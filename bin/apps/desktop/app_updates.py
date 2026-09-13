@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import sys
 import threading
 import time
 import urllib.error
@@ -301,19 +302,56 @@ def _empty_result(error: str = "") -> dict[str, Any]:
     return out
 
 
+def _git_origin_version() -> str:
+    """Wersja z origin/main:bin/apps/web/version.json. Pusty string gdy brak gita."""
+    if not is_portable_repo():
+        return ""
+    try:
+        import subprocess
+
+        flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
+        proc = subprocess.run(
+            ["git", "-C", str(GIT_ROOT), "show", "origin/main:bin/apps/web/version.json"],
+            capture_output=True,
+            text=True,
+            timeout=8,
+            check=False,
+            creationflags=flags,
+        )
+        if proc.returncode != 0:
+            return ""
+        data = json.loads(proc.stdout or "{}")
+        return str((data or {}).get("version") or "")
+    except Exception:
+        return ""
+
+
 def _public_result(data: dict[str, Any]) -> dict[str, Any]:
     """Zawsze przepusc przez porownanie vs biezaca wersja. Bez tokenu."""
     cur = current_version()
     latest = str(data.get("latest") or cur)
+    github_latest = latest
+    git_ver = _git_origin_version() if is_portable_repo() else ""
+    latest_source = "github"
+    if not is_newer(latest, cur):
+        if git_ver and is_newer(git_ver, cur):
+            latest = git_ver
+            latest_source = "git"
+        else:
+            latest = cur
+            latest_source = "installed"
     url = str(data.get("download_url") or "")
     err = str(data.get("error") or "")
     ok = bool(data.get("ok", True)) and not err
-    newer = is_newer(latest, cur)
+    newer = is_newer(latest, cur) if latest_source == "github" else False
     setup_ok = _is_setup_download_url(url)
     out = {
         "ok": ok,
         "current": cur,
         "latest": latest or cur,
+        "github_latest": github_latest,
+        "git_latest": git_ver,
+        "latest_source": latest_source,
         "update_available": bool(ok and newer and setup_ok),
         "download_url": url if setup_ok else "",
         "release_notes": str(data.get("release_notes") or "")[:4000],

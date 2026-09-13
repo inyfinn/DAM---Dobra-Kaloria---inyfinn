@@ -1679,7 +1679,20 @@
       });
   }
 
+  function ensureConversionGridCss() {
+    if (document.getElementById("damSettingsConvGridCss")) return;
+    var st = document.createElement("style");
+    st.id = "damSettingsConvGridCss";
+    st.textContent =
+      ".dam-settings-grid .dam-sw--conversion{grid-column:span 6;}" +
+      ".dam-settings-grid:has(.dam-sw--conversion.is-filtered-out) .dam-sw--naming:not(.is-filtered-out)," +
+      ".dam-settings-grid:has(.dam-sw--naming.is-filtered-out) .dam-sw--conversion:not(.is-filtered-out){grid-column:1 / -1;}" +
+      "@media (max-width:1100px){.dam-sw--conversion{grid-column:1 / -1;}}";
+    document.head.appendChild(st);
+  }
+
   function boot() {
+    ensureConversionGridCss();
     initSectionFilter();
     initSettingsSearch();
     initTheme();

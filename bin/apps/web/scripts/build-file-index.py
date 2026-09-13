@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import sys
@@ -41,6 +42,85 @@ def _load_naming_dict() -> dict:
 
 
 NAMING = _load_naming_dict()
+
+_LIVE_PATH = Path(os.environ.get("DAM_INDEX_LIVE_FILE") or "")
+if not str(_LIVE_PATH):
+    _LIVE_PATH = WEB.parent / "desktop" / "data" / "index-live.json"
+_LIVE_LAST = 0.0
+_LIVE_PRODUCT = ""
+_LIVE_SLOT = ""
+_LIVE: dict = {
+    "running": False,
+    "current_item": "",
+    "current_name": "",
+    "current_path": "",
+    "current_label": "",
+    "products_done": 0,
+    "products_total": 0,
+    "files_done": 0,
+    "files_total": 0,
+}
+
+
+def _write_index_live(*, force: bool = False) -> None:
+    global _LIVE_LAST
+    now = time.time()
+    if not force and (now - _LIVE_LAST) < 0.28:
+        return
+    _LIVE_LAST = now
+    body = dict(_LIVE)
+    body["updated_at"] = datetime.now().isoformat(timespec="seconds")
+    try:
+        _LIVE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        tmp = _LIVE_PATH.with_suffix(_LIVE_PATH.suffix + f".{os.getpid()}.tmp")
+        tmp.write_text(json.dumps(body, ensure_ascii=False), encoding="utf-8")
+        os.replace(tmp, _LIVE_PATH)
+    except OSError:
+        try:
+            _LIVE_PATH.write_text(json.dumps(body, ensure_ascii=False), encoding="utf-8")
+        except OSError:
+            pass
+
+
+def touch_index_live(
+    *,
+    kind: str = "",
+    name: str = "",
+    path: str = "",
+    product: str = "",
+    slot: str = "",
+    file: str = "",
+    inc_product: bool = False,
+    inc_file: bool = False,
+) -> None:
+    bits = [bit for bit in (product, slot, file or name) if bit]
+    label = " / ".join(bits) if bits else (name or path)
+    _LIVE["running"] = True
+    _LIVE["kind"] = kind
+    _LIVE["current_name"] = name or file or product or ""
+    _LIVE["current_path"] = str(path or "").replace("\\", "/")
+    _LIVE["current_label"] = label
+    _LIVE["current_item"] = label
+    if inc_product:
+        _LIVE["products_done"] = int(_LIVE.get("products_done") or 0) + 1
+    if inc_file:
+        _LIVE["files_done"] = int(_LIVE.get("files_done") or 0) + 1
+    _write_index_live(force=inc_product)
+    try:
+        print(
+            "[live] "
+            + "|".join(
+                [
+                    product or "",
+                    slot or "",
+                    file or name or "",
+                    str(path or "").replace("\\", "/"),
+                ]
+            ),
+            flush=True,
+        )
+    except OSError:
+        pass
 
 
 def resolve_marketing_base() -> Path:
@@ -1067,6 +1147,15 @@ def scan_slot_files(slot_dir: Path, root: Path, *, slot_name: str = "") -> list[
                     if slot_name:
                         ent["slot"] = slot_name
                     files.append(ent)
+                    touch_index_live(
+                        kind="file",
+                        name=f.name,
+                        path=str(f),
+                        product=_LIVE_PRODUCT,
+                        slot=slot_name,
+                        file=f.name,
+                        inc_file=True,
+                    )
                 except (PermissionError, OSError):
                     pass
     except (PermissionError, OSError):
@@ -1108,6 +1197,15 @@ def scan_viz_slot_files(
                         continue
                     seen.add(key)
                     files.append(ent)
+                    touch_index_live(
+                        kind="file",
+                        name=child.name,
+                        path=str(child),
+                        product=_LIVE_PRODUCT,
+                        slot=slot_name,
+                        file=child.name,
+                        inc_file=True,
+                    )
                 elif child.is_dir():
                     walk(child, depth + 1)
             except (PermissionError, OSError):
@@ -1161,6 +1259,15 @@ def scan_elements_files(slot_dir: Path, root: Path) -> list[dict]:
                     if key not in seen:
                         seen.add(key)
                         files.append(ent)
+                        touch_index_live(
+                            kind="file",
+                            name=f.name,
+                            path=str(f),
+                            product=_LIVE_PRODUCT,
+                            slot=f.parent.name,
+                            file=f.name,
+                            inc_file=True,
+                        )
                 except (PermissionError, OSError):
                     pass
             elif f.is_dir():
@@ -1437,6 +1544,13 @@ def scan_revision_children(product_dir: Path, root: Path, brand: str, cat_name: 
         base, rev, full = parse_index(child.name)
         carrier = parse_carrier(child.name)
         date_s = parse_date(child.name)
+        touch_index_live(
+            kind="folder",
+            name=child.name,
+            path=str(child),
+            product=_LIVE_PRODUCT,
+            slot=child.name,
+        )
         slots, files_by_role, wizki_files = scan_revision_slots(child, root)
 
         pool: list[dict] = list(wizki_files or [])
@@ -1557,8 +1671,16 @@ def merge_category_archive(cat: Path, root: Path, brand: str, products: list[dic
 
 
 def scan_product(cat_name: str, product_dir: Path, root: Path, brand: str) -> dict | None:
+    global _LIVE_PRODUCT
     product_name = product_dir.name
     display_name, bracket_tags = parse_display_name(product_name)
+    _LIVE_PRODUCT = display_name or product_name
+    touch_index_live(
+        kind="product",
+        name=_LIVE_PRODUCT,
+        path=str(product_dir),
+        product=_LIVE_PRODUCT,
+    )
     revisions = scan_revision_children(product_dir, root, brand, cat_name)
     if not revisions and not product_dir.exists():
         return None
@@ -1575,6 +1697,13 @@ def scan_product(cat_name: str, product_dir: Path, root: Path, brand: str) -> di
     # i sa tam odrzucane, ale jako Podkategoria maja byc widoczne, patrz P4).
     raw_brackets = [norm(m.group(1)) for m in BRACKET_HINT_RE.finditer(product_name)]
     subcat_slug, subcat_label = subcategory_label_pl(raw_brackets)
+    touch_index_live(
+        kind="product",
+        name=_LIVE_PRODUCT,
+        path=str(product_dir),
+        product=_LIVE_PRODUCT,
+        inc_product=True,
+    )
 
     return {
         "id": norm(product_name).replace(" ", "-")[:80],
@@ -2259,6 +2388,26 @@ def main() -> None:
         THUMBS_DIR.mkdir(parents=True, exist_ok=True)
 
     t0 = time.time()
+    try:
+        if _LIVE_PATH.is_file():
+            prev_live = json.loads(_LIVE_PATH.read_text(encoding="utf-8"))
+            if isinstance(prev_live, dict):
+                if prev_live.get("products_total"):
+                    _LIVE["products_total"] = prev_live.get("products_total")
+                if prev_live.get("files_total"):
+                    _LIVE["files_total"] = prev_live.get("files_total")
+    except (OSError, json.JSONDecodeError):
+        pass
+    if not _LIVE.get("products_total") and OUT.is_file():
+        try:
+            prev_idx = json.loads(OUT.read_text(encoding="utf-8"))
+            prods = prev_idx.get("products") if isinstance(prev_idx, dict) else []
+            _LIVE["products_total"] = len(prods or [])
+            _LIVE["files_total"] = int(prev_idx.get("viz_count") or 0)
+        except (OSError, json.JSONDecodeError, TypeError):
+            pass
+    _LIVE["running"] = True
+    _write_index_live(force=True)
     products: list[dict] = []
     categories: list[dict] = []
     roots_meta: list[dict] = []
@@ -2324,6 +2473,8 @@ def main() -> None:
     sample = [p for p in products if "tarta" in norm(p.get("display_name", "")) and "malin" in norm(p.get("display_name", ""))]
     banoffee = [p for p in products if "banoffee" in norm(p.get("display_name", "")) and "kakao" in norm(p.get("display_name", ""))]
     orange = [v for v in viz if v.get("index_base") == "6300624" or "orange" in norm(v.get("product_name", ""))]
+    _LIVE["running"] = False
+    _write_index_live(force=True)
     print(f"Wrote {OUT} ({OUT.stat().st_size // 1024} KB)")
     print(f"Wrote {SEARCH_OUT} ({SEARCH_OUT.stat().st_size // 1024} KB)")
     print(f"Thumbs dir: {THUMBS_DIR} ({len(list(THUMBS_DIR.glob('*.jpg')))} files)")

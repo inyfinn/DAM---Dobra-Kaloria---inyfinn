@@ -20,6 +20,7 @@ import json
 import os
 import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -244,6 +245,11 @@ def rebuild_with_lock(
     except ImportError:
         idx_sup = None  # type: ignore
 
+    if idx_sup is not None:
+        try:
+            idx_sup.begin_run_snapshot()
+        except Exception:
+            pass
     handle = None
     if acquire_lock is not None:
         handle, meta = acquire_lock(
@@ -276,7 +282,7 @@ def rebuild_with_lock(
             return 2
 
     py = _script_python()
-    cmd = [py, str(BUILD)]
+    cmd = [py, "-u", str(BUILD)]
     for r in root_args or []:
         cmd.extend(["--root", r])
     if out_dir is not None:
@@ -315,6 +321,12 @@ def rebuild_with_lock(
                 "last_duration_sec": last_duration_sec,
                 "progress_message": "Indeksowanie ROOT" if stage_prefix == "hourly" else "Indeksowanie",
                 "hourly_pending": False,
+                "current_item": (idx_sup.read_live() if idx_sup is not None else {}).get("current_item") or "",
+                "current_name": (idx_sup.read_live() if idx_sup is not None else {}).get("current_name") or "",
+                "current_path": (idx_sup.read_live() if idx_sup is not None else {}).get("current_path") or "",
+                "current_label": (idx_sup.read_live() if idx_sup is not None else {}).get("current_label") or "",
+                "products_done": (idx_sup.read_live() if idx_sup is not None else {}).get("products_done"),
+                "products_total": (idx_sup.read_live() if idx_sup is not None else {}).get("products_total"),
             },
         )
 
@@ -342,6 +354,12 @@ def rebuild_with_lock(
             cwd=str(BIN_ROOT),
             creationflags=flags,
             stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            bufsize=1,
         )
     except Exception as exc:  # noqa: BLE001
         _write_status(
@@ -364,6 +382,35 @@ def rebuild_with_lock(
             handle.update(stage=f"{stage_prefix}:building", child_pid=proc.pid)
         except Exception:
             pass
+
+    snap = {}
+    try:
+        if idx_sup is not None:
+            snap = idx_sup.read_run_snapshot()
+    except Exception:
+        snap = {}
+
+    def _read_builder_stdout() -> None:
+        if proc.stdout is None:
+            return
+        for line in proc.stdout:
+            try:
+                print(line, end="" if str(line).endswith("\n") else "\n")
+            except Exception:
+                pass
+            if idx_sup is None:
+                continue
+            try:
+                parsed = idx_sup.parse_builder_live_line(line)
+            except Exception:
+                parsed = None
+            if parsed:
+                try:
+                    idx_sup.merge_live_into_watcher_status(parsed, snap=snap)
+                except Exception:
+                    pass
+
+    threading.Thread(target=_read_builder_stdout, daemon=True, name="dam-index-live").start()
 
     if idx_sup is not None:
         rc = idx_sup.wait_rebuild_proc(proc, lock_handle=handle, on_tick=_tick)
@@ -391,6 +438,11 @@ def rebuild_with_lock(
     )
     if handle is not None:
         handle.release()
+    if idx_sup is not None:
+        try:
+            idx_sup.complete_run_report(ok=(rc == 0), cancelled=cancelled, rc=rc)
+        except Exception:
+            pass
     if rc == 0 and branding_hook:
         spawn_branding_pipeline(status_file=status_file)
     if rc == 0:

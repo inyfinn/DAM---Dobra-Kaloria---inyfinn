@@ -1,4 +1,4 @@
-"""Shared runtime ports and paths for DAM desktop app."""
+﻿"""Shared runtime ports and paths for DAM desktop app."""
 from __future__ import annotations
 
 import json
@@ -8,7 +8,7 @@ from pathlib import Path
 
 DESKTOP_DIR = Path(__file__).resolve().parent
 WEB_ROOT = DESKTOP_DIR.parent / "web"
-# Layout: GIT_ROOT (DAM.exe + .git) / bin = CONTENT_ROOT (apps, THEME, runtime, …)
+# Layout: GIT_ROOT (DAM.exe + .git) / bin = CONTENT_ROOT (apps, THEME, runtime, â€¦)
 # Primary 2026-08-05+: D:\\...\\DAM---Dobra-Kaloria---inyfinn (nie P:\\DAM).
 CONTENT_ROOT = DESKTOP_DIR.parent.parent
 GIT_ROOT = CONTENT_ROOT.parent
@@ -18,7 +18,7 @@ DEFAULT_UI_PORT = 8765
 DEFAULT_BRIDGE_PORT = 8766
 HOST = "127.0.0.1"
 APP_TITLE = "DAM - Dobra Kaloria - Inyfinn"
-APP_VERSION = "6.0.0"  # sync z apps/web/version.json + dam-version.js
+APP_VERSION = "6.0.4"  # sync z apps/web/version.json + dam-version.js
 MUTEX_NAME = "Global\\DAM_DOBRA_KALORIA_INYFINN_SINGLE_INSTANCE"
 
 

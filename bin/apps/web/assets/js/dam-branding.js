@@ -111,6 +111,7 @@
     { key: "author:Sylwia", label: "Sylwia", group: "autor" },
     { key: "author:Szymon", label: "Szymon", group: "autor" },
     { key: "author:Highlite", label: "Highlite", group: "autor" },
+    { key: "author:Hubert", label: "Hubert", group: "autor" },
   ];
 
   var PRODUCT_TAG_CHIPS = [

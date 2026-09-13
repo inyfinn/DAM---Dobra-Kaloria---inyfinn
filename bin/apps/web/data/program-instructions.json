@@ -1003,7 +1003,7 @@
       "must": [
         "Mapa kto↔produkt w product-people.json (+ KV product-people)",
         "enrich-search-tags.py wlewa autorow do authors / search_blob / by_tag / tag_groups.autor",
-        "tag_groups.autor = tylko Krzysztof, Sylwia, Szymon, Highlite (AUTHOR_ALLOWLIST w skrypcie)",
+        "tag_groups.autor = Krzysztof, Sylwia, Szymon, Highlite, Hubert (AUTHOR_ALLOWLIST w skrypcie)",
         "Szukajka: sylwia / krzysztof / szymon / highlite znajduje przypisane produkty"
       ],
       "body_pl": "Osoba przy produkcie sluzy do WYSZUKIWANIA (statusy Sylwii, spis Szymona, dziennik KW), nie do glosnych badge TAG na kartach. Zrodlo: apps/web/data/product-people.json. Po aktualizacji mapy: python apps/web/scripts/enrich-search-tags.py (+ seed KV).",

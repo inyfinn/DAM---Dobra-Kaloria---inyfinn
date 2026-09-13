@@ -207,18 +207,63 @@
       { latest: lat, current: cur }
     );
     var dismiss = tr("update.dismiss", "Ukryj na dziś");
-    var settings = tr("update.open_settings", "Ustawienia");
     var html =
       "<span>" + msg + "</span>" +
-      "<a href=\"settings.html#damAppUpdates\" style=\"color:inherit;text-decoration:underline;\">" +
-      settings + "</a>" +
+      "<button type=\"button\" id=\"damAppUpdateOpenCheck\" class=\"geex-btn geex-btn--sm\" " +
+      "style=\"background:var(--dam-surface);color:var(--dam-primary);border:0;min-height:44px;padding:8px 14px;\">" +
+      tr("update.check_now", "Sprawdź aktualizację") + "</button>" +
       "<button type=\"button\" id=\"damAppUpdateDismiss\" class=\"geex-btn geex-btn--sm\" " +
       "style=\"background:var(--dam-surface);color:var(--dam-primary);border:0;min-height:44px;padding:8px 14px;\">" +
       dismiss + "</button>";
     showBanner(html);
     var btn = document.getElementById("damAppUpdateDismiss");
     if (btn) btn.addEventListener("click", dismissToday);
+    var openBtn = document.getElementById("damAppUpdateOpenCheck");
+    if (openBtn) {
+      openBtn.addEventListener("click", function () {
+        checkFromMenu();
+      });
+    }
     return data;
+  }
+
+  function showCheckResult(data) {
+    var cur = String((data && data.current) || global.DAM_APP_VERSION || "?");
+    var lat = String((data && data.latest) || "-");
+    var src = String((data && data.latest_source) || "");
+    var gitLat = String((data && data.git_latest) || "");
+    var msg;
+    if (!data || data.ok === false) {
+      msg = tr("update.check_failed", "Nie udało się sprawdzić aktualizacji");
+    } else if (isRealUpdate(data)) {
+      msg = tr("update.available", "Dostępna wersja {latest} (masz {current}).", {
+        latest: lat,
+        current: cur,
+      });
+    } else if (src === "git" && gitLat && cmpVer(gitLat, cur) > 0) {
+      msg =
+        "Na origin/main jest " +
+        gitLat +
+        " (masz " +
+        cur +
+        "). Zamknij DAM, zrób git pull i uruchom DAM.exe.";
+    } else if (src === "installed" || cmpVer(lat, cur) <= 0) {
+      msg = tr("update.already_latest", "Masz najnowszą wersję.") + " Zainstalowana: " + cur;
+      if (data && data.github_latest && String(data.github_latest) !== cur) {
+        msg += " GitHub Releases: " + data.github_latest + ".";
+      }
+    } else {
+      msg = tr("update.already_latest", "Masz najnowszą wersję.") + " " + cur + " / " + lat;
+    }
+    showBanner("<span>" + msg + "</span>", { autoHideMs: 7000 });
+    return data;
+  }
+
+  function checkFromMenu() {
+    showBanner("<span>Sprawdzanie aktualizacji…</span>");
+    return checkRemote(true).then(function (data) {
+      return showCheckResult(data);
+    });
   }
 
   function checkRemote(force) {
@@ -236,6 +281,7 @@
       .then(function (data) {
         var cur = String((data && data.current) || global.DAM_APP_VERSION || "?");
         setVersionPill("DAM v" + cur);
+        if (force) return showCheckResult(data);
         return renderUpdateBanner(data);
       })
       .catch(function () {
@@ -260,6 +306,8 @@
   global.DamAppUpdate = {
     syncLocalBuild: syncLocalBuild,
     checkRemote: checkRemote,
+    checkFromMenu: checkFromMenu,
+    showCheckResult: showCheckResult,
     cmpVer: cmpVer,
     isRealUpdate: isRealUpdate,
     hideBanner: hideBanner,

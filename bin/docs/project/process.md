@@ -1,3 +1,51 @@
+## 2026-09-13 - v6.0.1 intern: dark tokens + HSL + export (facts)
+
+**Komenda/Akcja:** Kontynuacja. Dark tokeny + Colorify-like HSL w Ustawieniach + export JSON profilu. Screenshot+Read. Bez commit. Bez PASS. local_bridge / poller / root-status / shell NIE ruszane w tej turze.
+
+**Log/Status:**
+- Tokeny `html.dark, html[data-theme=dark]` w dam-brand.css: `--dam-bg` `--dam-surface-muted` `#101114` `--dam-surface` `#1c1d24` `--dam-surface-elevated` `#262730` `--dam-chrome` `--dam-border` `#2c2b36` `--dam-text` `#eeeaf6` `--dam-text-muted` `#b8b3c6` `--dam-hash` `--card-bg` plus Geex `--white-color` `--section-color` `--gray-color` `#d2cedc`. Zero `filter:invert`.
+- CDP historia: surface `#1C1D24` bg `#101114` elevated `#262730` hash `#C28CE0` filter none. Karty antracyt, nie biale.
+- CDP explorer: `#damExplorerMain` / results body `rgb(28, 29, 36)` `--card-bg` `#1C1D24` filter none. Leftover: biale pille radio (Produkty/Materialy, DK/GC, jezyk) z sibling CSS poza allowlista.
+- Settings `#damAppearance`: 4 slidery HSL (`bg_brightness` `bg_saturation` `accent_brightness` `accent_saturation` -90..+90). Przycisk `#damThemeExportBtn` = `Eksportuj ustawienia profilu`.
+- Export JSON klucze: `exported_at` `app_version` `theme_pref` `theme_resolved` `accent` `tuning` (dark/light) `localStorage` `user`. Sample: app_version 6.0.1 theme_pref dark accent `#AB54DB`. localStorage keys obecne: dam_theme_pref theme dam_accent dam_user_name dam_role dam_base_path dam_user_prefs. EXPORT_KEYS takze: dam_theme_tuning dam_user_email dam_user_phone dam_user_title dam_tooltips dam_synology_enabled dam_brands. Download `dam-profile-settings-YYYY-MM-DD.json`. Bez token/password.
+- PNG: `bin/docs/project/qa-6.0.1-dark-session.png` 161907 B; `qa-6.0.1-dark-explorer.png` 160875 B; `qa-6.0.1-theme-export.png` 135060 B. Screenshot+Read.
+- `?v=6.0.1` settings dam-brand.css + dam-theme.js.
+- smoke :8765 explorer.html 200 t=0.0047s; :8766/health 200 t=0.0137s.
+- git status forbidden nadal M (index worker), ta tura ich nie edytowala.
+
+**Efekt/Fix:** dark semantic surfaces + HSL tuning + JSON export. Dowod screenshot.
+
+**Backup:** brak.
+
+**Test/Ewaluacja:** curl 5s; CDP tokens; exportProfile(); screenshot+Read 3 PNG.
+
+**Zrodla:** dam-brand.css, dam-theme.js, settings.html#damAppearance, qa-6.0.1-dark-*.png qa-6.0.1-theme-export.png
+
+## 2026-09-13 - v6.0.1 intern: live toast + raport + menu (facts)
+
+**Komenda/Akcja:** Intern worker. Toast: current_item + short path. Po biegu: Zamknij albo Raport (puste = Nic nowego). Menu profilu pod Pomoc: Sprawdz aktualizacje. Ukrycie Aktualizacja w Ustawieniach z dam-root-status.js. 6.0.1. Bez commit. Facts only.
+
+**Log/Status:**
+- version.json / dam-version.js DAM_APP_VERSION / runtime_config.py APP_VERSION / DAM-Setup.iss = 6.0.1
+- GET :8766/index/status (X python 13240) klucze: current_item, current_name, current_path, new_items, last_report. Wartosci puste bo rebuild_running=false.
+- GET :8766/index/report: ok=false (ostatni run rc=1), empty=true, items=[]
+- Programs\\DAM (stary most) NIE mial tych kluczy; po starcie X serve_browser pola sa.
+- local_bridge.py 9786 linii (ADD only, bez truncate z D)
+- Ukrycie #damAppUpdates / .dam-sw--app: style#damHideAppUpdatesCss z dam-root-status.js. CDP settings titles: Profil, Wyglad, Dysk, Preferencje, Historia, Integracje, Powiadomienia, Konwersja, Nazewnictwo, Instrukcje, System. Brak Aktualizacje.
+- Menu: Profil / Ustawienia / Pomoc / Sprawdz aktualizacje (#damUserMenuUpdate)
+- Toast live (DamCacheSync.debugPreview live, bo idle): "Teraz: Cynamonka / ELEMENTY / front.ai" + short path. Raport: 1 pozycja Cynamonka nerkowcowy. Empty: "Nic nowego". Przyciski Zamknij + Raport.
+- PNG: qa-6.0.1-index-live.png 175010 B; qa-6.0.1-index-report.png 158043 B; qa-6.0.1-index-empty.png 156237 B; qa-6.0.1-update-menu.png 202655 B; qa-6.0.1-update-settings.png 178643 B
+- smoke :8765 explorer.html 200 t=0.005s; :8766/health 200 t=0.013s
+- Commit/push: nie. CSS/** i appearance panel: nie ruszane.
+
+**Efekt/Fix:** poller dociaga Teraz: z /index/status; hide update column z JS; menu pod Pomoc.
+
+**Backup:** brak.
+
+**Test/Ewaluacja:** py_compile index_supervisor+local_bridge; node --check poller+root-status+shell; curl status/report; screenshot+Read.
+
+**Zrodla:** dam-index-poller.js, dam-root-status.js, dam-shell.js, index_supervisor.py, local_bridge.py, qa-6.0.1-*.png
+
 ## 2026-09-13 - v6.0.0: status po 0526d70 (worker, bez commit/push)
 
 **Komenda/Akcja:** User: dokoncz plan, wersja 6.0.0, commit+push+build. Worker: FACTS only. Bez git commit/push. Bez OOTB PASS. Parent sedzi.

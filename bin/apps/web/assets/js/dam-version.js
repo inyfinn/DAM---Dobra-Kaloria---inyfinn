@@ -1,11 +1,11 @@
-/**
+﻿/**
  * Wersja programu DAM (single source w UI).
- * Etykieta sidebar na dole stopki — lewa kolumna, jeden string.
+ * Etykieta sidebar na dole stopki â€” lewa kolumna, jeden string.
  */
 (function (global) {
   "use strict";
 
-  global.DAM_APP_VERSION = "6.0.0";
+  global.DAM_APP_VERSION = "6.0.4";
 
   function formatVersion(v) {
     return String(v || "3.1.0").replace(/^v/i, "");

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * DAM - Shell navigation + auth guard + messages popup
  * Rewrites Geex sidebar/header Demo menu to DAM items
  * Requires: dam-api.js, dam-i18n.js loaded before this script
@@ -56,7 +56,7 @@
   })();
 
   /* P0 SW gate (Parent B): purge stale dam-page-* or non-v4 sw.js, then allow tutorial register.
-   * Trigger â‰  controller alone. One soft reload per session; after that still delete/unregister without loop. */
+   * Trigger Ă˘â€°Â  controller alone. One soft reload per session; after that still delete/unregister without loop. */
   (function softSwV4PurgeBoot() {
     if (!("serviceWorker" in navigator)) return;
     var CACHE_MARK = "dam-page-1h-v4";
@@ -137,8 +137,8 @@
   })();
 
   // Tryb roboczy: zawsze zalogowany jako admin (bez Microsoft).
-  // Wyłącz (false) gdy włączymy prawdziwe Entra ID.
-  // false = prawdziwe konta (bcrypt + sesja urządzenia). Nie wymuszaj demo-admin.
+  // WyĹ‚Ä…cz (false) gdy wĹ‚Ä…czymy prawdziwe Entra ID.
+  // false = prawdziwe konta (bcrypt + sesja urzÄ…dzenia). Nie wymuszaj demo-admin.
   var DAM_DEV_ALWAYS_ADMIN = false;
   // Dobra Kaloria (NIE Niemiesa). Zrodlo brand: Marketing/.../DOBRA KALORIA/01 - LOGO/SVG
   // Light: zielony (#008244) - czytelny na jasnym sidebarze. Dark: ten sam zielony (kontrast OK).
@@ -297,13 +297,13 @@
     projects: { labelKey: "nav.projects", label: "Projekty", parent: "dashboard", href: "index.html" },
     project: { labelKey: "nav.project", label: "Projekt", parent: "projects", href: "project.html" },
     invoices: { labelKey: "nav.invoices", label: "Faktury", parent: "dashboard", href: "invoices.html" },
-    costs: { labelKey: "nav.costs", label: "Kalkulator kosztów", parent: "dashboard", href: "costs.html" },
+    costs: { labelKey: "nav.costs", label: "Kalkulator kosztĂłw", parent: "dashboard", href: "costs.html" },
     integrations: { labelKey: "nav.integrations", label: "Integracja i produkcja", parent: "dashboard", href: "integrations.html" },
     profile: { labelKey: "user.profile", label: "Profil", parent: "dashboard", href: "profile.html" },
     settings: { labelKey: "user.settings", label: "Ustawienia", parent: "dashboard", href: "settings.html" },
     billing: { labelKey: "user.billing", label: "Rozliczenia", parent: "dashboard", href: "billing.html" },
-    activity: { labelKey: "user.activity", label: "Aktywność", parent: "dashboard", href: "activity.html" },
-    inbox: { labelKey: "nav.inbox", label: "Wiadomości", parent: "dashboard", href: "inbox.html" },
+    activity: { labelKey: "user.activity", label: "AktywnoĹ›Ä‡", parent: "dashboard", href: "activity.html" },
+    inbox: { labelKey: "nav.inbox", label: "WiadomoĹ›ci", parent: "dashboard", href: "inbox.html" },
     tasks: { labelKey: "nav.tasks", label: "Zadania", parent: "dashboard", href: "tasks.html" },
     help: { labelKey: "user.help", label: "Pomoc", parent: "dashboard", href: "help.html" }
   };
@@ -331,10 +331,10 @@
       "nav.visualizations": "Wizualizacje",
       "nav.branding": "Branding",
       "nav.projects": "Projekty",
-      "nav.inbox": "Wiadomości",
+      "nav.inbox": "WiadomoĹ›ci",
       "nav.tasks": "Zadania",
       "nav.invoices": "Faktury",
-      "nav.costs": "Kalkulator kosztów",
+      "nav.costs": "Kalkulator kosztĂłw",
       "nav.integrations": "Integracja i produkcja",
       "nav.logout": "Wyloguj"
     };
@@ -384,8 +384,8 @@
     return parent ? parent.href : "dashboard.html";
   }
 
-  /* Faza 6 (2026-07-18, P-audyt X/Wstecz): jeśli jest otwarty podgląd/modal
-     (lightbox wizualizacji, popover edycji tagu, modal zgłoszenia), "Wstecz"
+  /* Faza 6 (2026-07-18, P-audyt X/Wstecz): jeĹ›li jest otwarty podglÄ…d/modal
+     (lightbox wizualizacji, popover edycji tagu, modal zgĹ‚oszenia), "Wstecz"
      ZAMYKA GO i nie nawiguje do innej strony. Wyjatek zgodny z prosba usera. */
   function closeTopmostOverlayIfAny() {
     var overlaySelectors = [
@@ -499,7 +499,7 @@
     }).join("");
 
     var html =
-      '<nav class="dam-nav-trail" id="damNavTrail" aria-label="' + escapeHtml(backLabel) + ' / ścieżka">' +
+      '<nav class="dam-nav-trail" id="damNavTrail" aria-label="' + escapeHtml(backLabel) + ' / Ĺ›cieĹĽka">' +
       '<button type="button" class="dam-nav-back" id="damNavBack" aria-label="' + escapeHtml(backLabel) + '">' +
       '<i class="uil uil-arrow-left" aria-hidden="true"></i>' +
       '<span class="dam-nav-back__label">' + escapeHtml(backLabel) + "</span>" +
@@ -541,7 +541,7 @@
     var titleEl = document.getElementById("damProjectTitle");
     if (currentPageKey() === "project" && titleEl) {
       var t = (titleEl.textContent || "").trim();
-      if (t && t !== "Projekt" && t.toLowerCase() !== "ładowanie...") leaf = t;
+      if (t && t !== "Projekt" && t.toLowerCase() !== "Ĺ‚adowanie...") leaf = t;
     }
     renderNavTrail(leaf);
   }
@@ -550,7 +550,7 @@
     if (!DAM_DEV_ALWAYS_ADMIN) return;
     localStorage.setItem("dam_token", "demo-admin-dev-token");
     localStorage.setItem("dam_role", "admin");
-    // Użytkownik: Krzysztof Wieczorek (Grafik Marketing, Kubara)
+    // UĹĽytkownik: Krzysztof Wieczorek (Grafik Marketing, Kubara)
     var stored = localStorage.getItem("dam_user_name");
     if (!stored || stored === "Administrator DAM") {
       localStorage.setItem("dam_user_name", "Krzysztof Wieczorek");
@@ -564,8 +564,8 @@
       company: "KUBARA",
       phone: "502597985",
       manager: "Karolina Poznar",
-      managerTitle: "Czlonek Zarządu / Dyrektor Marketingu",
-      colleagues: ["Szymon Ryngwelski", "Anna Polanska", "Marta Zasępa", "Beata Scibik", "Sylwia Zarychta", "Maciej Labus"]
+      managerTitle: "Czlonek ZarzÄ…du / Dyrektor Marketingu",
+      colleagues: ["Szymon Ryngwelski", "Anna Polanska", "Marta ZasÄ™pa", "Beata Scibik", "Sylwia Zarychta", "Maciej Labus"]
     }));
   }
 
@@ -624,7 +624,7 @@
           } catch (e2) { /* ignore */ }
         })
         .catch(function () {
-          /* Sesja nieważna / bridge down bez tokena: schowaj ADMIN natychmiast. */
+          /* Sesja niewaĹĽna / bridge down bez tokena: schowaj ADMIN natychmiast. */
           clearAdminChrome();
           ensureAdminModeSwitch();
           try {
@@ -655,7 +655,7 @@
       a.href = "dashboard.html";
       a.setAttribute("title", "Dobra Kaloria - DAM - Inyfinn");
     });
-    // Usuń stare napisy Geex przy logo (jeśli sa w markupie)
+    // UsuĹ„ stare napisy Geex przy logo (jeĹ›li sa w markupie)
     document.querySelectorAll(".geex-sidebar__logo, .geex-header__logo").forEach(function (wrap) {
       wrap.querySelectorAll("span, h1, h2, h3, h4, h5, p, small").forEach(function (el) {
         var t = (el.textContent || "").toLowerCase();
@@ -688,13 +688,13 @@
         '<span class="dam-nav-label" data-i18n="' + item.i18n + '">' + label + '</span>' +
         '</a></li>';
     }).join("") +
-    /* (1) Sesja urządzenia - naturalnie po nav (BEZ margin-top:auto = bez pchania w dol) */
+    /* (1) Sesja urzÄ…dzenia - naturalnie po nav (BEZ margin-top:auto = bez pchania w dol) */
     '<li class="geex-sidebar__menu__item dam-nav-device-session">' +
     '<a href="profile.html#damDevicePathsRoot" class="geex-sidebar__menu__link dam-device-session-btn" id="damShellDeviceSession"' +
-    ' title="Sesja urządzenia - ścieżki Marketing" aria-label="Sesja urządzenia"' +
-    ' data-dam-tip="Sesja urządzenia: ścieżki Marketing na tym PC">' +
+    ' title="Sesja urzÄ…dzenia - Ĺ›cieĹĽki Marketing" aria-label="Sesja urzÄ…dzenia"' +
+    ' data-dam-tip="Sesja urzÄ…dzenia: Ĺ›cieĹĽki Marketing na tym PC">' +
     '<i class="uil uil-desktop" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i>' +
-    '<span class="dam-nav-label">Sesja urządzenia</span>' +
+    '<span class="dam-nav-label">Sesja urzÄ…dzenia</span>' +
     '</a></li>' +
     /* (2) Wyloguj - prawdziwy logout, +50px friction od Sesji */
     '<li class="geex-sidebar__menu__item dam-nav-logout">' +
@@ -706,7 +706,7 @@
     '</a></li>';
   }
 
-  /** Sidebar: Sesja urządzenia -> profil z CRUD ścieżek per device (nie logout). */
+  /** Sidebar: Sesja urzÄ…dzenia -> profil z CRUD Ĺ›cieĹĽek per device (nie logout). */
   function goDeviceSessionPaths(e) {
     if (e) e.preventDefault();
     var target = "profile.html#damDevicePathsRoot";
@@ -767,7 +767,7 @@
       created = true;
     }
     s.textContent =
-      "/* Header chrome PONIZEJ panelu Dostosuj wygląd; popupy w kontekscie headera */" +
+      "/* Header chrome PONIZEJ panelu Dostosuj wyglÄ…d; popupy w kontekscie headera */" +
       ".geex-content__header{position:relative;z-index:200;isolation:isolate;}" +
       ".geex-content__header__action{position:relative;z-index:60;}" +
       ".geex-content__header__action .geex-content__header__popup," +
@@ -840,7 +840,7 @@
       "flex:0 0 auto!important;min-height:0!important;height:auto!important;" +
       "gap:0!important;}" +
       "body.dam-sidebar-collapsed .geex-sidebar__menu{gap:0!important;}" +
-      "/* Geex first-child margin-top:15px - collapsed dam-brand zeruje â†’ Y jump -15px */" +
+      "/* Geex first-child margin-top:15px - collapsed dam-brand zeruje Ă˘â€ â€™ Y jump -15px */" +
       ".geex-sidebar__menu__item:first-child," +
       "body.dam-sidebar-collapsed .geex-sidebar__menu__item:first-child," +
       "body.dam-sidebar-morphing .geex-sidebar__menu__item:first-child{" +
@@ -873,7 +873,7 @@
       "content:\"\";position:absolute;left:0;top:8px;bottom:8px;width:3px;" +
       "border-radius:0 2px 2px 0;background:var(--dam-primary,#ab54db);" +
       "pointer-events:none;z-index:1;}" +
-      "/* Ikony: ten sam box 20×20 / line-height 1 w expanded+collapsed (bez 24â†’20 snap) */" +
+      "/* Ikony: ten sam box 20Ă—20 / line-height 1 w expanded+collapsed (bez 24Ă˘â€ â€™20 snap) */" +
       ".geex-sidebar .geex-sidebar__menu__link i," +
       ".geex-sidebar .geex-sidebar__menu__link .uil," +
       "body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link i," +
@@ -918,7 +918,7 @@
       "visibility:hidden!important;opacity:0!important;" +
       "pointer-events:none!important;width:1px!important;height:1px!important;" +
       "overflow:hidden!important;margin:0!important;padding:0!important;}" +
-      "/* Collapse btn: WYŚRODKOWANY w railu (= ta sama oś X co ikony; bylo flex-start â†’ CX 49 vs ikony 59) */" +
+      "/* Collapse btn: WYĹšRODKOWANY w railu (= ta sama oĹ› X co ikony; bylo flex-start Ă˘â€ â€™ CX 49 vs ikony 59) */" +
       "body.dam-sidebar-collapsed .dam-sidebar-collapse-btn," +
       "body.dam-sidebar-morphing .dam-sidebar-collapse-btn{" +
       "position:relative!important;z-index:1;" +
@@ -1118,7 +1118,7 @@
     }).join("");
   }
 
-  // Build brand in sidebar header + footer identity (DAM / Dobra Kaloria - Inyfinn / v…)
+  // Build brand in sidebar header + footer identity (DAM / Dobra Kaloria - Inyfinn / vâ€¦)
   function ensureSidebarFooterEl() {
     var wrapper = document.querySelector(".geex-sidebar .geex-sidebar__wrapper");
     if (!wrapper) return null;
@@ -1261,7 +1261,7 @@
    */
   /**
    * Geex demo wstawia grube fill-SVG. Zastepujemy cienkimi Unicons (line),
-   * zeby header wyglądal jak reszta DAM / theme.
+   * zeby header wyglÄ…dal jak reszta DAM / theme.
    */
   function normalizeHeaderIcons() {
     var list = document.querySelector(
@@ -1375,8 +1375,8 @@
     return (
       '<li class="geex-content__header__quickaction__item dam-admin-switch-item" id="damAdminSwitchItem" hidden>' +
         '<label class="dam-switch dam-admin-header-switch" for="damAdminModeSwitch" ' +
-          'title="Tryb admina: edycja tagów (Shift+klik), statusy wariantów, miniatury" ' +
-          'data-dam-tip="Włącz edycję tagów i narzędzi admina. Wyłączony = zwykły widok.">' +
+          'title="Tryb admina: edycja tagĂłw (Shift+klik), statusy wariantĂłw, miniatury" ' +
+          'data-dam-tip="WĹ‚Ä…cz edycjÄ™ tagĂłw i narzÄ™dzi admina. WyĹ‚Ä…czony = zwykĹ‚y widok.">' +
           '<input type="checkbox" class="dam-switch__input" id="damAdminModeSwitch" />' +
           '<span class="dam-switch__track" aria-hidden="true"></span>' +
           '<span class="dam-switch__label">Admin</span>' +
@@ -1388,10 +1388,10 @@
   function headerQuickactionHtml() {
     return (
       '<div class="geex-content__header__customizer">' +
-        '<button type="button" class="geex-btn geex-btn__toggle-sidebar" aria-label="Menu boczne" data-dam-tip="Otwórz / zamknij menu">' +
+        '<button type="button" class="geex-btn geex-btn__toggle-sidebar" aria-label="Menu boczne" data-dam-tip="OtwĂłrz / zamknij menu">' +
           '<i class="uil uil-align-center-alt"></i></button>' +
-        '<button type="button" class="geex-btn geex-btn__customizer" data-dam-tip="Dostosuj wygląd">' +
-          '<i class="uil uil-pen"></i><span>Dostosuj wygląd</span></button>' +
+        '<button type="button" class="geex-btn geex-btn__customizer" data-dam-tip="Dostosuj wyglÄ…d">' +
+          '<i class="uil uil-pen"></i><span>Dostosuj wyglÄ…d</span></button>' +
       "</div>" +
       '<div class="geex-content__header__action__wrap">' +
         '<ul class="geex-content__header__quickaction">' +
@@ -1403,10 +1403,10 @@
               '<i class="uil uil-search"></i></div>' +
           "</li>" +
           '<li class="geex-content__header__quickaction__item">' +
-            '<a href="#" class="geex-content__header__quickaction__link" id="damMsgBellLink" aria-label="Wiadomości" data-dam-tip="Wiadomości Asana i Teams">' +
+            '<a href="#" class="geex-content__header__quickaction__link" id="damMsgBellLink" aria-label="WiadomoĹ›ci" data-dam-tip="WiadomoĹ›ci Asana i Teams">' +
               '<i class="uil uil-comment-alt-dots" style="font-size:22px;color:#464255"></i>' +
               '<span class="geex-content__header__badge dam-badge--msg" id="damMsgBadge" hidden>0</span></a>' +
-            '<div class="geex-content__header__popup geex-content__header__popup--message" role="dialog" aria-label="Wiadomości"></div>' +
+            '<div class="geex-content__header__popup geex-content__header__popup--message" role="dialog" aria-label="WiadomoĹ›ci"></div>' +
           "</li>" +
           '<li class="geex-content__header__quickaction__item">' +
             '<a href="#" class="geex-content__header__quickaction__link" id="damNotifBellLink" aria-label="Powiadomienia" data-dam-tip="Powiadomienia operacyjne">' +
@@ -1416,9 +1416,9 @@
           "</li>" +
           adminSwitchHtml() +
           '<li class="geex-content__header__quickaction__item">' +
-            '<a href="#" class="geex-content__header__quickaction__link" aria-label="Profil" data-dam-tip="Menu użytkownika">' +
+            '<a href="#" class="geex-content__header__quickaction__link" aria-label="Profil" data-dam-tip="Menu uĹĽytkownika">' +
               '<img class="user-img" src="assets/img/avatar/avatar-male.svg" alt="" /></a>' +
-            '<div class="geex-content__header__popup geex-content__header__popup--author dam-user-menu" role="menu" aria-label="Menu użytkownika">' +
+            '<div class="geex-content__header__popup geex-content__header__popup--author dam-user-menu" role="menu" aria-label="Menu uĹĽytkownika">' +
               authorPopupInnerHtml() +
             "</div>" +
           "</li>" +
@@ -1441,7 +1441,7 @@
       wrap.innerHTML = adminSwitchHtml();
       existing = wrap.firstChild;
     }
-    // ZAWSZE tuż przed avatarem (po PL / języku, nie przed nim)
+    // ZAWSZE tuĹĽ przed avatarem (po PL / jÄ™zyku, nie przed nim)
     if (profileItem) {
       if (existing.nextElementSibling !== profileItem) {
         list.insertBefore(existing, profileItem);
@@ -1449,7 +1449,7 @@
     } else if (!existing.parentNode) {
       list.appendChild(existing);
     }
-    // Usuń lokalne przełączniki trybu admina ze stron (jedyny switch = header)
+    // UsuĹ„ lokalne przeĹ‚Ä…czniki trybu admina ze stron (jedyny switch = header)
     document.querySelectorAll("#damAdminToggle, #vizAdminToggle, label.dam-admin-toggle").forEach(function (el) {
       var kill = el.id === "vizAdminToggle" ? el.closest("label.dam-admin-toggle") || el : el;
       if (kill && kill.parentNode) kill.parentNode.removeChild(kill);
@@ -1464,7 +1464,7 @@
     var label = item && item.querySelector(".dam-admin-header-switch");
     if (!item || !input) return;
     var isSignin = window.location.pathname.indexOf("signin") !== -1;
-    /* Tylko zalogowany admin widzi przełącznik - program-instructions admin.header_switch_only */
+    /* Tylko zalogowany admin widzi przeĹ‚Ä…cznik - program-instructions admin.header_switch_only */
     var admin = !isSignin && hasValidSession() && isAdminRole();
     item.hidden = !admin;
     item.setAttribute("aria-hidden", admin ? "false" : "true");
@@ -1513,7 +1513,7 @@
       '<div class="geex-content__header__popup__header dam-user-menu__identity">' +
         '<div class="geex-content__header__popup__header__img dam-user-menu__avatar"><img src="assets/img/avatar/avatar-male.svg" alt="" /></div>' +
         '<div class="geex-content__header__popup__header__content dam-user-menu__meta">' +
-          '<h3 class="geex-content__header__popup__header__title dam-user-menu__name">Użytkownik</h3>' +
+          '<h3 class="geex-content__header__popup__header__title dam-user-menu__name">UĹĽytkownik</h3>' +
           '<span class="geex-content__header__popup__header__subtitle dam-user-menu__role"></span>' +
         "</div></div>" +
       /* Bez aria-label na nav/legal: dam-tooltips.js tipuje kazdy [aria-label] */
@@ -1523,19 +1523,59 @@
           '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link dam-user-menu__link" href="profile.html" role="menuitem"><i class="uil uil-user"></i><span>Profil</span></a></li>' +
           '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link dam-user-menu__link" href="settings.html" role="menuitem"><i class="uil uil-cog"></i><span>Ustawienia</span></a></li>' +
           '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link dam-user-menu__link" href="help.html" role="menuitem"><i class="uil uil-question-circle"></i><span>Pomoc</span></a></li>' +
+          '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link dam-user-menu__link dam-user-menu__update" href="#" id="damUserMenuUpdate" role="menuitem"><i class="uil uil-cloud-download"></i><span>SprawdĹş aktualizacjÄ™</span></a></li>' +
         "</ul>" +
       "</nav>" +
       '<div class="dam-user-menu__legal">' +
-        '<a class="dam-user-menu__legal-link" href="privacy.html">Prywatność</a>' +
-        '<span class="dam-user-menu__legal-sep" aria-hidden="true">·</span>' +
+        '<a class="dam-user-menu__legal-link" href="privacy.html">PrywatnoĹ›Ä‡</a>' +
+        '<span class="dam-user-menu__legal-sep" aria-hidden="true">Â·</span>' +
         '<a class="dam-user-menu__legal-link" href="terms.html">Regulamin</a>' +
-        '<span class="dam-user-menu__legal-sep" aria-hidden="true">·</span>' +
+        '<span class="dam-user-menu__legal-sep" aria-hidden="true">Â·</span>' +
         '<a class="dam-user-menu__legal-link" href="license.html">Licencja</a>' +
       "</div>" +
       '<div class="geex-content__header__popup__footer dam-user-menu__footer">' +
         '<a href="#" class="geex-content__header__popup__footer__link dam-user-menu__logout" role="menuitem"><i class="uil uil-signout"></i><span>Wyloguj</span></a>' +
       "</div>"
     );
+  }
+
+  function bindUserMenuUpdate() {
+    var btn = document.getElementById("damUserMenuUpdate");
+    if (!btn || btn._damUpdBound) return;
+    btn._damUpdBound = true;
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (window.DamAppUpdate && typeof window.DamAppUpdate.checkFromMenu === "function") {
+        window.DamAppUpdate.checkFromMenu();
+        return;
+      }
+      if (window.DamAppUpdate && typeof window.DamAppUpdate.checkRemote === "function") {
+        window.DamAppUpdate.checkRemote(true);
+      }
+    });
+  }
+
+  function ensureUpdateMenuItem(popup) {
+    if (!popup) return;
+    if (!popup.querySelector("#damUserMenuUpdate")) {
+      var help = popup.querySelector('a.dam-user-menu__link[href="help.html"]');
+      var li = help && help.closest("li");
+      if (li && li.parentNode) {
+        var item = document.createElement("li");
+        item.className = "geex-content__header__popup__item";
+        item.innerHTML =
+          '<a class="geex-content__header__popup__link dam-user-menu__link dam-user-menu__update" href="#" id="damUserMenuUpdate" role="menuitem"><i class="uil uil-cloud-download"></i><span>SprawdĹş aktualizacjÄ™</span></a>';
+        li.parentNode.insertBefore(item, li.nextSibling);
+      }
+    }
+    var upd = popup.querySelector("#damUserMenuUpdate");
+    if (upd) {
+      upd.style.minHeight = "44px";
+      var span = upd.querySelector("span");
+      if (span) span.textContent = "SprawdĹş aktualizacjÄ™";
+    }
+    bindUserMenuUpdate();
   }
 
   function ensureUserMenuMarkup() {
@@ -1547,11 +1587,12 @@
       if (nav) nav.removeAttribute("aria-label");
       var legal = popup.querySelector(".dam-user-menu__legal");
       if (legal) legal.removeAttribute("aria-label");
+      ensureUpdateMenuItem(popup);
       return;
     }
     popup.classList.add("dam-user-menu");
     popup.setAttribute("role", "menu");
-    popup.setAttribute("aria-label", "Menu użytkownika");
+    popup.setAttribute("aria-label", "Menu uĹĽytkownika");
     popup.innerHTML = authorPopupInnerHtml();
   }
 
@@ -1566,7 +1607,7 @@
     });
   }
 
-  /** Panel Dostosuj wygląd - gdy strona (np. tasks) nie ma markupu Geex. */
+  /** Panel Dostosuj wyglÄ…d - gdy strona (np. tasks) nie ma markupu Geex. */
   function ensureAppearanceCustomizer() {
     if (document.querySelector(".geex-customizer")) {
       mountCustomizerToBody();
@@ -1576,7 +1617,7 @@
     panel.className = "geex-customizer";
     panel.innerHTML =
       '<div class="geex-customizer__header">' +
-      '<h4 class="geex-customizer__title">Dostosuj wygląd</h4>' +
+      '<h4 class="geex-customizer__title">Dostosuj wyglÄ…d</h4>' +
       '<button type="button" class="geex-btn geex-btn__customizer-close" aria-label="Zamknij">' +
       '<i class="uil uil-times" aria-hidden="true"></i></button></div>' +
       '<div class="geex-customizer__body">' +
@@ -1682,7 +1723,7 @@
 
   /**
    * Globalne otwieranie popupow headera - class .is-open.
-   * Geex main.js uzywa jQuery slideToggle, ktore psuje panel wiadomości (stala wysokosc).
+   * Geex main.js uzywa jQuery slideToggle, ktore psuje panel wiadomoĹ›ci (stala wysokosc).
    */
   function bindDamHeaderPopups() {
     var root = document.querySelector(".geex-content__header__action");
@@ -1799,7 +1840,7 @@
     var teamsMessages = [
       { from: "Anna Polanska", time: "10 min temu", msg: "Prosze sprawdz projekt Tuba Prezentowa - oczekuje na akceptacje." },
       { from: "Marek Paluszewski", time: "1 godz. temu", msg: "Karta wprowadzenia dla DK TUBA gotowa do przejrzenia." },
-      { from: "Karolina Kubara", time: "2 godz. temu", msg: "Potrzebujemy grafiki do kategorii dla nowej linii produktów." },
+      { from: "Karolina Kubara", time: "2 godz. temu", msg: "Potrzebujemy grafiki do kategorii dla nowej linii produktĂłw." },
       { from: "Maciej Labus", time: "wczoraj", msg: "Specyfikacja techniczna zaktualizowana - prosze weryfikowac." }
     ];
 
@@ -1811,7 +1852,7 @@
     }
     var totalMsg = asanaTasks.length + teamsMessages.length + pendingMod;
     setHeaderBadge("damMsgBadge", totalMsg);
-    /* Odśwież licznik pending zgłoszeń (admin) w tle */
+    /* OdĹ›wieĹĽ licznik pending zgĹ‚oszeĹ„ (admin) w tle */
     try {
       var bridge =
         (window.DamPaths && window.DamPaths.bridgeUrl && window.DamPaths.bridgeUrl()) ||
@@ -1865,7 +1906,7 @@
             '<div class="dam-msg-section-row">' + section + "</div>" +
             "</div></a></li>";
         }).join("")
-      : '<li class="dam-msg-empty">Brak otwartych zadań Asana albo jeszcze sie laduja.</li>';
+      : '<li class="dam-msg-empty">Brak otwartych zadaĹ„ Asana albo jeszcze sie laduja.</li>';
 
     var teamsHTML = teamsMessages.map(function (m) {
       return '<li class="geex-content__header__popup__item">' +
@@ -1883,7 +1924,7 @@
 
     msgPopup.innerHTML =
       '<div class="dam-popup-head">' +
-        '<h3 class="dam-popup-head__title">Wiadomości</h3>' +
+        '<h3 class="dam-popup-head__title">WiadomoĹ›ci</h3>' +
         '<span class="dam-popup-head__count">' + escHtml(formatBadgeCount(totalMsg) || "0") + "</span>" +
       "</div>" +
       '<div class="dam-msg-tabs" role="tablist">' +
@@ -1895,7 +1936,7 @@
         '<div id="damMsgTeams" hidden><ul class="geex-content__header__popup__items">' + teamsHTML + "</ul></div>" +
       "</div>" +
       '<div class="dam-msg-footer-link"><a href="inbox.html">Wszystkie zadania</a></div>' +
-      '<div class="dam-msg-resize-handle" title="Przeciagnij, aby zmienic wysokosc" aria-label="Zmien wysokosc okna wiadomości"></div>';
+      '<div class="dam-msg-resize-handle" title="Przeciagnij, aby zmienic wysokosc" aria-label="Zmien wysokosc okna wiadomoĹ›ci"></div>';
 
     msgPopup.querySelectorAll(".dam-msg-tab").forEach(function (tab) {
       tab.addEventListener("click", function (e) {
@@ -2024,7 +2065,7 @@
       settings: tt("user.settings", "Ustawienia"),
       help: tt("user.help", "Pomoc"),
       logout: tt("user.logout", "Wyloguj"),
-      privacy: tt("user.privacy", "Prywatność"),
+      privacy: tt("user.privacy", "PrywatnoĹ›Ä‡"),
       terms: tt("user.terms", "Regulamin"),
       license: tt("user.license", "Licencja"),
     };
@@ -2064,7 +2105,7 @@
 
   function polishBalanceMenu() {
     var links = document.querySelectorAll(".geex-content__summary__balance__more__content a");
-    if (links[0]) links[0].textContent = tt("dash.cost_details", "Szczegóły kosztu");
+    if (links[0]) links[0].textContent = tt("dash.cost_details", "SzczegĂłĹ‚y kosztu");
     if (links[1]) {
       links[1].textContent = tt("dash.cost_calc", "Kalkulator");
       links[1].href = "costs.html";
@@ -2073,7 +2114,7 @@
 
   /** Translate leftover Geex English chrome (Customizer, Edit/Delete, Search...). */
   function polishGeexChrome() {
-    var customizerLabel = tt("customizer.title", "Dostosuj wygląd");
+    var customizerLabel = tt("customizer.title", "Dostosuj wyglÄ…d");
     document.querySelectorAll(".geex-btn__customizer > span").forEach(function (el) {
       var parts = String(customizerLabel || "").trim().split(/\s+/);
       if (parts.length >= 2) {
@@ -2105,21 +2146,21 @@
     });
 
     var editLbl = tt("common.edit", "Edytuj");
-    var delLbl = tt("common.delete", "Usuń");
+    var delLbl = tt("common.delete", "UsuĹ„");
     document.querySelectorAll("a, button, .geex-content__chat__header__filter__content__list__link").forEach(function (el) {
       var t = (el.textContent || "").trim();
       if (t === "Edit" || t === "Edytuj") el.textContent = editLbl;
-      else if (t === "Delete" || t === "Usuń") el.textContent = delLbl;
+      else if (t === "Delete" || t === "UsuĹ„") el.textContent = delLbl;
     });
 
     polishUserMenu();
     polishBalanceMenu();
 
     var langTitle = document.querySelector(".dam-lang-popup .geex-content__header__popup__title");
-    if (langTitle) langTitle.textContent = tt("header.lang_title", "Język");
+    if (langTitle) langTitle.textContent = tt("header.lang_title", "JÄ™zyk");
     var langTrigger = document.querySelector(".dam-lang-trigger");
     if (langTrigger) {
-      var langLbl = tt("header.lang_title", "Język");
+      var langLbl = tt("header.lang_title", "JÄ™zyk");
       langTrigger.setAttribute("title", langLbl);
       langTrigger.setAttribute("aria-label", langLbl);
     }
@@ -2193,6 +2234,7 @@
     applyUserAvatar();
     polishUserMenu();
     bindLogoutAndDeviceLinks();
+    ensureUpdateMenuItem(document.querySelector(".geex-content__header__popup--author"));
   }
 
   function bindLogoutAndDeviceLinks() {
@@ -2200,9 +2242,9 @@
       if (link._damDeviceBound) return;
       link._damDeviceBound = true;
       link.setAttribute("href", "profile.html#damDevicePathsRoot");
-      link.setAttribute("title", "Sesja urządzenia - ścieżki Marketing");
-      link.setAttribute("aria-label", "Sesja urządzenia");
-      link.setAttribute("data-dam-tip", "Sesja urządzenia: ścieżki Marketing na tym PC");
+      link.setAttribute("title", "Sesja urzÄ…dzenia - Ĺ›cieĹĽki Marketing");
+      link.setAttribute("aria-label", "Sesja urzÄ…dzenia");
+      link.setAttribute("data-dam-tip", "Sesja urzÄ…dzenia: Ĺ›cieĹĽki Marketing na tym PC");
       link.addEventListener("click", goDeviceSessionPaths);
     });
     document.querySelectorAll(
@@ -2262,8 +2304,8 @@
     var btn = document.getElementById("damSidebarCollapse");
     if (!btn) return;
     btn.setAttribute("aria-pressed", collapsed ? "true" : "false");
-    btn.setAttribute("title", collapsed ? "Rozwiń menu" : "Zwiń menu");
-    btn.setAttribute("aria-label", collapsed ? "Rozwiń menu" : "Zwiń menu");
+    btn.setAttribute("title", collapsed ? "RozwiĹ„ menu" : "ZwiĹ„ menu");
+    btn.setAttribute("aria-label", collapsed ? "RozwiĹ„ menu" : "ZwiĹ„ menu");
   }
 
   function prefersReducedMotion() {
@@ -2534,7 +2576,7 @@
       document.body.classList.remove("dam-sidebar-collapsed");
       void sidebar.offsetWidth;
 
-      /* FLIP: zachowaj wizualna pozycje btn, tween xâ†’0 (razem z kurczeniem raila = płynny tor). */
+      /* FLIP: zachowaj wizualna pozycje btn, tween xĂ˘â€ â€™0 (razem z kurczeniem raila = pĹ‚ynny tor). */
       if (collapseBtn && btnFirst) {
         var btnLast = collapseBtn.getBoundingClientRect();
         var btnDx = btnFirst.left - btnLast.left;
@@ -2566,7 +2608,7 @@
           footer.style.removeProperty("opacity");
           footer.style.removeProperty("visibility");
         }
-        /* Expand koniec: logo wraca do flex â†’ btn skacze w prawo; FLIP dogrywka. */
+        /* Expand koniec: logo wraca do flex Ă˘â€ â€™ btn skacze w prawo; FLIP dogrywka. */
         if (!want && collapseBtn && btnPre) {
           void sidebar.offsetWidth;
           var btnPost = collapseBtn.getBoundingClientRect();
@@ -2609,7 +2651,7 @@
         onComplete: finishMorph,
       });
 
-      /* Width + pad track = jedna oś; flex-start + pad vars (bez justify:center). */
+      /* Width + pad track = jedna oĹ›; flex-start + pad vars (bez justify:center). */
       _sidebarMorphTl.to(
         layoutProxy,
         {
@@ -2800,8 +2842,8 @@
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "dam-search-clear";
-      btn.setAttribute("aria-label", "Wyczyść wyszukiwanie");
-      btn.setAttribute("data-dam-tip", "Usuń tekst z pola wyszukiwania");
+      btn.setAttribute("aria-label", "WyczyĹ›Ä‡ wyszukiwanie");
+      btn.setAttribute("data-dam-tip", "UsuĹ„ tekst z pola wyszukiwania");
       btn.innerHTML = '<i class="uil uil-times" aria-hidden="true"></i>';
       btn.hidden = true;
       wrap.appendChild(btn);
@@ -2824,7 +2866,7 @@
 
   /**
    * Typografia PL na podtytulach stron (sieroty / wdowy).
-   * Shared z DamI18n.nbspPl gdy dostępne.
+   * Shared z DamI18n.nbspPl gdy dostÄ™pne.
    */
   function nbspPlLocal(s) {
     if (window.DamI18n && typeof window.DamI18n.nbspPl === "function") {
@@ -2835,7 +2877,7 @@
     out = out.replace(/(^|[\s\u00A0])([iaouwzIAOUWZ])[ \t]+(?=\S)/g, function (_m, before, letter) {
       return before + letter + "\u00A0";
     });
-    out = out.replace(/(\S+)[ \t]+(\S+)([.!?…]*)$/, function (_m, a, b, punct) {
+    out = out.replace(/(\S+)[ \t]+(\S+)([.!?â€¦]*)$/, function (_m, a, b, punct) {
       return a + "\u00A0" + b + (punct || "");
     });
     return out;
@@ -2854,7 +2896,7 @@
   }
 
   /**
-   * DamPageReady — lightweight ready marks only.
+   * DamPageReady â€” lightweight ready marks only.
    * HARD: NO full-page skeleton overlay. Sidebar/header NEVER skel.
    * Per-object skeletons live inside widget bodies (dashboard / grids).
    */
@@ -3004,7 +3046,7 @@
     } else {
       release();
     }
-    /* Extra: nawet gdy scheduleBootReveal nigdy nie wywołany (init hang) */
+    /* Extra: nawet gdy scheduleBootReveal nigdy nie wywoĹ‚any (init hang) */
     setTimeout(function () {
       if (!bootFinished) finishBoot(true);
     }, 3500);
@@ -3033,31 +3075,37 @@
     // Po wstrzyknieciu collapse - logo musi nadal byc (re-ensure)
     ensureSidebarLogo();
 
-    // Status ROOT plików (czerwona kropka gdy offline)
+    // Status ROOT plikĂłw (czerwona kropka gdy offline)
     if (!window.DamRootStatus) {
       var rs = document.createElement("script");
-      rs.src = "assets/js/dam-root-status.js?v=6.0.0";
+      rs.src = "assets/js/dam-root-status.js?v=6.0.4";
       document.head.appendChild(rs);
     } else if (typeof window.DamRootStatus.start === "function") {
       window.DamRootStatus.start();
     }
     if (!window.DamCacheSync && !document.querySelector("script[data-dam-cache-sync]")) {
       var cs = document.createElement("script");
-      cs.src = "assets/js/dam-cache-sync.js?v=6.0.0";
+      cs.src = "assets/js/dam-cache-sync.js?v=6.0.4";
       cs.setAttribute("data-dam-cache-sync", "1");
       document.head.appendChild(cs);
+    }
+    if (!window.DamIndexPoller && !document.querySelector("script[src*='dam-index-poller']")) {
+      var ip = document.createElement("script");
+      ip.src = "assets/js/dam-index-poller.js?v=6.0.4";
+      ip.setAttribute("data-dam-index-poller", "1");
+      document.head.appendChild(ip);
     }
 
     // Status bazy danych (obok Pliki online)
     if (!window.DamDbStatus) {
       var dbs = document.createElement("script");
-      dbs.src = "assets/js/dam-db-status.js?v=6.0.0";
+      dbs.src = "assets/js/dam-db-status.js?v=6.0.4";
       document.head.appendChild(dbs);
     } else if (typeof window.DamDbStatus.start === "function") {
       window.DamDbStatus.start();
     }
 
-    // Telemetria UI (kliknięcia, błędy, wolne fetch) -> desktop/logs/telemetry-*.jsonl
+    // Telemetria UI (klikniÄ™cia, bĹ‚Ä™dy, wolne fetch) -> desktop/logs/telemetry-*.jsonl
     if (!window.DamTelemetry) {
       var tel = document.createElement("script");
       tel.src = "assets/js/dam-telemetry.js?v=5.0.196";
@@ -3069,11 +3117,11 @@
     // Wersja + aktualizacje (takze przed logowaniem na signin)
     if (!window.DamAppUpdate) {
       var upd = document.createElement("script");
-      upd.src = "assets/js/dam-app-update.js?v=5.0.196";
+      upd.src = "assets/js/dam-app-update.js?v=6.0.4";
       document.head.appendChild(upd);
     }
 
-    // F1 pomoc / F5 odśwież
+    // F1 pomoc / F5 odĹ›wieĹĽ
     if (!window.DamShortcuts) {
       var sc = document.createElement("script");
       sc.src = "assets/js/dam-shortcuts.js?v=5.0.196";
@@ -3113,8 +3161,8 @@
       }
     });
 
-    // Re-apply after i18n / Geex main.js (odpinamy slideToggle jeśli wrocil)
-    // Po boot reveal - odśwież chrome, ale NIE flashuj wczesniej
+    // Re-apply after i18n / Geex main.js (odpinamy slideToggle jeĹ›li wrocil)
+    // Po boot reveal - odĹ›wieĹĽ chrome, ale NIE flashuj wczesniej
     function refreshChrome() {
       ensureCustomizerPeek();
       ensureHeaderChrome();
@@ -3135,7 +3183,7 @@
     }
     setTimeout(refreshChrome, 80);
     setTimeout(refreshChrome, 400);
-    // Po rehydrate sesji rola moze dojsc pozniej - odśwież widocznosc switcha
+    // Po rehydrate sesji rola moze dojsc pozniej - odĹ›wieĹĽ widocznosc switcha
     setTimeout(ensureAdminModeSwitch, 900);
     setTimeout(ensureAdminModeSwitch, 2000);
   }

@@ -1,4 +1,4 @@
-﻿DAM 6.0.0. Uruchom DAM-Setup.exe i zaakceptuj umowe.
+﻿DAM 6.0.2. Uruchom DAM-Setup.exe i zaakceptuj umowe.
 
 Pierwsze uruchomienie:
 - instalator wgrywa program, skrot i dane startowe,
@@ -17,4 +17,4 @@ Cache miniatur NIE jest w Setup. Po zalogowaniu DAM sciaga go z Synology.
 Po instalacji: skrot "DAM - Dobra Kaloria" -> logowanie.
 Nic nie kopiujesz i nic nie konfigurujesz.
 
-Aktualizacje: Ustawienia -> Aktualizacje aplikacji.
+Aktualizacje: menu profilu -> Sprawdz aktualizacje.

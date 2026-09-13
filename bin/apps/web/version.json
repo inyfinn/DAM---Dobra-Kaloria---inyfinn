@@ -1,9 +1,9 @@
 {
-  "version": "6.0.0",
+  "version": "6.0.4",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
-  "released_at": "2026-09-12",
-  "note": "6.0.0 = 206 installer/cache/index + 207 Elementy/DB + merge on X (Programs\\DAM pg-config, D:/ to X: resolve, karty bazy).",
+  "released_at": "2026-09-13",
+  "note": "6.0.4: indeks live+raport nowych; Sprawdz aktualizacje pod Pomoc; dark tokeny (nie invert) + HSL + eksport JSON. Hubert/Autor i TUBA 6300793 jesli w tym drzewie.",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
     "asset_name": "DAM-Setup.exe",

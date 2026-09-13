@@ -1,7 +1,8 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="pl" dir="ltr">
 <head>
   <script src="./assets/js/dam-panic-reload.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-theme.js?v=6.0.4"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -14,11 +15,11 @@
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=5.0.196">
   <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=5.0.196">
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=5.0.198">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=6.0.0">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=6.0.4">
   <link rel="stylesheet" href="./assets/css/dam-auth.css?v=5.0.196">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <script>
-    if (localStorage.theme) document.documentElement.setAttribute("data-theme", localStorage.theme);
+    if (localStorage.theme) { document.documentElement.setAttribute("data-theme", localStorage.theme); document.documentElement.classList.toggle("dark", localStorage.theme==="dark"); }
     (function () {
       if (localStorage.getItem("dam_token") && localStorage.getItem("dam_device_id")) {
         location.replace("dashboard.html");
@@ -222,7 +223,8 @@
   <script src="./assets/js/main.js?v=5.0.196"></script>
   <script src="./assets/js/dam-runtime.js?v=5.0.196"></script>
   <script src="./assets/js/dam-api.js?v=6.0.0"></script>
-  <script src="./assets/js/dam-cache-sync.js?v=6.0.0"></script>
+  <script src="./assets/js/dam-cache-sync.js?v=6.0.4"></script>
+  <script src="./assets/js/dam-index-poller.js?v=6.0.4"></script>
   <script>
     (function () {
       var mode = "login";

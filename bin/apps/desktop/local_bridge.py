@@ -55,7 +55,8 @@ Endpoints:
                     ?fields=explorer = produkty bez files_by_role/wizki/viz_latest (first paint)
   GET  /file-index/product?id=  pelny produkt (pliki rewizji) do openProduct
   GET  /file-index/viz-latest?index=&revision_path=&product_id=  pojedynczy wiersz viz_latest
-  GET  /index/status  mtime file-index + postgres + ETA/cancel/snooze
+  GET  /index/status  mtime file-index + postgres + ETA/cancel/snooze + current_item
+  GET  /index/report  last_run_new (added/changed) after indeksowanie
   POST /index/rebuild  przebudowa indeksu + miniatur (async)
   GET/POST /index/cancel  przerwij biezacy rebuild (index-control.json)
   GET/POST /index/snooze  odroc hourly+watch do konca dnia
@@ -1557,7 +1558,15 @@ def index_status() -> dict:
             "eta_sec": remaining,
             "remaining_sec": remaining,
             "pct": progress.get("pct"),
-            "message": "Indeksowanie",
+            "message": progress.get("current_item") or progress.get("message") or "Indeksowanie",
+            "current_item": progress.get("current_item") or watcher.get("current_item") or "",
+            "current_name": progress.get("current_name") or watcher.get("current_name") or "",
+            "current_path": progress.get("current_path") or watcher.get("current_path") or "",
+            "current_label": progress.get("current_label") or watcher.get("current_label") or "",
+            "products_done": progress.get("products_done") if progress.get("products_done") is not None else watcher.get("products_done"),
+            "products_total": progress.get("products_total") if progress.get("products_total") is not None else watcher.get("products_total"),
+            "files_done": progress.get("files_done"),
+            "files_total": progress.get("files_total"),
         }
     snoozed = bool(watcher.get("snoozed"))
     return {
@@ -1585,6 +1594,12 @@ def index_status() -> dict:
         "control_path": watcher.get("control_path") or str(DESKTOP_DATA_DIR / "index-control.json"),
         "hourly_sec": watcher.get("hourly_sec"),
         "hourly_pending": bool(watcher.get("hourly_pending")),
+        "current_item": progress.get("current_item") or watcher.get("current_item") or "",
+        "current_name": progress.get("current_name") or watcher.get("current_name") or "",
+        "current_path": progress.get("current_path") or watcher.get("current_path") or "",
+        "current_label": progress.get("current_label") or watcher.get("current_label") or "",
+        "new_items": watcher.get("new_items") or [],
+        "last_report": watcher.get("last_report") or {},
     }
 
 
@@ -1612,6 +1627,12 @@ def _run_index_rebuild() -> None:
         _index_state["last_error"] = ""
         _index_state["stage"] = "starting"
         _index_state["kind"] = "manual"
+    try:
+        import index_supervisor
+
+        index_supervisor.begin_run_snapshot()
+    except Exception:
+        pass
     lock_handle = None
     try:
         from rebuild_lock import acquire_lock
@@ -1642,7 +1663,7 @@ def _run_index_rebuild() -> None:
             log_f.write(f"\n==== rebuild start {utc_now()} pid={os.getpid()} ====\n")
             log_f.flush()
             proc = subprocess.Popen(
-                [sys.executable, str(BUILD_INDEX)],
+                [sys.executable, "-u", str(BUILD_INDEX)],
                 creationflags=_no_win,
                 stdin=subprocess.DEVNULL,
                 stdout=log_f,
@@ -1657,7 +1678,9 @@ def _run_index_rebuild() -> None:
             try:
                 import index_supervisor
 
-                rc = index_supervisor.wait_rebuild_proc(proc, lock_handle=lock_handle)
+                rc = index_supervisor.wait_rebuild_proc(
+                    proc, lock_handle=lock_handle, log_file=INDEX_REBUILD_LOG_FILE
+                )
             except Exception:
                 rc = int(proc.wait())
         with _index_lock:
@@ -1670,6 +1693,12 @@ def _run_index_rebuild() -> None:
             elif rc != 0:
                 _index_state["last_error"] = f"build_rc_{rc}"
         _append_rebuild_log(f"finished rc={rc}")
+        try:
+            import index_supervisor
+
+            index_supervisor.complete_run_report(ok=(rc == 0), cancelled=(rc == 130), rc=rc)
+        except Exception as report_exc:  # noqa: BLE001
+            _append_rebuild_log(f"index_report {report_exc}")
         try:
             import index_supervisor
 
@@ -7392,6 +7421,16 @@ class Handler(BaseHTTPRequestHandler):
                 return
         if parsed.path == "/index/status":
             self._json(200, index_status())
+            return
+        if parsed.path == "/index/report":
+            try:
+                import index_supervisor
+
+                report = index_supervisor.read_report()
+            except Exception as exc:  # noqa: BLE001
+                self._json(200, {"ok": False, "error": str(exc), "items": []})
+                return
+            self._json(200, {"ok": True, **report})
             return
         if parsed.path == "/index/cancel":
             self._json(200, index_cancel())

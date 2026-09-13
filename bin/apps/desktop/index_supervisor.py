@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 import threading
@@ -32,7 +33,19 @@ WATCHER_STATUS = DATA_DIR / "index-watcher-status.json"
 WATCHER_LOG = DATA_DIR / "index-watcher.log"
 PRODUCT_REBUILD_LOCK = DATA_DIR / "index-rebuild.lock.json"
 CONTROL_FILE = DATA_DIR / "index-control.json"
+INDEX_FILE = WEB_ROOT / "data" / "file-index.json"
+WEB_INDEX = INDEX_FILE
+LIVE_FILE = DATA_DIR / "index-live.json"
+SNAPSHOT_FILE = DATA_DIR / "index-run-snapshot.json"
+REPORT_FILE = DATA_DIR / "index-last-report.json"
 MAX_LOG_BYTES = 2_000_000
+MAX_NEW_ITEMS = 300
+REPORT_ITEM_CAP = 150
+_LIVE_KEYS = ("current_path", "current_label", "products_done", "products_total")
+_CAT_RE = re.compile(r"\[([A-Za-z]{1,8})\]\s+(.+?):\s+products so far\s+(\d+)")
+_ARCH_RE = re.compile(r"\[archive\][^\n:]*:\s+(.+)$")
+_SKIP_ROOT_RE = re.compile(r"skip missing root \[([A-Za-z]{1,8})\]:\s+(.+)$")
+_SKIP_CAT_RE = re.compile(r"skip cat\s+(.+?):")
 HOURLY_SEC_DEFAULT = float(os.environ.get("DAM_INDEX_HOURLY_SEC", "3600") or "3600")
 FIRST_DELAY_SEC_DEFAULT = float(os.environ.get("DAM_INDEX_FIRST_DELAY_SEC", "20") or "20")
 
@@ -62,7 +75,18 @@ def write_watcher_status(payload: dict[str, Any], *, preserve_last: bool = True)
     body = dict(payload)
     if preserve_last:
         prev = read_watcher_status()
-        for key in ("last_ok", "last_rc", "last_error", "last_started", "last_finished", "last_duration_sec"):
+        for key in (
+            "last_ok",
+            "last_rc",
+            "last_error",
+            "last_started",
+            "last_finished",
+            "last_duration_sec",
+            "current_path",
+            "current_label",
+            "products_done",
+            "products_total",
+        ):
             if key not in body and key in prev and prev.get(key) is not None:
                 body[key] = prev.get(key)
     # Explicit run state: null last_ok = no successful rebuild yet (not a green success).
@@ -136,6 +160,323 @@ def write_control(payload: dict[str, Any]) -> None:
     body = dict(payload)
     body["updated_at"] = _utc()
     _write_json_atomic(CONTROL_FILE, body)
+
+
+def read_live() -> dict[str, Any]:
+    if not LIVE_FILE.is_file():
+        return {}
+    try:
+        data = json.loads(LIVE_FILE.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def write_live(payload: dict[str, Any]) -> None:
+    body = dict(payload)
+    body["updated_at"] = _utc()
+    _write_json_atomic(LIVE_FILE, body)
+
+
+def read_run_snapshot() -> dict[str, Any]:
+    if not SNAPSHOT_FILE.is_file():
+        return {}
+    try:
+        data = json.loads(SNAPSHOT_FILE.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def parse_builder_live_line(line: str) -> dict[str, Any] | None:
+    raw = str(line or "").strip()
+    if not raw:
+        return None
+    m = _CAT_RE.search(raw)
+    if m:
+        brand, cat, n = m.group(1), m.group(2).strip(), int(m.group(3))
+        return {
+            "current_brand": brand,
+            "current_cat": cat,
+            "current_label": f"{brand} · {cat}",
+            "products_done": n,
+        }
+    m = _ARCH_RE.search(raw)
+    if m:
+        name = m.group(1).strip()
+        if name:
+            return {"current_label": name, "current_path": name}
+    m = _SKIP_ROOT_RE.search(raw)
+    if m:
+        brand, path = m.group(1), m.group(2).strip()
+        return {
+            "current_brand": brand,
+            "current_label": f"{brand} · brak rootu",
+            "current_path": path,
+        }
+    m = _SKIP_CAT_RE.search(raw)
+    if m:
+        cat = m.group(1).strip()
+        return {"current_label": cat, "current_cat": cat}
+    return None
+
+
+def resolve_live_path(live: dict[str, Any], snap: dict[str, Any] | None = None) -> str:
+    existing = str(live.get("current_path") or "").strip()
+    if existing and (":" in existing or existing.startswith("/") or existing.startswith("\\\\")):
+        return existing
+    brand = str(live.get("current_brand") or "").strip()
+    cat = str(live.get("current_cat") or "").strip()
+    roots = (snap or {}).get("roots") if isinstance((snap or {}).get("roots"), list) else []
+    if not roots:
+        idx = _load_web_index()
+        roots = []
+        for r in idx.get("roots") or []:
+            if isinstance(r, dict) and r.get("path"):
+                roots.append({"brand": r.get("brand") or "", "path": r.get("path")})
+    if brand and cat:
+        for r in roots:
+            if str(r.get("brand") or "") == brand and r.get("path"):
+                return str(Path(str(r["path"])) / cat)
+    return existing or cat
+
+
+def merge_live_into_watcher_status(live: dict[str, Any], *, snap: dict[str, Any] | None = None) -> None:
+    if not live:
+        return
+    snap = snap or read_run_snapshot()
+    path = resolve_live_path(live, snap)
+    label = str(live.get("current_label") or "").strip()
+    body = dict(read_watcher_status())
+    if path:
+        body["current_path"] = path
+    if label:
+        body["current_label"] = label
+        body["current_item"] = label
+        body["current_name"] = str(live.get("current_cat") or label)
+    if live.get("products_done") is not None:
+        body["products_done"] = live.get("products_done")
+    if live.get("products_total") is not None:
+        body["products_total"] = live.get("products_total")
+    write_watcher_status(body)
+    lv = dict(read_live())
+    lv["running"] = True
+    if path:
+        lv["current_path"] = path
+        lv["current_item"] = path
+    if label:
+        lv["current_label"] = label
+        lv["current_name"] = str(live.get("current_cat") or label)
+        if not lv.get("current_item"):
+            lv["current_item"] = label
+    if live.get("products_done") is not None:
+        lv["products_done"] = live.get("products_done")
+    if live.get("products_total") is not None:
+        lv["products_total"] = live.get("products_total")
+    elif lv.get("products_total") is None and snap:
+        lv["products_total"] = snap.get("product_count")
+    write_live(lv)
+
+
+def _tail_new_lines(path: Path, pos: int) -> tuple[int, list[str]]:
+    if not path.is_file():
+        return pos, []
+    try:
+        size = path.stat().st_size
+    except OSError:
+        return pos, []
+    if size < pos:
+        pos = 0
+    try:
+        with path.open("r", encoding="utf-8", errors="replace") as fh:
+            fh.seek(pos)
+            chunk = fh.read()
+            new_pos = fh.tell()
+    except OSError:
+        return pos, []
+    if not chunk:
+        return new_pos, []
+    return new_pos, chunk.splitlines()
+
+
+def mark_run_start() -> dict[str, Any]:
+    return begin_run_snapshot()
+
+
+def finalize_run_report(*, cancelled: bool, rc: int) -> dict[str, Any]:
+    return complete_run_report(ok=(int(rc) == 0), cancelled=bool(cancelled), rc=int(rc))
+
+
+def read_last_report() -> dict[str, Any]:
+    return read_report()
+
+
+def read_report() -> dict[str, Any]:
+    if not REPORT_FILE.is_file():
+        ctrl = read_control()
+        items = ctrl.get("last_run_new")
+        if isinstance(items, list):
+            return {
+                "ok": True,
+                "items": items,
+                "finished_at": str(ctrl.get("last_run_at") or ""),
+                "from_control": True,
+            }
+        return {"ok": True, "items": [], "finished_at": ""}
+    try:
+        data = json.loads(REPORT_FILE.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {"ok": False, "items": []}
+    except (OSError, json.JSONDecodeError):
+        return {"ok": False, "items": []}
+
+
+def _index_snapshot_map(idx: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    out: dict[str, dict[str, Any]] = {}
+    for prod in idx.get("products") or []:
+        if not isinstance(prod, dict):
+            continue
+        pid = str(prod.get("id") or prod.get("path") or "")
+        if not pid:
+            continue
+        indexes = prod.get("indexes") or []
+        files_n = 0
+        for rev in prod.get("revisions") or []:
+            if not isinstance(rev, dict):
+                continue
+            files_n += int(rev.get("wizki_count") or 0)
+            for lst in (rev.get("files_by_role") or {}).values():
+                files_n += len(lst or [])
+        out[pid] = {
+            "id": pid,
+            "name": prod.get("display_name") or prod.get("name") or pid,
+            "path": prod.get("path") or "",
+            "category": prod.get("category") or "",
+            "revision_count": int(prod.get("revision_count") or len(prod.get("revisions") or [])),
+            "indexes": [str(x) for x in indexes],
+            "files": files_n,
+        }
+    return out
+
+
+def _load_web_index() -> dict[str, Any]:
+    if not WEB_INDEX.is_file():
+        return {}
+    try:
+        data = json.loads(WEB_INDEX.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def begin_run_snapshot() -> dict[str, Any]:
+    idx = _load_web_index()
+    prev = _index_snapshot_map(idx)
+    nprod = len(prev)
+    nfiles = sum(int(v.get("files") or 0) for v in prev.values())
+    snap = {
+        "started_at": _utc(),
+        "products": prev,
+        "product_count": nprod,
+        "file_count": nfiles,
+    }
+    try:
+        if WEB_INDEX.is_file():
+            snap["mtime"] = WEB_INDEX.stat().st_mtime
+    except OSError:
+        snap["mtime"] = None
+    roots: list[dict[str, Any]] = []
+    for r in idx.get("roots") or []:
+        if isinstance(r, dict) and r.get("path"):
+            roots.append({"brand": r.get("brand") or "", "path": r.get("path")})
+    snap["roots"] = roots
+    _write_json_atomic(SNAPSHOT_FILE, snap)
+    write_live(
+        {
+            "running": True,
+            "current_item": "",
+            "current_name": "",
+            "current_path": "",
+            "current_label": "",
+            "products_done": 0,
+            "products_total": nprod,
+        }
+    )
+    ctrl = read_control()
+    ctrl["run_started_at"] = snap["started_at"]
+    write_control(ctrl)
+    return snap
+
+
+def complete_run_report(*, ok: bool = True, cancelled: bool = False, rc: int | None = None) -> dict[str, Any]:
+    prev_body: dict[str, Any] = {}
+    try:
+        if SNAPSHOT_FILE.is_file():
+            loaded = json.loads(SNAPSHOT_FILE.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                prev_body = loaded
+    except (OSError, json.JSONDecodeError):
+        prev_body = {}
+    old_map = prev_body.get("products") if isinstance(prev_body.get("products"), dict) else {}
+    idx = _load_web_index() if ok else {}
+    now_map = _index_snapshot_map(idx) if ok else {}
+    items: list[dict[str, Any]] = []
+    for pid, cur in now_map.items():
+        old = old_map.get(pid) if isinstance(old_map.get(pid), dict) else None
+        kind = ""
+        if old is None:
+            kind = "added"
+        elif (
+            int(old.get("revision_count") or 0) != int(cur.get("revision_count") or 0)
+            or list(old.get("indexes") or []) != list(cur.get("indexes") or [])
+            or int(old.get("files") or 0) != int(cur.get("files") or 0)
+        ):
+            kind = "changed"
+        if not kind:
+            continue
+        items.append(
+            {
+                "id": pid,
+                "kind": kind,
+                "name": cur.get("name") or pid,
+                "label": cur.get("name") or pid,
+                "path": cur.get("path") or "",
+                "category": cur.get("category") or "",
+            }
+        )
+        if len(items) >= MAX_NEW_ITEMS:
+            break
+    report = {
+        "ok": bool(ok),
+        "cancelled": bool(cancelled),
+        "rc": rc,
+        "finished_at": _utc(),
+        "generated_at": _utc(),
+        "started_at": prev_body.get("started_at") or "",
+        "items": items,
+        "added": sum(1 for it in items if it.get("kind") == "added"),
+        "changed": sum(1 for it in items if it.get("kind") == "changed"),
+        "empty": len(items) == 0,
+        "product_count_before": int(prev_body.get("product_count") or len(old_map)),
+        "product_count_after": len(now_map),
+    }
+    _write_json_atomic(REPORT_FILE, report)
+    live = read_live()
+    live["running"] = False
+    live["current_item"] = ""
+    live["current_label"] = ""
+    live["current_path"] = ""
+    live["current_name"] = ""
+    live.pop("products_done", None)
+    live.pop("products_total", None)
+    write_live(live)
+    ctrl = read_control()
+    ctrl["last_run_at"] = report["finished_at"]
+    ctrl["last_run_new"] = items
+    ctrl["last_run_new_count"] = len(items)
+    ctrl["last_run_added"] = report["added"]
+    ctrl["last_run_changed"] = report["changed"]
+    write_control(ctrl)
+    return report
 
 
 def _parse_iso(ts: str):
@@ -252,15 +593,107 @@ def terminate_rebuild_child() -> dict[str, Any]:
     return {"child_pid": child, "killed": killed}
 
 
+def read_run_snapshot() -> dict[str, Any]:
+    try:
+        if SNAPSHOT_FILE.is_file():
+            data = json.loads(SNAPSHOT_FILE.read_text(encoding="utf-8"))
+            return data if isinstance(data, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        pass
+    return {}
+
+
+def _tail_new_lines(path: Path, pos: int) -> tuple[int, list[str]]:
+    try:
+        size = path.stat().st_size if path.is_file() else 0
+        if size < pos:
+            pos = 0
+        if size <= pos:
+            return pos, []
+        with path.open("r", encoding="utf-8", errors="replace") as fh:
+            fh.seek(pos)
+            chunk = fh.read()
+            new_pos = fh.tell()
+        lines = [ln.strip() for ln in chunk.splitlines() if ln.strip()]
+        return new_pos, lines
+    except OSError:
+        return pos, []
+
+
+def parse_builder_live_line(line: str) -> dict[str, Any] | None:
+    raw = str(line or "").strip()
+    if not raw:
+        return None
+    if raw.startswith("[live] "):
+        parts = raw[7:].split("|")
+        product = (parts[0] if parts else "").strip()
+        slot = (parts[1] if len(parts) > 1 else "").strip()
+        fname = (parts[2] if len(parts) > 2 else "").strip()
+        path = (parts[3] if len(parts) > 3 else "").strip()
+        bits = [bit for bit in (product, slot, fname) if bit]
+        label = " / ".join(bits)
+        return {
+            "current_name": fname or slot or product,
+            "current_path": path,
+            "current_label": label,
+            "current_item": label,
+        }
+    match = _CAT_RE.search(raw)
+    if match:
+        cat = match.group(2).strip()
+        done = int(match.group(3))
+        return {
+            "current_name": cat,
+            "current_label": cat,
+            "current_item": cat,
+            "products_done": done,
+        }
+    return None
+
+
+def merge_live_into_watcher_status(live: dict[str, Any], *, snap: dict[str, Any] | None = None) -> None:
+    if not isinstance(live, dict) or not live:
+        return
+    prev = read_live()
+    body = dict(prev)
+    for key, val in live.items():
+        if val not in (None, ""):
+            body[key] = val
+    body["running"] = True
+    if snap:
+        if not body.get("products_total"):
+            body["products_total"] = snap.get("product_count")
+        if not body.get("files_total"):
+            body["files_total"] = snap.get("file_count")
+    write_live(body)
+    status = read_watcher_status()
+    label = str(body.get("current_item") or body.get("current_label") or "")
+    status["current_name"] = body.get("current_name") or ""
+    status["current_path"] = body.get("current_path") or ""
+    status["current_item"] = label
+    status["progress_message"] = label or status.get("progress_message") or "Indeksowanie"
+    write_watcher_status(status)
+
+
 def wait_rebuild_proc(
     proc: subprocess.Popen,
     *,
     lock_handle=None,
     on_tick=None,
     poll_sec: float = 0.4,
+    log_file: Path | None = None,
 ) -> int:
     """Wait for build-file-index; stop on cancel flag or lock.cancel_requested."""
     from rebuild_lock import lock_cancel_requested
+
+    log_path = Path(log_file) if log_file else WATCHER_LOG
+    pos = 0
+    try:
+        if log_path.is_file():
+            pos = log_path.stat().st_size
+    except OSError:
+        pos = 0
+    snap = read_run_snapshot()
 
     while True:
         rc = proc.poll()
@@ -283,6 +716,17 @@ def wait_rebuild_proc(
                 on_tick()
             except Exception:
                 pass
+        try:
+            pos, lines = _tail_new_lines(log_path, pos)
+            live = None
+            for line in lines:
+                parsed = parse_builder_live_line(line)
+                if parsed:
+                    live = parsed
+            if live:
+                merge_live_into_watcher_status(live, snap=snap)
+        except Exception:
+            pass
         if lock_handle is not None:
             try:
                 lock_handle.update(heartbeat_at=_utc())
@@ -335,6 +779,14 @@ def _progress_from_watcher(w: dict[str, Any], rebuild: dict[str, Any]) -> dict[s
             pct = max(1, min(99, int(100.0 * float(elapsed or 0) / float(last_dur))))
         except (TypeError, ValueError, ZeroDivisionError):
             pct = None
+    live = read_live()
+    current_name = str(live.get("current_name") or w.get("current_name") or "")
+    current_path = str(live.get("current_path") or w.get("current_path") or "")
+    current_label = str(
+        live.get("current_label") or live.get("current_item") or w.get("current_item") or ""
+    )
+    if not current_label:
+        current_label = current_name or current_path
     return {
         "running": running,
         "kind": kind or ("hourly" if "hourly" in str(w.get("stage") or "") else ""),
@@ -345,7 +797,15 @@ def _progress_from_watcher(w: dict[str, Any], rebuild: dict[str, Any]) -> dict[s
         "remaining_sec": remaining if remaining is not None else eta,
         "pct": pct,
         "last_duration_sec": last_dur,
-        "message": w.get("progress_message") or "",
+        "message": current_label or w.get("progress_message") or "",
+        "current_item": current_label,
+        "current_name": current_name,
+        "current_path": current_path,
+        "current_label": current_label,
+        "products_done": live.get("products_done"),
+        "products_total": live.get("products_total"),
+        "files_done": live.get("files_done"),
+        "files_total": live.get("files_total"),
     }
 
 
@@ -587,6 +1047,10 @@ def public_status() -> dict[str, Any]:
     awaiting = last_ok is None
     control = public_control()
     progress = _progress_from_watcher(w, rebuild)
+    report = read_report()
+    items = report.get("items") if isinstance(report.get("items"), list) else []
+    if not items and isinstance(control.get("last_run_new"), list):
+        items = list(control.get("last_run_new") or [])
     # watcher_ok = process alive; index_run_ok = last rebuild succeeded (no false green).
     return {
         "ok": True,
@@ -610,5 +1074,13 @@ def public_status() -> dict[str, Any]:
         "snooze_until": control.get("snooze_until") or "",
         "cancelable": bool(progress.get("running") or rebuild.get("held")),
         "hourly_sec": HOURLY_SEC_DEFAULT,
-        "hourly_pending": bool(w.get("hourly_pending")) and not snoozed,
+        "hourly_pending": bool(w.get("hourly_pending")) and not bool(control.get("snoozed")),
+        "current_path": progress.get("current_path") or w.get("current_path") or "",
+        "current_label": progress.get("current_label") or w.get("current_label") or "",
+        "current_name": progress.get("current_name") or w.get("current_name") or "",
+        "current_item": progress.get("current_item") or w.get("current_item") or "",
+        "products_done": progress.get("products_done"),
+        "products_total": progress.get("products_total"),
+        "last_report": report if isinstance(report, dict) else {"ok": True, "items": items},
+        "new_items": items,
     }

@@ -1,6 +1,6 @@
 ﻿; DAM Windows installer - pelny kreator (licencja, sciezka, aktualizacja)
 #ifndef MyAppVersion
-  #define MyAppVersion "6.0.0"
+  #define MyAppVersion "6.0.4"
 #endif
 #ifndef StageDir
   #define StageDir "..\dist\staging\DAM-install"
@@ -56,6 +56,12 @@ VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription={#MyAppName} Installer
 VersionInfoProductName={#MyAppName}
 VersionInfoProductVersion={#MyAppVersion}
+; Authenticode: ISCC /Sdamsigntool="signtool ..." gdy jest cert (build-installer.ps1).
+; Bez tego Windows pokazuje nieznanego wydawce — to nie podpis sterownika.
+#ifdef DamSignTool
+SignTool=damsigntool
+SignedUninstaller=yes
+#endif
 
 [Languages]
 Name: "polish"; MessagesFile: "compiler:Languages\Polish.isl"

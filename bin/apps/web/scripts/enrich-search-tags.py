@@ -48,7 +48,7 @@ PACK = {
 }
 
 # Tagi Autor w Eksploratorze — tylko zespol DK + agencja Highlite (nie imiona z wizytowek/Asany).
-AUTHOR_ALLOWLIST = ["Krzysztof", "Sylwia", "Szymon", "Highlite"]
+AUTHOR_ALLOWLIST = ["Krzysztof", "Sylwia", "Szymon", "Highlite", "Hubert"]
 
 
 def norm(s: str) -> str:
