@@ -1,3 +1,28 @@
+## 2026-09-13 - v6.0.0: status po 0526d70 (worker, bez commit/push)
+
+**Komenda/Akcja:** User: dokoncz plan, wersja 6.0.0, commit+push+build. Worker: FACTS only. Bez git commit/push. Bez OOTB PASS. Parent sedzi.
+
+**Log/Status:**
+- HEAD = origin/main = `0526d70470fed1da461396a62c16f9a8149c2ad6` (left-right origin...HEAD = 0 0)
+- version.json / dam-version.js `DAM_APP_VERSION` / runtime_config.py `APP_VERSION` / DAM-Setup.iss `MyAppVersion` = 6.0.0 (brak dryfu)
+- local_bridge.py 9034 linie (git show HEAD i working tree; worker podal 9747, parent zmierzyl 9034). Nie kopiowano mostu z D.
+- DAM-Setup.exe GIT_ROOT: 75542098 B, mtime 2026-09-12 15:49:11, FileVersion=6.0.0 ProductVersion=6.0.0, `.gitignore`. Pliki produktu w HEAD starsze niz Setup; rebuild NIE odpalany.
+- build-installer.ps1 staging: named trees only; PAMIEC-PODRECZNA nie jest zrodlem kopi.
+- PNG (tracked w 0526d70): qa-6.0.0-explorer-elementy.png 98907 B; qa-6.0.0-db-panel.png 167923 B; qa-6.0.0-settings-db.png 186859 B
+- smoke :8765/explorer.html HTTP 200 t=0.009s; :8766/health HTTP 200 t=0.010s. Ta maszyna = runtime, nie czysty PC.
+- W 0526d70 juz sa: build-installer.ps1, parent-agent-gate.ps1, dam-cache-sync.js, DAM-Setup.iss, qa PNG, ten process.md (wpis 2026-09-12).
+- Untracked produkt do commita parenta: `PLAN-INSTALATOR.md` (zaktualizowany do 6.0.0/0526d70).
+- Skip: DAM.cmd (placeholder chmury), HANDOFF-BRANDING-QUIZ-VIZ.md (chmura/poza planem), *_Conflict*, logi, sqlite, dumps, file-index, user-prefs, index-watcher, secrets, pg-config, cache-publish-queue, thumb-cache-manifest.
+- Plan todo `ootb-clean-pc` nadal pending.
+
+**Efekt/Fix:** PLAN-INSTALATOR.md zsynchronizowany ze stanem 6.0.0. Wersje bez zmian. Setup bez rebuildu.
+
+**Backup:** `D:\_DAM-BACKUP-X-20260912` (nie ruszany). Commit/push: nie (zakaz workera).
+
+**Test/Ewaluacja:** smoke-dam-ports.ps1 exit 0; FileVersionInfo Setup; python line count mostu; Get-Item PNG.
+
+**Zrodla:** git rev-parse, version.json, dam-version.js, runtime_config.py, DAM-Setup.iss, DAM-Setup.exe, local_bridge.py, qa-6.0.0-*.png, build-installer.ps1, PLAN-INSTALATOR.md
+
 ## 2026-09-12 - v6.0.0: produkt 6.0.0 (206 installer + 207 Elementy/DB + merge X)
 
 **Komenda/Akcja:** User: STOP 5.0.208. Target 6.0.0. Bez git commit/push. Parent sędzi z plików.
@@ -5,7 +30,7 @@
 **Log/Status:**
 - version.json / dam-version.js / runtime_config.py APP_VERSION / DAM-Setup.iss MyAppVersion / README.txt = 6.0.0
 - HTML ?v=6.0.0 na assetach merge; dam-shell injectors 6.0.0; dam-root-status cache-sync 6.0.0
-- local_bridge.py 9747 linii; list_folder_images + list_folder_browse + pick_folder_dialog + reveal/open = resolve_physical_path
+- local_bridge.py 9034 linie; list_folder_images + list_folder_browse + pick_folder_dialog + reveal/open = resolve_physical_path
 - py_compile local_bridge.py pg_db.py runtime_config.py exit 0
 - node --check dam-shell.js dam-explorer.js dam-db-status.js exit 0
 - smoke :8765 explorer.html HTTP 200 t=0.0057s; :8766/health HTTP 200 t=0.0146s
