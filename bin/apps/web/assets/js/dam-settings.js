@@ -194,7 +194,7 @@
       id: "settings-appearance",
       label: "Wygląd panelu",
       where: "Ustawienia → Wygląd",
-      keywords: "wyglad wygląd motyw theme jasny ciemny kolor akcent",
+      keywords: "wyglad wygląd motyw theme jasny ciemny kolor akcent zestaw paleta kafelki scheme",
       href: "#damAppearance",
       icon: "uil-palette",
     },
@@ -682,7 +682,8 @@
       }
     }
 
-    if (presetsEl) {
+    if (presetsEl && !presetsEl.getAttribute("data-bound")) {
+      presetsEl.setAttribute("data-bound", "1");
       presetsEl.innerHTML = DamAccent.presets
         .map(function (p) {
           return (
@@ -720,9 +721,21 @@
     }
     if (resetBtn) {
       resetBtn.addEventListener("click", function () {
-        syncUi(DamAccent.reset());
+        if (window.DamTheme && typeof DamTheme.applyScheme === "function") {
+          DamTheme.applyScheme("default");
+          syncUi(DamAccent.current());
+        } else {
+          syncUi(DamAccent.reset());
+        }
       });
     }
+    window.addEventListener("dam:scheme", function (ev) {
+      var hex = ev && ev.detail && ev.detail.accent;
+      if (hex) syncUi(hex);
+    });
+    window.addEventListener("dam:theme", function () {
+      syncUi(DamAccent.current());
+    });
     syncUi(current);
   }
 

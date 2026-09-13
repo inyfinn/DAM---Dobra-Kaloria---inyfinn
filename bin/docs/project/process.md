@@ -1,3 +1,26 @@
+## 2026-09-13 - v6.0.6: zestawy Colorify jako kafelki (facts, bez PASS)
+
+**Komenda/Akcja:** User FAIL: screenshot nadal 8 kropek akcentu. Worker: import ALL Colorify schemes jako TILES. HSL max 50%. Bez git commit/push.
+
+**Log/Status:**
+- Colorify SoT: `colorify-admin-schemes.php` `scheme_pool_raw` = 40 palet. Skip: `colorify-custom` (hex override w DAM). Extra tile: `default` / DAM fiolet `#AB54DB`.
+- Tiles rendered: 41 (`#damSchemeGrid [data-scheme-id]`). Groups: DAM, Zielone, Cieple, Niebieskie, Fioletowe, Ziemia.
+- Selectors: `#damAppearance` `#damSchemeGrid` `.dam-scheme-tile` `[data-scheme-id]` `#damAccentPresets` `.dam-appearance-tune` `#damThemeTuning`.
+- Persist: `localStorage.dam_scheme` + `dam_scheme_named` + `dam_accent` + `dam_theme_tuning`. Export JSON keys: `scheme` `scheme_named` `accent` `tuning`.
+- CDP: cardW 1140, tuneW 420 (37% <=50%), first tile 114x60, dots 8.
+- PNG: `bin/docs/project/qa-6.0.6-schemes-tiles.png` 1511x940 119614 B; `qa-6.0.6-schemes-hsl.png` 1511x940 119684 B.
+- smoke :8765 200 t=0.005s; :8766/health 200 t=0.011s.
+- Wersja 6.0.6: version.json, dam-version.js, runtime_config.py, DAM-Setup.iss. Cache `?v=6.0.6b` dam-theme.js / dam-brand.css / dam-settings.js.
+- Commit/push/installer: NIE.
+
+**Efekt/Fix:** Zestawy pelne (bg/surface/accent/text), kropki tylko override.
+
+**Backup:** brak.
+
+**Test/Ewaluacja:** node --check dam-theme.js dam-settings.js; CDP tileCount 41; screenshot+Read.
+
+**Zrodla:** dam-theme.js COLORIFY_POOL, settings.html#damSchemeGrid, colorify-admin-schemes.php pool_raw
+
 ## 2026-09-13 - v6.0.5: zadania w tle ukryte + karta Ustawienia (facts)
 
 **Komenda/Akcja:** Widoczny cmd.exe 15:14:45 robocopy Panel-DAM. HARD: ukryte okno, bramka DAM.exe/dam-appw.exe, karta Ustawienia. Worker: bez git commit/push, bez PASS. Parent sedzi PNG i zrobi commit+installer.

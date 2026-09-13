@@ -78,3 +78,7 @@ if (-not (Test-ExeReadable $outExe)) {
 }
 
 Write-Host "OK DAM.exe -> $outExe ($((Get-Item -LiteralPath $outExe).Length) B, local $outLocal)"
+$signScript = Join-Path $PSScriptRoot "sign-dam-binaries.ps1"
+if (Test-Path -LiteralPath $signScript) {
+  & $signScript -Path @($outExe, $outLocal) -SkipWhenMissing
+}

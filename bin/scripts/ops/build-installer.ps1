@@ -289,14 +289,60 @@ if (-not (Test-Path $wv2Bootstrap)) {
 
 $releaseDir = $GitRoot
 $iss = Join-Path $BinRoot "installer\DAM-Setup.iss"
-& $Iscc "/DMyAppVersion=$Version" "/DStageDir=$stageRoot" "/DGitRoot=$GitRoot" "/DReleaseDir=$releaseDir" $iss
+$signScript = Join-Path $PSScriptRoot "sign-dam-binaries.ps1"
+$stageExe = Join-Path $stageRoot "DAM.exe"
+if (Test-Path -LiteralPath $signScript) {
+  & $signScript -Path @($stageExe) -SkipWhenMissing
+}
+
+$isccArgs = @(
+  "/DMyAppVersion=$Version",
+  "/DStageDir=$stageRoot",
+  "/DGitRoot=$GitRoot",
+  "/DReleaseDir=$releaseDir"
+)
+$signToolExe = $null
+$cmdSign = Get-Command signtool.exe -ErrorAction SilentlyContinue
+if ($cmdSign) { $signToolExe = $cmdSign.Source }
+if (-not $signToolExe) {
+  $kit = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter "signtool.exe" -ErrorAction SilentlyContinue |
+    Where-Object { $_.DirectoryName -match '\\x64$' } | Sort-Object FullName -Descending | Select-Object -First 1
+  if ($kit) { $signToolExe = $kit.FullName }
+}
+$tsUrl = $env:DAM_CODE_SIGN_TIMESTAMP
+if (-not $tsUrl) { $tsUrl = "http://timestamp.digicert.com" }
+if ($signToolExe -and ($env:DAM_CODE_SIGN_PFX -or $env:DAM_CODE_SIGN_THUMBPRINT)) {
+  $signCmd = "`"$signToolExe`" sign /fd SHA256 /td SHA256 /tr $tsUrl `$f"
+  if ($env:DAM_CODE_SIGN_PFX) {
+    $signCmd = "`"$signToolExe`" sign /fd SHA256 /td SHA256 /tr $tsUrl /f `"$($env:DAM_CODE_SIGN_PFX)`""
+    if ($env:DAM_CODE_SIGN_PASSWORD) { $signCmd += " /p `"$($env:DAM_CODE_SIGN_PASSWORD)`"" }
+    $signCmd += " `$f"
+  } elseif ($env:DAM_CODE_SIGN_THUMBPRINT) {
+    $signCmd = "`"$signToolExe`" sign /fd SHA256 /td SHA256 /tr $tsUrl /sha1 $($env:DAM_CODE_SIGN_THUMBPRINT) `$f"
+  }
+  $isccArgs += "/DDamSignTool=1"
+  $isccArgs += "/Sdamsigntool=$signCmd"
+  Write-Host "ISCC SignTool=damsigntool (Authenticode)"
+} else {
+  Write-Warning "ISCC bez SignTool — DAM-Setup.exe wyjdzie NIEPODPISANY (SmartScreen: nieznany wydawca). bin/installer/CODE-SIGNING.md"
+}
+
+& $Iscc @isccArgs $iss
 if ($LASTEXITCODE -ne 0) { throw "ISCC failed: $LASTEXITCODE" }
 
 $setupExe = Join-Path $releaseDir "DAM-Setup.exe"
 if (-not (Test-Path $setupExe)) { throw "Brak $setupExe" }
+if (Test-Path -LiteralPath $signScript) {
+  & $signScript -Path @($setupExe) -SkipWhenMissing
+}
 $sizeMb = [math]::Round((Get-Item $setupExe).Length / 1MB, 1)
+$setupSig = Get-AuthenticodeSignature -LiteralPath $setupExe
 Write-Host ""
 Write-Host "GOTOWE - kliknij:"
 Write-Host ('  {0}  ({1} MB)' -f $setupExe, $sizeMb)
+Write-Host ('  Authenticode: {0}' -f $setupSig.Status)
+if ($setupSig.Status -ne "Valid") {
+  Write-Warning "Setup nie jest podpisany. Windows i SmartScreen beda straszyc nieznanym zrodlem, dopoki nie ustawisz DAM_CODE_SIGN_PFX (CODE-SIGNING.md)."
+}
 Write-Host ""
 

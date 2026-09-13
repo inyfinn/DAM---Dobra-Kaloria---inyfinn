@@ -25,14 +25,17 @@ function Resolve-Pythonw {
 
 $pyw = Resolve-Pythonw
 $script = Join-Path $repo "apps\desktop\scripts\sync-database-backups-to-git.py"
-$vbsSilent = Join-Path $repo "apps\desktop\scripts\sync-database-backups-silent.vbs"
+$vbsSilent = Join-Path $repo "scripts\ops\run-dam-bg-job-hidden.vbs"
+if (-not (Test-Path -LiteralPath $vbsSilent)) {
+  $vbsSilent = Join-Path $repo "apps\desktop\scripts\sync-database-backups-silent.vbs"
+}
 $taskName = "DAM-ETA-Database-Git-Sync"
 
 # Usun stare zadanie (np. rejestracja z python.exe = widoczne okno CMD).
 Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
 
-# Uruchomienie przez VBS = brak migajacego okna CMD (WindowStyle Hidden + pythonw).
-$action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$vbsSilent`"" -WorkingDirectory $repo
+# Uruchomienie przez VBS = brak migajacego okna CMD. Bramka DAM.exe / dam-appw.exe.
+$action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$vbsSilent`" db-git-sync" -WorkingDirectory $repo
 # Co godzine, start za 5 minut od teraz, powtarzaj przez 10 lat (Windows nie lubi MaxValue)
 $start = (Get-Date).AddMinutes(5)
 $trigger = New-ScheduledTaskTrigger -Once -At $start `

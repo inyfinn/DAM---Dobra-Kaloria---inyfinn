@@ -1,9 +1,9 @@
 {
-  "version": "6.0.5",
+  "version": "6.0.6",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-09-13",
-  "note": "6.0.5: zadania w tle ukryte (bramka DAM.exe/dam-appw.exe, karta Ustawienia). 6.0.4: indeks live+raport; Sprawdz aktualizacje; dark tokeny + HSL.",
+  "note": "6.0.6: zestawy kolorystyczne (kafelki) + HSL w kolumnie 50%. 6.0.5: zadania w tle ukryte. 6.0.4: indeks live+raport; Sprawdz aktualizacje; dark tokeny + HSL.",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
     "asset_name": "DAM-Setup.exe",
