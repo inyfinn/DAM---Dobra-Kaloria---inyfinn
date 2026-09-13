@@ -95,6 +95,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting.dark,html.dam-booting[data-
         <button type="button" class="dam-settings-jump__chip" data-filter="appearance" aria-pressed="false"><i class="uil uil-palette" aria-hidden="true"></i> Wygląd</button>
         <button type="button" class="dam-settings-jump__chip" data-filter="disk" aria-pressed="false"><i class="uil uil-folder" aria-hidden="true"></i> Dysk</button>
         <button type="button" class="dam-settings-jump__chip" data-filter="prefs" aria-pressed="false"><i class="uil uil-sliders-v" aria-hidden="true"></i> Preferencje</button>
+        <button type="button" class="dam-settings-jump__chip" data-filter="jobs" aria-pressed="false"><i class="uil uil-clock" aria-hidden="true"></i> Zadania w tle</button>
         <button type="button" class="dam-settings-jump__chip" data-filter="integrations" aria-pressed="false"><i class="uil uil-link" aria-hidden="true"></i> Integracje</button>
         <button type="button" class="dam-settings-jump__chip" data-filter="notify" aria-pressed="false"><i class="uil uil-users-alt" aria-hidden="true"></i> Powiadomienia</button>
         <button type="button" class="dam-settings-jump__chip" data-filter="naming" aria-pressed="false"><i class="uil uil-tag-alt" aria-hidden="true"></i> Nazewnictwo</button>
@@ -305,6 +306,18 @@ html.dam-booting{background:#f3f5f4}html.dam-booting.dark,html.dam-booting[data-
                 <span class="dam-toggle-thumb"></span>
               </label>
             </div>
+          </div>
+        </section>
+
+        <section class="dam-widget dam-sw--jobs" id="damBackgroundJobs" data-section="jobs"
+          data-search="zadania w tle background jobs sync panel-dam robocopy harmonogram schtasks backup indeks nas">
+          <div class="dam-widget__head">
+            <h2 class="dam-widget__title"><i class="uil uil-clock" aria-hidden="true"></i> Zadania w tle</h2>
+            <p class="dam-widget__meta">Tu widać, co Windows albo DAM odpala w tle, po co, i jak to wyłączyć. Nic nie startuje, gdy aplikacja <strong>DAM.exe</strong> (albo <strong>dam-appw.exe</strong>) jest zamknięta. Okna konsoli są ukryte. Sam Python serve_browser nie wystarcza.</p>
+          </div>
+          <div class="dam-widget__body">
+            <p id="damBgJobsHint" class="dam-widget__meta">Wczytywanie…</p>
+            <div id="damBgJobsList"></div>
           </div>
         </section>
 
@@ -528,7 +541,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting.dark,html.dam-booting[data-
   <script src="./assets/js/dam-api.js?v=6.0.0"></script>
   <script src="./assets/js/dam-i18n.js?v=5.0.196"></script>
   <script src="./assets/js/dam-runtime.js?v=5.0.196"></script>
-  <script src="./assets/js/dam-version.js?v=6.0.4"></script>
+  <script src="./assets/js/dam-version.js?v=6.0.5"></script>
 	<script src="./assets/js/dam-shell.js?v=6.0.4"></script>
   <script src="./assets/js/dam-loader.js?v=5.0.196"></script>
   <script src="./assets/js/dam-tooltips.js?v=5.0.196"></script>
@@ -540,7 +553,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting.dark,html.dam-booting[data-
   <script src="./assets/js/dam-danger.js?v=5.0.196"></script>
   <script src="./assets/js/dam-fmcg-catalog.js?v=5.0.196"></script>
   <script src="./assets/js/dam-integrations.js?v=5.0.196"></script>
-  <script src="./assets/js/dam-settings.js?v=6.0.4"></script>
+  <script src="./assets/js/dam-settings.js?v=6.0.5"></script>
   <script src="./assets/js/dam-device-paths.js?v=5.0.196"></script>
   <style id="damDangerZoneCss">
     /* Pełna szerokość w siatce 12-col (bez .dam-sw--danger w dam-settings.css) */
@@ -738,20 +751,4 @@ html.dam-booting{background:#f3f5f4}html.dam-booting.dark,html.dam-booting[data-
         });
       }
       /* Hold na trash odbiorców - bez edycji dam-settings.js (delegacja data-dam-hold-delete) */
-      function armNotifyTrash(root) {
-        (root || document).querySelectorAll(".dam-notify-row__remove").forEach(function (el) {
-          if (el.getAttribute("data-dam-hold-delete") != null) return;
-          el.setAttribute("data-dam-hold-delete", "");
-          el.setAttribute("data-dam-label", "Usun odbiorce");
-          el.setAttribute("data-dam-hint", "Przytrzymaj, aby usunac odbiorce");
-          el.setAttribute("data-dam-hold-ms", "300");
-          el.setAttribute("aria-label", "Usun odbiorce");
-          el.setAttribute("title", "Przytrzymaj, aby usunac odbiorce");
-        });
-      }
-      armNotifyTrash();
-      var list = document.getElementById("damNotificationGroupsList");
-      if (list && typeof MutationObserver !== "undefined") {
-        new MutationObserver(function () { armNotifyTrash(list); }).observe(list, { childList: true, subtree: true });
-      }
-    
+      function armNotifyT

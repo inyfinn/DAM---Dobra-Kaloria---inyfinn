@@ -5,6 +5,8 @@
 .DESCRIPTION
   Robocopy /MIR with exclusions. Does not purge pamiec-podreczna.
   Seeds pamiec-podreczna\thumbs from bin\PAMIEC-PODRECZNA\thumbs (329 AVIF).
+  Scheduled runs MUST go through run-dam-bg-job-hidden.vbs (no visible console).
+  Gate DAM.exe / dam-appw.exe lives in run-dam-bg-job.ps1. Manual console OK.
 #>
 param(
     [switch]$SkipThumbsSeed,

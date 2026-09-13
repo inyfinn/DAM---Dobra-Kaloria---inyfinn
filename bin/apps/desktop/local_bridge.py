@@ -213,7 +213,7 @@ except ImportError:
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("DAM_BRIDGE_PORT", "8766"))
 # Bump po nowych endpointach hub (smoke: GET /health -> api_version)
-BRIDGE_API_VERSION = 10
+BRIDGE_API_VERSION = 11
 DESKTOP_DIR = Path(__file__).resolve().parent
 WEB_ROOT = Path(os.environ.get("DAM_WEB_ROOT", str(DESKTOP_DIR.parent / "web")))
 AUDIT_FILE = WEB_ROOT / "data" / "audit-log.jsonl"
@@ -2701,6 +2701,7 @@ WYKROJNIKI_REGISTRY_FILE = WEB_ROOT / "data" / "wykrojniki-registry.json"
 BUILD_BRANDING_INDEX = WEB_ROOT / "scripts" / "build-branding-index.py"
 BUILD_BRANDING_GRID_INDEX = WEB_ROOT / "scripts" / "build-branding-grid-index.py"
 DESKTOP_DATA_DIR = Path(__file__).resolve().parent / "data"
+BACKGROUND_JOBS_FILE = DESKTOP_DATA_DIR / "background-jobs.json"
 INDEX_REBUILD_LOCK_FILE = DESKTOP_DATA_DIR / "index-rebuild.lock.json"
 INDEX_WATCHER_STATUS_FILE = DESKTOP_DATA_DIR / "index-watcher-status.json"
 INDEX_REBUILD_LOG_FILE = DESKTOP_DATA_DIR / "index-rebuild.log"
@@ -2718,6 +2719,361 @@ INVOICE_ERP_SYNC_FILE = WEB_ROOT / "data" / "invoice-erp-sync.json"
 ASANA_TASKS_FILE = WEB_ROOT / "data" / "asana-tasks.json"
 WYKROJNIK_QUEUE_FILE = WEB_ROOT / "data" / "wykrojnik-mapping-queue.json"
 BUILD_PROJECT_COSTS = WEB_ROOT / "scripts" / "build-project-costs.py"
+
+# Scheduled / in-app background jobs (Settings: Zadania w tle).
+# Gate: DAM.exe OR dam-appw.exe. python serve_browser.py is NOT enough.
+_BG_JOB_CATALOG = (
+    {
+        "id": "panel-dam-sync",
+        "title": "Sync Panel-DAM na NAS",
+        "why": "Co godzine kopiuje panel (bin/apps/web) na W:\\web\\Panel-DAM, zeby wersja na synology.me byla aktualna. Bez DAM.exe / dam-appw.exe zadanie konczy sie od razu, bez okna.",
+        "task_name": "DAM-Panel-DAM-HourlySync",
+        "kind": "scheduled",
+        "can_run": True,
+        "can_toggle": True,
+    },
+    {
+        "id": "db-git-sync",
+        "title": "Kopia zrzutow bazy do gita",
+        "why": "Zapasowy sync dumpow Postgres. Gdy DAM jest otwarty, zrzut robi watek mostu. Harmonogram milczy przy zamknietej aplikacji.",
+        "task_name": "DAM-ETA-Database-Git-Sync",
+        "kind": "scheduled",
+        "can_run": True,
+        "can_toggle": True,
+    },
+    {
+        "id": "pg-backup-watcher",
+        "title": "Zrzut Postgres (watek mostu)",
+        "why": "Co godzine zapisuje dam_eta_*.sql.gz. Dziala tylko wewnatrz otwartego DAM (local_bridge), bez osobnego okna.",
+        "task_name": "",
+        "kind": "in-app",
+        "can_run": True,
+        "can_toggle": True,
+    },
+    {
+        "id": "index-supervisor",
+        "title": "Nadzor indeksu plikow",
+        "why": "Odswieza indeks, gdy DAM jest otwarty. Wymagane do wyszukiwania. Nie ma osobnego okna CMD.",
+        "task_name": "",
+        "kind": "in-app",
+        "can_run": False,
+        "can_toggle": False,
+    },
+)
+
+
+def _bg_no_window_kwargs() -> dict:
+    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
+    si = None
+    if sys.platform == "win32":
+        si = subprocess.STARTUPINFO()
+        si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        si.wShowWindow = 0
+    return {"creationflags": flags, "startupinfo": si}
+
+
+def _dam_desktop_processes() -> list[str]:
+    found: list[str] = []
+    try:
+        r = subprocess.run(
+            ["tasklist", "/FI", "IMAGENAME eq DAM.exe", "/FO", "CSV", "/NH"],
+            capture_output=True,
+            text=True,
+            timeout=8,
+            **_bg_no_window_kwargs(),
+        )
+        if r.stdout and "DAM.exe" in r.stdout and "INFO:" not in r.stdout:
+            found.append("DAM.exe")
+    except Exception:
+        pass
+    try:
+        r = subprocess.run(
+            ["tasklist", "/FI", "IMAGENAME eq dam-appw.exe", "/FO", "CSV", "/NH"],
+            capture_output=True,
+            text=True,
+            timeout=8,
+            **_bg_no_window_kwargs(),
+        )
+        if r.stdout and "dam-appw.exe" in r.stdout.lower() and "INFO:" not in r.stdout:
+            found.append("dam-appw.exe")
+    except Exception:
+        pass
+    return found
+
+
+def _read_background_jobs_file() -> dict:
+    DESKTOP_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    if not BACKGROUND_JOBS_FILE.is_file():
+        return {"updated_at": None, "jobs": {}}
+    try:
+        data = json.loads(BACKGROUND_JOBS_FILE.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return {"updated_at": None, "jobs": {}}
+        jobs = data.get("jobs")
+        if not isinstance(jobs, dict):
+            data["jobs"] = {}
+        else:
+            junk = {
+                "IsFixedSize",
+                "IsSynchronized",
+                "Count",
+                "IsReadOnly",
+                "Values",
+                "Keys",
+                "SyncRoot",
+            }
+            data["jobs"] = {k: v for k, v in jobs.items() if k not in junk}
+        return data
+    except Exception:
+        return {"updated_at": None, "jobs": {}}
+
+
+def _write_background_jobs_file(data: dict) -> None:
+    DESKTOP_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    tmp = BACKGROUND_JOBS_FILE.with_suffix(".json.tmp")
+    payload = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
+    tmp.write_text(payload, encoding="utf-8")
+    tmp.replace(BACKGROUND_JOBS_FILE)
+
+
+def _job_auto_enabled(job_id: str, stored: dict) -> bool:
+    entry = (stored.get("jobs") or {}).get(job_id) or {}
+    if not isinstance(entry, dict):
+        return True
+    if "auto" not in entry:
+        return True
+    return bool(entry.get("auto"))
+
+
+def _query_schtask(name: str) -> dict:
+    if not name:
+        return {"exists": False}
+    try:
+        r = subprocess.run(
+            ["schtasks", "/query", "/tn", name, "/fo", "LIST", "/v"],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            **_bg_no_window_kwargs(),
+        )
+    except Exception as exc:  # noqa: BLE001
+        return {"exists": False, "error": str(exc)}
+    if r.returncode != 0:
+        return {"exists": False, "error": (r.stderr or r.stdout or "").strip()[:400]}
+    info = {"exists": True, "hidden": None, "state": None, "last_run": None, "last_result": None, "to_run": None}
+    for raw in (r.stdout or "").splitlines():
+        if ":" not in raw:
+            continue
+        key, val = raw.split(":", 1)
+        key = key.strip()
+        val = val.strip()
+        if key == "Last Run Time":
+            info["last_run"] = val
+        elif key == "Last Result":
+            info["last_result"] = val
+        elif key == "Scheduled Task State":
+            info["state"] = val
+        elif key == "Task To Run":
+            info["to_run"] = val
+        elif key == "Status":
+            info["status"] = val
+    try:
+        ps = (
+            f"$t=Get-ScheduledTask -TaskName '{name}' -ErrorAction Stop; "
+            "$t.Settings.Hidden; $t.State"
+        )
+        r2 = subprocess.run(
+            [
+                "powershell.exe",
+                "-NoProfile",
+                "-WindowStyle",
+                "Hidden",
+                "-Command",
+                ps,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            **_bg_no_window_kwargs(),
+        )
+        lines = [ln.strip() for ln in (r2.stdout or "").splitlines() if ln.strip()]
+        if lines:
+            info["hidden"] = lines[0].lower() in ("true", "1")
+            if len(lines) > 1:
+                info["state_ps"] = lines[1]
+    except Exception:
+        pass
+    return info
+
+
+def _set_schtask_enabled(name: str, enabled: bool) -> dict:
+    flag = "/ENABLE" if enabled else "/DISABLE"
+    try:
+        r = subprocess.run(
+            ["schtasks", "/Change", "/TN", name, flag],
+            capture_output=True,
+            text=True,
+            timeout=20,
+            **_bg_no_window_kwargs(),
+        )
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)}
+    if r.returncode != 0:
+        return {
+            "ok": False,
+            "error": (r.stderr or r.stdout or "schtasks_change_failed").strip()[:400],
+            "escalate": "admin" in (r.stderr or "").lower() or r.returncode in (1, 2),
+        }
+    return {"ok": True, "enabled": enabled}
+
+
+def _start_bg_job_hidden(job_id: str) -> dict:
+    wrapper = DESKTOP_DIR.parent.parent / "scripts" / "ops" / "run-dam-bg-job.ps1"
+    if not wrapper.is_file():
+        return {"ok": False, "error": f"missing_wrapper:{wrapper}"}
+    try:
+        subprocess.Popen(
+            [
+                "powershell.exe",
+                "-NoProfile",
+                "-WindowStyle",
+                "Hidden",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(wrapper),
+                "-JobId",
+                job_id,
+                "-Force",
+            ],
+            cwd=str(wrapper.parent),
+            **_bg_no_window_kwargs(),
+        )
+        return {"ok": True, "started": True, "hidden": True}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)}
+
+
+def background_jobs_status() -> dict:
+    stored = _read_background_jobs_file()
+    dam_procs = _dam_desktop_processes()
+    jobs_out = []
+    for spec in _BG_JOB_CATALOG:
+        job_id = spec["id"]
+        stored_job = (stored.get("jobs") or {}).get(job_id) or {}
+        if not isinstance(stored_job, dict):
+            stored_job = {}
+        auto = _job_auto_enabled(job_id, stored)
+        task = _query_schtask(spec.get("task_name") or "") if spec.get("task_name") else {}
+        last_run = stored_job.get("last_run") or task.get("last_run")
+        last_status = stored_job.get("last_status")
+        item = {
+            "id": job_id,
+            "title": spec["title"],
+            "why": spec["why"],
+            "kind": spec["kind"],
+            "can_run": spec["can_run"],
+            "can_toggle": spec["can_toggle"],
+            "auto": auto,
+            "gate": "DAM.exe or dam-appw.exe",
+            "hidden": True,
+            "task_name": spec.get("task_name") or None,
+            "task": task,
+            "last_run": last_run,
+            "last_status": last_status,
+            "last_detail": stored_job.get("last_detail"),
+        }
+        if spec["kind"] == "in-app":
+            item["task"] = {
+                "exists": False,
+                "in_app": True,
+                "state": "Ready" if dam_procs else "Stopped",
+            }
+        jobs_out.append(item)
+    startup = []
+    try:
+        start_dir = Path.home() / (
+            "AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup"
+        )
+        if start_dir.is_dir():
+            for p in start_dir.iterdir():
+                if "DAM" in p.name.upper() or "dam" in p.name:
+                    startup.append({"name": p.name, "path": str(p)})
+    except Exception:
+        pass
+    return {
+        "ok": True,
+        "dam_running": bool(dam_procs),
+        "dam_processes": dam_procs,
+        "gate": "DAM.exe or dam-appw.exe (not python serve_browser)",
+        "file": str(BACKGROUND_JOBS_FILE),
+        "startup": startup,
+        "jobs": jobs_out,
+    }
+
+
+def background_jobs_apply(payload: dict) -> dict:
+    job_id = str(payload.get("id") or "").strip()
+    action = str(payload.get("action") or "").strip().lower()
+    spec = next((s for s in _BG_JOB_CATALOG if s["id"] == job_id), None)
+    if spec is None:
+        return {"ok": False, "error": "unknown_job"}
+    stored = _read_background_jobs_file()
+    jobs = stored.setdefault("jobs", {})
+    if not isinstance(jobs, dict):
+        jobs = {}
+        stored["jobs"] = jobs
+    entry = jobs.get(job_id) if isinstance(jobs.get(job_id), dict) else {}
+    from datetime import datetime as _dt
+
+    stamp = _dt.now().strftime("%Y-%m-%dT%H:%M:%S")
+
+    if action == "toggle":
+        if not spec["can_toggle"]:
+            return {"ok": False, "error": "toggle_locked"}
+        enabled = bool(payload.get("auto")) if "auto" in payload else not _job_auto_enabled(job_id, stored)
+        entry = dict(entry)
+        entry["auto"] = enabled
+        entry["updated_at"] = stamp
+        jobs[job_id] = entry
+        stored["updated_at"] = stamp
+        _write_background_jobs_file(stored)
+        task_res = {"ok": True, "skipped": True}
+        if spec.get("task_name"):
+            task_res = _set_schtask_enabled(spec["task_name"], enabled)
+        return {
+            "ok": True,
+            "id": job_id,
+            "auto": enabled,
+            "task": task_res,
+            "status": background_jobs_status(),
+        }
+
+    if action == "run":
+        if not spec["can_run"]:
+            return {"ok": False, "error": "run_locked"}
+        if spec["kind"] == "in-app" and job_id == "pg-backup-watcher":
+            result = run_hourly_pg_backup()
+            entry = dict(entry)
+            entry["last_run"] = stamp
+            entry["last_status"] = "ok" if result.get("ok") else "error"
+            entry["last_detail"] = json.dumps(result, ensure_ascii=False)[:400]
+            jobs[job_id] = entry
+            stored["updated_at"] = stamp
+            _write_background_jobs_file(stored)
+            return {"ok": bool(result.get("ok")), "id": job_id, "result": result}
+        started = _start_bg_job_hidden(job_id)
+        entry = dict(entry)
+        entry["last_run"] = stamp
+        entry["last_status"] = "started" if started.get("ok") else "error"
+        entry["last_detail"] = started.get("error") or "hidden start"
+        jobs[job_id] = entry
+        stored["updated_at"] = stamp
+        _write_background_jobs_file(stored)
+        return {**started, "id": job_id}
+
+    return {"ok": False, "error": "unknown_action"}
+
 
 _CARRIER_FOLDER_PREFIX_FALLBACK = {
     "BAT": "BAT",
@@ -7190,6 +7546,12 @@ class Handler(BaseHTTPRequestHandler):
             email = str(user.get("email") or "").strip()
             self._json(200, read_user_prefs(email))
             return
+        if parsed.path == "/background-jobs":
+            user = self._require_login()
+            if user is None:
+                return
+            self._json(200, background_jobs_status())
+            return
         if parsed.path == "/auth/registration-open":
             # Self-service: email + haslo (bez imienia/nazwiska).
             n = users_count()
@@ -8376,6 +8738,15 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(patch, dict):
                 patch = {}
             res = write_user_prefs(email, patch)
+            self._json(200 if res.get("ok") else 400, res)
+            return
+        if parsed.path == "/background-jobs":
+            user = self._require_login()
+            if user is None:
+                return
+            if not isinstance(data, dict):
+                data = {}
+            res = background_jobs_apply(data)
             self._json(200 if res.get("ok") else 400, res)
             return
         if parsed.path == "/meta/sync":
@@ -9643,6 +10014,10 @@ def _pg_backup_watcher() -> None:
     time.sleep(min(8.0, max(2.0, interval)))
     while True:
         try:
+            if not _job_auto_enabled("pg-backup-watcher", _read_background_jobs_file()):
+                _pg_backup_log("skip auto_off")
+                time.sleep(interval)
+                continue
             result = run_hourly_pg_backup()
             if result.get("ok"):
                 _pg_backup_log(f"ok files={result.get('files')} bytes={result.get('bytes')}")

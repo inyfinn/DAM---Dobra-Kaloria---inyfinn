@@ -1,4 +1,31 @@
+## 2026-09-13 - v6.0.5: zadania w tle ukryte + karta Ustawienia (facts)
+
+**Komenda/Akcja:** Widoczny cmd.exe 15:14:45 robocopy Panel-DAM. HARD: ukryte okno, bramka DAM.exe/dam-appw.exe, karta Ustawienia. Worker: bez git commit/push, bez PASS. Parent sedzi PNG i zrobi commit+installer.
+
+**Log/Status:**
+- Przyczyna: zadanie Windows `DAM-Panel-DAM-HourlySync` LastRun 13.09.2026 15:14:44, Hidden=False, action = powershell.exe -File deploy-panel-dam-synology.ps1 (widoczna konsola + robocopy /MIR).
+- Drugie zadanie: `DAM-ETA-Database-Git-Sync` (juz Hidden via VBS; po re-register tez wrapper).
+- Autostart (lista, nie robocopy): Startup `DAM autostart (przegladarka).lnk` -> wscript run-dam-watch.vbs (D: stary layout). parent-agent-gate, index_supervisor, pg-backup-watcher = watek mostu, nie schtasks.
+- Wrapper: `bin/scripts/ops/run-dam-bg-job.ps1` + `run-dam-bg-job-hidden.vbs`. Gate: Get-Process DAM, dam-appw (NIE python serve_browser). Mock: DAM_REQUIRE_PROCESS=1 + DAM_MOCK_NO_PROCESS=1 -> exit 0, last_status skipped_no_dam, bez okna.
+- Re-register (user xpret, Limited, Hidden=True):
+  - DAM-Panel-DAM-HourlySync: wscript.exe "...\run-dam-bg-job-hidden.vbs" panel-dam-sync
+  - DAM-ETA-Database-Git-Sync: wscript.exe "...\run-dam-bg-job-hidden.vbs" db-git-sync
+- UI: settings.html `#damBackgroundJobs` (chip data-filter=jobs). GET/POST `:8766/background-jobs`. Selektorzy: `#damBgJobsHint` `#damBgJobsList` `.dam-bgjob` `input[data-bg-job]` `[data-bg-run]`. Persist: `bin/apps/desktop/data/background-jobs.json`.
+- Wersja 6.0.5: version.json, dam-version.js DAM_APP_VERSION, runtime_config.py APP_VERSION, DAM-Setup.iss MyAppVersion, settings.html ?v=6.0.5 (dam-version.js, dam-settings.js). BRIDGE_API_VERSION=11.
+- PNG: `bin/docs/project/qa-6.0.5-bg-jobs-settings.png` 201794 B, 1511x940. Chip Zadania w tle aktywny. 4 wiersze: Panel-DAM HourlySync, Database-Git-Sync, zrzut Postgres, nadzor indeksu. Toggle + Uruchom teraz. Hint: DAM.exe nie dziala. Overlay toast indeksu zaslania stopke ostatniego wiersza.
+- smoke :8765/settings.html 200; :8766/health 200. GET /background-jobs 200 (token 64).
+- Commit/push/installer: NIE (zakaz workera). Parent: commit + build-installer.ps1.
+
+**Efekt/Fix:** robocopy nie startuje przy zamknietym DAM.exe; schtasks Hidden + VBS; user wylacza auto w Ustawieniach.
+
+**Backup:** brak.
+
+**Test/Ewaluacja:** schtasks Hidden+wscript; mock skipped_no_dam exit 0; node --check dam-settings.js; py_compile local_bridge.py; screenshot+Read.
+
+**Zrodla:** deploy-panel-dam-synology.ps1, run-dam-bg-job.ps1, run-dam-bg-job-hidden.vbs, install-panel-dam-hourly-task.ps1, local_bridge.py /background-jobs, settings.html#damBackgroundJobs, dam-settings.js initBackgroundJobs, qa-6.0.5-bg-jobs-settings.png
+
 ## 2026-09-13 - v6.0.1 intern: dark tokens + HSL + export (facts)
+
 
 **Komenda/Akcja:** Kontynuacja. Dark tokeny + Colorify-like HSL w Ustawieniach + export JSON profilu. Screenshot+Read. Bez commit. Bez PASS. local_bridge / poller / root-status / shell NIE ruszane w tej turze.
 

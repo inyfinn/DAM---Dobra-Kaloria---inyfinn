@@ -932,6 +932,186 @@
     initRestart();
   }
 
+  function ensureBgJobsCss() {
+    if (document.getElementById("damBgJobsCss")) return;
+    var st = document.createElement("style");
+    st.id = "damBgJobsCss";
+    st.textContent =
+      ".dam-settings-grid > .dam-sw--jobs,#damBackgroundJobs{grid-column:1 / -1;}" +
+      ".dam-bgjob{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px 16px;padding:14px 0;border-bottom:1px solid var(--dam-border,#ececf2);}" +
+      ".dam-bgjob:last-child{border-bottom:none;padding-bottom:0;}" +
+      ".dam-bgjob__copy{flex:1 1 280px;min-width:0;}" +
+      ".dam-bgjob__name{font-size:13px;font-weight:600;color:var(--dam-text,#464255);margin:0 0 4px;}" +
+      ".dam-bgjob__why{font-size:12px;color:var(--dam-text-muted,#8b8d97);margin:0 0 6px;line-height:1.45;}" +
+      ".dam-bgjob__meta{font-size:11px;color:var(--dam-text-muted,#8b8d97);margin:0;}" +
+      ".dam-bgjob__ctl{display:flex;align-items:center;gap:10px;flex-shrink:0;}" +
+      ".dam-bgjob__run{min-height:44px;}" +
+      ".dam-bgjob__pill{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--dam-surface-muted,#f3f5f4);color:var(--dam-text-muted,#8b8d97);margin:0 6px 4px 0;}";
+    document.head.appendChild(st);
+  }
+
+  function initBackgroundJobs() {
+    var list = document.getElementById("damBgJobsList");
+    var hint = document.getElementById("damBgJobsHint");
+    if (!list) return;
+    ensureBgJobsCss();
+
+    function statusLabel(job) {
+      var bits = [];
+      if (job.kind === "scheduled") bits.push("Windows Task Scheduler");
+      else bits.push("Wbudowane w DAM");
+      if (job.task && job.task.state) bits.push("stan: " + job.task.state);
+      if (job.last_run) bits.push("ostatni bieg: " + job.last_run);
+      else bits.push("ostatni bieg: brak");
+      if (job.last_status) bits.push("wynik: " + job.last_status);
+      if (job.hidden) bits.push("okno ukryte");
+      bits.push("bramka: " + (job.gate || "DAM.exe"));
+      return bits.join(" · ");
+    }
+
+    function render(payload) {
+      if (!payload || !payload.ok) {
+        if (hint) {
+          hint.hidden = false;
+          hint.textContent =
+            "Nie udało się wczytać listy. Most :8766 musi działać (zaloguj się).";
+        }
+        return;
+      }
+      var damLine = payload.dam_running
+        ? "DAM.exe / dam-appw.exe: działa (" + (payload.dam_processes || []).join(", ") + ")."
+        : "DAM.exe / dam-appw.exe: nie działa. Harmonogram nic nie odpali przy zamkniętej aplikacji.";
+      if (hint) {
+        hint.hidden = false;
+        hint.textContent = damLine;
+      }
+      var jobs = payload.jobs || [];
+      var html = jobs
+        .map(function (job) {
+          var id = esc(job.id || "");
+          var toggle =
+            job.can_toggle === false
+              ? '<span class="dam-bgjob__pill">Zawsze z aplikacją</span>'
+              : '<label class="dam-toggle" for="damBgJobAuto-' +
+                id +
+                '">' +
+                '<input type="checkbox" id="damBgJobAuto-' +
+                id +
+                '" data-bg-job="' +
+                id +
+                '" ' +
+                (job.auto ? "checked" : "") +
+                ">" +
+                '<span class="dam-toggle-track"></span>' +
+                '<span class="dam-toggle-thumb"></span>' +
+                "</label>";
+          var runBtn =
+            job.can_run === false
+              ? ""
+              : '<button type="button" class="dam-sw-btn dam-sw-btn--ghost dam-bgjob__run" data-bg-run="' +
+                id +
+                '">Uruchom teraz</button>';
+          return (
+            '<article class="dam-bgjob" data-bg-id="' +
+            id +
+            '">' +
+            '<div class="dam-bgjob__copy">' +
+            '<p class="dam-bgjob__name">' +
+            esc(job.title) +
+            (job.task_name ? ' <span class="dam-bgjob__pill">' + esc(job.task_name) + "</span>" : "") +
+            "</p>" +
+            '<p class="dam-bgjob__why">' +
+            esc(job.why) +
+            "</p>" +
+            '<p class="dam-bgjob__meta">' +
+            esc(statusLabel(job)) +
+            "</p>" +
+            "</div>" +
+            '<div class="dam-bgjob__ctl">' +
+            toggle +
+            runBtn +
+            "</div>" +
+            "</article>"
+          );
+        })
+        .join("");
+      var start = payload.startup || [];
+      if (start.length) {
+        html +=
+          '<p class="dam-widget__meta" id="damBgJobsStartup">Autostart Windows: ' +
+          start
+            .map(function (s) {
+              return esc(s.name);
+            })
+            .join(", ") +
+          ". To uruchamia aplikację po zalogowaniu, nie robocopy.</p>";
+      }
+      list.innerHTML = html;
+    }
+
+    function load() {
+      fetch(bridge() + "/background-jobs", { cache: "no-store", headers: authHeaders() })
+        .then(function (r) {
+          return r.json();
+        })
+        .then(render)
+        .catch(function () {
+          render(null);
+        });
+    }
+
+    list.addEventListener("change", function (ev) {
+      var inp = ev.target && ev.target.closest ? ev.target.closest("input[data-bg-job]") : null;
+      if (!inp) return;
+      var id = inp.getAttribute("data-bg-job");
+      fetch(bridge() + "/background-jobs", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ action: "toggle", id: id, auto: !!inp.checked }),
+      })
+        .then(function (r) {
+          return r.json();
+        })
+        .then(function (d) {
+          if (d && d.status) render(d.status);
+          else load();
+        })
+        .catch(function () {
+          if (hint) hint.textContent = "Nie udało się zapisać przełącznika.";
+        });
+    });
+
+    list.addEventListener("click", function (ev) {
+      var btn = ev.target && ev.target.closest ? ev.target.closest("[data-bg-run]") : null;
+      if (!btn) return;
+      var id = btn.getAttribute("data-bg-run");
+      btn.disabled = true;
+      fetch(bridge() + "/background-jobs", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ action: "run", id: id }),
+      })
+        .then(function (r) {
+          return r.json();
+        })
+        .then(function (d) {
+          btn.disabled = false;
+          if (hint) {
+            hint.hidden = false;
+            hint.textContent = d && d.ok
+              ? "Uruchomiono w tle (okno ukryte). Odświeżam status…"
+              : "Nie udało się uruchomić: " + ((d && d.error) || "błąd");
+          }
+          load();
+        })
+        .catch(function () {
+          btn.disabled = false;
+        });
+    });
+
+    load();
+  }
+
   function initRestart() {
     var restartBtn = document.getElementById("settingRestartApp");
     var restartMsg = document.getElementById("settingRestartMsg");
@@ -1669,7 +1849,6 @@
       })
       .then(function (res) {
         if (!(res && res.ok)) {
-          /* fallback: local only hint */
           console.warn("notification-groups save:", res);
         }
         return res;
@@ -1699,6 +1878,7 @@
     initProfile();
     initAccent();
     initPrefs();
+    initBackgroundJobs();
     gateAdminSettingsUi();
     loadInstructions();
     loadAppUpdates();
@@ -1721,3 +1901,4 @@
     boot();
   }
 })();
+            
