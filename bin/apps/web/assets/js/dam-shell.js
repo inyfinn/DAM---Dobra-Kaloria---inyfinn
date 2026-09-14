@@ -336,6 +336,7 @@
       "nav.invoices": "Faktury",
       "nav.costs": "Kalkulator kosztĂłw",
       "nav.integrations": "Integracja i produkcja",
+      "nav.device_session": "Sesja urządzenia",
       "nav.logout": "Wyloguj"
     };
     return fallbacks[item.i18n] || item.i18n;
@@ -677,6 +678,11 @@
   function buildSidebarNav() {
     var active = sidebarActiveKey();
     var logoutLabel = navItemLabel({ i18n: "nav.logout" });
+    var deviceLabel = navItemLabel({ i18n: "nav.device_session" }) || "Sesja urządzenia";
+    var deviceTip =
+      (window.DamI18n && DamI18n.t("nav.device_session_tip") !== "nav.device_session_tip"
+        ? DamI18n.t("nav.device_session_tip")
+        : "Sesja urządzenia: ścieżki Marketing na tym PC");
     return NAV_ITEMS.map(function (item) {
       var label = navItemLabel(item);
       var on = item.key === active;
@@ -688,13 +694,13 @@
         '<span class="dam-nav-label" data-i18n="' + item.i18n + '">' + label + '</span>' +
         '</a></li>';
     }).join("") +
-    /* (1) Sesja urzÄ…dzenia - naturalnie po nav (BEZ margin-top:auto = bez pchania w dol) */
+    /* (1) Sesja urządzenia - naturalnie po nav (BEZ margin-top:auto = bez pchania w dol) */
     '<li class="geex-sidebar__menu__item dam-nav-device-session">' +
     '<a href="profile.html#damDevicePathsRoot" class="geex-sidebar__menu__link dam-device-session-btn" id="damShellDeviceSession"' +
-    ' title="Sesja urzÄ…dzenia - Ĺ›cieĹĽki Marketing" aria-label="Sesja urzÄ…dzenia"' +
-    ' data-dam-tip="Sesja urzÄ…dzenia: Ĺ›cieĹĽki Marketing na tym PC">' +
+    ' title="' + deviceLabel + ' - ścieżki Marketing" aria-label="' + deviceLabel + '"' +
+    ' data-i18n-tip="nav.device_session_tip" data-dam-tip="' + deviceTip + '">' +
     '<i class="uil uil-desktop" aria-hidden="true" style="font-size:20px;margin-right:8px;width:22px;text-align:center"></i>' +
-    '<span class="dam-nav-label">Sesja urzÄ…dzenia</span>' +
+    '<span class="dam-nav-label" data-i18n="nav.device_session">' + deviceLabel + '</span>' +
     '</a></li>' +
     /* (2) Wyloguj - prawdziwy logout, +50px friction od Sesji */
     '<li class="geex-sidebar__menu__item dam-nav-logout">' +
@@ -706,7 +712,7 @@
     '</a></li>';
   }
 
-  /** Sidebar: Sesja urzÄ…dzenia -> profil z CRUD Ĺ›cieĹĽek per device (nie logout). */
+  /** Sidebar: Sesja urządzenia -> profil z CRUD ścieżek per device (nie logout). */
   function goDeviceSessionPaths(e) {
     if (e) e.preventDefault();
     var target = "profile.html#damDevicePathsRoot";
@@ -2242,9 +2248,9 @@
       if (link._damDeviceBound) return;
       link._damDeviceBound = true;
       link.setAttribute("href", "profile.html#damDevicePathsRoot");
-      link.setAttribute("title", "Sesja urzÄ…dzenia - Ĺ›cieĹĽki Marketing");
-      link.setAttribute("aria-label", "Sesja urzÄ…dzenia");
-      link.setAttribute("data-dam-tip", "Sesja urzÄ…dzenia: Ĺ›cieĹĽki Marketing na tym PC");
+      link.setAttribute("title", "Sesja urządzenia - ścieżki Marketing");
+      link.setAttribute("aria-label", "Sesja urządzenia");
+      link.setAttribute("data-dam-tip", "Sesja urządzenia: ścieżki Marketing na tym PC");
       link.addEventListener("click", goDeviceSessionPaths);
     });
     document.querySelectorAll(
@@ -3085,13 +3091,13 @@
     }
     if (!window.DamCacheSync && !document.querySelector("script[data-dam-cache-sync]")) {
       var cs = document.createElement("script");
-      cs.src = "assets/js/dam-cache-sync.js?v=6.0.4";
+      cs.src = "assets/js/dam-cache-sync.js?v=6.0.9";
       cs.setAttribute("data-dam-cache-sync", "1");
       document.head.appendChild(cs);
     }
     if (!window.DamIndexPoller && !document.querySelector("script[src*='dam-index-poller']")) {
       var ip = document.createElement("script");
-      ip.src = "assets/js/dam-index-poller.js?v=6.0.4";
+      ip.src = "assets/js/dam-index-poller.js?v=6.0.9";
       ip.setAttribute("data-dam-index-poller", "1");
       document.head.appendChild(ip);
     }

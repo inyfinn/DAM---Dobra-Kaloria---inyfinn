@@ -98,9 +98,14 @@
     var h = loaderH || 38;
     if (fab) {
       var fr = fab.getBoundingClientRect();
+      var extra = 0;
+      var badge = document.getElementById("damIndexFabBadge");
+      if (badge && !badge.hidden && document.body && document.body.classList.contains("dam-index-fab-on")) {
+        extra = Math.round(fr.height) || FAB_FALLBACK.size;
+      }
       return {
         left: Math.round(fr.left + fr.width / 2 - w / 2),
-        top: Math.round(fr.top - FAB_GAP - h),
+        top: Math.round(fr.top - FAB_GAP - h - extra),
       };
     }
     var fb = FAB_FALLBACK;

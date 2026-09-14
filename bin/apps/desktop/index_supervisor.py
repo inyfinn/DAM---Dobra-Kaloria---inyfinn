@@ -35,6 +35,7 @@ PRODUCT_REBUILD_LOCK = DATA_DIR / "index-rebuild.lock.json"
 CONTROL_FILE = DATA_DIR / "index-control.json"
 INDEX_FILE = WEB_ROOT / "data" / "file-index.json"
 WEB_INDEX = INDEX_FILE
+BRANDING_HEAD = WEB_ROOT / "data" / "branding-grid-head.json"
 LIVE_FILE = DATA_DIR / "index-live.json"
 SNAPSHOT_FILE = DATA_DIR / "index-run-snapshot.json"
 REPORT_FILE = DATA_DIR / "index-last-report.json"
@@ -311,23 +312,47 @@ def read_last_report() -> dict[str, Any]:
     return read_report()
 
 
+def _hydrate_report_counts(data: dict[str, Any]) -> dict[str, Any]:
+    """Never serve a blank 'nothing' when counts exist. Do not json.loads file-index here."""
+    if not isinstance(data, dict):
+        data = {"ok": False, "items": []}
+    items = data.get("items") if isinstance(data.get("items"), list) else []
+    data["items"] = items
+    added = int(data.get("added") or 0)
+    changed = int(data.get("changed") or 0)
+    after = int(data.get("product_count_after") or 0)
+    before = int(data.get("product_count_before") or 0)
+    scanned = int(data.get("scanned") or after or before or 0)
+    data["scanned"] = scanned
+    data["added"] = added
+    data["changed"] = changed
+    unchanged = int(data.get("unchanged") or max(0, scanned - added - changed))
+    data["unchanged"] = unchanged
+    data["empty"] = scanned <= 0 and len(items) == 0
+    return data
+
+
 def read_report() -> dict[str, Any]:
     if not REPORT_FILE.is_file():
         ctrl = read_control()
         items = ctrl.get("last_run_new")
         if isinstance(items, list):
-            return {
-                "ok": True,
-                "items": items,
-                "finished_at": str(ctrl.get("last_run_at") or ""),
-                "from_control": True,
-            }
-        return {"ok": True, "items": [], "finished_at": ""}
+            return _hydrate_report_counts(
+                {
+                    "ok": True,
+                    "items": items,
+                    "finished_at": str(ctrl.get("last_run_at") or ""),
+                    "from_control": True,
+                    "added": int(ctrl.get("last_run_added") or 0),
+                    "changed": int(ctrl.get("last_run_changed") or 0),
+                }
+            )
+        return _hydrate_report_counts({"ok": True, "items": [], "finished_at": ""})
     try:
         data = json.loads(REPORT_FILE.read_text(encoding="utf-8"))
-        return data if isinstance(data, dict) else {"ok": False, "items": []}
+        return _hydrate_report_counts(data if isinstance(data, dict) else {"ok": False, "items": []})
     except (OSError, json.JSONDecodeError):
-        return {"ok": False, "items": []}
+        return _hydrate_report_counts({"ok": False, "items": []})
 
 
 def _index_snapshot_map(idx: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -358,6 +383,91 @@ def _index_snapshot_map(idx: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return out
 
 
+def _branding_snapshot_map() -> dict[str, dict[str, Any]]:
+    """Slim branding-grid-head only (never fat branding-index.json)."""
+    if not BRANDING_HEAD.is_file():
+        return {}
+    try:
+        data = json.loads(BRANDING_HEAD.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    assets = data.get("assets") if isinstance(data, dict) else []
+    out: dict[str, dict[str, Any]] = {}
+    if not isinstance(assets, list):
+        return out
+    for asset in assets:
+        if not isinstance(asset, dict):
+            continue
+        aid = str(asset.get("id") or asset.get("path") or "")
+        if not aid:
+            continue
+        tags = asset.get("tags") or []
+        out[aid] = {
+            "id": aid,
+            "name": asset.get("name") or aid,
+            "path": asset.get("path") or "",
+            "category": asset.get("asset_role") or asset.get("source") or "",
+            "role": asset.get("asset_role") or "",
+            "tags": [str(t) for t in tags] if isinstance(tags, list) else [],
+        }
+    return out
+
+
+def _entry_changed(old: dict[str, Any], cur: dict[str, Any], *, source: str) -> bool:
+    if source == "branding":
+        return (
+            str(old.get("name") or "") != str(cur.get("name") or "")
+            or str(old.get("path") or "") != str(cur.get("path") or "")
+            or str(old.get("role") or "") != str(cur.get("role") or "")
+            or list(old.get("tags") or []) != list(cur.get("tags") or [])
+        )
+    return (
+        int(old.get("revision_count") or 0) != int(cur.get("revision_count") or 0)
+        or list(old.get("indexes") or []) != list(cur.get("indexes") or [])
+        or int(old.get("files") or 0) != int(cur.get("files") or 0)
+    )
+
+
+def _diff_maps(
+    old_map: dict[str, Any],
+    now_map: dict[str, Any],
+    *,
+    source: str,
+    cap: int,
+) -> tuple[list[dict[str, Any]], int, int, int]:
+    items: list[dict[str, Any]] = []
+    added = 0
+    changed = 0
+    for pid, cur in now_map.items():
+        if not isinstance(cur, dict):
+            continue
+        old = old_map.get(pid) if isinstance(old_map.get(pid), dict) else None
+        kind = ""
+        if old is None:
+            kind = "added"
+            added += 1
+        elif _entry_changed(old, cur, source=source):
+            kind = "changed"
+            changed += 1
+        if not kind:
+            continue
+        items.append(
+            {
+                "id": pid,
+                "kind": kind,
+                "name": cur.get("name") or pid,
+                "label": cur.get("name") or pid,
+                "path": cur.get("path") or "",
+                "category": cur.get("category") or "",
+                "source": source,
+            }
+        )
+        if len(items) >= cap:
+            break
+    unchanged = max(0, len(now_map) - added - changed)
+    return items, added, changed, unchanged
+
+
 def _load_web_index() -> dict[str, Any]:
     if not WEB_INDEX.is_file():
         return {}
@@ -373,11 +483,14 @@ def begin_run_snapshot() -> dict[str, Any]:
     prev = _index_snapshot_map(idx)
     nprod = len(prev)
     nfiles = sum(int(v.get("files") or 0) for v in prev.values())
+    branding = _branding_snapshot_map()
     snap = {
         "started_at": _utc(),
         "products": prev,
         "product_count": nprod,
         "file_count": nfiles,
+        "branding": branding,
+        "branding_count": len(branding),
     }
     try:
         if WEB_INDEX.is_file():
@@ -417,47 +530,50 @@ def complete_run_report(*, ok: bool = True, cancelled: bool = False, rc: int | N
     except (OSError, json.JSONDecodeError):
         prev_body = {}
     old_map = prev_body.get("products") if isinstance(prev_body.get("products"), dict) else {}
-    idx = _load_web_index() if ok else {}
-    now_map = _index_snapshot_map(idx) if ok else {}
-    items: list[dict[str, Any]] = []
-    for pid, cur in now_map.items():
-        old = old_map.get(pid) if isinstance(old_map.get(pid), dict) else None
-        kind = ""
-        if old is None:
-            kind = "added"
-        elif (
-            int(old.get("revision_count") or 0) != int(cur.get("revision_count") or 0)
-            or list(old.get("indexes") or []) != list(cur.get("indexes") or [])
-            or int(old.get("files") or 0) != int(cur.get("files") or 0)
-        ):
-            kind = "changed"
-        if not kind:
-            continue
-        items.append(
-            {
-                "id": pid,
-                "kind": kind,
-                "name": cur.get("name") or pid,
-                "label": cur.get("name") or pid,
-                "path": cur.get("path") or "",
-                "category": cur.get("category") or "",
-            }
-        )
-        if len(items) >= MAX_NEW_ITEMS:
-            break
+    old_brand = prev_body.get("branding") if isinstance(prev_body.get("branding"), dict) else {}
+    # Always load current indexes (even on rc != 0). Skipping the load zeroed
+    # product_count_after and produced a blank "Nic nowego" report.
+    idx = _load_web_index()
+    now_map = _index_snapshot_map(idx)
+    now_brand = _branding_snapshot_map()
+    brand_cap = min(MAX_NEW_ITEMS, 80)
+    brand_items, b_added, b_changed, b_unchanged = _diff_maps(
+        old_brand, now_brand, source="branding", cap=brand_cap
+    )
+    prod_items, p_added, p_changed, p_unchanged = _diff_maps(
+        old_map, now_map, source="product", cap=max(0, MAX_NEW_ITEMS - len(brand_items))
+    )
+    items = brand_items + prod_items
+    files_after = sum(int(v.get("files") or 0) for v in now_map.values())
+    files_before = int(prev_body.get("file_count") or 0)
+    scanned = len(now_map)
+    added = p_added + b_added
+    changed = p_changed + b_changed
+    unchanged = p_unchanged
     report = {
-        "ok": bool(ok),
+        "ok": bool(ok) and not cancelled,
         "cancelled": bool(cancelled),
         "rc": rc,
         "finished_at": _utc(),
         "generated_at": _utc(),
         "started_at": prev_body.get("started_at") or "",
         "items": items,
-        "added": sum(1 for it in items if it.get("kind") == "added"),
-        "changed": sum(1 for it in items if it.get("kind") == "changed"),
-        "empty": len(items) == 0,
+        "added": added,
+        "changed": changed,
+        "unchanged": unchanged,
+        "scanned": scanned,
+        "empty": scanned <= 0 and len(items) == 0,
         "product_count_before": int(prev_body.get("product_count") or len(old_map)),
-        "product_count_after": len(now_map),
+        "product_count_after": scanned,
+        "files_before": files_before,
+        "files_after": files_after,
+        "branding_added": b_added,
+        "branding_changed": b_changed,
+        "branding_unchanged": b_unchanged,
+        "branding_scanned": len(now_brand),
+        "product_added": p_added,
+        "product_changed": p_changed,
+        "product_unchanged": p_unchanged,
     }
     _write_json_atomic(REPORT_FILE, report)
     live = read_live()
@@ -471,6 +587,46 @@ def complete_run_report(*, ok: bool = True, cancelled: bool = False, rc: int | N
     write_live(live)
     ctrl = read_control()
     ctrl["last_run_at"] = report["finished_at"]
+    ctrl["last_run_new"] = items
+    ctrl["last_run_new_count"] = len(items)
+    ctrl["last_run_added"] = report["added"]
+    ctrl["last_run_changed"] = report["changed"]
+    ctrl["last_run_unchanged"] = unchanged
+    ctrl["last_run_scanned"] = scanned
+    write_control(ctrl)
+    return report
+
+
+def merge_branding_into_report() -> dict[str, Any]:
+    """After branding-grid rebuild: merge head delta into the last file-index report."""
+    prev_body = read_run_snapshot()
+    old_brand = prev_body.get("branding") if isinstance(prev_body.get("branding"), dict) else {}
+    now_brand = _branding_snapshot_map()
+    brand_items, b_added, b_changed, b_unchanged = _diff_maps(
+        old_brand, now_brand, source="branding", cap=80
+    )
+    report = read_report()
+    existing = [
+        it
+        for it in (report.get("items") or [])
+        if isinstance(it, dict) and it.get("source") != "branding"
+    ]
+    items = (brand_items + existing)[:MAX_NEW_ITEMS]
+    p_added = int(report.get("product_added") or 0)
+    p_changed = int(report.get("product_changed") or 0)
+    report["items"] = items
+    report["branding_added"] = b_added
+    report["branding_changed"] = b_changed
+    report["branding_unchanged"] = b_unchanged
+    report["branding_scanned"] = len(now_brand)
+    report["added"] = p_added + b_added
+    report["changed"] = p_changed + b_changed
+    scanned = int(report.get("scanned") or report.get("product_count_after") or 0)
+    report["scanned"] = scanned
+    report["empty"] = scanned <= 0 and len(items) == 0
+    report["branding_merged_at"] = _utc()
+    _write_json_atomic(REPORT_FILE, report)
+    ctrl = read_control()
     ctrl["last_run_new"] = items
     ctrl["last_run_new_count"] = len(items)
     ctrl["last_run_added"] = report["added"]

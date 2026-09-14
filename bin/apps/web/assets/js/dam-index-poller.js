@@ -160,7 +160,27 @@
   }
 
   function emptyReportCopy(rep) {
-    return "Nic nowego";
+    if (global.DamCacheSync && typeof global.DamCacheSync.openReport === "function") {
+      return "";
+    }
+    var scanned = Number((rep && (rep.scanned || rep.product_count_after)) || 0);
+    var added = Number((rep && rep.added) || 0);
+    var changed = Number((rep && rep.changed) || 0);
+    var unchanged = Number((rep && rep.unchanged) || 0);
+    if (scanned || added || changed || unchanged) {
+      return (
+        "Nowe " +
+        added +
+        " · zaktualizowane " +
+        changed +
+        " · bez zmian " +
+        unchanged +
+        ". Przeskanowano " +
+        scanned +
+        " elementów."
+      );
+    }
+    return "Nowe 0 · zaktualizowane 0 · bez zmian 0.";
   }
 
   function injectLiveStyle() {
@@ -230,14 +250,6 @@
     var orig = api.openReport;
     api.openReport = function (rep) {
       orig(rep);
-      var lead = document.querySelector("#damIndexReport .dam-index-report__lead");
-      if (!lead) return;
-      var data = rep || {};
-      var items = data.items || data.new_items || [];
-      if (!items.length) {
-        lead.textContent = emptyReportCopy(data);
-        lead.classList.add("is-empty");
-      }
     };
   }
 
@@ -272,13 +284,7 @@
   }
 
   function patchEmptyReportLead() {
-    var lead = document.querySelector("#damIndexReport .dam-index-report__lead");
-    if (!lead) return;
-    var txt = String(lead.textContent || "").trim();
-    if (txt === "Nic nowego" || txt === "Nic nowego.") {
-      lead.textContent = emptyReportCopy({});
-      lead.classList.add("is-empty");
-    }
+    /* Honest counts live in DamCacheSync.openReport. Do not force "Nic nowego". */
   }
 
   function bootLiveUi() {
@@ -303,4 +309,26 @@
     }
     var tries = 0;
     (function waitCache() {
-      wrapOpenReport()
+      wrapOpenReport();
+      if (global.DamCacheSync && global.DamCacheSync.__damLiveWrapped) return;
+      tries += 1;
+      if (tries < 40) setTimeout(waitCache, 250);
+    })();
+    liveTick();
+  }
+
+  global.DamIndexPoller = {
+    create: createPoller,
+    pickGeneration: pickGeneration,
+    isRunning: isRunning,
+    bootLiveUi: bootLiveUi,
+  };
+
+  if (typeof document !== "undefined") {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", bootLiveUi);
+    } else {
+      bootLiveUi();
+    }
+  }
+})(typeof window !== "undefined" ? window : globalThis);

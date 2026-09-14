@@ -48,3 +48,12 @@
 ## Zakazy bez komendy
 
 commit, push, reset, force pull, xcopy D-X, junction `apps/`, checkout plikow kolizji z D.
+
+## Mac (6.0.9) — propozycja, nie instalator
+
+Windows zostaje: `DAM.exe` + WebView2 + Inno per-user `{localappdata}\Programs\DAM` (PrivilegesRequired=lowest).
+
+- Dziś UI to HTTP na **:8765** (most :8766). Na Macu Safari/Chrome otwiera ten sam panel, jeśli Python serwuje `serve_browser.py`.
+- Domyślny następny krok: **pywebview (cocoa / WKWebView)** + ten sam `bin/apps/web`. Start: `python apps/desktop/__main__.py` (na Darwinie `dam_macos.py`; na Windowsie bez zmian `launch.py`).
+- Blokery: WebView2 jest tylko na Windows; podpisany `.dmg` wymaga Apple Developer ID + notarize. **Nie ma** instalatora Maca w 6.0.9.
+

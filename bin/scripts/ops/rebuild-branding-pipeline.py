@@ -86,6 +86,12 @@ def main() -> int:
                 "python": py,
             }
         )
+        try:
+            import index_supervisor
+
+            index_supervisor.merge_branding_into_report()
+        except Exception as exc:  # noqa: BLE001
+            print(f"[branding-pipeline] report merge skip: {exc}")
         return 0
     finally:
         try:

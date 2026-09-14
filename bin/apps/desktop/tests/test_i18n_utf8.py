@@ -31,6 +31,12 @@ class I18nUtf8Tests(unittest.TestCase):
         self.assertIn("Włącz", data["viz.show_all_tip"])
         self.assertIn("Wyłącz", data["viz.show_all_tip"])
 
+    def test_pl_json_index_done_has_n(self):
+        data = json.loads(PL_JSON.read_text(encoding="utf-8"))
+        self.assertEqual(data["index.done"], "Indeksowanie zakończone")
+        self.assertIn("ń", data["index.done"])
+        self.assertEqual(data["nav.device_session"], "Sesja urządzenia")
+
     def test_pl_json_valid_utf8_no_replacement(self):
         raw = PL_JSON.read_text(encoding="utf-8")
         self.assertNotIn("\ufffd", raw)

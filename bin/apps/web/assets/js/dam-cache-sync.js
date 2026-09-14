@@ -14,6 +14,12 @@
   var MIN_TOUCH = 44;
   var REPORT_KEY = "dam_index_last_report";
   var ACK_KEY = "dam_index_report_ack";
+  var TOAST_DAY_KEY = "dam_index_toast_day";
+  var FAB_ID = "damIndexFabBadge";
+  var CHECK_ANIM_MS = 4000;
+  var DONE_DWELL_MS = 3 * 60 * 1000;
+  var FAB_SIZE = 44;
+  var FAB_GAP = 10;
 
   var _timer = null;
   var _minimized = false;
@@ -22,6 +28,10 @@
   var _wasRunning = false;
   var _awaitAck = false;
   var _lastReport = null;
+  var _toastPinned = false;
+  var _fabPhase = "idle";
+  var _fabHideTimer = null;
+  var _fabAnimTimer = null;
 
   function bridgeBase() {
     if (global.DamRuntime && typeof global.DamRuntime.bridgeUrl === "function") {
@@ -56,6 +66,38 @@
     var parts = s.split("/").filter(Boolean);
     if (parts.length <= 4) return s;
     return parts.slice(-4).join("/");
+  }
+
+  function tt(key, fallback) {
+    var v =
+      global.DamI18n && typeof global.DamI18n.t === "function" ? global.DamI18n.t(key) : "";
+    if (v && v !== key) return v;
+    return fallback;
+  }
+
+  function fillTpl(tpl, map) {
+    return String(tpl || "").replace(/\{(\w+)\}/g, function (_m, k) {
+      return map[k] != null ? String(map[k]) : "";
+    });
+  }
+
+  function localDayKey() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  function toastShownToday() {
+    try {
+      return localStorage.getItem(TOAST_DAY_KEY) === localDayKey();
+    } catch (_e) {
+      return false;
+    }
+  }
+
+  function markToastShownToday() {
+    try {
+      localStorage.setItem(TOAST_DAY_KEY, localDayKey());
+    } catch (_e) {}
   }
 
   function persistReport(rep) {
@@ -177,9 +219,69 @@
       "html[data-theme='dark'] #" + HOST_ID + " .dam-job-toast__title{color:#fff;}" +
       "html[data-theme='dark'] #" + HOST_ID + " .dam-job-toast__now{color:#e4dff0;}" +
       "html[data-theme='dark'] #" + HOST_ID + " .dam-job-toast__meta," +
-      "html[data-theme='dark'] #" + HOST_ID + " .dam-job-toast__path{color:#c9c4d4;}" +
-      "html[data-theme='dark'] #" + PILL_ID + "{background:#1f1d27;color:#eceaf3;border-color:rgba(255,255,255,.08);}" +
-      "html[data-theme='dark'] #" + REPORT_ID + " .dam-index-report__card{background:#1f1d27;color:#eceaf3;}";
+      "html[data-theme='dark'] #" + HOST_ID + " .dam-job-toast__path{color:var(--dam-text-muted,#c9c4d4);}" +
+      "html[data-theme='dark'] #" + PILL_ID + "{background:var(--dam-surface,#1f1d27);color:var(--dam-text,#eceaf3);border-color:rgba(255,255,255,.08);}" +
+      "html[data-theme='dark'] #" + REPORT_ID + " .dam-index-report__card{background:var(--dam-surface,#1f1d27);color:var(--dam-text,#eceaf3);}" +
+      "#" + FAB_ID + "{" +
+        "position:fixed;right:20px;z-index:10050;" +
+        "bottom:calc(20px + " + FAB_SIZE + "px + " + FAB_GAP + "px);" +
+        "width:" + FAB_SIZE + "px;height:" + FAB_SIZE + "px;" +
+        "min-width:" + MIN_TOUCH + "px;min-height:" + MIN_TOUCH + "px;" +
+        "display:flex;align-items:center;justify-content:center;" +
+        "pointer-events:none;" +
+      "}" +
+      "#" + FAB_ID + "[hidden]{display:none!important;}" +
+      "#" + FAB_ID + " .dam-index-fab__hit{" +
+        "position:relative;width:" + FAB_SIZE + "px;height:" + FAB_SIZE + "px;" +
+        "min-width:" + MIN_TOUCH + "px;min-height:" + MIN_TOUCH + "px;" +
+        "border:0;border-radius:999px;cursor:pointer;pointer-events:auto;" +
+        "background:var(--dam-surface,#fff);" +
+        "box-shadow:0 8px 24px color-mix(in srgb, var(--dam-dark, #17161E) 14%, transparent);" +
+        "display:inline-flex;align-items:center;justify-content:center;padding:0;" +
+      "}" +
+      "#" + FAB_ID + " .dam-index-fab__hit:focus-visible{outline:2px solid var(--dam-primary);outline-offset:2px;}" +
+      "#" + FAB_ID + " .dam-index-fab__spin{" +
+        "width:18px;height:18px;border-radius:50%;box-sizing:border-box;" +
+        "border:2.5px solid color-mix(in srgb, var(--dam-primary) 22%, transparent);" +
+        "border-top-color:var(--dam-primary);" +
+        "animation:damIndexFabSpin .8s linear infinite;" +
+      "}" +
+      "#" + FAB_ID + " .dam-index-fab__check{display:none;width:22px;height:22px;}" +
+      "#" + FAB_ID + ".is-done .dam-index-fab__spin{display:none;}" +
+      "#" + FAB_ID + " .dam-index-fab__check-ring{" +
+        "fill:none;stroke:var(--dam-ok);stroke-width:2;stroke-linecap:round;" +
+      "}" +
+      "#" + FAB_ID + " .dam-index-fab__check-mark{" +
+        "fill:none;stroke:var(--dam-ok);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;" +
+      "}" +
+      "#" + FAB_ID + ".is-anim .dam-index-fab__check-ring{" +
+        "stroke-dasharray:64;stroke-dashoffset:64;" +
+        "animation:damIndexFabRing 4s ease forwards;" +
+      "}" +
+      "#" + FAB_ID + ".is-anim .dam-index-fab__check-mark{" +
+        "stroke-dasharray:24;stroke-dashoffset:24;" +
+        "animation:damIndexFabDraw 4s ease forwards;" +
+      "}" +
+      "#" + FAB_ID + ".is-done .dam-index-fab__check{display:block;}" +
+      "#" + FAB_ID + " .dam-index-fab__dismiss{" +
+        "position:absolute;top:-8px;right:-8px;width:22px;height:22px;min-width:22px;min-height:22px;" +
+        "border:0;border-radius:999px;cursor:pointer;pointer-events:auto;" +
+        "display:none;align-items:center;justify-content:center;padding:0;" +
+        "background:var(--dam-surface,#fff);color:var(--dam-danger);" +
+        "box-shadow:0 2px 8px color-mix(in srgb, var(--dam-dark) 16%, transparent);" +
+        "font-size:14px;line-height:1;" +
+      "}" +
+      "#" + FAB_ID + ":hover .dam-index-fab__dismiss," +
+      "#" + FAB_ID + " .dam-index-fab__dismiss:focus-visible{display:inline-flex;}" +
+      "#" + FAB_ID + " .dam-index-fab__dismiss:focus-visible{outline:2px solid var(--dam-danger);outline-offset:2px;}" +
+      "@keyframes damIndexFabSpin{to{transform:rotate(360deg)}}" +
+      "@keyframes damIndexFabRing{to{stroke-dashoffset:0}}" +
+      "@keyframes damIndexFabDraw{to{stroke-dashoffset:0}}" +
+      "@media (prefers-reduced-motion: reduce){" +
+        "#" + FAB_ID + " .dam-index-fab__spin{animation:none!important;border-top-color:color-mix(in srgb, var(--dam-primary) 45%, transparent);}" +
+        "#" + FAB_ID + ".is-anim .dam-index-fab__check-ring," +
+        "#" + FAB_ID + ".is-anim .dam-index-fab__check-mark{animation:none!important;stroke-dashoffset:0;}" +
+      "}";
     document.head.appendChild(st);
   }
 
@@ -256,8 +358,17 @@
     if (closeBtn) {
       closeBtn.addEventListener("click", function () {
         ackReport(_lastReport || loadPersistedReport());
+        _toastPinned = false;
+        _awaitAck = false;
         el.hidden = true;
         countPill().hidden = true;
+        if (_fabPhase === "done") {
+          var badge = document.getElementById(FAB_ID);
+          if (badge) {
+            badge.hidden = false;
+            setFabBodyFlag(true);
+          }
+        }
       });
     }
     var reportBtn = el.querySelector("#damJobToastReport");
@@ -267,6 +378,129 @@
       });
     }
     return el;
+  }
+
+  function clearFabTimers() {
+    if (_fabHideTimer) {
+      clearTimeout(_fabHideTimer);
+      _fabHideTimer = null;
+    }
+    if (_fabAnimTimer) {
+      clearTimeout(_fabAnimTimer);
+      _fabAnimTimer = null;
+    }
+  }
+
+  function setFabBodyFlag(on) {
+    if (!document.body) return;
+    document.body.classList.toggle("dam-index-fab-on", !!on);
+  }
+
+  function hideFab() {
+    clearFabTimers();
+    _fabPhase = "idle";
+    var badge = document.getElementById(FAB_ID);
+    if (badge) badge.hidden = true;
+    setFabBodyFlag(false);
+  }
+
+  function pinToastFromFab() {
+    _toastPinned = true;
+    _awaitAck = true;
+    var toast = host();
+    toast.hidden = false;
+    applyView(
+      { running: false },
+      {
+        progress: { running: false },
+        rebuild_running: false,
+        last_report: _lastReport || loadPersistedReport(),
+      }
+    );
+  }
+
+  function fabHost() {
+    var el = document.getElementById(FAB_ID);
+    if (el) return el;
+    el = document.createElement("div");
+    el.id = FAB_ID;
+    el.hidden = true;
+    el.innerHTML =
+      '<button type="button" class="dam-index-fab__hit" id="damIndexFabHit">' +
+        '<span class="dam-index-fab__spin" aria-hidden="true"></span>' +
+        '<svg class="dam-index-fab__check" viewBox="0 0 24 24" aria-hidden="true">' +
+          '<circle class="dam-index-fab__check-ring" cx="12" cy="12" r="10"></circle>' +
+          '<path class="dam-index-fab__check-mark" d="M7 12.5l3.2 3.2L17 8.8"></path>' +
+        "</svg>" +
+      "</button>" +
+      '<button type="button" class="dam-index-fab__dismiss" id="damIndexFabDismiss">' +
+        '<i class="uil uil-times" aria-hidden="true"></i>' +
+      "</button>";
+    document.body.appendChild(el);
+    var hit = el.querySelector("#damIndexFabHit");
+    var dismiss = el.querySelector("#damIndexFabDismiss");
+    if (hit) {
+      hit.addEventListener("click", function () {
+        pinToastFromFab();
+      });
+    }
+    if (dismiss) {
+      dismiss.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        hideFab();
+      });
+    }
+    return el;
+  }
+
+  function showFabRunning() {
+    ensureCss();
+    var el = fabHost();
+    clearFabTimers();
+    _fabPhase = "running";
+    el.hidden = false;
+    el.classList.remove("is-done", "is-anim");
+    var hit = el.querySelector("#damIndexFabHit");
+    var dismiss = el.querySelector("#damIndexFabDismiss");
+    if (hit) {
+      hit.setAttribute("aria-label", tt("index.fab_running", "Indeksowanie w tle"));
+      hit.setAttribute("title", tt("index.fab_running", "Indeksowanie w tle"));
+    }
+    if (dismiss) {
+      dismiss.setAttribute("aria-label", tt("index.dismiss", "Ukryj"));
+    }
+    setFabBodyFlag(true);
+  }
+
+  function showFabDone() {
+    ensureCss();
+    var el = fabHost();
+    var reduce =
+      global.matchMedia && global.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    _fabPhase = "done";
+    el.hidden = false;
+    el.classList.add("is-done");
+    el.classList.toggle("is-anim", !reduce);
+    var hit = el.querySelector("#damIndexFabHit");
+    var dismiss = el.querySelector("#damIndexFabDismiss");
+    if (hit) {
+      hit.setAttribute("aria-label", tt("index.fab_done", "Indeksowanie zakończone"));
+      hit.setAttribute("title", tt("index.fab_done", "Indeksowanie zakończone"));
+    }
+    if (dismiss) {
+      dismiss.setAttribute("aria-label", tt("index.dismiss", "Ukryj"));
+    }
+    setFabBodyFlag(true);
+    if (_fabAnimTimer) clearTimeout(_fabAnimTimer);
+    _fabAnimTimer = setTimeout(function () {
+      el.classList.remove("is-anim");
+      _fabAnimTimer = null;
+    }, CHECK_ANIM_MS);
+    if (_fabHideTimer) clearTimeout(_fabHideTimer);
+    _fabHideTimer = setTimeout(function () {
+      hideFab();
+    }, DONE_DWELL_MS);
   }
 
   function fmtEta(sec) {
@@ -314,6 +548,37 @@
       });
   }
 
+  function reportLead(data) {
+    var added = Number((data && data.added) || 0);
+    var changed = Number((data && data.changed) || 0);
+    var scanned = Number(
+      (data && (data.scanned || data.product_count_after || data.product_count_before)) || 0
+    );
+    var unchanged = Number((data && data.unchanged) || Math.max(0, scanned - added - changed));
+    var files = Number((data && (data.files_after || data.files_before)) || 0);
+    var bScan = Number((data && data.branding_scanned) || 0);
+    if (!scanned && !added && !changed) {
+      scanned = (data && data.items && data.items.length) || 0;
+    }
+    var tpl = tt(
+      "index.report_lead",
+      "Nowe {added} · zaktualizowane {changed} · bez zmian {unchanged}. Przeskanowano {scanned} elementów, {files} plików."
+    );
+    var lead = fillTpl(tpl, {
+      added: added,
+      changed: changed,
+      unchanged: unchanged,
+      scanned: scanned,
+      files: files,
+    });
+    if (bScan) {
+      lead +=
+        " " +
+        fillTpl(tt("index.report_branding", "Materiały branding: {n}."), { n: bScan });
+    }
+    return lead;
+  }
+
   function openReport(rep) {
     ensureCss();
     var data = rep || loadPersistedReport() || { items: [], empty: true };
@@ -329,29 +594,34 @@
     }
     var rows = items
       .map(function (it) {
-        var kind = it.kind === "changed" ? "Zmiana" : "Nowe";
+        var kind =
+          it.kind === "changed"
+            ? tt("index.kind_changed", "Zmiana")
+            : tt("index.kind_new", "Nowe");
         return (
           "<li><span class=\"dam-index-report__kind\">" +
           esc(kind) +
           "</span> " +
           esc(it.name || it.id || "") +
-          (it.category ? " <span style=\"color:#7a7388\">(" + esc(it.category) + ")</span>" : "") +
+          (it.category ? " <span style=\"color:var(--dam-text-muted,#7a7388)\">(" + esc(it.category) + ")</span>" : "") +
           "</li>"
         );
       })
       .join("");
-    var lead = items.length
-      ? "Nowe i zmienione w tym przebiegu: " + items.length + "."
-      : "Nic nowego";
+    var lead = reportLead(data);
     el.innerHTML =
       '<div class="dam-index-report__card">' +
-        ' <h2 id="damIndexReportTitle">Raport indeksowania</h2>' +
+        '<h2 id="damIndexReportTitle">' +
+        esc(tt("index.report_title", "Raport indeksowania")) +
+        "</h2>" +
         '<p class="dam-index-report__lead">' +
         esc(lead) +
         "</p>" +
         (items.length ? "<ul>" + rows + "</ul>" : "") +
         '<div class="dam-index-report__actions">' +
-          '<button type="button" class="is-ghost" id="damIndexReportClose">Zamknij</button>' +
+          '<button type="button" class="is-ghost" id="damIndexReportClose">' +
+          esc(tt("index.close", "Zamknij")) +
+          "</button>" +
         "</div>" +
       "</div>";
     el.hidden = false;
@@ -398,22 +668,40 @@
     if (idxRun) {
       _wasRunning = true;
       _awaitAck = false;
+      showFabRunning();
     } else if (_wasRunning) {
       _wasRunning = false;
-      _awaitAck = true;
       fetchReport();
+      showFabDone();
+      if (!toastShownToday()) {
+        _awaitAck = true;
+        markToastShownToday();
+      } else if (!_toastPinned) {
+        _awaitAck = false;
+      }
     }
 
     var persisted = loadPersistedReport();
-    if (!idxRun && persisted && !isAcked(persisted)) {
+    if (!idxRun && persisted && !isAcked(persisted) && !toastShownToday() && !_toastPinned) {
       _awaitAck = true;
+      markToastShownToday();
     }
 
-    var show = syncRun || idxRun || snoozed || pendingHourly || _awaitAck;
-    el.hidden = !show;
-    if (!show) {
-      pill.hidden = true;
-      return;
+    var showToast =
+      syncRun ||
+      _toastPinned ||
+      (!idxRun && _awaitAck) ||
+      (!idxRun && snoozed) ||
+      (!idxRun && pendingHourly && !snoozed);
+    if (idxRun && !_toastPinned) {
+      showToast = false;
+    }
+
+    el.hidden = !showToast;
+    if (showToast && !idxRun && !syncRun && (_awaitAck || _toastPinned)) {
+      var hideBadge = document.getElementById(FAB_ID);
+      if (hideBadge) hideBadge.hidden = true;
+      setFabBodyFlag(false);
     }
 
     var lines = [];
@@ -425,10 +713,10 @@
     }
     if (idxRun) {
       var eta = fmtEta(progress.eta_sec != null ? progress.eta_sec : progress.remaining_sec);
-      lines.push(eta ? ("Indeksowanie · " + eta) : "Indeksowanie");
+      lines.push(eta ? (tt("index.running", "Indeksowanie") + " · " + eta) : tt("index.running", "Indeksowanie"));
       if (progress.pct) pct = Math.max(pct, Number(progress.pct) || 0);
-    } else if (_awaitAck) {
-      lines.push("Indeksowanie zakonczone");
+    } else if (_awaitAck || _toastPinned) {
+      lines.push(tt("index.done", "Indeksowanie zakończone"));
     } else if (pendingHourly && !snoozed) {
       lines.push("Pełny skan ROOT · start za chwilę");
     }
@@ -453,7 +741,10 @@
         " plików";
     }
     pill.textContent = countTxt;
-    pill.hidden = !countTxt || _minimized;
+    pill.hidden = !showToast || !countTxt || _minimized;
+    if (!showToast) {
+      return;
+    }
 
     if (_minimized) {
       title.textContent = lines[0] || "Praca w tle";
@@ -582,15 +873,53 @@
         ok: true,
         finished_at: new Date().toISOString(),
         items: [
-          { kind: "added", name: "Cynamonka nerkowcowy", category: "BATONY", path: "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/BATONY/Cynamonka" },
+          { kind: "added", name: "TUBA-PREZENT-DUŻO-DOBRA", category: "web_hero_slider", source: "branding" },
+          { kind: "added", name: "ZESTAW3", category: "www", source: "branding" },
         ],
+        added: 2,
+        changed: 0,
+        unchanged: 191,
+        scanned: 193,
+        files_after: 5417,
+        branding_scanned: 800,
         empty: false,
       });
+      _toastPinned = true;
       _awaitAck = true;
       _wasRunning = false;
+      showFabDone();
+      mockIndex = { progress: { running: false }, rebuild_running: false, last_report: _lastReport };
+    } else if (kind === "done-again" || kind === "fab-done") {
+      persistReport({
+        ok: true,
+        finished_at: new Date().toISOString(),
+        items: [],
+        added: 0,
+        changed: 0,
+        unchanged: 193,
+        scanned: 193,
+        files_after: 5417,
+        empty: false,
+      });
+      _toastPinned = false;
+      _awaitAck = false;
+      _wasRunning = false;
+      markToastShownToday();
+      showFabDone();
       mockIndex = { progress: { running: false }, rebuild_running: false, last_report: _lastReport };
     } else if (kind === "empty") {
-      persistReport({ ok: true, finished_at: new Date().toISOString(), items: [], empty: true });
+      persistReport({
+        ok: true,
+        finished_at: new Date().toISOString(),
+        items: [],
+        added: 0,
+        changed: 0,
+        unchanged: 193,
+        scanned: 193,
+        files_after: 5417,
+        empty: false,
+      });
+      _toastPinned = true;
       _awaitAck = true;
       _wasRunning = false;
       mockIndex = { progress: { running: false }, rebuild_running: false, last_report: _lastReport };
@@ -621,6 +950,9 @@
     refresh: tick,
     debugPreview: debugPreview,
     openReport: openReport,
+    showFabRunning: showFabRunning,
+    showFabDone: showFabDone,
+    hideFab: hideFab,
   };
 
   if (document.readyState === "loading") {
