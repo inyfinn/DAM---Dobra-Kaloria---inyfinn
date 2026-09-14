@@ -691,26 +691,6 @@
       ]
     },
     {
-      key: "costs",
-      label: "Kalkulator kosztów",
-      href: "costs.html",
-      steps: [
-        {
-          pose: "explain",
-          title: "Kalkulator kosztów",
-          text: "Kalkulator policzy koszty opakowań i materiałów FMCG. Podajesz parametry, wynik dostajesz od ręki.",
-          target: [".geex-content__section-wrapper", sideLink("costs.html")]
-        },
-        {
-          pose: "think",
-          title: "Kiedy się przydaje",
-          text: "Idealny przed wyceną albo gdy porównujesz warianty opakowania. Liczby zamiast zgadywania.",
-          target: [sideLink("costs.html")],
-          go: true
-        }
-      ]
-    },
-    {
       key: "integrations",
       label: "Integracje",
       href: "integrations.html",

@@ -20,7 +20,19 @@
       "source": "manual",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Folia laminowana"
+      "notes": "Folia laminowana",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "doypack",
+        "folia",
+        "folia"
+      ],
+      "qty_breaks": [
+        1000,
+        5000,
+        10000
+      ]
     },
     {
       "id": "cardboard_primary",
@@ -32,7 +44,13 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Tektura falista"
+      "notes": "Tektura falista",
+      "kind": "karton",
+      "aliases": [
+        "karton",
+        "tektura",
+        "karton"
+      ]
     },
     {
       "id": "cardboard_secondary",
@@ -44,7 +62,13 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Display / shipper"
+      "notes": "Display / shipper",
+      "kind": "karton",
+      "aliases": [
+        "karton",
+        "tektura",
+        "karton"
+      ]
     },
     {
       "id": "labels_primary",
@@ -56,7 +80,19 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Etykieta front/back"
+      "notes": "Etykieta front/back",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "doypack",
+        "folia",
+        "etykiety"
+      ],
+      "qty_breaks": [
+        1000,
+        5000,
+        10000
+      ]
     },
     {
       "id": "inks_varnish",
@@ -68,7 +104,14 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Flexo UV"
+      "notes": "Flexo UV",
+      "kind": "drukarnia",
+      "aliases": [
+        "drukarnia",
+        "druk",
+        "prepress",
+        "farby"
+      ]
     },
     {
       "id": "adhesives",
@@ -80,7 +123,12 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Klej hotmelt"
+      "notes": "Klej hotmelt",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "kleje"
+      ]
     },
     {
       "id": "shrink_sleeve",
@@ -92,7 +140,19 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Rękaw sleeve"
+      "notes": "Rękaw sleeve",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "doypack",
+        "folia",
+        "rekaw"
+      ],
+      "qty_breaks": [
+        1000,
+        5000,
+        10000
+      ]
     },
     {
       "id": "pallet_wrap",
@@ -104,7 +164,14 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Stretch folia"
+      "notes": "Stretch folia",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "doypack",
+        "folia",
+        "folia"
+      ]
     },
     {
       "id": "plate_cylinder",
@@ -116,7 +183,14 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Klisze flexo"
+      "notes": "Klisze flexo",
+      "kind": "drukarnia",
+      "aliases": [
+        "drukarnia",
+        "druk",
+        "prepress",
+        "formy"
+      ]
     },
     {
       "id": "color_matching",
@@ -128,7 +202,14 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Proof lab"
+      "notes": "Proof lab",
+      "kind": "drukarnia",
+      "aliases": [
+        "drukarnia",
+        "druk",
+        "prepress",
+        "dobor"
+      ]
     },
     {
       "id": "prepress_artwork",
@@ -140,7 +221,14 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "RIP + imposition"
+      "notes": "RIP + imposition",
+      "kind": "drukarnia",
+      "aliases": [
+        "drukarnia",
+        "druk",
+        "prepress",
+        "przygotowanie"
+      ]
     },
     {
       "id": "die_cut_prep",
@@ -152,7 +240,13 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Wykrojnik nowy"
+      "notes": "Wykrojnik nowy",
+      "kind": "wykrojnik",
+      "aliases": [
+        "wykrojnik",
+        "wykroj",
+        "przygotowanie"
+      ]
     },
     {
       "id": "barcode_check",
@@ -164,7 +258,14 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "GS1 check"
+      "notes": "GS1 check",
+      "kind": "drukarnia",
+      "aliases": [
+        "drukarnia",
+        "druk",
+        "prepress",
+        "weryfikacja"
+      ]
     },
     {
       "id": "regulatory_text",
@@ -176,7 +277,14 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Prawnik / QA"
+      "notes": "Prawnik / QA",
+      "kind": "drukarnia",
+      "aliases": [
+        "drukarnia",
+        "druk",
+        "prepress",
+        "korekta"
+      ]
     },
     {
       "id": "mockup_3d",
@@ -188,7 +296,14 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Wizualizacja"
+      "notes": "Wizualizacja",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "doypack",
+        "folia",
+        "mockup"
+      ]
     },
     {
       "id": "line_setup",
@@ -200,7 +315,12 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Changeover"
+      "notes": "Changeover",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "przebrojenie"
+      ]
     },
     {
       "id": "qa_inspection",
@@ -212,7 +332,12 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "AQL sampling"
+      "notes": "AQL sampling",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "kontrola"
+      ]
     },
     {
       "id": "batch_testing",
@@ -224,7 +349,14 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Lab mikrobiologia"
+      "notes": "Lab mikrobiologia",
+      "kind": "badania",
+      "aliases": [
+        "badanie",
+        "badania",
+        "marketing",
+        "testy"
+      ]
     },
     {
       "id": "rework",
@@ -236,7 +368,12 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Rework line"
+      "notes": "Rework line",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "poprawki"
+      ]
     },
     {
       "id": "consumables",
@@ -248,7 +385,12 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Noze, tasmy"
+      "notes": "Noze, tasmy",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "materialy"
+      ]
     },
     {
       "id": "energy_line",
@@ -260,7 +402,12 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Prad + gaz"
+      "notes": "Prad + gaz",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "energia"
+      ]
     },
     {
       "id": "waste_disposal",
@@ -272,7 +419,12 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Odpady produkcyjne"
+      "notes": "Odpady produkcyjne",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "utylizacja"
+      ]
     },
     {
       "id": "packaging_line_rent",
@@ -284,7 +436,12 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Co-packing"
+      "notes": "Co-packing",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "najem"
+      ]
     },
     {
       "id": "inbound_receiving",
@@ -296,7 +453,12 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Przyjecie WZ"
+      "notes": "Przyjecie WZ",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "przyjecie"
+      ]
     },
     {
       "id": "storage_cold",
@@ -308,7 +470,12 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Chlodnia"
+      "notes": "Chlodnia",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "magazyn"
+      ]
     },
     {
       "id": "storage_ambient",
@@ -320,7 +487,12 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Regal paletowy"
+      "notes": "Regal paletowy",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "magazyn"
+      ]
     },
     {
       "id": "picking",
@@ -332,7 +504,12 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Pick and pack"
+      "notes": "Pick and pack",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "kompletacja"
+      ]
     },
     {
       "id": "inventory_count",
@@ -344,7 +521,12 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Stock take"
+      "notes": "Stock take",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "inwentaryzacja"
+      ]
     },
     {
       "id": "repacking",
@@ -356,7 +538,14 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Relabeling"
+      "notes": "Relabeling",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "doypack",
+        "folia",
+        "przepakowanie"
+      ]
     },
     {
       "id": "returns_handling",
@@ -368,7 +557,12 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Zwroty B2B"
+      "notes": "Zwroty B2B",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "obsluga"
+      ]
     },
     {
       "id": "packaging_materials_wh",
@@ -380,7 +574,13 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Kartony wypelnienie"
+      "notes": "Kartony wypelnienie",
+      "kind": "karton",
+      "aliases": [
+        "karton",
+        "tektura",
+        "materialy"
+      ]
     },
     {
       "id": "domestic_freight",
@@ -392,7 +592,15 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "FTL/LTL PL"
+      "notes": "FTL/LTL PL",
+      "kind": "logistyka",
+      "aliases": [
+        "logistyka",
+        "km",
+        "transport",
+        "transport"
+      ],
+      "distance_km": null
     },
     {
       "id": "export_freight",
@@ -404,7 +612,15 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "CMR export"
+      "notes": "CMR export",
+      "kind": "logistyka",
+      "aliases": [
+        "logistyka",
+        "km",
+        "transport",
+        "transport"
+      ],
+      "distance_km": null
     },
     {
       "id": "customs_clearance",
@@ -416,7 +632,15 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Agencja celna"
+      "notes": "Agencja celna",
+      "kind": "logistyka",
+      "aliases": [
+        "logistyka",
+        "km",
+        "transport",
+        "odprawa"
+      ],
+      "distance_km": null
     },
     {
       "id": "last_mile",
@@ -428,7 +652,15 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Kurier lokalny"
+      "notes": "Kurier lokalny",
+      "kind": "logistyka",
+      "aliases": [
+        "logistyka",
+        "km",
+        "transport",
+        "dostawa"
+      ],
+      "distance_km": null
     },
     {
       "id": "courier_express",
@@ -440,7 +672,15 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "DHL/UPS"
+      "notes": "DHL/UPS",
+      "kind": "logistyka",
+      "aliases": [
+        "logistyka",
+        "km",
+        "transport",
+        "kurier"
+      ],
+      "distance_km": null
     },
     {
       "id": "pallet_handling",
@@ -452,7 +692,15 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Przeladunek"
+      "notes": "Przeladunek",
+      "kind": "logistyka",
+      "aliases": [
+        "logistyka",
+        "km",
+        "transport",
+        "obsluga"
+      ],
+      "distance_km": null
     },
     {
       "id": "fuel_surcharge",
@@ -464,7 +712,15 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Indeks paliw"
+      "notes": "Indeks paliw",
+      "kind": "logistyka",
+      "aliases": [
+        "logistyka",
+        "km",
+        "transport",
+        "doplata"
+      ],
+      "distance_km": null
     },
     {
       "id": "insurance_cargo",
@@ -476,7 +732,15 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Cargo insurance"
+      "notes": "Cargo insurance",
+      "kind": "logistyka",
+      "aliases": [
+        "logistyka",
+        "km",
+        "transport",
+        "ubezpieczenie"
+      ],
+      "distance_km": null
     },
     {
       "id": "cross_dock",
@@ -488,7 +752,15 @@
       "source": "seed_estimate",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Cross dock hub"
+      "notes": "Cross dock hub",
+      "kind": "logistyka",
+      "aliases": [
+        "logistyka",
+        "km",
+        "transport",
+        "cross-docking"
+      ],
+      "distance_km": null
     },
     {
       "id": "raw_material_per_1000",
@@ -500,7 +772,13 @@
       "source": "manual",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Srednia folia/kartonik short-run PL"
+      "notes": "Srednia folia/kartonik short-run PL",
+      "kind": "karton",
+      "aliases": [
+        "karton",
+        "tektura",
+        "surowiec"
+      ]
     },
     {
       "id": "production_labor",
@@ -512,7 +790,14 @@
       "source": "manual",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Przezbrojenie + kontrola jakosci"
+      "notes": "Przezbrojenie + kontrola jakosci",
+      "kind": "badania",
+      "aliases": [
+        "badanie",
+        "badania",
+        "marketing",
+        "robocizna"
+      ]
     },
     {
       "id": "warehouse_packing",
@@ -524,7 +809,14 @@
       "source": "manual",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Pakowanie i etykietowanie wewnetrzne"
+      "notes": "Pakowanie i etykietowanie wewnetrzne",
+      "kind": "opakowanie",
+      "aliases": [
+        "opakowanie",
+        "doypack",
+        "folia",
+        "kompletacja"
+      ]
     },
     {
       "id": "proofing",
@@ -536,7 +828,14 @@
       "source": "manual",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Proof cyfrowy lub kontrakcja"
+      "notes": "Proof cyfrowy lub kontrakcja",
+      "kind": "drukarnia",
+      "aliases": [
+        "drukarnia",
+        "druk",
+        "prepress",
+        "proof"
+      ]
     },
     {
       "id": "print_flexo_offset",
@@ -548,7 +847,78 @@
       "source": "manual",
       "vendor": "",
       "asana_keywords": [],
-      "notes": "Sredni koszt setup + krotki naklad"
+      "notes": "Sredni koszt setup + krotki naklad",
+      "kind": "drukarnia",
+      "aliases": [
+        "drukarnia",
+        "druk",
+        "prepress",
+        "druk"
+      ]
+    },
+    {
+      "id": "doypack_flexo_line",
+      "stage": "production",
+      "label_pl": "Druk doypack (flexo) — stawka bazowa",
+      "kind": "opakowanie",
+      "unit": "per_1000",
+      "amount": 380.0,
+      "vendor": "PrintPack Kalisz",
+      "aliases": [
+        "opakowanie",
+        "doypack",
+        "folia",
+        "flexo",
+        "druk doypack",
+        "druk"
+      ],
+      "qty_breaks": [
+        5000,
+        12000,
+        25000
+      ],
+      "source": "seed",
+      "notes": "TESTOWE — nakład"
+    },
+    {
+      "id": "logistics_km_rate",
+      "stage": "logistics",
+      "label_pl": "Kilometrówka (transport własny)",
+      "kind": "logistyka",
+      "unit": "per_km",
+      "amount": 2.45,
+      "vendor": "Kubara logistyka",
+      "aliases": [
+        "logistyka",
+        "km",
+        "transport",
+        "kilometr",
+        "kilometrowka",
+        "kilometrówka"
+      ],
+      "distance_km": 220,
+      "source": "seed",
+      "notes": "Stawka za km"
+    },
+    {
+      "id": "marketing_research_pack",
+      "stage": "prepress",
+      "label_pl": "Badanie marketingowe (focus / shelf)",
+      "kind": "badania",
+      "unit": "per_order",
+      "amount": 4200.0,
+      "vendor": "Agencja TEST",
+      "aliases": [
+        "drukarnia",
+        "druk",
+        "prepress",
+        "badanie marketingowe",
+        "badania",
+        "focus",
+        "badanie"
+      ],
+      "source": "seed",
+      "notes": "TESTOWE"
     }
   ],
   "updated_at": "2026-07-20T17:02:27.031080+00:00",

@@ -559,9 +559,191 @@
     return { entry: entry, bulk: bulk, price: price, packLabel: packLabel };
   }
 
-  function renderCatalog(p, bundle) {
+  function catalogLabel(key, fb) {
+    if (window.DamI18n && typeof window.DamI18n.t === "function") {
+      var v = window.DamI18n.t(key);
+      if (v && v !== key) return v;
+    }
+    return fb;
+  }
+
+  var catalogRenderCtx = null;
+
+  function isFinanceAdmin() {
+    return (
+      window.DamProductFinance &&
+      typeof DamProductFinance.isAdminMode === "function" &&
+      DamProductFinance.isAdminMode()
+    );
+  }
+
+  function fmcgRowKey(row, idx) {
+    return String((row && row.key) || "row_" + idx);
+  }
+
+  function buildFmcgRowsHtml(direct, PF, admin) {
+    return (direct || [])
+      .map(function (row, idx) {
+        var meta = PF && typeof PF.directRowMeta === "function" ? PF.directRowMeta(row) : "";
+        var rk = fmcgRowKey(row, idx);
+        var amountCell = admin
+          ? '<input type="number" step="0.01" min="0" class="form-control form-control-sm dam-catalog-fmcg__amount-input text-end" data-row-key="' +
+            esc(rk) +
+            '" value="' +
+            esc(String(row.amount != null ? row.amount : "")) +
+            '" aria-label="' +
+            esc(row.label) +
+            '" />'
+          : esc(PF ? PF.formatPLN(row.amount) : String(row.amount));
+        return (
+          "<tr data-row-key=\"" +
+          esc(rk) +
+          "\"><td>" +
+          esc(row.label) +
+          (meta ? '<div class="dam-catalog-fmcg__meta">' + esc(meta) + "</div>" : "") +
+          '</td><td class="text-end dam-catalog-fmcg__amount-cell">' +
+          amountCell +
+          "</td></tr>"
+        );
+      })
+      .join("");
+  }
+
+  function readDirectFromDom(host) {
+    var PF = window.DamProductFinance;
+    var base = (catalogRenderCtx && catalogRenderCtx.financeProject && catalogRenderCtx.financeProject.direct) || [];
+    var byKey = {};
+    base.forEach(function (row, idx) {
+      byKey[fmcgRowKey(row, idx)] = row;
+    });
+    var rows = [];
+    host.querySelectorAll(".dam-catalog-fmcg__table tbody tr[data-row-key]").forEach(function (tr) {
+      var key = tr.getAttribute("data-row-key");
+      var src = byKey[key] || {};
+      var inp = tr.querySelector(".dam-catalog-fmcg__amount-input");
+      var amount = inp ? Number(inp.value) : Number(src.amount) || 0;
+      rows.push({
+        key: src.key || key,
+        label:
+          src.label ||
+          (tr.querySelector("td") ? String(tr.querySelector("td").textContent || "").trim() : "") ||
+          key,
+        department: src.department,
+        unit: src.unit,
+        qty: src.qty,
+        rate: src.rate,
+        amount: amount,
+        isTest: src.isTest !== false,
+        source: src.source || "manual",
+        adhoc: !!src.adhoc,
+      });
+    });
+    return rows;
+  }
+
+  function bindCatalogFmcgEvents(p, financeProject) {
     var host = document.getElementById("damCatalogBody");
     if (!host) return;
+    var section = host.querySelector(".dam-catalog-fmcg");
+    if (!section) return;
+    var PF = window.DamProductFinance;
+    var projectId = financeProject && financeProject.id;
+
+    var saveBtn = section.querySelector("#damCatalogFmcgSave");
+    if (saveBtn && !saveBtn._damBound) {
+      saveBtn._damBound = true;
+      saveBtn.addEventListener("click", function () {
+        if (!isFinanceAdmin() || !PF || !projectId) return;
+        var direct = readDirectFromDom(host);
+        PF.saveProjectDirect(projectId, direct)
+          .then(function (res) {
+            if (!res || !res.ok) {
+              alert((res && res.error) || "Nie udało się zapisać kwot.");
+              return;
+            }
+            if (catalogRenderCtx) {
+              catalogRenderCtx.financeProject = res.project;
+              renderCatalog(catalogRenderCtx.p, catalogRenderCtx.bundle, res.project);
+            }
+          })
+          .catch(function () {
+            alert("Bridge offline — zapis kwot wymaga mostu lokalnego.");
+          });
+      });
+    }
+
+    var addBtn = section.querySelector("#damCatalogFmcgAdd");
+    if (addBtn && !addBtn._damBound) {
+      addBtn._damBound = true;
+      addBtn.addEventListener("click", function () {
+        if (!isFinanceAdmin() || !PF || !projectId) return;
+        var labelInp = section.querySelector("#damCatalogFmcgAdhocLabel");
+        var amountInp = section.querySelector("#damCatalogFmcgAdhocAmount");
+        var label = labelInp ? String(labelInp.value || "").trim() : "";
+        var amount = amountInp ? Number(amountInp.value) : 0;
+        if (!label) {
+          if (labelInp) labelInp.focus();
+          return;
+        }
+        var direct = readDirectFromDom(host);
+        direct.push({
+          key: "adhoc_" + Date.now(),
+          label: label,
+          department: "Ad-hoc",
+          unit: "szt",
+          amount: amount,
+          isTest: true,
+          source: "manual",
+          adhoc: true,
+        });
+        PF.saveProjectDirect(projectId, direct)
+          .then(function (res) {
+            if (!res || !res.ok) {
+              alert((res && res.error) || "Nie udało się dodać pozycji.");
+              return;
+            }
+            if (labelInp) labelInp.value = "";
+            if (amountInp) amountInp.value = "";
+            if (catalogRenderCtx) {
+              catalogRenderCtx.financeProject = res.project;
+              renderCatalog(catalogRenderCtx.p, catalogRenderCtx.bundle, res.project);
+            }
+          })
+          .catch(function () {
+            alert("Bridge offline.");
+          });
+      });
+    }
+
+    section.querySelectorAll(".dam-catalog-fmcg__amount-input").forEach(function (inp) {
+      if (inp._damSumBound) return;
+      inp._damSumBound = true;
+      inp.addEventListener("input", function () {
+        var sumEl = section.querySelector("#damCatalogFmcgSum");
+        if (!sumEl) return;
+        var direct = readDirectFromDom(host);
+        var sum = direct.reduce(function (a, r) {
+          return a + (Number(r.amount) || 0);
+        }, 0);
+        sumEl.textContent = PF ? PF.formatPLN(sum) : String(sum);
+      });
+    });
+  }
+
+  if (!window.__damProjectAdminListen) {
+    window.__damProjectAdminListen = true;
+    document.addEventListener("dam:admin-mode", function () {
+      if (catalogRenderCtx) {
+        renderCatalog(catalogRenderCtx.p, catalogRenderCtx.bundle, catalogRenderCtx.financeProject);
+      }
+    });
+  }
+
+  function renderCatalog(p, bundle, financeProject) {
+    catalogRenderCtx = { p: p, bundle: bundle, financeProject: financeProject };
+    var host = document.getElementById("damCatalogBody");
+    if (!host) return;
+    var PF = window.DamProductFinance;
     var entry = bundle.entry || {};
     var dims = entry.dimensions_mm || {};
     var weight = entry.weight_g || {};
@@ -570,53 +752,185 @@
       dims.w || dims.h || dims.d
         ? [dims.w, dims.h, dims.d].filter(Boolean).join(" × ") + " mm"
         : null;
-    var priceHtml = "—";
-    var priceHint = "Cena ze sklepu (odświeżanie 1×/dobę)";
+    var priceVal = null;
     if (bundle.price && bundle.price.ok && bundle.price.price_pln != null) {
-      priceHtml = String(bundle.price.price_pln).replace(".", ",") + " zł";
-      if (bundle.price.fetched_at) {
-        priceHint = "Sklep · " + String(bundle.price.fetched_at).slice(0, 10);
-      }
+      priceVal = String(bundle.price.price_pln).replace(".", ",") + " zł";
+    } else if (entry.price_pln != null) {
+      priceVal = String(entry.price_pln).replace(".", ",") + " zł";
+    }
+    var priceHint = catalogLabel("project.price_hint", "Cena ze sklepu (odświeżanie 1×/dobę)");
+    if (bundle.price && bundle.price.fetched_at) {
+      priceHint = "Sklep · " + String(bundle.price.fetched_at).slice(0, 10);
     }
     var shopLink = entry.shop_url
       ? '<a class="dam-catalog-shop-link" href="' +
         esc(entry.shop_url) +
         '" target="_blank" rel="noopener noreferrer"><i class="uil uil-external-link-alt"></i> Zobacz w sklepie</a>'
       : "";
-    host.innerHTML =
-      '<div class="dam-catalog-grid">' +
-      '<div class="dam-catalog-card dam-catalog-card--price"><p class="dam-catalog-card__label">Cena</p>' +
-      '<p class="dam-catalog-card__value">' +
-      esc(priceHtml) +
-      "</p><p class=\"dam-catalog-card__hint\">" +
+
+    var palMain =
+      pal.cases_per_pallet != null
+        ? pal.cases_per_pallet + " kart. × " + (pal.layers || pal.layers_per_pallet || "?") + " warstw"
+        : pal.units_per_pallet != null
+          ? pal.units_per_pallet + " szt./paleta"
+          : null;
+    var palSub = pal.formula_pl || "";
+    if (!palSub && pal.cases_per_layer) {
+      palSub =
+        pal.cases_per_layer +
+        " kart./warstwa · " +
+        (pal.net_weight_kg != null ? pal.net_weight_kg + " kg netto" : "");
+    }
+
+    var testBadge =
+      PF && typeof PF.testBadgeHtml === "function" &&
+      (PF.isTestEntity(entry) || PF.isTestEntity(financeProject))
+        ? PF.testBadgeHtml()
+        : "";
+
+    var links = PF && typeof PF.financeLinks === "function"
+      ? PF.financeLinks(p.id, financeProject && financeProject.id)
+      : { invoices: "invoices.html", calculator: "costs.html" };
+
+    var kpi =
+      '<div class="dam-catalog-kpi" role="list">' +
+      '<div class="dam-catalog-kpi__tile dam-catalog-kpi__tile--price" role="listitem">' +
+      '<span class="dam-catalog-kpi__label">' +
+      esc(catalogLabel("project.kpi_price", "Cena")) +
+      "</span>" +
+      '<span class="dam-catalog-kpi__value">' +
+      esc(priceVal || "—") +
+      "</span>" +
+      '<span class="dam-catalog-kpi__hint">' +
       esc(priceHint) +
-      "</p>" +
+      "</span>" +
       shopLink +
       "</div>" +
-      '<div class="dam-catalog-card"><p class="dam-catalog-card__label">Wymiary</p>' +
-      dash(dimStr) +
+      '<div class="dam-catalog-kpi__tile dam-catalog-kpi__tile--dims" role="listitem">' +
+      '<span class="dam-catalog-kpi__label">' +
+      esc(catalogLabel("project.kpi_dims", "Wymiary")) +
+      "</span>" +
+      '<span class="dam-catalog-kpi__value">' +
+      esc(dimStr || "—") +
+      "</span></div>" +
+      '<div class="dam-catalog-kpi__tile" role="listitem">' +
+      '<span class="dam-catalog-kpi__label">' +
+      esc(catalogLabel("project.kpi_weight", "Waga netto")) +
+      "</span>" +
+      '<span class="dam-catalog-kpi__value">' +
+      esc(weight.net != null ? weight.net + " g" : "—") +
+      "</span></div>" +
+      '<div class="dam-catalog-kpi__tile" role="listitem">' +
+      '<span class="dam-catalog-kpi__label">' +
+      esc(catalogLabel("project.kpi_case", "Szt. w kartonie")) +
+      "</span>" +
+      '<span class="dam-catalog-kpi__value">' +
+      esc(entry.units_per_bulk_case != null ? String(entry.units_per_bulk_case) : "—") +
+      "</span></div>" +
+      '<div class="dam-catalog-kpi__tile dam-catalog-kpi__tile--pallet" role="listitem">' +
+      '<span class="dam-catalog-kpi__label">' +
+      esc(catalogLabel("project.kpi_pallet", "Paletyzacja")) +
+      "</span>" +
+      '<span class="dam-catalog-kpi__value">' +
+      esc(palMain || "—") +
+      "</span>" +
+      (palSub ? '<span class="dam-catalog-kpi__hint">' + esc(palSub) + "</span>" : "") +
       "</div>" +
-      '<div class="dam-catalog-card"><p class="dam-catalog-card__label">Waga netto</p>' +
-      dash(weight.net != null ? weight.net + " g" : null) +
-      "</div>" +
-      '<div class="dam-catalog-card"><p class="dam-catalog-card__label">Szt. w kartonie</p>' +
-      dash(entry.units_per_bulk_case != null ? String(entry.units_per_bulk_case) : null) +
-      "</div>" +
-      '<div class="dam-catalog-card"><p class="dam-catalog-card__label">Paletyzacja</p>' +
-      dash(
-        pal.units_per_pallet != null
-          ? pal.units_per_pallet + " szt./paleta"
-          : pal.units_per_layer
-            ? pal.units_per_layer + " × " + (pal.layers_per_pallet || "?") + " warstw"
-            : null
-      ) +
-      "</div>" +
-      (bundle.packLabel
-        ? '<div class="dam-catalog-card"><p class="dam-catalog-card__label">Pakowanie zbiorcze</p><div class="dam-catalog-pack-badge"><span class="dam-viz-badge dam-badge-tag dam-badge-tag--pakowanie dam-badge-tag--tier-low">' +
-          esc(bundle.packLabel) +
-          "</span></div></div>"
-        : "") +
       "</div>";
+
+    var fmcgHtml = "";
+    var admin = isFinanceAdmin();
+    if (financeProject) {
+      var directLines = financeProject.direct || [];
+      var rows = buildFmcgRowsHtml(directLines, PF, admin);
+      var adminTools = admin
+        ? '<div class="dam-catalog-fmcg__admin">' +
+          '<div class="dam-catalog-fmcg__adhoc">' +
+          '<label class="visually-hidden" for="damCatalogFmcgAdhocLabel">' +
+          esc(catalogLabel("project.fmcg_adhoc_label", "Nazwa pozycji")) +
+          "</label>" +
+          '<input type="text" id="damCatalogFmcgAdhocLabel" class="form-control form-control-sm dam-catalog-fmcg__adhoc-label" placeholder="' +
+          esc(catalogLabel("project.fmcg_adhoc_ph", "np. Badanie marketingowe")) +
+          '" />' +
+          '<label class="visually-hidden" for="damCatalogFmcgAdhocAmount">' +
+          esc(catalogLabel("project.fmcg_adhoc_amount", "Kwota PLN")) +
+          "</label>" +
+          '<input type="number" step="0.01" min="0" id="damCatalogFmcgAdhocAmount" class="form-control form-control-sm dam-catalog-fmcg__adhoc-amount" placeholder="0,00" />' +
+          '<button type="button" class="geex-btn geex-btn--sm geex-btn--primary-transparent" id="damCatalogFmcgAdd">' +
+          esc(catalogLabel("project.fmcg_add_line", "Dodaj pozycję")) +
+          "</button>" +
+          "</div>" +
+          '<button type="button" class="geex-btn geex-btn--sm geex-btn--primary" id="damCatalogFmcgSave">' +
+          esc(catalogLabel("project.fmcg_save", "Zapisz kwoty")) +
+          "</button>" +
+          '<p class="dam-catalog-kpi__hint">' +
+          esc(catalogLabel("project.fmcg_admin_hint", "Wymaga ADMIN i mostu lokalnego (8766).")) +
+          "</p></div>"
+        : "";
+      fmcgHtml =
+        '<section class="dam-catalog-fmcg dam-catalog-fmcg--panel">' +
+        '<div class="dam-catalog-fmcg__inner">' +
+        '<div class="dam-catalog-fmcg__head">' +
+        "<h4>" +
+        esc(catalogLabel("project.fmcg_title", "Kalkulacja opakowań (FMCG)")) +
+        "</h4>" +
+        testBadge +
+        "</div>" +
+        '<p class="dam-catalog-kpi__hint">' +
+        esc(catalogLabel("project.fmcg_sub", "Ten sam łańcuch co w Kalkulatorze kosztów.")) +
+        "</p>" +
+        '<div class="dam-cost-table-wrap dam-catalog-fmcg__table-wrap"><table class="table table-sm dam-cost-table dam-catalog-fmcg__table"><tbody>' +
+        (rows ||
+          '<tr><td colspan="2" class="dam-cost-empty">' +
+            esc(catalogLabel("project.fmcg_empty", "Brak pozycji — dodaj w trybie ADMIN.")) +
+            "</td></tr>") +
+        '<tr class="dam-cost-sum"><td><strong>' +
+        esc(catalogLabel("project.fmcg_sum", "Suma opakowań")) +
+        '</strong></td><td class="text-end"><strong id="damCatalogFmcgSum">' +
+        esc(PF ? PF.formatPLN(financeProject.direct_total) : "") +
+        "</strong></td></tr></tbody></table></div>" +
+        adminTools +
+        '<div class="dam-catalog-fmcg__links">' +
+        '<a class="geex-btn geex-btn--sm geex-btn--primary-transparent" href="' +
+        esc(links.invoices) +
+        '"><i class="uil uil-invoice" aria-hidden="true"></i> ' +
+        esc(catalogLabel("project.link_invoices", "Faktury tego produktu")) +
+        "</a>" +
+        '<a class="geex-btn geex-btn--sm geex-btn--primary" href="' +
+        esc(links.calculator) +
+        '"><i class="uil uil-calculator-alt" aria-hidden="true"></i> ' +
+        esc(catalogLabel("project.link_base_rates", "Kwoty bazowe")) +
+        "</a></div></div></section>";
+    } else {
+      fmcgHtml =
+        '<div class="dam-catalog-fmcg__links">' +
+        '<a class="geex-btn geex-btn--sm geex-btn--primary-transparent" href="' +
+        esc(links.invoices) +
+        '">' +
+        esc(catalogLabel("project.link_invoices", "Faktury tego produktu")) +
+        "</a>" +
+        '<a class="geex-btn geex-btn--sm geex-btn--primary" href="' +
+        esc(links.calculator) +
+        '">' +
+        esc(catalogLabel("project.link_calculator", "Kalkulator kosztów")) +
+        "</a></div>";
+    }
+
+    host.innerHTML =
+      '<div class="dam-catalog-panel__head">' +
+      testBadge +
+      (bundle.packLabel
+        ? '<span class="dam-viz-badge dam-badge-tag dam-badge-tag--pakowanie dam-badge-tag--tier-low">' +
+          esc(bundle.packLabel) +
+          "</span>"
+        : "") +
+      "</div>" +
+      kpi +
+      fmcgHtml;
+    if (window.DamI18n && typeof window.DamI18n.apply === "function") {
+      window.DamI18n.apply(host);
+    }
+    bindCatalogFmcgEvents(p, financeProject);
   }
 
   function marketingTilePreviewHtml(assets, limit) {
@@ -854,7 +1168,23 @@
       window.DamIcons && typeof window.DamIcons.asanaSvg === "function"
         ? window.DamIcons.asanaSvg()
         : '<i class="uil uil-external-link-alt" aria-hidden="true"></i>';
+    var finLinks =
+      window.DamProductFinance && typeof DamProductFinance.financeLinks === "function"
+        ? DamProductFinance.financeLinks(p.id, p.id)
+        : { invoices: "invoices.html?project=" + encodeURIComponent(p.id), calculator: "costs.html?project=" + encodeURIComponent(p.id) };
     stack.innerHTML =
+      '<a class="dam-action-tile" href="' +
+      esc(finLinks.calculator) +
+      '" title="Kalkulator kosztów tego produktu">' +
+      '<i class="uil uil-calculator-alt" aria-hidden="true"></i>' +
+      "<span>Kalkulator</span>" +
+      "<small>Koszty FMCG i godziny</small></a>" +
+      '<a class="dam-action-tile" href="' +
+      esc(finLinks.invoices) +
+      '" title="Faktury powiązane z produktem">' +
+      '<i class="uil uil-invoice" aria-hidden="true"></i>' +
+      "<span>Faktury</span>" +
+      "<small>Filtr na ten SKU</small></a>" +
       '<button type="button" class="dam-action-tile dam-action-tile--primary" id="damRecomputeBtn"' +
       (!canWrite || !variant ? " disabled" : "") +
       ' title="Przelicz status kompletności">' +
@@ -965,7 +1295,16 @@
         }
       }
       var catalogBundle = await loadCatalogBundle(p.id);
-      renderCatalog(p, catalogBundle);
+      var financeProject = null;
+      if (window.DamProductFinance && typeof DamProductFinance.loadProjectCosts === "function") {
+        try {
+          var pcData = await DamProductFinance.loadProjectCosts();
+          financeProject = DamProductFinance.findProjectByProductId(p.id, pcData);
+        } catch (eFin) {
+          financeProject = null;
+        }
+      }
+      renderCatalog(p, catalogBundle, financeProject);
       renderMarketingShort(p, revs, marketingPartition, marketingAssets);
       renderWykrojnikiShort(p.id);
       renderHeaderBadges(p, catalogBundle);

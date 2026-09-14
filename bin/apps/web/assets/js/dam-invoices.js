@@ -17,6 +17,7 @@
 
   var allInvoices = [];
   var currentFilter = "all";
+  var projectFilterQuery = "";
   var source = "local";
   var erpSync = null;
   var asanaTasks = [];
@@ -43,8 +44,67 @@
   }
 
   function isAdmin() {
+    if (window.DamShell && typeof window.DamShell.isAdminMode === "function") {
+      return window.DamShell.isAdminMode();
+    }
     var role = (localStorage.getItem("dam_role") || "").toLowerCase();
     return role === "admin" || role === "power_user";
+  }
+
+  var COMPARE_PRODUCT_IDS = [
+    "figa-z-makiem-owocowe",
+    "cynamonka-nerkowcowy",
+  ];
+
+  function renderProductCompare() {
+    var section = document.getElementById("damInvProductCompare");
+    var tbody = document.getElementById("damInvProductCompareBody");
+    if (!section || !tbody) return;
+    var PF = window.DamProductFinance;
+    if (!PF || typeof PF.loadProjectCosts !== "function") {
+      section.hidden = true;
+      return;
+    }
+    PF.loadProjectCosts()
+      .then(function (data) {
+        var rows = COMPARE_PRODUCT_IDS.map(function (pid) {
+          var proj = PF.findProjectByProductId(pid, data);
+          if (!proj) return "";
+          var salesSeed = PF.compareSalesSeed && PF.compareSalesSeed(pid);
+          var sales = salesSeed ? Number(salesSeed.sales_pln) : 0;
+          var pack = Number(proj.direct_total) || 0;
+          var profit = sales - pack;
+          var name =
+            (salesSeed && salesSeed.label) ||
+            proj.label ||
+            proj.name ||
+            pid;
+          return (
+            "<tr><td>" +
+            escapeHtml(name) +
+            (PF.testBadgeHtml ? " " + PF.testBadgeHtml() : "") +
+            '</td><td class="text-end">' +
+            escapeHtml(formatPLN(pack)) +
+            '</td><td class="text-end">' +
+            escapeHtml(formatPLN(sales)) +
+            '</td><td class="text-end">' +
+            escapeHtml(formatPLN(profit)) +
+            "</td></tr>"
+          );
+        }).join("");
+        if (!rows) {
+          section.hidden = true;
+          return;
+        }
+        tbody.innerHTML = rows;
+        section.hidden = false;
+        if (window.DamI18n && typeof window.DamI18n.apply === "function") {
+          window.DamI18n.apply(section);
+        }
+      })
+      .catch(function () {
+        section.hidden = true;
+      });
   }
 
   function ensureCtaStyles() {
@@ -180,13 +240,42 @@
       });
   }
 
+  function invoiceMatchesProjectFilter(inv, q) {
+    if (!q) return true;
+    var blob = (
+      (inv.project || "") +
+      " " +
+      (inv.id || "") +
+      " " +
+      (inv.linked_product_id || "")
+    ).toLowerCase();
+    var needle = String(q).toLowerCase();
+    if (blob.indexOf(needle) >= 0) return true;
+    if (needle.indexOf("figa") >= 0 && /figa|makiem/i.test(blob)) return true;
+    if (needle.indexOf("cynamon") >= 0 && /cynamon/i.test(blob)) return true;
+    return false;
+  }
+
+  function testBadgeInline(inv) {
+    if (!inv || (!inv.isTest && inv.source !== "seed")) return "";
+    if (window.DamProductFinance && typeof DamProductFinance.testBadgeHtml === "function") {
+      return " " + DamProductFinance.testBadgeHtml();
+    }
+    return ' <span class="dam-seed-test-badge dam-viz-badge">(TESTOWE)</span>';
+  }
+
   function renderTable(invoices) {
     var tbody = document.getElementById("invTableBody");
     if (!tbody) return;
+    var scoped = projectFilterQuery
+      ? invoices.filter(function (inv) {
+          return invoiceMatchesProjectFilter(inv, projectFilterQuery);
+        })
+      : invoices;
     var filtered =
       currentFilter === "all"
-        ? invoices
-        : invoices.filter(function (inv) {
+        ? scoped
+        : scoped.filter(function (inv) {
             return inv.status === currentFilter;
           });
 
@@ -209,6 +298,7 @@
           "<td>" +
           '<div style="font-weight:500">' +
           escapeHtml(inv.project || "-") +
+          testBadgeInline(inv) +
           "</div>" +
           '<div style="font-size:11px;color:#888">' +
           escapeHtml(inv.type || inv.client || "") +
@@ -265,12 +355,35 @@
     setEl("invTotalAmount", formatPLN(totalAmt));
   }
 
+  function visibleInvoices() {
+    if (!projectFilterQuery) return allInvoices;
+    return allInvoices.filter(function (inv) {
+      return invoiceMatchesProjectFilter(inv, projectFilterQuery);
+    });
+  }
+
+  function showProjectFilterBanner() {
+    var banner = document.getElementById("damInvProjectFilter");
+    if (!banner) return;
+    if (!projectFilterQuery) {
+      banner.hidden = true;
+      banner.textContent = "";
+      return;
+    }
+    banner.hidden = false;
+    banner.innerHTML =
+      '<span class="dam-int-chip dam-int-st dam-int-st--wait">' +
+      escapeHtml("Filtr produktu: " + projectFilterQuery) +
+      '</span> <a class="geex-btn geex-btn--sm geex-btn--primary-transparent" href="invoices.html">Wyczyść filtr</a>';
+  }
+
   function applyInvoices(list, src) {
     allInvoices = list || [];
     source = src || "local";
-    updateSummary(allInvoices);
+    updateSummary(visibleInvoices());
     renderTable(allInvoices);
     updateSourceBadge();
+    showProjectFilterBanner();
   }
 
   function loadInvoices() {
@@ -331,7 +444,13 @@
       ".dam-inv-mail__row{display:grid;grid-template-columns:20px minmax(9.5rem,11rem) minmax(0,1fr);gap:10px 12px;align-items:start;font-size:13px;cursor:pointer}" +
       ".dam-inv-mail__row-id{min-width:9.5rem;font-variant-numeric:tabular-nums}" +
       ".dam-inv-mail__row-body{min-width:0;text-align:left;line-height:1.35;color:#3d3d48}" +
-      ".dam-inv-mail__actions{display:flex;flex-wrap:wrap;gap:10px}";
+      ".dam-inv-mail__actions{display:flex;flex-wrap:wrap;gap:10px}" +
+      ".dam-inv-compare{margin:0 0 20px;padding:16px 18px;border:1px solid var(--dam-border,#e7e7e7);border-radius:12px;background:var(--dam-surface,#fff)}" +
+      ".dam-inv-compare__head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}" +
+      ".dam-inv-compare__title{margin:0;font-size:15px;font-weight:650;color:var(--dam-text,#464255)}" +
+      ".dam-inv-compare__table{width:100%;font-size:13px;text-align:left}" +
+      ".dam-inv-compare__table th,.dam-inv-compare__table td{text-align:left;vertical-align:middle}" +
+      ".dam-inv-compare__table .text-end{text-align:right!important}";
   }
 
   function loadCostCatalog() {
@@ -945,6 +1064,14 @@
   function init() {
     ensureCtaStyles();
     ensureInvStyles();
+    try {
+      projectFilterQuery =
+        new URLSearchParams(window.location.search).get("project") ||
+        new URLSearchParams(window.location.search).get("product_id") ||
+        "";
+    } catch (eQs) {
+      projectFilterQuery = "";
+    }
     document.querySelectorAll(".geex-content__summary").forEach(function (el) {
       el.style.display = "none";
     });
@@ -969,6 +1096,7 @@
     if (skelBody && window.DamGridReveal && window.DamGridReveal.skeleton) {
       window.DamGridReveal.skeleton(skelBody, { count: 6, cols: 6 });
     }
+    renderProductCompare();
     loadInvoices()
       .then(function () {
         renderMailPanel();
@@ -988,28 +1116,4 @@
       var btn = e.target.closest(".inv-filter-btn");
       if (!btn) return;
       currentFilter = btn.getAttribute("data-filter") || "all";
-      document.querySelectorAll(".inv-filter-btn").forEach(function (b) {
-        var on = b === btn;
-        b.classList.toggle("active", on);
-        b.classList.toggle("is-active", on);
-        b.removeAttribute("style");
-      });
-      renderTable(allInvoices);
-    });
-  }
-
-  window.DamInvoices = {
-    reload: function () {
-      return Promise.all([loadInvoices(), loadErpStatus()]);
-    },
-    getErpSync: function () {
-      return erpSync;
-    },
-  };
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
-})();
+      

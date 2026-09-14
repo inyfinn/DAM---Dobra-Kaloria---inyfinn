@@ -37,7 +37,7 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
     </script>	
 <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=5.0.196">
 <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=5.0.196">
-<link rel="stylesheet" href="./assets/css/dam-app.css?v=5.0.198">
+<link rel="stylesheet" href="./assets/css/dam-app.css?v=6.0.12">
 <link rel="stylesheet" href="./assets/css/dam-tutorial.css?v=5.0.196">
 <link rel="stylesheet" href="./assets/css/dam-brand.css?v=6.0.7">
 <link rel="stylesheet" href="./assets/css/dam-invoices.css?v=5.0.196">
@@ -246,8 +246,9 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 			<div class="geex-content__section-wrapper">
 				<!-- INVOICES MAIN CONTENT -->
 				<div class="geex-card dam-inv-card">
+					<p id="damInvProjectFilter" class="dam-inv-erp-meta" hidden></p>
 					<div class="dam-inv-toolbar">
-						<span id="invSourceBadge" class="dam-int-chip dam-int-st dam-int-st--wait">ďż˝rďż˝dďż˝o: -</span>
+						<span id="invSourceBadge" class="dam-int-chip dam-int-st dam-int-st--wait" data-i18n="invoices.source_loading">Źródło: …</span>
 						<span id="invErpStatusBadge" class="dam-int-chip dam-int-st dam-int-st--wait" title="Stan synchronizacji ERP">ERP: -</span>
 						<span id="invErpAdminWrap" class="dam-inv-toolbar__actions" hidden>
 							<label class="dam-int-cta" for="invCsvImport">
@@ -259,6 +260,26 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 						<span id="invImportWrap" hidden aria-hidden="true"></span>
 					</div>
 					<p id="invErpSyncMeta" class="dam-inv-erp-meta">Kierunek: dwukierunkowy (ERP - DAM). Ostatni import / eksport: -</p>
+					<section id="damInvProductCompare" class="dam-inv-compare" aria-labelledby="damInvProductCompareTitle" hidden>
+						<div class="dam-inv-compare__head">
+							<h3 id="damInvProductCompareTitle" class="dam-inv-compare__title" data-i18n="invoices.compare_title">Porównanie kosztów opakowań (TESTOWE)</h3>
+							<a class="geex-btn geex-btn--sm geex-btn--primary-transparent" href="costs.html" data-i18n="invoices.compare_base_rates">Kwoty bazowe</a>
+						</div>
+						<p class="dam-inv-erp-meta" data-i18n="invoices.compare_sub">Koszt opakowań ze seeda projektu · sprzedaż placeholder · zysk = sprzedaż − koszt opakowań.</p>
+						<div class="dam-inv-compare__table-wrap">
+							<table class="table table-sm dam-inv-compare__table">
+								<thead>
+									<tr>
+										<th scope="col" data-i18n="invoices.compare_col_product">Produkt</th>
+										<th scope="col" class="text-end" data-i18n="invoices.compare_col_pack">Koszt opakowań</th>
+										<th scope="col" class="text-end" data-i18n="invoices.compare_col_sales">Sprzedaż (TEST)</th>
+										<th scope="col" class="text-end" data-i18n="invoices.compare_col_profit">Zysk (TEST)</th>
+									</tr>
+								</thead>
+								<tbody id="damInvProductCompareBody"></tbody>
+							</table>
+						</div>
+					</section>
 					<!-- Summary cards -->
 					<div class="dam-inv-summary">
 						<div class="dam-inv-summary__tile dam-inv-summary__tile--all">
@@ -305,15 +326,15 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 								</tr>
 							</thead>
 							<tbody id="invTableBody">
-								<tr><td colspan="6" style="text-align:center;padding:20px;color:#888">ďż˝adowanie faktur...</td></tr>
+								<tr><td colspan="6" style="text-align:center;padding:20px;color:#888" data-i18n="invoices.loading">Ładowanie faktur…</td></tr>
 							</tbody>
 						</table>
 					</div>
 				</div>
 				<div class="geex-card dam-inv-asana" id="damInvAsanaCard">
-					<h4 style="margin:0 0 8px;font-size:16px">Zadania Asana ďż˝ kosztorys faktury</h4>
-					<p class="dam-inv-asana__lead" style="margin:0 0 12px;font-size:13px;color:#5c5c6a;max-width:70ch">
-						Szacunki z katalogu kosztďż˝w (seed). Zaznacz zadania proof/druk, wygeneruj pozycje i dodaj do faktury. Pďż˝niej zaktualizujesz stawki.
+					<h4 style="margin:0 0 8px;font-size:16px" data-i18n="invoices.asana_title">Zadania Asana do kosztorysu faktury</h4>
+					<p class="dam-inv-asana__lead" style="margin:0 0 12px;font-size:13px;color:#5c5c6a;max-width:70ch" data-i18n="invoices.asana_lead">
+						Szacunki z katalogu kosztów (seed). Zaznacz zadania proof/druk, wygeneruj pozycje i dodaj do faktury. Później zaktualizujesz stawki.
 					</p>
 					<p id="damAsanaTasksBanner" class="dam-inv-asana__banner"></p>
 					<div class="dam-inv-asana__toolbar" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
@@ -1085,14 +1106,15 @@ html.dam-booting{background:#f3f5f4}html.dam-booting[data-theme="dark"]{backgrou
 	<script src="./assets/js/dam-api.js?v=6.0.0"></script>
 	<script src="./assets/js/dam-i18n.js?v=5.0.196"></script>
 	<script src="./assets/js/dam-runtime.js?v=5.0.196"></script>
-	<script src="./assets/js/dam-version.js?v=6.0.9"></script>
-	<script src="./assets/js/dam-shell.js?v=6.0.9"></script>
+	<script src="./assets/js/dam-version.js?v=6.0.12"></script>
+	<script src="./assets/js/dam-shell.js?v=6.0.12"></script>
 	<script src="./assets/vendor/js/gsap/gsap.min.js?v=5.0.196"></script>
-	<script src="./assets/js/dam-loader.js?v=6.0.9"></script>
+	<script src="./assets/js/dam-loader.js?v=6.0.12"></script>
 	<script src="./assets/js/dam-grid-reveal.js?v=5.0.196"></script>
 	<script src="./assets/js/dam-ui-cta.js?v=5.0.196"></script>
-	<script src="./assets/js/dam-invoices.js?v=5.0.196"></script>
-	<script src="./assets/js/dam-tutorial.js?v=5.0.196"></script>
+	<script src="./assets/js/dam-product-finance.js?v=6.0.12"></script>
+	<script src="./assets/js/dam-invoices.js?v=6.0.12"></script>
+	<script src="./assets/js/dam-tutorial.js?v=6.0.12"></script>
 </body>
 
 </html>

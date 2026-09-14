@@ -1,4 +1,193 @@
 /* DAM — karta katalogowa produktu (project.html) */
+.dam-catalog-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.dam-seed-test-badge {
+  background: color-mix(in srgb, var(--dam-warning, #ff9f43) 18%, transparent);
+  color: var(--dam-warning-text, #9a5b00);
+  font-weight: 600;
+}
+
+.dam-catalog-kpi {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--dam-bento-gap, 12px);
+  margin-bottom: 16px;
+}
+
+.dam-catalog-kpi__tile {
+  border-radius: var(--dam-radius-md, 12px);
+  border: 1px solid var(--dam-border, rgba(0, 0, 0, 0.08));
+  background: var(--dam-surface, #fff);
+  padding: 14px 16px;
+  min-height: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 2px 10px rgba(70, 66, 85, 0.06);
+}
+
+.dam-catalog-kpi__tile--price {
+  grid-column: span 2;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--dam-primary, #ab54db) 12%, #fff),
+    color-mix(in srgb, var(--dam-success, #28c76f) 8%, #fff)
+  );
+  border-color: color-mix(in srgb, var(--dam-success, #28c76f) 25%, var(--dam-border, #e7e7e7));
+}
+
+.dam-catalog-kpi__tile--pallet {
+  grid-column: span 2;
+}
+
+.dam-catalog-kpi__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dam-muted, #6b7280);
+}
+
+.dam-catalog-kpi__value {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--dam-text, #464255);
+}
+
+.dam-catalog-kpi__tile--price .dam-catalog-kpi__value {
+  font-size: 28px;
+  color: var(--dam-success, #008244);
+}
+
+.dam-catalog-kpi__hint {
+  font-size: 12px;
+  color: var(--dam-muted, #6b7280);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.dam-catalog-fmcg {
+  margin-top: 4px;
+}
+
+/* Panel FMCG — bez anatomii .dam-viz-card__body (frozen center) */
+.dam-catalog-fmcg--panel {
+  width: 100%;
+  text-align: left;
+  align-items: stretch;
+  margin-top: 16px;
+}
+
+.dam-catalog-fmcg__inner {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--dam-border, rgba(0, 0, 0, 0.08));
+  border-radius: var(--dam-radius-md, 12px);
+  background: var(--dam-surface, #fff);
+  padding: 16px 18px;
+  box-shadow: 0 2px 10px rgba(70, 66, 85, 0.06);
+  box-sizing: border-box;
+}
+
+.dam-catalog-fmcg__table-wrap {
+  width: 100%;
+  text-align: left;
+}
+
+.dam-catalog-fmcg__table {
+  width: 100%;
+  text-align: left;
+}
+
+.dam-catalog-fmcg__table td,
+.dam-catalog-fmcg__table th {
+  text-align: left;
+  vertical-align: top;
+}
+
+.dam-catalog-fmcg__amount-cell {
+  text-align: right !important;
+  white-space: nowrap;
+  min-width: 7rem;
+}
+
+.dam-catalog-fmcg__amount-input {
+  max-width: 9rem;
+  margin-left: auto;
+}
+
+.dam-catalog-fmcg__admin {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.dam-catalog-fmcg__adhoc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+
+.dam-catalog-fmcg__adhoc-label {
+  flex: 1 1 12rem;
+  min-width: 10rem;
+}
+
+.dam-catalog-fmcg__adhoc-amount {
+  flex: 0 1 7rem;
+  max-width: 8rem;
+}
+
+.dam-catalog-fmcg__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.dam-catalog-fmcg__head h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dam-catalog-fmcg__meta {
+  font-size: 11px;
+  color: var(--dam-muted, #6b7280);
+  margin-top: 2px;
+}
+
+.dam-catalog-fmcg__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+@media (max-width: 991px) {
+  .dam-catalog-kpi {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dam-catalog-kpi__tile--price,
+  .dam-catalog-kpi__tile--pallet {
+    grid-column: span 2;
+  }
+}
+
 .dam-catalog-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));

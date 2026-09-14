@@ -3715,6 +3715,98 @@ def _fmcg_compute(catalog: dict) -> dict:
     }
 
 
+def _patch_project_costs_direct(project_id: str, payload: dict) -> dict:
+    """Merge direct lines / ad-hoc rows into project-costs.json (seed overrides)."""
+    pid = str(project_id or "").strip()
+    if not pid:
+        return {"ok": False, "error": "project_id_required"}
+    root = _load_json(PROJECT_COSTS_FILE, {})
+    projects = root.get("projects") or []
+    target = None
+    for p in projects:
+        if not isinstance(p, dict):
+            continue
+        if p.get("id") == pid or p.get("linked_product_id") == pid:
+            target = p
+            break
+    if target is None:
+        return {"ok": False, "error": "project_not_found"}
+
+    direct = target.get("direct")
+    if not isinstance(direct, list):
+        direct = []
+
+    if "direct" in payload:
+        incoming = payload.get("direct")
+        if not isinstance(incoming, list):
+            return {"ok": False, "error": "direct_must_be_list"}
+        cleaned: list[dict] = []
+        for row in incoming:
+            if not isinstance(row, dict):
+                continue
+            label = str(row.get("label") or "").strip()
+            if not label:
+                continue
+            key = str(row.get("key") or label).strip().replace(" ", "_")[:64]
+            try:
+                amount = round(float(row.get("amount") or 0), 2)
+            except (TypeError, ValueError):
+                amount = 0.0
+            cleaned.append(
+                {
+                    "key": key,
+                    "label": label,
+                    "department": str(row.get("department") or "Ręczne"),
+                    "unit": str(row.get("unit") or "szt"),
+                    "qty": row.get("qty"),
+                    "rate": row.get("rate"),
+                    "amount": amount,
+                    "isTest": bool(row.get("isTest", True)),
+                    "source": str(row.get("source") or "manual"),
+                    "adhoc": bool(row.get("adhoc")),
+                }
+            )
+        direct = cleaned
+
+    adhoc = payload.get("add_adhoc")
+    if isinstance(adhoc, dict):
+        label = str(adhoc.get("label") or "").strip()
+        if label:
+            try:
+                amount = round(float(adhoc.get("amount") or 0), 2)
+            except (TypeError, ValueError):
+                amount = 0.0
+            key = str(adhoc.get("key") or f"adhoc_{int(time.time() * 1000)}")
+            direct.append(
+                {
+                    "key": key,
+                    "label": label,
+                    "department": str(adhoc.get("department") or "Ad-hoc"),
+                    "unit": str(adhoc.get("unit") or "szt"),
+                    "qty": adhoc.get("qty"),
+                    "rate": adhoc.get("rate"),
+                    "amount": amount,
+                    "isTest": True,
+                    "source": "manual",
+                    "adhoc": True,
+                }
+            )
+
+    target["direct"] = direct
+    dtotal = round(
+        sum(float(r.get("amount") or 0) for r in direct if isinstance(r, dict)),
+        2,
+    )
+    target["direct_total"] = dtotal
+    labor = float(target.get("labor_total") or 0)
+    target["total"] = round(labor + dtotal, 2)
+    target["total_with_invoices"] = target["total"]
+    root["projects"] = projects
+    root["updated_at"] = utc_now()
+    _save_json(PROJECT_COSTS_FILE, root)
+    return {"ok": True, "project_id": target.get("id"), "project": target}
+
+
 def _apply_fmcg_csv_import(catalog: dict, rows: list[dict[str, str]]) -> tuple[int, list[str]]:
     import_map = _load_json(FMCG_IMPORT_MAP_FILE, {"maps": []})
     col_to_id: dict[str, str] = {}
@@ -6943,15 +7035,91 @@ def _resolve_missing_media_path(raw: str) -> str | None:
 
 
 _VIZ_IMAGE_EXT = re.compile(r"\.(jpe?g|png|webp|gif|tif{1,2})$", re.I)
+_LOGO_SLOT_RE = re.compile(r"(?i)/(01\s*-\s*logo)/")
+_LOGO_TECH_FOLDER_RE = re.compile(r"(?i)/(png|svg|jpe?g|11x|ai|pdf|eps)(/|$)")
+_VIZ_LOOKUP_MIN_SCORE = 60
 
 
 def _norm_path_key(p: str) -> str:
     return normalize_path(p or "").replace("\\", "/").lower().rstrip("/")
 
 
+def _path_is_brand_logo_tree(raw: str) -> bool:
+    low = (raw or "").replace("\\", "/").lower()
+    return "/01 - logo/" in low or "/- branding i marka -/" in low
+
+
+def _logo_drive_variants(path: str) -> list[str]:
+    p = (path or "").replace("\\", "/")
+    out: list[str] = []
+    seen: set[str] = set()
+
+    def add(val: str) -> None:
+        key = val.replace("\\", "/").lower()
+        if not val or key in seen:
+            return
+        seen.add(key)
+        out.append(val)
+
+    add(p)
+    repls = (
+        ("X:/Marketing/", "D:/Marketing/"),
+        ("X:/Marketing/", "M:/"),
+        ("D:/Marketing/", "M:/"),
+        ("M:/", "D:/Marketing/"),
+    )
+    for a, b in repls:
+        if p.lower().startswith(a.lower()):
+            add(b + p[len(a) :])
+    return out
+
+
+def _resolve_logo_lang_folder_drift(raw: str) -> str | None:
+    """Index often has 01-LOGO/PNG while disk is 01-LOGO/PL/PNG (or EN) + optional -PREV."""
+    target = Path(normalize_path(raw))
+    try:
+        if target.is_file():
+            return str(target)
+    except OSError:
+        pass
+    seeds = _logo_drive_variants(str(target).replace("\\", "/"))
+    candidates: list[str] = []
+    for s in seeds:
+        m = _LOGO_SLOT_RE.search(s)
+        if not m:
+            continue
+        after = s[m.end() :]
+        tech = _LOGO_TECH_FOLDER_RE.match("/" + after)
+        if tech:
+            for lang in ("PL", "EN"):
+                candidates.append(s[: m.end()] + lang + "/" + after)
+        stem, ext = os.path.splitext(s.rsplit("/", 1)[-1])
+        prev_name = stem + "-PREV" + ext if not re.search(r"-prev$", stem, re.I) else ""
+        bases = [s.rsplit("/", 1)[0]]
+        for cand in list(candidates[-4:]):
+            bases.append(cand.rsplit("/", 1)[0])
+        if prev_name:
+            for base in bases:
+                candidates.append(base + "/" + prev_name)
+    seen: set[str] = set()
+    for cand in candidates:
+        key = cand.replace("\\", "/").lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        try:
+            if Path(cand).is_file():
+                return str(Path(cand))
+        except OSError:
+            continue
+    return None
+
+
 def _lookup_viz_path_from_index(raw: str, file_index: dict | None = None) -> str:
     """Map revision folder / index / drifted path → viz_latest.path (FRONT-S RGB)."""
     if not raw:
+        return ""
+    if _path_is_brand_logo_tree(raw):
         return ""
     fi = file_index if isinstance(file_index, dict) else _load_json(INDEX_FILE, {})
     if not fi:
@@ -6984,10 +7152,10 @@ def _lookup_viz_path_from_index(raw: str, file_index: dict | None = None) -> str
             score = 70
         elif idx_hint and idx_hint in key and idx_hint in vpk:
             score = 60
-        if score > best_score:
+        if score >= _VIZ_LOOKUP_MIN_SCORE and score > best_score:
             best_score = score
             best = vp
-    if best:
+    if best and best_score >= _VIZ_LOOKUP_MIN_SCORE:
         resolved = normalize_path(best)
         try:
             if os.path.isfile(resolved):
@@ -7059,6 +7227,9 @@ def _resolve_viz_image_for_thumb(path: str) -> str:
             return target
     except OSError:
         pass
+    logo_hit = _resolve_logo_lang_folder_drift(raw)
+    if logo_hit:
+        return logo_hit
     from_index = _lookup_viz_path_from_index(raw)
     if from_index:
         return from_index
@@ -7953,6 +8124,14 @@ class Handler(BaseHTTPRequestHandler):
             if not path:
                 self._json(400, {"ok": False, "error": "path_required"})
                 return
+            # Logo index paths often miss PL/EN; never reuse a viz/packshot cache key.
+            if _path_is_brand_logo_tree(path):
+                resolved_logo = _coerce_media_target(path)
+                try:
+                    if resolved_logo and os.path.isfile(resolved_logo):
+                        path = resolved_logo
+                except OSError:
+                    pass
 
             def _resolve(p: str, _email: str = "") -> str:
                 return _coerce_media_target(p)
@@ -9646,6 +9825,13 @@ class Handler(BaseHTTPRequestHandler):
             }
             _save_json(FMCG_IMPORT_MAP_FILE, payload)
             self._json(200, {"ok": True, "map_count": len(cleaned)})
+            return
+        if parsed.path == "/finance/project-costs":
+            if self._require_admin() is None:
+                return
+            pid = str(data.get("project_id") or data.get("id") or "").strip()
+            result = _patch_project_costs_direct(pid, data if isinstance(data, dict) else {})
+            self._json(200 if result.get("ok") else 400, result)
             return
         if parsed.path == "/finance/fmcg-catalog":
             if self._require_admin() is None:

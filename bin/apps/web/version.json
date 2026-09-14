@@ -1,12 +1,10 @@
 {
-  "version": "6.0.9",
+  "version": "6.0.12",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-09-14",
-  "note": "6.0.9: raport indeksu z liczbami; spinner nad pomocą zamiast codziennego toasta. 6.0.8: branding sort newest + logo folder tiles + thumb mapping. 6.0.7: zestawy w osobnym oknie (2 kolumny, bez zamykania po kliku). 6.0.6: zestawy kolorystyczne (kafelki) + HSL. 6.0.5: zadania w tle ukryte. 6.0.4: indeks live+raport; Sprawdz aktualizacje; dark tokeny + HSL.",
+  "note": "6.0.12: wstecz myszy, Pokaż indeksy, kalkulacja lewa+ADMIN, kwoty bazowe, Faktury porównanie, sidebar bez kalkulatora. 6.0.11: instalator u użytkownika; dymek indeksu z Zamknij/Raport.",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
     "asset_name": "DAM-Setup.exe",
-    "check_hour_local": 9
-  }
-}
+   

@@ -373,6 +373,28 @@
     );
   }
 
+  function projectsI18n(key, fallback) {
+    if (window.DamI18n && typeof window.DamI18n.t === "function") {
+      var v = window.DamI18n.t(key);
+      if (v && v !== key) return v;
+    }
+    return fallback || key;
+  }
+
+  function projectIndexCopyChipHtml(ix) {
+    return (
+      '<button type="button" class="dam-viz-badge dam-viz-badge--index dam-branding-id-chip dam-viz-card__id-chip" data-copy-id="' +
+      esc(ix) +
+      '" data-tag-value="' +
+      esc(ix) +
+      '" data-dam-tip="Kliknij, aby skopiować" aria-label="Kopiuj indeks ' +
+      esc(ix) +
+      '"><i class="uil uil-copy" aria-hidden="true"></i>' +
+      esc(ix) +
+      "</button>"
+    );
+  }
+
   function renderIndexCorner(p) {
     var meta = state.metaById[p.id] || {};
     var raw = rawProduct(p);
@@ -390,31 +412,103 @@
       return String(b).localeCompare(String(a));
     });
     if (!indexes.length) return "";
-    var multi = indexes.length > 1;
-    var html =
-      '<div class="dam-project-card__index-corner' +
-      (multi ? " dam-project-card__index-corner--multi" : "") +
-      '">';
-    indexes.slice(0, 3).forEach(function (ix) {
-      if (window.DamBadges && typeof window.DamBadges.render === "function") {
-        html +=
-          window.DamBadges.render({
-            index: ix,
-            compact: true,
-            maxTotal: 1,
-            showCarrierPlaceholder: false,
-          });
-      } else {
-        html +=
-          '<button type="button" class="dam-viz-badge dam-badge-tag dam-viz-badge--index" data-tag-kind="index" data-tag-value="' +
-          String(ix).replace(/"/g, "&quot;") +
-          '">' +
-          String(ix).replace(/</g, "&lt;") +
-          "</button>";
-      }
-    });
+    var html = '<div class="dam-project-card__index-corner">';
+    if (indexes.length > 1) {
+      var showLabel = projectsI18n("dash.widget.show_indexes", "Pokaż indeksy");
+      var showTip = projectsI18n(
+        "dash.widget.show_indexes_tip",
+        "Pokaż wszystkie indeksy wariantów (klik = kopiuj)"
+      );
+      html +=
+        '<div class="dam-viz-card__indexes-anchor">' +
+        '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-card__show-indexes" data-dam-tip="' +
+        esc(showTip) +
+        '" aria-expanded="false">' +
+        '<i class="uil uil-layer-group" aria-hidden="true"></i><span>' +
+        esc(showLabel) +
+        "</span></button>" +
+        '<div class="dam-viz-card__indexes-wrap" hidden>' +
+        indexes.map(projectIndexCopyChipHtml).join("") +
+        "</div></div>";
+    } else {
+      html += projectIndexCopyChipHtml(indexes[0]);
+    }
     html += "</div>";
     return html;
+  }
+
+  function toastIndexCopied(msg) {
+    if (typeof window.damShowToast === "function") {
+      window.damShowToast(msg);
+      return;
+    }
+    var el = document.getElementById("damGlobalToast");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "damGlobalToast";
+      el.className = "dam-global-toast";
+      el.setAttribute("role", "status");
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.classList.add("is-on");
+    clearTimeout(el._t);
+    el._t = setTimeout(function () {
+      el.classList.remove("is-on");
+    }, 1600);
+  }
+
+  function copyProjectIndexChip(chip) {
+    var text = chip.getAttribute("data-copy-id") || chip.getAttribute("data-tag-value") || "";
+    text = String(text).trim();
+    if (!text) return;
+    var onOk = function () {
+      toastIndexCopied("Skopiowano: " + text);
+    };
+    var onFail = function () {
+      toastIndexCopied("Nie udało się skopiować");
+    };
+    if (window.DamBadges && typeof window.DamBadges.copyTagText === "function") {
+      window.DamBadges.copyTagText(chip).then(onOk).catch(onFail);
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(onOk).catch(onFail);
+    }
+  }
+
+  function bindProjectGridIndexDelegation(grid) {
+    if (!grid || grid._damProjectsIndexDelegation) return;
+    grid._damProjectsIndexDelegation = true;
+    grid.addEventListener("click", function (ev) {
+      var corner = ev.target.closest(".dam-project-card__index-corner");
+      if (!corner || !grid.contains(corner)) return;
+
+      var showBtn = ev.target.closest(".dam-viz-card__show-indexes");
+      if (showBtn && corner.contains(showBtn)) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        var anchor = showBtn.closest(".dam-viz-card__indexes-anchor");
+        var wrap =
+          (anchor && anchor.querySelector(".dam-viz-card__indexes-wrap")) ||
+          (showBtn.parentNode && showBtn.parentNode.querySelector(".dam-viz-card__indexes-wrap"));
+        if (!wrap) return;
+        var open = !(anchor && anchor.classList.contains("is-expanded"));
+        if (anchor) {
+          if (open) anchor.classList.add("is-expanded");
+          else anchor.classList.remove("is-expanded");
+        }
+        if (open) wrap.removeAttribute("hidden");
+        else wrap.setAttribute("hidden", "");
+        showBtn.setAttribute("aria-expanded", open ? "true" : "false");
+        return;
+      }
+
+      var copyChip = ev.target.closest("[data-copy-id]");
+      if (copyChip && corner.contains(copyChip)) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        copyProjectIndexChip(copyChip);
+      }
+    });
   }
 
   function cardCategoryLabel(p) {
@@ -922,6 +1016,7 @@
         window.DamIcons.bindWinButtons(grid);
       }
       revealProjectCards(grid);
+      bindProjectGridIndexDelegation(grid);
       if (!grid._damProjectsRecentBound) {
         grid._damProjectsRecentBound = true;
         grid.addEventListener("click", function (e) {

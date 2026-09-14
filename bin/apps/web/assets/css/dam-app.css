@@ -1271,26 +1271,55 @@ i.uil.uil-folder.dam-folder-item__icon {
   transform: translateY(-3px);
 }
 
-/* Project index badges: keep 6300xxx.01 / .00 fully inside the card (not clipped). */
+/* Project cards: one header line; multi-index expands like viz/branding (no width hack). */
 #damProjectsGrid article.dam-project-card .dam-project-card__top {
   align-items: flex-start;
   min-width: 0;
 }
 
-#damProjectsGrid article.dam-project-card .dam-project-card__index-corner,
-#damProjectsGrid article.dam-project-card .dam-project-card__index-corner--multi {
+#damProjectsGrid article.dam-project-card .dam-project-card__index-corner {
   display: flex;
+  flex: 0 1 auto;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+  max-width: none;
+  margin-left: auto;
+}
+
+#damProjectsGrid article.dam-project-card .dam-project-card__index-corner .dam-viz-card__indexes-anchor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+}
+
+#damProjectsGrid article.dam-project-card .dam-project-card__index-corner .dam-viz-card__show-indexes.geex-btn {
+  flex-shrink: 0;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+#damProjectsGrid article.dam-project-card .dam-project-card__index-corner .dam-viz-card__indexes-wrap[hidden] {
+  display: none;
+}
+
+#damProjectsGrid article.dam-project-card .dam-project-card__index-corner .dam-viz-card__indexes-anchor.is-expanded .dam-viz-card__indexes-wrap {
+  display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
   justify-content: flex-end;
   align-items: center;
   gap: 4px;
+  width: 100%;
   min-width: 0;
-  max-width: calc(100% - 7.25rem);
-  flex: 1 1 auto;
-}
-
-#damProjectsGrid article.dam-project-card .dam-project-card__index-corner--multi {
-  max-width: min(9.5rem, calc(100% - 7.25rem));
+  margin-top: 2px;
 }
 
 #damProjectsGrid article.dam-project-card .dam-project-card__index-corner .dam-viz-badge,

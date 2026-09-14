@@ -1,6 +1,6 @@
 ﻿; DAM Windows installer - pelny kreator (licencja, sciezka, aktualizacja)
 #ifndef MyAppVersion
-  #define MyAppVersion "6.0.9"
+  #define MyAppVersion "6.0.12"
 #endif
 #ifndef StageDir
   #define StageDir "..\dist\staging\DAM-install"
@@ -128,12 +128,30 @@ Root: HKCU; Subkey: "Software\Inyfinn\DAM"; ValueType: string; ValueName: "Insta
 Root: HKCU; Subkey: "Software\Inyfinn\DAM"; ValueType: string; ValueName: "Version"; ValueData: "{#MyAppVersion}"; Flags: uninsdeletekey
 
 [Code]
+function IsProtectedInstallPath(const Path: String): Boolean;
+var
+  U: String;
+begin
+  U := Uppercase(Path);
+  Result :=
+    (Pos('\PROGRAM FILES\', '\' + U + '\') > 0) or
+    (Pos('\PROGRAM FILES (X86)\', '\' + U + '\') > 0) or
+    (Pos('\WINDOWS\', '\' + U + '\') > 0) or
+    (Pos('\PROGRAMDATA\', '\' + U + '\') > 0);
+end;
+
+function UserInstallDir: String;
+begin
+  Result := ExpandConstant('{localappdata}\Programs\DAM');
+end;
+
 function IsBadInstallPath(const Path: String): Boolean;
 var
   U: String;
 begin
   U := Uppercase(Path);
   Result := (Path = '') or
+    IsProtectedInstallPath(Path) or
     (Pos('\TEMP\', U) > 0) or
     (Pos('DAM-INSTALL-TEST', U) > 0) or
     (Pos('DAM-INSTALL-SMOKE', U) > 0);
@@ -166,12 +184,36 @@ begin
     end;
   end;
   SrcDir := ExtractFilePath(ExpandConstant('{srcexe}'));
-  if PathLooksLikeDamRoot(SrcDir) then
+  if (not IsBadInstallPath(SrcDir)) and PathLooksLikeDamRoot(SrcDir) then
   begin
     Result := SrcDir;
     Exit;
   end;
-  Result := ExpandConstant('{localappdata}\Programs\DAM');
+  Result := UserInstallDir;
+end;
+
+procedure InitializeWizard;
+begin
+  if IsProtectedInstallPath(WizardForm.DirEdit.Text) then
+    WizardForm.DirEdit.Text := UserInstallDir;
+end;
+
+function NextButtonClick(CurPageID: Integer): Boolean;
+begin
+  Result := True;
+  if CurPageID = wpSelectDir then
+  begin
+    if IsProtectedInstallPath(WizardDirValue) then
+    begin
+      MsgBox(
+        'DAM instaluje sie bez uprawnien administratora, w folderze uzytkownika:' + #13#10 +
+        UserInstallDir + #13#10#13#10 +
+        'Program Files na dysku C wymaga uprawnien, ktorych ten instalator nie uzywa.',
+        mbError, MB_OK);
+      WizardForm.DirEdit.Text := UserInstallDir;
+      Result := False;
+    end;
+  end;
 end;
 
 function VCRedistNeeded: Boolean;

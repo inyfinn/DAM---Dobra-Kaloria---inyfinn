@@ -253,12 +253,6 @@
       i18n: "nav.invoices"
     },
     {
-      key: "costs",
-      href: "costs.html",
-      icon: "uil-calculator-alt",
-      i18n: "nav.costs"
-    },
-    {
       key: "integrations",
       href: "integrations.html",
       icon: "uil-plug",
@@ -297,7 +291,7 @@
     projects: { labelKey: "nav.projects", label: "Projekty", parent: "dashboard", href: "index.html" },
     project: { labelKey: "nav.project", label: "Projekt", parent: "projects", href: "project.html" },
     invoices: { labelKey: "nav.invoices", label: "Faktury", parent: "dashboard", href: "invoices.html" },
-    costs: { labelKey: "nav.costs", label: "Kalkulator kosztĂłw", parent: "dashboard", href: "costs.html" },
+    costs: { labelKey: "nav.costs", label: "Kalkulator kosztĂłw", parent: "projects", href: "costs.html" },
     integrations: { labelKey: "nav.integrations", label: "Integracja i produkcja", parent: "dashboard", href: "integrations.html" },
     profile: { labelKey: "user.profile", label: "Profil", parent: "dashboard", href: "profile.html" },
     settings: { labelKey: "user.settings", label: "Ustawienia", parent: "dashboard", href: "settings.html" },
@@ -347,22 +341,43 @@
     return file + (window.location.search || "");
   }
 
-  function pushNavStack() {
-    var url = currentNavUrl();
+  function readNavStack() {
     var stack = [];
     try { stack = JSON.parse(sessionStorage.getItem(NAV_STACK_KEY) || "[]"); } catch (e) { stack = []; }
     if (!Array.isArray(stack)) stack = [];
-    if (stack[stack.length - 1] !== url) stack.push(url);
+    return stack;
+  }
+
+  function writeNavStack(stack) {
+    if (!Array.isArray(stack)) stack = [];
     if (stack.length > 40) stack = stack.slice(-40);
     sessionStorage.setItem(NAV_STACK_KEY, JSON.stringify(stack));
+  }
+
+  /** Po history.back / popstate: przytnij stos do biezacego URL (mysz + UI ta sama sciezka). */
+  function reconcileNavStackToUrl(url) {
+    if (!url) return;
+    var stack = readNavStack();
+    for (var i = stack.length - 1; i >= 0; i--) {
+      if (stack[i] === url) {
+        writeNavStack(stack.slice(0, i + 1));
+        return;
+      }
+    }
+    if (stack[stack.length - 1] !== url) {
+      stack.push(url);
+      writeNavStack(stack);
+    }
+  }
+
+  function pushNavStack() {
+    reconcileNavStackToUrl(currentNavUrl());
   }
 
   /* Aktualizuj wierzcholek stosu (np. index.html -> index.html?q=test) bez push */
   function replaceNavStackTop(url) {
     if (!url) return;
-    var stack = [];
-    try { stack = JSON.parse(sessionStorage.getItem(NAV_STACK_KEY) || "[]"); } catch (e) { stack = []; }
-    if (!Array.isArray(stack)) stack = [];
+    var stack = readNavStack();
     if (!stack.length) {
       stack.push(url);
     } else {
@@ -374,14 +389,23 @@
         stack.push(url);
       }
     }
-    if (stack.length > 40) stack = stack.slice(-40);
-    sessionStorage.setItem(NAV_STACK_KEY, JSON.stringify(stack));
+    writeNavStack(stack);
+  }
+
+  function pageParentKey(key) {
+    if (key === "costs") {
+      var fromEntry = sessionStorage.getItem("dam_costs_parent");
+      if (fromEntry === "invoices" || fromEntry === "projects") return fromEntry;
+      return "projects";
+    }
+    var meta = PAGE_TRAIL[key];
+    return meta ? meta.parent : null;
   }
 
   function parentHrefForKey(key) {
-    var meta = PAGE_TRAIL[key];
-    if (!meta || !meta.parent) return "dashboard.html";
-    var parent = PAGE_TRAIL[meta.parent];
+    var parentKey = pageParentKey(key);
+    if (!parentKey) return "dashboard.html";
+    var parent = PAGE_TRAIL[parentKey];
     return parent ? parent.href : "dashboard.html";
   }
 
@@ -413,7 +437,13 @@
     return false;
   }
 
+  var lastNavBackAt = 0;
+  var lastNavForwardAt = 0;
+
   function goBackNav() {
+    var now = Date.now();
+    if (now - lastNavBackAt < 350) return;
+    lastNavBackAt = now;
     if (closeTopmostOverlayIfAny()) return;
     /* Na inboxie: Wstecz cofa ostatnia akcje (expand, potem filtr), nie nawigacje */
     if (window.DamInbox && typeof window.DamInbox.collapseExpanded === "function") {
@@ -422,13 +452,11 @@
     if (window.DamInbox && typeof window.DamInbox.popFilter === "function") {
       if (window.DamInbox.popFilter()) return;
     }
-    var stack = [];
-    try { stack = JSON.parse(sessionStorage.getItem(NAV_STACK_KEY) || "[]"); } catch (e) { stack = []; }
-    if (!Array.isArray(stack)) stack = [];
+    var stack = readNavStack();
     var here = currentNavUrl();
     if (stack[stack.length - 1] === here) stack.pop();
     var prev = stack.pop();
-    sessionStorage.setItem(NAV_STACK_KEY, JSON.stringify(stack));
+    writeNavStack(stack);
     if (prev && prev !== here) {
       window.location.href = prev;
       return;
@@ -451,6 +479,34 @@
     window.location.href = parent;
   }
 
+  function goForwardNav() {
+    var now = Date.now();
+    if (now - lastNavForwardAt < 350) return;
+    lastNavForwardAt = now;
+    window.history.forward();
+  }
+
+  var navPointerBound = false;
+
+  function onNavPointerButton(e) {
+    var btn = e.button;
+    if (btn !== 3 && btn !== 4) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (btn === 3) goBackNav();
+    else goForwardNav();
+  }
+
+  function bindNavPointerBack() {
+    if (navPointerBound) return;
+    navPointerBound = true;
+    window.addEventListener("mouseup", onNavPointerButton, true);
+    window.addEventListener("auxclick", onNavPointerButton, true);
+    window.addEventListener("popstate", function () {
+      reconcileNavStackToUrl(currentNavUrl());
+    });
+  }
+
   function buildTrailCrumbs(leafOverride) {
     var key = currentPageKey();
     var crumbs = [];
@@ -462,7 +518,7 @@
       var walk = key;
       while (walk && PAGE_TRAIL[walk] && walk !== "dashboard") {
         chain.unshift(walk);
-        walk = PAGE_TRAIL[walk].parent;
+        walk = pageParentKey(walk);
       }
       chain.forEach(function (k, idx) {
         var meta = PAGE_TRAIL[k];
@@ -3069,6 +3125,7 @@
     ensureSidebarLogo();
     applyDobraKaloriaLogo();
     applySidebarCollapse();
+    bindNavPointerBack();
 
     bindSearchClearInputs();
 
@@ -3091,7 +3148,7 @@
     }
     if (!window.DamCacheSync && !document.querySelector("script[data-dam-cache-sync]")) {
       var cs = document.createElement("script");
-      cs.src = "assets/js/dam-cache-sync.js?v=6.0.9";
+      cs.src = "assets/js/dam-cache-sync.js?v=6.0.12";
       cs.setAttribute("data-dam-cache-sync", "1");
       document.head.appendChild(cs);
     }
@@ -3226,6 +3283,7 @@
     injectNavTrail: injectNavTrail,
     setTrailLeaf: setTrailLeaf,
     goBack: goBackNav,
+    goForward: goForwardNav,
     replaceNavStackTop: replaceNavStackTop,
     currentNavUrl: currentNavUrl,
     isAdminMode: isAdminModeOn,

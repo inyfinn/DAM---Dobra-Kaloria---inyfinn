@@ -512,6 +512,36 @@ class DamJsApi:
         threading.Thread(target=_close, daemon=True).start()
         return {"ok": True, "status": "restarting"}
 
+    def invoke_nav_back(self) -> dict:
+        """Przycisk wstecz myszy (XBUTTON1) -> ta sama sciezka co UI Wstecz."""
+        try:
+            import webview  # type: ignore
+
+            windows = list(getattr(webview, "windows", []) or [])
+            if not windows:
+                return {"ok": False, "error": "no_window"}
+            windows[0].evaluate_js(
+                "window.DamShell&&typeof window.DamShell.goBack==='function'&&window.DamShell.goBack();"
+            )
+            return {"ok": True}
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)}
+
+    def invoke_nav_forward(self) -> dict:
+        """Przycisk do przodu myszy (XBUTTON2)."""
+        try:
+            import webview  # type: ignore
+
+            windows = list(getattr(webview, "windows", []) or [])
+            if not windows:
+                return {"ok": False, "error": "no_window"}
+            windows[0].evaluate_js(
+                "window.DamShell&&typeof window.DamShell.goForward==='function'&&window.DamShell.goForward();"
+            )
+            return {"ok": True}
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)}
+
 
 def _is_foreground_dam_window() -> bool:
     """True gdy aktywne okno nalezy do DAM (nie Cursor/Chrome devtools)."""
@@ -542,10 +572,10 @@ def _is_foreground_dam_window() -> bool:
 
 
 def start_hard_reset_watchdog(api: "DamJsApi") -> None:
-    """F5 / Ctrl+R poza wÄ…tkiem JS â€” dziala gdy WebView2 UI zamrozone.
+    """F5 / Ctrl+R oraz XBUTTON1/2 poza watkiem JS.
 
     pywebview w non-debug czesto wylacza natywne skroty przegladarki;
-    ten watchdog restartuje cala aplikacje niezaleznie od stanu strony.
+    F5 restartuje aplikacje; boczne przyciski myszy wołaja DamShell.goBack/goForward.
     """
     if sys.platform != "win32":
         return
@@ -566,28 +596,50 @@ def start_hard_reset_watchdog(api: "DamJsApi") -> None:
         VK_F5 = 0x74
         VK_CONTROL = 0x11
         VK_R = 0x52
+        VK_XBUTTON1 = 0x05
+        VK_XBUTTON2 = 0x06
         last_fire = 0.0
+        last_nav_fire = 0.0
         f5_was = False
         ctrl_r_was = False
+        xbtn1_was = False
+        xbtn2_was = False
         while True:
             time.sleep(0.025)
             if not _is_foreground_dam_window():
                 f5_was = False
                 ctrl_r_was = False
+                xbtn1_was = False
+                xbtn2_was = False
                 continue
             f5_down = bool(user32.GetAsyncKeyState(VK_F5) & 0x8000)
             ctrl_down = bool(user32.GetAsyncKeyState(VK_CONTROL) & 0x8000)
             r_down = bool(user32.GetAsyncKeyState(VK_R) & 0x8000)
+            x1_down = bool(user32.GetAsyncKeyState(VK_XBUTTON1) & 0x8000)
+            x2_down = bool(user32.GetAsyncKeyState(VK_XBUTTON2) & 0x8000)
             edge_f5 = f5_down and not f5_was
             edge_ctrl_r = ctrl_down and r_down and not ctrl_r_was
+            edge_x1 = x1_down and not xbtn1_was
+            edge_x2 = x2_down and not xbtn2_was
             f5_was = f5_down
             ctrl_r_was = ctrl_down and r_down
+            xbtn1_was = x1_down
+            xbtn2_was = x2_down
             if edge_f5 or edge_ctrl_r:
                 now = time.time()
                 if now - last_fire < 0.75:
                     continue
                 last_fire = now
                 _fire_hard_reset()
+            elif edge_x1 or edge_x2:
+                now = time.time()
+                if now - last_nav_fire < 0.35:
+                    continue
+                last_nav_fire = now
+                if edge_x1:
+                    api.invoke_nav_back()
+                else:
+                    api.invoke_nav_forward()
 
     threading.Thread(target=_loop, name="dam-hard-reset-watchdog", daemon=True).start()
 

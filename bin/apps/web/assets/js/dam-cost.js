@@ -23,6 +23,12 @@
   }
 
   function isAdmin() {
+    if (window.DamShell && typeof window.DamShell.isAdminMode === "function") {
+      return window.DamShell.isAdminMode();
+    }
+    if (window.DamProductFinance && typeof DamProductFinance.isAdminMode === "function") {
+      return DamProductFinance.isAdminMode();
+    }
     var role = (localStorage.getItem("dam_role") || "").toLowerCase();
     return role === "admin" || role === "power_user";
   }
@@ -129,7 +135,20 @@
     source: "local",
     syncing: false,
     fmcgCompute: null,
+    fmcgCatalog: null,
+    baseRatesQuery: "",
+    baseRatesKind: "all",
   };
+
+  var BASE_KINDS = [
+    { id: "all", key: "cost.base_kind_all" },
+    { id: "opakowanie", key: "cost.base_kind_pack" },
+    { id: "karton", key: "cost.base_kind_carton" },
+    { id: "wykrojnik", key: "cost.base_kind_die" },
+    { id: "drukarnia", key: "cost.base_kind_print" },
+    { id: "logistyka", key: "cost.base_kind_logistics" },
+    { id: "badania", key: "cost.base_kind_research" },
+  ];
 
   function isGeneralProject(p) {
     var name = String(p.name || p.label || "");
@@ -198,7 +217,7 @@
       escapeHtml(
         t(
           "cost.pick_hint",
-          "Najpierw wybierz projekt. Potem zobaczysz koszt osob i koszty bezposrednie."
+          "Najpierw wybierz projekt. Potem zobaczysz koszt osób i koszty bezpośrednie."
         )
       ) +
       "</p>" +
@@ -361,7 +380,7 @@
       formatPLN(project.labor_total) +
       "</strong></li>" +
       "<li><span>" +
-      escapeHtml(t("cost.meta_direct", "Koszty bezposrednie")) +
+      escapeHtml(t("cost.meta_direct", "Koszty bezpośrednie")) +
       "</span><strong>" +
       formatPLN(project.direct_total) +
       "</strong></li>" +
@@ -399,9 +418,20 @@
 
     var directRows = (project.direct || [])
       .map(function (row) {
+        var meta = "";
+        if (row.department || row.qty != null) {
+          var parts = [];
+          if (row.department) parts.push(row.department);
+          if (row.qty != null && row.unit) {
+            parts.push(String(row.qty).replace(".", ",") + " " + row.unit);
+          }
+          if (row.rate != null) parts.push(formatPLN(row.rate) + "/" + (row.unit || "j."));
+          meta = '<div class="dam-cost-row-meta">' + escapeHtml(parts.join(" · ")) + "</div>";
+        }
         return (
           "<tr><td>" +
           escapeHtml(row.label) +
+          meta +
           '</td><td class="text-end fw-500">' +
           formatPLN(row.amount) +
           "</td></tr>"
@@ -426,9 +456,16 @@
       })
       .join("");
 
+    var testChip =
+      project.isTest || project.source === "seed"
+        ? window.DamProductFinance && typeof DamProductFinance.testBadgeHtml === "function"
+          ? DamProductFinance.testBadgeHtml()
+          : ' <span class="dam-seed-test-badge">(TESTOWE)</span>'
+        : "";
     mount.innerHTML =
       '<h5 class="dam-cost-card__title">' +
       escapeHtml(t("cost.result_title", "Szacowany koszt")) +
+      testChip +
       "</h5>" +
       '<p class="dam-cost-card__sub">' +
       escapeHtml(t("cost.result_sub", "Osoby + surowiec/druk/dostawa z Asany")) +
@@ -442,7 +479,7 @@
       "</div>" +
       "</div>" +
       '<h6 class="dam-cost-section-title">' +
-      escapeHtml(t("cost.section_labor", "Osoby zaangazowane")) +
+      escapeHtml(t("cost.section_labor", "Osoby zaangażowane")) +
       "</h6>" +
       '<div class="dam-cost-table-wrap"><table class="table table-sm dam-cost-table"><tbody>' +
       (laborRows || '<tr><td colspan="2" class="dam-cost-empty">-</td></tr>') +
@@ -453,7 +490,7 @@
       "</strong></td></tr>" +
       "</tbody></table></div>" +
       '<h6 class="dam-cost-section-title">' +
-      escapeHtml(t("cost.section_direct", "Koszty bezposrednie")) +
+      escapeHtml(t("cost.section_direct", "Koszty bezpośrednie")) +
       "</h6>" +
       '<div class="dam-cost-table-wrap"><table class="table table-sm dam-cost-table"><tbody>' +
       (directRows ||
@@ -558,6 +595,241 @@
     };
   }
 
+  function catalogSearchBlob(item) {
+    var parts = [
+      item.label_pl,
+      item.id,
+      item.kind,
+      item.vendor,
+      item.notes,
+      item.stage,
+    ];
+    (item.aliases || []).forEach(function (a) {
+      parts.push(a);
+    });
+    return parts.join(" ").toLowerCase();
+  }
+
+  function filteredCatalogItems() {
+    var items = (state.fmcgCatalog && state.fmcgCatalog.items) || [];
+    var q = state.baseRatesQuery.trim().toLowerCase();
+    var kind = state.baseRatesKind;
+    return items.filter(function (it) {
+      if (kind !== "all" && String(it.kind || "") !== kind) return false;
+      if (!q) return true;
+      return catalogSearchBlob(it).indexOf(q) !== -1;
+    });
+  }
+
+  function unitLabel(unit) {
+    var map = {
+      per_1000: "/1000 szt",
+      per_order: "/zlecenie",
+      per_kg: "/kg",
+      per_hour: "/h",
+      per_pallet: "/paleta",
+      per_sku: "/SKU",
+      per_km: "/km",
+    };
+    return map[unit] || unit || "";
+  }
+
+  function renderBaseRatesPanel() {
+    var mount = document.getElementById("damCostBaseRates");
+    if (!mount) return;
+    var cat = state.fmcgCatalog;
+    if (!cat || !cat.items) {
+      mount.innerHTML =
+        '<p class="dam-cost-empty">' + escapeHtml(t("cost.base_loading", "Ładowanie katalogu stawek…")) + "</p>";
+      return;
+    }
+    var admin = isAdmin();
+    var list = filteredCatalogItems();
+    var kindBtns = BASE_KINDS.map(function (k) {
+      var active = state.baseRatesKind === k.id ? " is-active" : "";
+      return (
+        '<button type="button" class="dam-cost-bucket dam-cost-base-kind' +
+        active +
+        '" data-base-kind="' +
+        escapeHtml(k.id) +
+        '">' +
+        escapeHtml(t(k.key, k.id)) +
+        "</button>"
+      );
+    }).join("");
+    var rows = list
+      .slice(0, 120)
+      .map(function (it) {
+        var amtCell = admin
+          ? '<input type="number" step="0.01" class="form-control form-control-sm dam-cost-base-rate-input text-end" data-catalog-id="' +
+            escapeHtml(it.id) +
+            '" value="' +
+            escapeHtml(it.amount != null ? String(it.amount) : "") +
+            '" />'
+          : escapeHtml(formatPLN(it.amount));
+        return (
+          "<tr><td>" +
+          escapeHtml(it.label_pl || it.id) +
+          '<div class="dam-cost-row-meta">' +
+          escapeHtml(
+            [it.kind, it.vendor, it.stage].filter(Boolean).join(" · ")
+          ) +
+          "</div></td><td class=\"text-end\">" +
+          amtCell +
+          "</td><td class=\"text-end text-muted\">" +
+          escapeHtml(unitLabel(it.unit)) +
+          "</td></tr>"
+        );
+      })
+      .join("");
+    mount.innerHTML =
+      '<div class="dam-cost-base-rates">' +
+      "<h5 class=\"dam-cost-card__title\">" +
+      escapeHtml(t("cost.base_title", "Kwoty bazowe")) +
+      " " +
+      (window.DamProductFinance && DamProductFinance.testBadgeHtml
+        ? DamProductFinance.testBadgeHtml()
+        : "") +
+      "</h5>" +
+      '<p class="dam-cost-card__sub">' +
+      escapeHtml(
+        t(
+          "cost.base_sub",
+          "Stawki opakowań i usług — źródło liczenia na karcie produktu. Szukaj po nazwie, aliasie, drukarni."
+        )
+      ) +
+      "</p>" +
+      '<div class="dam-cost-picker__controls dam-cost-base-search">' +
+      '<label class="dam-cost-picker__search-wrap" for="damCostBaseSearch">' +
+      '<span class="visually-hidden">' +
+      escapeHtml(t("cost.base_search", "Szukaj stawki")) +
+      "</span>" +
+      '<i class="uil uil-search" aria-hidden="true"></i>' +
+      '<input type="search" id="damCostBaseSearch" class="dam-cost-picker__search" placeholder="' +
+      escapeHtml(t("cost.base_search_ph", "doypack, kilometr, badanie…")) +
+      '" value="' +
+      escapeHtml(state.baseRatesQuery) +
+      '" autocomplete="off" />' +
+      "</label></div>" +
+      '<div class="dam-cost-picker__buckets dam-cost-base-kinds" role="tablist">' +
+      kindBtns +
+      "</div>" +
+      '<p class="dam-cost-picker__count">' +
+      escapeHtml(t("cost.base_count", "Pozycji")) +
+      ": " +
+      list.length +
+      " / " +
+      cat.items.length +
+      "</p>" +
+      (admin
+        ? '<button type="button" class="geex-btn geex-btn--sm geex-btn--primary" id="damCostBaseSave">' +
+          escapeHtml(t("cost.base_save", "Zapisz zmienione stawki")) +
+          "</button>"
+        : "") +
+      '<div class="dam-cost-table-wrap"><table class="table table-sm dam-cost-table"><thead><tr><th>' +
+      escapeHtml(t("cost.base_col_item", "Pozycja")) +
+      "</th><th class=\"text-end\">" +
+      escapeHtml(t("cost.base_col_rate", "Stawka")) +
+      "</th><th class=\"text-end\">" +
+      escapeHtml(t("cost.base_col_unit", "Jednostka")) +
+      "</th></tr></thead><tbody>" +
+      (rows ||
+        '<tr><td colspan="3" class="dam-cost-empty">' +
+          escapeHtml(t("cost.base_none", "Brak dopasowań")) +
+          "</td></tr>") +
+      "</tbody></table></div></div>";
+
+    mount.querySelectorAll(".dam-cost-base-kind").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        state.baseRatesKind = this.getAttribute("data-base-kind") || "all";
+        renderBaseRatesPanel();
+      });
+    });
+    var search = document.getElementById("damCostBaseSearch");
+    if (search) {
+      search.addEventListener("input", function () {
+        state.baseRatesQuery = this.value || "";
+        renderBaseRatesPanel();
+        var again = document.getElementById("damCostBaseSearch");
+        if (again) {
+          again.focus();
+          var len = again.value.length;
+          again.setSelectionRange(len, len);
+        }
+      });
+    }
+    var saveBase = document.getElementById("damCostBaseSave");
+    if (saveBase && !saveBase._damBound) {
+      saveBase._damBound = true;
+      saveBase.addEventListener("click", function () {
+        if (!isAdmin()) return;
+        var patches = [];
+        mount.querySelectorAll(".dam-cost-base-rate-input").forEach(function (inp) {
+          var id = inp.getAttribute("data-catalog-id");
+          if (!id) return;
+          patches.push({ id: id, amount: Number(inp.value) });
+        });
+        fetch(bridgeUrl() + "/finance/fmcg-catalog", {
+          method: "POST",
+          headers: Object.assign({ "Content-Type": "application/json" }, authHeaders()),
+          body: JSON.stringify({ action: "patch", items: patches }),
+        })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (j) {
+            if (!j || j.ok === false) {
+              alert((j && j.error) || "Zapis stawek nie powiódł się.");
+              return;
+            }
+            return loadFmcgCatalog(true);
+          })
+          .catch(function () {
+            alert("Bridge offline.");
+          });
+      });
+    }
+    if (window.DamGridReveal && window.DamGridReveal.revealRows) {
+      window.DamGridReveal.revealRows(mount, ":scope > *");
+    }
+  }
+
+  function loadFmcgCatalog(skipCompute) {
+    return fetch(bridgeUrl() + "/finance/fmcg-catalog", {
+      headers: authHeaders(),
+      cache: "no-store",
+    })
+      .then(function (r) {
+        if (!r.ok) throw new Error("bridge");
+        return r.json();
+      })
+      .then(function (data) {
+        state.fmcgCatalog = data;
+        renderBaseRatesPanel();
+        if (!skipCompute) {
+          state.fmcgCompute =
+            window.DamFmcg && typeof DamFmcg.computeFromCatalog === "function"
+              ? DamFmcg.computeFromCatalog(data)
+              : data.compute || null;
+          renderFmcgPanel();
+        }
+      })
+      .catch(function () {
+        return fetch("data/fmcg-cost-catalog.json?v=" + Date.now(), { cache: "no-store" })
+          .then(function (r) {
+            return r.ok ? r.json() : null;
+          })
+          .then(function (catalog) {
+            state.fmcgCatalog = catalog;
+            renderBaseRatesPanel();
+            if (catalog && window.DamFmcg && typeof DamFmcg.computeFromCatalog === "function") {
+              state.fmcgCompute = DamFmcg.computeFromCatalog(catalog);
+            }
+            renderFmcgPanel();
+          });
+      });
+  }
+
   function renderFmcgPanel() {
     var mount = document.getElementById("damCostFmcg");
     if (!mount) return;
@@ -610,6 +882,18 @@
     }
   }
 
+  function projectIdFromUrl() {
+    try {
+      return (
+        new URLSearchParams(window.location.search).get("project") ||
+        new URLSearchParams(window.location.search).get("product_id") ||
+        ""
+      );
+    } catch (e) {
+      return "";
+    }
+  }
+
   function applyProjectCosts(data, source) {
     state.data = data;
     state.source = source || "local";
@@ -625,7 +909,16 @@
       }
       return;
     }
-    state.activeId = preferDefaultProject(data.projects);
+    var fromUrl = projectIdFromUrl();
+    if (fromUrl) {
+      var match = data.projects.find(function (p) {
+        return p.id === fromUrl || p.linked_product_id === fromUrl;
+      });
+      if (match) state.activeId = match.id;
+      else state.activeId = preferDefaultProject(data.projects);
+    } else {
+      state.activeId = preferDefaultProject(data.projects);
+    }
     state.bucket = "product";
     renderPicker(data.projects);
     renderActive();
@@ -747,7 +1040,12 @@
       window.DamGridReveal.skeleton(document.getElementById("damCostMeta"), { count: 4 });
       window.DamGridReveal.skeleton(document.getElementById("damCostResult"), { variant: "rows", count: 4 });
       window.DamGridReveal.skeleton(document.getElementById("damCostFmcg"), { variant: "rows", count: 3 });
+      window.DamGridReveal.skeleton(document.getElementById("damCostBaseRates"), { variant: "rows", count: 4 });
     }
+    document.addEventListener("dam:admin-mode", function () {
+      renderBaseRatesPanel();
+      updateSourceBadge();
+    });
     loadProjectCosts().catch(function (err) {
       var meta = document.getElementById("damCostMeta");
       if (meta) {
@@ -758,7 +1056,7 @@
           '<p class="dam-cost-card__note">Uruchom: python apps/web/scripts/build-project-costs.py</p>';
       }
     });
-    loadFmcgCompute();
+    loadFmcgCatalog();
   }
 
   window.DamCost = {
