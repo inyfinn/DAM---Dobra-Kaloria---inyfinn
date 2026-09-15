@@ -268,14 +268,22 @@ DAM-Setup.exe
 .env.*
 !.env.example
 !.env.sample
+bin/.env
 .ssh/
+**/.ssh/
 id_rsa
+id_rsa*
 id_ed25519
+id_ed25519*
 id_ecdsa
+id_ecdsa*
 id_dsa
 *.ppk
 *.pem
 *.p12
 *.pfx
+.git-credentials
+**/credentials.json
+!**/credentials.json.example
 cloud-agent-nas
 # --- end secrets-lock ---

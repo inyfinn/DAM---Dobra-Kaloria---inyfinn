@@ -42,6 +42,12 @@ python apps/desktop/seed_kubara_users.py
 3. Startuje most `:8766` + UI w WebView2 + watcher indeksu.
 4. Logowanie: email + haslo lokalne (docelowo Entra ID).
 
+## Git i sekrety (repo)
+
+- Nigdy nie commituj: `.env`, `pg-config.json`, kluczy SSH (`id_rsa*`, `id_ed25519*`, `*.pem`), `.git-credentials`, `machine-config.json` z tokenami.
+- Skan lokalny: `gitleaks detect --source . --verbose` (konfiguracja: `.gitleaks.toml` w GIT_ROOT).
+- Klucz deploy na NAS pozostaje tylko na Synology (`dam-git.sh` wskazuje sciezke — nie zawartosc klucza).
+
 ## Bezpieczenstwo sesji
 
 - `machine_id` / `device_id` / `session_id` - patrz ADR-008.

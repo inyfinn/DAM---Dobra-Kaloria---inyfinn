@@ -1,0 +1,9 @@
+# Minimal secret scan (local: gitleaks detect --no-git --verbose)
+title = "DAM inyfinn"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "NAS deploy script references SSH key path on Synology (not key material)"
+paths = ['''bin/scripts/ops/synology/dam-git\.sh$''']
