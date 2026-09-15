@@ -2688,6 +2688,7 @@ NAMING_DICTIONARY_FILE = WEB_ROOT / "data" / "naming-dictionary.json"
 APP_SETTINGS_FILE = WEB_ROOT / "data" / "app-settings.json"
 PROGRAM_INSTRUCTIONS_FILE = WEB_ROOT / "data" / "program-instructions.json"
 PRODUCT_CATALOG_FILE = WEB_ROOT / "data" / "product-catalog.json"
+PRODUCT_LIFECYCLE_FILE = WEB_ROOT / "data" / "product-lifecycle.json"
 PRODUCT_PRICES_CACHE_FILE = WEB_ROOT / "data" / "product-prices-cache.json"
 BULK_PACKAGING_FILE = WEB_ROOT / "data" / "bulk-packaging.json"
 SHOP_CATEGORIES_FILE = WEB_ROOT / "data" / "shop-categories.json"
@@ -7668,6 +7669,7 @@ class Handler(BaseHTTPRequestHandler):
                         "/branding-search-index",
                         "/search/semantic",
                         "/product-catalog",
+                        "/product-lifecycle",
                         "/bulk-packaging",
                         "/branding/status",
                         "/wykrojniki-registry",
@@ -8468,6 +8470,13 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(200, {"ok": True, **data})
             return
+        if parsed.path == "/product-lifecycle":
+            data = _load_json(PRODUCT_LIFECYCLE_FILE, None)
+            if not isinstance(data, dict):
+                self._json(404, {"ok": False, "error": "product_lifecycle_missing"})
+                return
+            self._json(200, {"ok": True, **data})
+            return
         if parsed.path == "/product-price":
             qs = parse_qs(parsed.query)
             product_id = (qs.get("product_id") or [""])[0].strip()
@@ -9228,6 +9237,31 @@ class Handler(BaseHTTPRequestHandler):
                 encoding="utf-8",
             )
             self._json(200, {"ok": True, "product_id": product_id})
+            return
+        if parsed.path == "/product-lifecycle/update":
+            if self._require_admin() is None:
+                return
+            product_id = (data.get("product_id") or "").strip()
+            stage = (data.get("stage") or "").strip().lower()
+            notes = data.get("notes")
+            if not product_id or not stage:
+                self._json(400, {"ok": False, "error": "product_id_and_stage_required"})
+                return
+            lifecycle = _load_json(PRODUCT_LIFECYCLE_FILE, {"version": 1, "stages": [], "products": {}})
+            products = lifecycle.setdefault("products", {})
+            base = products.get(product_id) if isinstance(products.get(product_id), dict) else {}
+            products[product_id] = {
+                **base,
+                "stage": stage,
+                "updated_at": utc_now(),
+                **({"notes": notes} if notes is not None else {}),
+            }
+            lifecycle["updated_at"] = utc_now()
+            PRODUCT_LIFECYCLE_FILE.write_text(
+                json.dumps(lifecycle, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+            self._json(200, {"ok": True, "product_id": product_id, "stage": stage})
             return
         if parsed.path == "/wykrojnik-mapping-queue":
             if self._require_admin() is None:

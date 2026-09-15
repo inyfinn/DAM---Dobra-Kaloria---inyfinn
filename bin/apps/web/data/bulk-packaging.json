@@ -391,6 +391,26 @@
         "d": null
       },
       "notes": ""
+    },
+    "pak:doypack-24": {
+      "label": "2F · 12×2",
+      "grid": "12x2",
+      "faces": 2,
+      "units_total": 24,
+      "type": "karton",
+      "tag_tier": "low",
+      "source_pdf": "M:/- POLSKA/01 - PRODUKTY/03 - OPAKOWANIA ZBIORCZE/Datesy/Archive 1/DK_karton_datesy_2face_2026_06_29_FQ-3.pdf",
+      "case_mm": {
+        "l": 393,
+        "w": 238,
+        "h": 179
+      },
+      "flat_dimensions_mm": {
+        "w": 393,
+        "h": 238,
+        "d": 179
+      },
+      "notes": "Kulki/doypack zbiorczy 24 szt. — układ 12×2 (nie 1×24). Metodologia rodziny Datesy/Figa."
     }
   }
 }

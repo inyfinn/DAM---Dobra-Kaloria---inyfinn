@@ -529,6 +529,7 @@
   async function loadCatalogBundle(productId) {
     var catalog = null;
     var bulk = null;
+    var lifecycle = null;
     var price = null;
     try {
       catalog = await fetchJsonLocal("data/product-catalog.json");
@@ -536,6 +537,9 @@
     try {
       bulk = await fetchJsonLocal("data/bulk-packaging.json");
     } catch (e2) { /* optional */ }
+    try {
+      lifecycle = await fetchJsonLocal("data/product-lifecycle.json");
+    } catch (eLc) { /* optional */ }
     try {
       var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
       var timer = ctrl
@@ -556,7 +560,7 @@
       var pack = bulk.packs[entry.bulk_packaging_ref];
       if (pack && pack.label) packLabel = pack.label;
     }
-    return { entry: entry, bulk: bulk, price: price, packLabel: packLabel };
+    return { entry: entry, bulk: bulk, lifecycle: lifecycle, price: price, packLabel: packLabel };
   }
 
   function catalogLabel(key, fb) {
@@ -581,32 +585,61 @@
     return String((row && row.key) || "row_" + idx);
   }
 
+  function buildFmcgRowTr(row, idx, PF, admin) {
+    var meta = PF && typeof PF.directRowMeta === "function" ? PF.directRowMeta(row) : "";
+    var rk = fmcgRowKey(row, idx);
+    var amountCell = admin
+      ? '<input type="number" step="0.01" min="0" class="form-control form-control-sm dam-catalog-fmcg__amount-input text-end" data-row-key="' +
+        esc(rk) +
+        '" value="' +
+        esc(String(row.amount != null ? row.amount : "")) +
+        '" aria-label="' +
+        esc(row.label) +
+        '" />'
+      : esc(PF ? PF.formatPLN(row.amount) : String(row.amount));
+    return (
+      "<tr data-row-key=\"" +
+      esc(rk) +
+      "\"><td>" +
+      esc(row.label) +
+      (meta ? '<div class="dam-catalog-fmcg__meta">' + esc(meta) + "</div>" : "") +
+      '</td><td class="text-end dam-catalog-fmcg__amount-cell">' +
+      amountCell +
+      "</td></tr>"
+    );
+  }
+
   function buildFmcgRowsHtml(direct, PF, admin) {
     return (direct || [])
       .map(function (row, idx) {
-        var meta = PF && typeof PF.directRowMeta === "function" ? PF.directRowMeta(row) : "";
-        var rk = fmcgRowKey(row, idx);
-        var amountCell = admin
-          ? '<input type="number" step="0.01" min="0" class="form-control form-control-sm dam-catalog-fmcg__amount-input text-end" data-row-key="' +
-            esc(rk) +
-            '" value="' +
-            esc(String(row.amount != null ? row.amount : "")) +
-            '" aria-label="' +
-            esc(row.label) +
-            '" />'
-          : esc(PF ? PF.formatPLN(row.amount) : String(row.amount));
-        return (
-          "<tr data-row-key=\"" +
-          esc(rk) +
-          "\"><td>" +
-          esc(row.label) +
-          (meta ? '<div class="dam-catalog-fmcg__meta">' + esc(meta) + "</div>" : "") +
-          '</td><td class="text-end dam-catalog-fmcg__amount-cell">' +
-          amountCell +
-          "</td></tr>"
-        );
+        return buildFmcgRowTr(row, idx, PF, admin);
       })
       .join("");
+  }
+
+  function buildFmcgTwoColumnHtml(direct, PF, admin) {
+    var rows = direct || [];
+    if (!rows.length) return "";
+    var mid = Math.ceil(rows.length / 2);
+    var left = rows.slice(0, mid);
+    var right = rows.slice(mid);
+    function colHtml(slice, offset) {
+      return (
+        '<div class="dam-catalog-fmcg__col"><div class="dam-cost-table-wrap"><table class="table table-sm dam-cost-table dam-catalog-fmcg__table"><tbody>' +
+        slice
+          .map(function (row, i) {
+            return buildFmcgRowTr(row, offset + i, PF, admin);
+          })
+          .join("") +
+        "</tbody></table></div></div>"
+      );
+    }
+    return (
+      '<div class="dam-catalog-fmcg__columns">' +
+      colHtml(left, 0) +
+      (right.length ? colHtml(right, mid) : "") +
+      "</div>"
+    );
   }
 
   function readDirectFromDom(host) {
@@ -752,21 +785,118 @@
       dims.w || dims.h || dims.d
         ? [dims.w, dims.h, dims.d].filter(Boolean).join(" × ") + " mm"
         : null;
+
+    var lifecycleDoc = bundle.lifecycle || {};
+    var lifecycleStages = lifecycleDoc.stages || [];
+    var lifecycleProduct =
+      lifecycleDoc.products && p.id ? lifecycleDoc.products[p.id] : null;
+    var stageId = lifecycleProduct && lifecycleProduct.stage ? lifecycleProduct.stage : null;
+    var shopLive =
+      entry &&
+      entry.shop_live === true &&
+      PF &&
+      typeof PF.isShopLiveStage === "function" &&
+      PF.isShopLiveStage(stageId);
+    if (entry && entry.shop_live === true && !stageId) shopLive = true;
+
     var priceVal = null;
-    if (bundle.price && bundle.price.ok && bundle.price.price_pln != null) {
-      priceVal = String(bundle.price.price_pln).replace(".", ",") + " zł";
-    } else if (entry.price_pln != null) {
-      priceVal = String(entry.price_pln).replace(".", ",") + " zł";
-    }
     var priceHint = catalogLabel("project.price_hint", "Cena ze sklepu (odświeżanie 1×/dobę)");
-    if (bundle.price && bundle.price.fetched_at) {
-      priceHint = "Sklep · " + String(bundle.price.fetched_at).slice(0, 10);
+    if (shopLive) {
+      if (bundle.price && bundle.price.ok && bundle.price.price_pln != null) {
+        priceVal = String(bundle.price.price_pln).replace(".", ",") + " zł";
+      } else if (entry && entry.price_pln != null) {
+        priceVal = String(entry.price_pln).replace(".", ",") + " zł";
+      }
+      if (bundle.price && bundle.price.fetched_at) {
+        priceHint = "Sklep · " + String(bundle.price.fetched_at).slice(0, 10);
+      }
     }
-    var shopLink = entry.shop_url
-      ? '<a class="dam-catalog-shop-link" href="' +
+
+    var shopLink = "";
+    if (shopLive && entry && entry.shop_url) {
+      shopLink =
+        '<a class="dam-catalog-shop-link" href="' +
         esc(entry.shop_url) +
-        '" target="_blank" rel="noopener noreferrer"><i class="uil uil-external-link-alt"></i> Zobacz w sklepie</a>'
-      : "";
+        '" target="_blank" rel="noopener noreferrer"><i class="uil uil-external-link-alt"></i> ' +
+        esc(catalogLabel("project.shop_link", "Zobacz w sklepie")) +
+        "</a>";
+    }
+
+    var priceHeroHtml = "";
+    if (shopLive && priceVal) {
+      priceHeroHtml =
+        '<div class="dam-cost-total dam-catalog-price-hero">' +
+        '<div class="dam-cost-total__label">' +
+        esc(catalogLabel("project.kpi_price", "Cena")) +
+        "</div>" +
+        '<div class="dam-cost-total__value">' +
+        esc(priceVal) +
+        "</div>" +
+        '<p class="dam-catalog-price-hero__hint">' +
+        esc(priceHint) +
+        "</p>" +
+        shopLink +
+        "</div>";
+    } else if (entry && entry.reference_price_pln != null) {
+      var refVal = String(entry.reference_price_pln).replace(".", ",") + " zł";
+      var refNote =
+        entry.reference_price_note_pl ||
+        catalogLabel(
+          "project.reference_price_hint",
+          "Porównanie kategorii (TESTOWE, nie cena ze sklepu)"
+        );
+      var refLink = entry.reference_price_url
+        ? ' <a class="dam-catalog-ref-link" href="' +
+          esc(entry.reference_price_url) +
+          '" target="_blank" rel="noopener noreferrer">' +
+          esc(catalogLabel("project.reference_price_link", "Produkt referencyjny")) +
+          "</a>"
+        : "";
+      priceHeroHtml =
+        '<div class="dam-cost-total dam-catalog-price-hero dam-catalog-price-hero--reference">' +
+        '<div class="dam-cost-total__label">' +
+        esc(catalogLabel("project.reference_price_label", "Cena referencyjna kategorii")) +
+        " " +
+        (PF && typeof PF.testBadgeHtml === "function" ? PF.testBadgeHtml() : "") +
+        "</div>" +
+        '<div class="dam-cost-total__value">' +
+        esc(refVal) +
+        "</div>" +
+        '<p class="dam-catalog-price-hero__hint">' +
+        esc(refNote) +
+        refLink +
+        "</p></div>";
+    } else {
+      var stageLbl =
+        PF && typeof PF.lifecycleStageLabel === "function"
+          ? PF.lifecycleStageLabel(stageId, lifecycleStages)
+          : stageId || "—";
+      priceHeroHtml =
+        '<div class="dam-cost-total dam-catalog-price-hero dam-catalog-price-hero--unavailable">' +
+        '<div class="dam-cost-total__label">' +
+        esc(catalogLabel("project.not_in_shop", "Brak w sklepie")) +
+        "</div>" +
+        '<div class="dam-cost-total__value dam-catalog-price-hero__status">' +
+        esc(catalogLabel("project.lifecycle_stage", "Etap")) +
+        ": " +
+        esc(stageLbl) +
+        "</div></div>";
+    }
+
+    var lifecycleHtml =
+      PF && typeof PF.lifecycleStepperHtml === "function"
+        ? PF.lifecycleStepperHtml(stageId, lifecycleStages)
+        : "";
+
+    var packLayout =
+      PF && typeof PF.computeCasePackLayout === "function"
+        ? PF.computeCasePackLayout(
+            entry && entry.units_per_bulk_case,
+            entry && entry.case_pack_layout
+          )
+        : null;
+    var packVizHtml =
+      PF && typeof PF.casePackGridHtml === "function" ? PF.casePackGridHtml(packLayout) : "";
 
     var palMain =
       pal.cases_per_pallet != null
@@ -793,19 +923,21 @@
       : { invoices: "invoices.html", calculator: "costs.html" };
 
     var kpi =
+      '<div class="geex-card dam-cost-panel dam-catalog-kpi-panel">' +
+      '<h5 class="dam-cost-card__title">' +
+      esc(catalogLabel("project.catalog_kpi_title", "KPI produktu")) +
+      "</h5>" +
+      '<p class="dam-cost-card__sub">' +
+      esc(
+        catalogLabel(
+          "project.catalog_kpi_sub",
+          "Wymiary, pakowanie zbiorcze i status cyklu życia."
+        )
+      ) +
+      "</p>" +
+      lifecycleHtml +
+      priceHeroHtml +
       '<div class="dam-catalog-kpi" role="list">' +
-      '<div class="dam-catalog-kpi__tile dam-catalog-kpi__tile--price" role="listitem">' +
-      '<span class="dam-catalog-kpi__label">' +
-      esc(catalogLabel("project.kpi_price", "Cena")) +
-      "</span>" +
-      '<span class="dam-catalog-kpi__value">' +
-      esc(priceVal || "—") +
-      "</span>" +
-      '<span class="dam-catalog-kpi__hint">' +
-      esc(priceHint) +
-      "</span>" +
-      shopLink +
-      "</div>" +
       '<div class="dam-catalog-kpi__tile dam-catalog-kpi__tile--dims" role="listitem">' +
       '<span class="dam-catalog-kpi__label">' +
       esc(catalogLabel("project.kpi_dims", "Wymiary")) +
@@ -820,13 +952,15 @@
       '<span class="dam-catalog-kpi__value">' +
       esc(weight.net != null ? weight.net + " g" : "—") +
       "</span></div>" +
-      '<div class="dam-catalog-kpi__tile" role="listitem">' +
+      '<div class="dam-catalog-kpi__tile dam-catalog-kpi__tile--case" role="listitem">' +
       '<span class="dam-catalog-kpi__label">' +
       esc(catalogLabel("project.kpi_case", "Szt. w kartonie")) +
       "</span>" +
       '<span class="dam-catalog-kpi__value">' +
       esc(entry.units_per_bulk_case != null ? String(entry.units_per_bulk_case) : "—") +
-      "</span></div>" +
+      "</span>" +
+      packVizHtml +
+      "</div>" +
       '<div class="dam-catalog-kpi__tile dam-catalog-kpi__tile--pallet" role="listitem">' +
       '<span class="dam-catalog-kpi__label">' +
       esc(catalogLabel("project.kpi_pallet", "Paletyzacja")) +
@@ -836,7 +970,7 @@
       "</span>" +
       (palSub ? '<span class="dam-catalog-kpi__hint">' + esc(palSub) + "</span>" : "") +
       "</div>" +
-      "</div>";
+      "</div></div>";
 
     var fmcgHtml = "";
     var admin = isFinanceAdmin();
@@ -867,23 +1001,29 @@
           esc(catalogLabel("project.fmcg_admin_hint", "Wymaga ADMIN i mostu lokalnego (8766).")) +
           "</p></div>"
         : "";
+      var fmcgBody =
+        directLines.length >= 2
+          ? buildFmcgTwoColumnHtml(directLines, PF, admin)
+          : '<div class="dam-cost-table-wrap dam-catalog-fmcg__table-wrap"><table class="table table-sm dam-cost-table dam-catalog-fmcg__table"><tbody>' +
+            (rows ||
+              '<tr><td colspan="2" class="dam-cost-empty">' +
+                esc(catalogLabel("project.fmcg_empty", "Brak pozycji — dodaj w trybie ADMIN.")) +
+                "</td></tr>") +
+            "</tbody></table></div>";
       fmcgHtml =
-        '<section class="dam-catalog-fmcg dam-catalog-fmcg--panel">' +
+        '<section class="dam-catalog-fmcg geex-card dam-cost-panel dam-catalog-fmcg--panel">' +
         '<div class="dam-catalog-fmcg__inner">' +
         '<div class="dam-catalog-fmcg__head">' +
-        "<h4>" +
+        '<h5 class="dam-cost-card__title">' +
         esc(catalogLabel("project.fmcg_title", "Kalkulacja opakowań (FMCG)")) +
-        "</h4>" +
+        "</h5>" +
         testBadge +
         "</div>" +
-        '<p class="dam-catalog-kpi__hint">' +
+        '<p class="dam-cost-card__sub">' +
         esc(catalogLabel("project.fmcg_sub", "Ten sam łańcuch co w Kalkulatorze kosztów.")) +
         "</p>" +
-        '<div class="dam-cost-table-wrap dam-catalog-fmcg__table-wrap"><table class="table table-sm dam-cost-table dam-catalog-fmcg__table"><tbody>' +
-        (rows ||
-          '<tr><td colspan="2" class="dam-cost-empty">' +
-            esc(catalogLabel("project.fmcg_empty", "Brak pozycji — dodaj w trybie ADMIN.")) +
-            "</td></tr>") +
+        fmcgBody +
+        '<div class="dam-cost-table-wrap dam-catalog-fmcg__sum-wrap"><table class="table table-sm dam-cost-table dam-catalog-fmcg__table"><tbody>' +
         '<tr class="dam-cost-sum"><td><strong>' +
         esc(catalogLabel("project.fmcg_sum", "Suma opakowań")) +
         '</strong></td><td class="text-end"><strong id="damCatalogFmcgSum">' +

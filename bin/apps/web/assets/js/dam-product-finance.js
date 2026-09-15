@@ -180,6 +180,150 @@
     return parts.join(" · ");
   }
 
+  /** Kolejność etapów cyklu życia produktu (katalog). */
+  var LIFECYCLE_STAGE_IDS = [
+    "projektowanie",
+    "druk",
+    "konfekcja",
+    "emitowanie",
+    "w_sklepach",
+    "wycofywane",
+  ];
+
+  var LIFECYCLE_STAGE_LABELS = {
+    projektowanie: "Projektowanie",
+    druk: "Druk",
+    konfekcja: "Konfekcja (u nas)",
+    emitowanie: "Emitowanie do sklepów",
+    w_sklepach: "W sklepach",
+    wycofywane: "Wycofywane / zastępowane",
+  };
+
+  function lifecycleStageIndex(stageId) {
+    var id = String(stageId || "").toLowerCase();
+    var i = LIFECYCLE_STAGE_IDS.indexOf(id);
+    return i >= 0 ? i : -1;
+  }
+
+  function isShopLiveStage(stageId) {
+    return String(stageId || "").toLowerCase() === "w_sklepach";
+  }
+
+  function lifecycleStageLabel(stageId, stagesFromJson) {
+    var id = String(stageId || "").toLowerCase();
+    if (stagesFromJson && stagesFromJson.length) {
+      var hit = stagesFromJson.find(function (s) {
+        return String(s.id).toLowerCase() === id;
+      });
+      if (hit && hit.label_pl) return hit.label_pl;
+    }
+    return LIFECYCLE_STAGE_LABELS[id] || id || "—";
+  }
+
+  /**
+   * Układ sztuk w kartonie — preferuj kwadratowe warstwy (12×2, 6×4, 8×3…).
+   * override: { cols, rows, layers, caption_pl } z product-catalog.
+   */
+  function computeCasePackLayout(units, override) {
+    var n = Math.max(0, Math.floor(Number(units) || 0));
+    if (override && override.cols > 0 && override.rows > 0) {
+      return {
+        cols: override.cols,
+        rows: override.rows,
+        layers: override.layers || 1,
+        caption_pl:
+          override.caption_pl ||
+          "Układ w kartonie: " + override.cols + " × " + override.rows + " szt.",
+        source: override.source || "catalog_override",
+      };
+    }
+    if (n <= 0) {
+      return { cols: 0, rows: 0, layers: 0, caption_pl: "", source: "empty" };
+    }
+    var best = null;
+    var bestScore = Infinity;
+    for (var cols = 1; cols <= n; cols++) {
+      if (n % cols !== 0) continue;
+      var rows = n / cols;
+      var score = Math.abs(cols - rows) + (cols > 24 ? 50 : 0) + (rows === 1 && cols > 6 ? 20 : 0);
+      if (score < bestScore) {
+        bestScore = score;
+        best = { cols: cols, rows: rows, layers: 1 };
+      }
+    }
+    if (!best) best = { cols: n, rows: 1, layers: 1 };
+    return {
+      cols: best.cols,
+      rows: best.rows,
+      layers: best.layers,
+      caption_pl: "Układ w kartonie: " + best.cols + " × " + best.rows + " szt.",
+      source: "computed",
+    };
+  }
+
+  function casePackGridHtml(layout) {
+    if (!layout || !layout.cols || !layout.rows) return "";
+    var cols = layout.cols;
+    var rows = layout.rows;
+    var total = cols * rows;
+    var cells = [];
+    for (var i = 0; i < total; i++) {
+      cells.push('<span class="dam-catalog-pack-cell" aria-hidden="true"></span>');
+    }
+    return (
+      '<div class="dam-catalog-pack-viz" role="img" aria-label="' +
+      esc(layout.caption_pl || "") +
+      '">' +
+      '<div class="dam-catalog-pack-grid dam-catalog-pack-grid--' +
+      cols +
+      "x" +
+      rows +
+      '" style="--dam-pack-cols:' +
+      cols +
+      ";--dam-pack-rows:" +
+      rows +
+      '">' +
+      cells.join("") +
+      "</div>" +
+      '<p class="dam-catalog-pack-caption">' +
+      esc(layout.caption_pl || "") +
+      "</p></div>"
+    );
+  }
+
+  function lifecycleStepperHtml(currentStageId, stagesFromJson) {
+    var curIdx = lifecycleStageIndex(currentStageId);
+    var stages =
+      stagesFromJson && stagesFromJson.length
+        ? stagesFromJson.slice().sort(function (a, b) {
+            return (a.order || 0) - (b.order || 0);
+          })
+        : LIFECYCLE_STAGE_IDS.map(function (id, idx) {
+            return { id: id, label_pl: LIFECYCLE_STAGE_LABELS[id], order: idx + 1 };
+          });
+    var chips = stages
+      .map(function (st, idx) {
+        var cls = "dam-catalog-lifecycle__step";
+        if (idx < curIdx) cls += " is-done";
+        else if (idx === curIdx) cls += " is-current";
+        return (
+          '<li class="' +
+          cls +
+          '"><span class="dam-catalog-lifecycle__dot" aria-hidden="true"></span><span class="dam-catalog-lifecycle__label">' +
+          esc(st.label_pl || lifecycleStageLabel(st.id, stagesFromJson)) +
+          "</span></li>"
+        );
+      })
+      .join("");
+    return (
+      '<nav class="dam-catalog-lifecycle" aria-label="' +
+      esc(t("project.lifecycle_nav", "Etap produktu")) +
+      '"><ol class="dam-catalog-lifecycle__list">' +
+      chips +
+      "</ol></nav>"
+    );
+  }
+
   /** TESTOWE — porównanie sprzedaży (nie ERP). */
   var COMPARE_SALES_SEED = {
     "figa-z-makiem-owocowe": { sales_pln: 128400, label: "Figa Z Makiem" },
@@ -206,6 +350,13 @@
     saveProjectDirect: saveProjectDirect,
     compareSalesSeed: compareSalesSeed,
     invalidateCostsCache: invalidateCostsCache,
+    LIFECYCLE_STAGE_IDS: LIFECYCLE_STAGE_IDS,
+    lifecycleStageIndex: lifecycleStageIndex,
+    lifecycleStageLabel: lifecycleStageLabel,
+    isShopLiveStage: isShopLiveStage,
+    computeCasePackLayout: computeCasePackLayout,
+    casePackGridHtml: casePackGridHtml,
+    lifecycleStepperHtml: lifecycleStepperHtml,
   };
 })(typeof window !== "undefined" ? window : globalThis);
-
+

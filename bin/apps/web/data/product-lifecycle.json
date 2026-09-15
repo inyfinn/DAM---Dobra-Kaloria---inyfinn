@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "updated_at": "2026-09-15T12:00:00+02:00",
+  "stages": [
+    {
+      "id": "projektowanie",
+      "label_pl": "Projektowanie",
+      "label_en": "Design",
+      "order": 1
+    },
+    {
+      "id": "druk",
+      "label_pl": "Druk",
+      "label_en": "Print",
+      "order": 2
+    },
+    {
+      "id": "konfekcja",
+      "label_pl": "Konfekcja (u nas)",
+      "label_en": "Co-packing (in-house)",
+      "order": 3
+    },
+    {
+      "id": "emitowanie",
+      "label_pl": "Emitowanie do sklepów",
+      "label_en": "Store rollout",
+      "order": 4
+    },
+    {
+      "id": "w_sklepach",
+      "label_pl": "W sklepach",
+      "label_en": "In stores",
+      "order": 5
+    },
+    {
+      "id": "wycofywane",
+      "label_pl": "Wycofywane / zastępowane",
+      "label_en": "Delisted / replaced",
+      "order": 6
+    }
+  ],
+  "products": {
+    "figa-z-makiem-owocowe": {
+      "stage": "druk",
+      "updated_at": "2026-09-15",
+      "notes": "Seed v1 — druk folii / opakowania; brak emisji do sklepu.",
+      "source": "owner_brief_2026-09-15"
+    }
+  }
+}

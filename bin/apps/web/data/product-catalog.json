@@ -1,13 +1,20 @@
 {
   "version": 1,
-  "updated_at": "2026-07-19T00:00:00+02:00",
+  "updated_at": "2026-09-14T12:00:00+02:00",
   "products": {
     "mix-6x-mini-batoniki-mixy": {
       "index_primary": "6300547.00",
       "shop_url": null,
       "shop_category_slug": "batony",
-      "dimensions_mm": { "w": null, "h": null, "d": null },
-      "weight_g": { "net": null, "gross": null },
+      "dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "weight_g": {
+        "net": null,
+        "gross": null
+      },
       "units_per_bulk_case": 6,
       "bulk_packaging_ref": "pak:1f-6x1",
       "palletization": {
@@ -21,8 +28,15 @@
       "index_primary": null,
       "shop_url": null,
       "shop_category_slug": "datesy",
-      "dimensions_mm": { "w": null, "h": null, "d": null },
-      "weight_g": { "net": 100, "gross": null },
+      "dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "weight_g": {
+        "net": 100,
+        "gross": null
+      },
       "units_per_bulk_case": 24,
       "bulk_packaging_ref": "pak:2f-2x12",
       "palletization": {
@@ -36,8 +50,15 @@
       "index_primary": "6300622.00",
       "shop_url": null,
       "shop_category_slug": "batony",
-      "dimensions_mm": { "w": null, "h": null, "d": null },
-      "weight_g": { "net": null, "gross": null },
+      "dimensions_mm": {
+        "w": null,
+        "h": null,
+        "d": null
+      },
+      "weight_g": {
+        "net": null,
+        "gross": null
+      },
       "units_per_bulk_case": null,
       "bulk_packaging_ref": null,
       "palletization": {
@@ -46,6 +67,54 @@
         "units_per_pallet": null
       },
       "notes": ""
+    },
+    "figa-z-makiem-owocowe": {
+      "index_primary": "6300808.00",
+      "shop_url": null,
+      "shop_live": false,
+      "shop_category_slug": "lulki",
+      "reference_price_pln": 6.99,
+      "reference_price_url": "https://dobrakaloria.pl/kulki-w-pudrze-owocowym/297-kulki-w-pudrze-malinowym-65-g",
+      "reference_price_note_pl": "Porównanie kategorii — kulki w pudrze 65 g (TESTOWE, nie cena tego SKU)",
+      "dimensions_mm": {
+        "w": 140,
+        "h": 170,
+        "d": 80
+      },
+      "weight_g": {
+        "net": 65,
+        "gross": 72
+      },
+      "units_per_bulk_case": 24,
+      "bulk_packaging_ref": "pak:doypack-24",
+      "case_pack_layout": {
+        "cols": 12,
+        "rows": 2,
+        "layers": 1,
+        "caption_pl": "Układ w kartonie: 12 × 2 szt.",
+        "source": "owner_2026-09-15; karton Datesy/Figa rodzina — PDF DK_karton_datesy_2face_2026_06_29_FQ-3 (L393×W238×H179 mm)"
+      },
+      "bulk_case_mm": {
+        "w": 393,
+        "h": 238,
+        "d": 179
+      },
+      "palletization": {
+        "pallet_type": "EPAL 1200×1000 mm",
+        "cases_per_layer": 9,
+        "layers": 6,
+        "cases_per_pallet": 54,
+        "units_per_pallet": 1296,
+        "net_weight_kg": 84.24,
+        "gross_weight_kg": 108.0,
+        "max_payload_kg": 1250,
+        "formula_pl": "Karton 400×300×180 mm: 3×3 na warstwie (1200×1000). 6 warstw = 54 kartony × 24 szt. = 1296 szt. Masa ~108 kg << 1250 kg (EPAL)."
+      },
+      "notes": "Doypack lulki owocowe (TESTOWE seed).",
+      "isTest": true,
+      "source": "seed"
     }
-  }
+  },
+  "isTest": true,
+  "bulk_packs": {}
 }
