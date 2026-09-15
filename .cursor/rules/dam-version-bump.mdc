@@ -1,0 +1,45 @@
+---
+description: DAM — wersja to plaska liczba z kropkami (179→180→181→182), nie semver patch +0.0.1.
+globs:
+  - bin/apps/web/**
+  - bin/apps/desktop/**
+  - bin/installer/**
+alwaysApply: false
+---
+
+# DAM — wersjonowanie (HARD, 2026-09-15)
+
+**NIE semver.** Kropki są tylko do wyświetlania. Strip dots → increment jak zwykłej liczbie → wstaw kropki jako `M.m.p` (jedna cyfra w każdym slocie).
+
+| Display | Integer | Never write |
+|---------|---------|-------------|
+| 1.7.9 | 179 | |
+| 1.8.0 | 180 | 1.7.10 |
+| 1.8.1 | 181 | 1.7.11 |
+| 1.8.2 | 182 | 1.7.12 |
+| 1.8.9 | 189 | |
+| 1.9.0 | 190 | 1.8.10 |
+| 2.0.0 | 200 | 1.9.10 |
+
+- Footer `1.7.12` oznacza licznik **182 = 1.8.2**, nie 1.8.0 i nie 1.7.12.
+- Po `x.y.9` następna jest `(x).(y+1).0`, nie `x.y.10`.
+- Zakaz `+0.0.1` jako „następny patch”. To dawało 1.7.10 / 1.7.12.
+
+## Każda zmiana produktowa
+
+Podbij **licznik +1** (np. 182 → 183 = 1.8.3) i zsynchronizuj:
+
+- `bin/apps/web/version.json` → pole `version`
+- `bin/apps/web/assets/js/dam-version.js` → `DAM_APP_VERSION`
+- `bin/apps/desktop/runtime_config.py` → `APP_VERSION`
+- `bin/installer/DAM-Setup.iss` → `MyAppVersion`
+- `#damSidebarVersion` (przez `DamVersion.setSidebarLabel`)
+- `?v=` na dotkniętych assetach w HTML
+
+## Baseline commitów — SUPERSEDED
+
+Stara formuła `n = git rev-list --count main` → `1.0.{n-100}` jest **nieważna**. Właściciel liczy 179, 180, 181, 182… Opis trzymaj w `version.json` → `note` i `bin/memory.md`.
+
+## Dev UI
+
+Static UI: `http://127.0.0.1:8765` (`bin/apps/desktop/launch.py`).

@@ -1,3 +1,13 @@
+## 2026-09-15 - v1.8.2 dotted-integer version math
+
+**Komenda/Akcja:** Wersja DAM to plaska liczba z kropkami (179→180→181→182), nie semver. Footer 1.7.12 = 182 = 1.8.2. Ship 1.8.0 byl dwa kroki za.
+
+**Log/Status:** memory.md + dam-version-bump.mdc; zrodla 1.8.2; commit; push; instalator.
+
+**Efekt/Fix:** Footer DAM v1.8.2. Licznik 182. Nigdy 1.7.10 / 1.7.12 / 1.8.10.
+
+**Zrodla:** memory.md, dam-version-bump.mdc, version.json, dam-version.js, runtime_config.py, DAM-Setup.iss.
+
 ## 2026-09-15 - v1.7.5 cache provenance + first-run NAS pack
 
 **Komenda/Akcja:** Manifest + SQLite provenance; first-run fetch z Panel-DAM/bin/PAMIEC-PODRECZNA; bump 1.7.5 (user: 175 commitow, nie 1.0.75); push; instalator.

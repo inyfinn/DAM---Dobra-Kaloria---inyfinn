@@ -4,6 +4,29 @@ Data startu: **2026-07-16**. Ostatnia synchronizacja docs: **2026-08-03**.
 Workspace: **GIT_ROOT** = katalog z `DAM.exe` + `.git` (primary **D:** …`DAM---Dobra-Kaloria---inyfinn`); kod = **`...\bin`** (CONTENT_ROOT).  
 Wykonawca: Composer 2.5 / Monday.
 
+## Wersja DAM = plaska liczba z kropkami (2026-09-15) - HARD
+
+**NIE semver.** Kropki sa tylko do wyswietlania. Strip dots → +1 jak zwyklej liczbie → wstaw kropki jako `M.m.p` (kazda cyfra 0-9).
+
+| Wyswietlanie | Licznik | Zle (nigdy) |
+|--------------|---------|-------------|
+| 1.7.9 | 179 | |
+| 1.8.0 | 180 | 1.7.10 |
+| 1.8.1 | 181 | 1.7.11 |
+| 1.8.2 | 182 | 1.7.12 |
+| 1.8.9 | 189 | |
+| 1.9.0 | 190 | 1.8.10 |
+| 1.9.9 | 199 | |
+| 2.0.0 | 200 | 1.9.10 |
+
+- Footer `1.7.12` = licznik juz **182** = **1.8.2**. Ship `1.8.0` (4a027c0) byl dwa kroki za.
+- Po 1.8.9 → 1.9.0. Po 1.9.9 → 2.0.0. Nigdy `x.y.10`.
+- Zakaz `+0.0.1` / `1.7.10` / `1.8.10`. Nadpisuje `dam-version-bump.mdc` i global `version-bump-every-change`.
+- Sync: `version.json`, `dam-version.js` `DAM_APP_VERSION`, `runtime_config.py` `APP_VERSION`, `DAM-Setup.iss` `MyAppVersion`, HTML `?v=`.
+- **Aktualny ship: 1.8.2.** Footer: `DAM v1.8.2`.
+
+Lustro operacyjne: `bin/memory.md` (ten sam wpis).
+
 ## Panel silnika bazy — karty klikalne, bez rzędu chipów (HARD, 2026-09-12)
 
 - Rząd `Auto | Synology | Lokalna` (`role=radiogroup` Tryb połączenia) = USUNIĘTY.

@@ -1,9 +1,9 @@
 {
-  "version": "1.8.0",
+  "version": "1.8.2",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-09-15",
-  "note": "1.8.0 = clean Dobra Kaloria light paper (DS near-white, not sage wash); index live-path + full branding watch roots; never 1.7.10. Sync: version.json, dam-version.js, runtime_config.py, DAM-Setup.iss.",
+  "note": "Dotted integer, not semver: 179=1.7.9, 180=1.8.0, 181=1.8.1, 182=1.8.2. Footer 1.7.12 meant 182. Never 1.7.10 / 1.7.12 / 1.8.10. Sync: version.json, dam-version.js, runtime_config.py, DAM-Setup.iss.",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
     "asset_name": "DAM-Setup.exe"
