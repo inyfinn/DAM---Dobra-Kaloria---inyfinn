@@ -153,7 +153,7 @@
       ".dam-sleeve-stock__toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}" +
       ".dam-sleeve-stock__filters{display:flex;flex-wrap:wrap;gap:6px}" +
       ".dam-sleeve-stock__filter{border:1px solid #ddd;background:#fff;border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer}" +
-      ".dam-sleeve-stock__filter.is-active{background:color-mix(in srgb,var(--dam-primary,#ab54db) 14%,#fff);border-color:color-mix(in srgb,var(--dam-primary,#ab54db) 45%,#ccc);color:#4a1f6b;font-weight:600}" +
+      ".dam-sleeve-stock__filter.is-active{background:color-mix(in srgb,var(--dam-primary,#005A29) 14%,#fff);border-color:color-mix(in srgb,var(--dam-primary,#005A29) 45%,#ccc);color:#4a1f6b;font-weight:600}" +
       ".dam-sleeve-stock__search{min-width:200px;max-width:280px}" +
       ".dam-sleeve-stock__table-wrap{overflow:auto;max-height:min(62vh,640px);border:1px solid #e8e8ee;border-radius:12px}" +
       ".dam-sleeve-stock__table{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;table-layout:fixed}" +
@@ -161,10 +161,10 @@
       ".dam-sleeve-stock__table th:not(:first-child),.dam-sleeve-stock__table td:not(:first-child){border-left:1px solid rgba(15,15,25,0.10)}" +
       ".dam-sleeve-stock__table th{position:sticky;top:0;background:#f7f7fa;z-index:2;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:#666;user-select:none;cursor:grab;white-space:nowrap}" +
       ".dam-sleeve-stock__table th.is-dragging{opacity:.55;cursor:grabbing}" +
-      ".dam-sleeve-stock__table th.is-drop-target{box-shadow:inset 3px 0 0 var(--dam-primary,#ab54db)}" +
+      ".dam-sleeve-stock__table th.is-drop-target{box-shadow:inset 3px 0 0 var(--dam-primary,#005A29)}" +
       ".dam-sleeve-stock__th-inner{position:relative;display:block;padding-right:8px;min-height:1.2em}" +
       ".dam-sleeve-stock__col-resizer{position:absolute;top:0;right:-4px;width:10px;height:100%;cursor:col-resize;z-index:3}" +
-      ".dam-sleeve-stock__col-resizer:hover,.dam-sleeve-stock__col-resizer.is-active{background:rgba(171,84,219,0.18)}" +
+      ".dam-sleeve-stock__col-resizer:hover,.dam-sleeve-stock__col-resizer.is-active{background:color-mix(in srgb, var(--dam-primary, #005A29) 18%, transparent)}" +
       ".dam-sleeve-stock__table tr.is-critical{background:#fff5f4}" +
       ".dam-sleeve-stock__num{font-variant-numeric:tabular-nums}" +
       ".dam-sleeve-stock__horizon{line-height:1.25}" +

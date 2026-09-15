@@ -925,7 +925,7 @@
       ".geex-sidebar .geex-sidebar__menu__link[aria-current=\"page\"]{" +
       "position:relative!important;" +
       "border-radius:6px 18px 18px 6px!important;" +
-      "background:color-mix(in srgb,var(--dam-primary,#ab54db) 16%,transparent)!important;" +
+      "background:color-mix(in srgb,var(--dam-primary,#005A29) 16%,transparent)!important;" +
       "background-clip:border-box!important;" +
       "box-shadow:none!important;" +
       "overflow:visible!important;}" +
@@ -933,7 +933,7 @@
       ".geex-sidebar .geex-sidebar__menu__link.active::before," +
       ".geex-sidebar .geex-sidebar__menu__link[aria-current=\"page\"]::before{" +
       "content:\"\";position:absolute;left:0;top:8px;bottom:8px;width:3px;" +
-      "border-radius:0 2px 2px 0;background:var(--dam-primary,#ab54db);" +
+      "border-radius:0 2px 2px 0;background:var(--dam-primary,#005A29);" +
       "pointer-events:none;z-index:1;}" +
       "/* Ikony: ten sam box 20Ă—20 / line-height 1 w expanded+collapsed (bez 24Ă˘â€ â€™20 snap) */" +
       ".geex-sidebar .geex-sidebar__menu__link i," +
@@ -3186,7 +3186,7 @@
     }
     if (!window.DamCacheSync && !document.querySelector("script[data-dam-cache-sync]")) {
       var cs = document.createElement("script");
-      cs.src = "assets/js/dam-cache-sync.js?v=6.0.12";
+      cs.src = "assets/js/dam-cache-sync.js?v=6.0.13";
       cs.setAttribute("data-dam-cache-sync", "1");
       document.head.appendChild(cs);
     }

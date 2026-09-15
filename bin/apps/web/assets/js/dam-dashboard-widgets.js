@@ -4159,7 +4159,7 @@
               "%</span></div>" +
               '<div class="dam-widget__bar-row"><span>Druk</span><div class="dam-widget__bar-track"><div class="dam-widget__bar-fill" style="width:' +
               Math.round((print / sum) * 100) +
-              '%;background:#AB54DB"></div></div><span>' +
+              '%;background:var(--dam-primary)"></div></div><span>' +
               Math.round((print / sum) * 100) +
               "%</span></div></div>" +
               '<span class="dam-widget__chip">Szacunek FMCG</span>'

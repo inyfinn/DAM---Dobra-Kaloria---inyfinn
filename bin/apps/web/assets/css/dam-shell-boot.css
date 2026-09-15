@@ -7,19 +7,19 @@
  * Awaria = html.dam-boot-failed + #damBootFail (wlasny ekran DAM).
  */
 html.dam-booting {
-  background: #f3f5f4;
+  background: #F3F6F4; /* --dam-surface-muted light; tokens not loaded yet */
 }
 
 html.dam-booting[data-theme="dark"] {
-  background: #101412;
+  background: #060F0C; /* --dam-bg dark */
 }
 
 html.dam-boot-failed {
-  background: #f3f5f4;
+  background: #F3F6F4;
 }
 
 html.dam-boot-failed[data-theme="dark"] {
-  background: #101412;
+  background: #060F0C;
 }
 
 /* Krytyczne: nie pokazuj surowego chrome zanim boot sie uda. Zero auto-reveal. */
@@ -73,13 +73,13 @@ html.dam-boot-failed .geex-content:not(.dam-boot-fail) {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: #f3f5f4;
+  background: #F3F6F4;
   color: #17161E;
   font-family: Jost, "Segoe UI", sans-serif;
 }
 
 html[data-theme="dark"] .dam-boot-fail {
-  background: #101412;
+  background: #060F0C;
   color: #f3f5f4;
 }
 
@@ -93,7 +93,7 @@ html[data-theme="dark"] .dam-boot-fail {
 }
 
 html[data-theme="dark"] .dam-boot-fail__card {
-  background: #17161E;
+  background: #0B1814; /* --dam-surface; tokens may be absent on fail */
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
@@ -103,7 +103,7 @@ html[data-theme="dark"] .dam-boot-fail__card {
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #008244;
+  color: #005A29;
 }
 
 .dam-boot-fail__title {
@@ -124,7 +124,7 @@ html[data-theme="dark"] .dam-boot-fail__card {
   padding: 10px 18px;
   border: 0;
   border-radius: 10px;
-  background: #008244;
+  background: #005A29;
   color: #fff;
   font: inherit;
   font-weight: 600;
@@ -132,7 +132,7 @@ html[data-theme="dark"] .dam-boot-fail__card {
 }
 
 .dam-boot-fail__btn:focus-visible {
-  outline: 2px solid #008244;
+  outline: 2px solid #005A29;
   outline-offset: 3px;
 }
 

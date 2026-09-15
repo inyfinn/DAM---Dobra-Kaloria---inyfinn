@@ -1,9 +1,9 @@
 {
-  "version": "1.7.7",
+  "version": "1.7.8",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-09-15",
-  "note": "1.7.7 = M10 follow-up: phone .dam-win-btn 44px (not leftover 31px), transform none. Pliki sync: version.json, dam-version.js, runtime_config.py, DAM-Setup.iss, #damSidebarVersion.",
+  "note": "1.7.8 = DK light paper shares DAM fiolet (#F7F2F7 / #FDFBFD); green = accent + subaccent only. Pliki sync: version.json, dam-version.js, runtime_config.py, DAM-Setup.iss, #damSidebarVersion.",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
     "asset_name": "DAM-Setup.exe"

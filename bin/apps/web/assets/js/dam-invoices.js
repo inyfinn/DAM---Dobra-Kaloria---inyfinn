@@ -304,7 +304,7 @@
           escapeHtml(inv.type || inv.client || "") +
           "</div>" +
           "</td>" +
-          '<td style="font-weight:600;white-space:nowrap;color:#AB54DB">' +
+          '<td style="font-weight:600;white-space:nowrap;color:var(--dam-primary)">' +
           formatPLN(inv.amount) +
           "</td>" +
           '<td style="white-space:nowrap">' +
@@ -430,10 +430,10 @@
       ".dam-inv-asana__draft table{width:100%;border-collapse:collapse;font-size:12.5px}" +
       ".dam-inv-asana__draft th,.dam-inv-asana__draft td{padding:6px 8px;border-bottom:1px solid #eee;text-align:left}" +
       ".dam-inv-cb{display:inline-flex;align-items:flex-start;margin:0;cursor:pointer}" +
-      ".dam-inv-cb__input{-webkit-appearance:none;appearance:none;width:20px;height:20px;margin:1px 0 0;flex:0 0 20px;border:2px solid var(--dam-border-strong,#a8a3b5);border-radius:6px;background:var(--dam-surface,#fff);accent-color:var(--dam-primary,#ab54db);cursor:pointer;position:relative;transition:background .15s ease,border-color .15s ease}" +
-      ".dam-inv-cb__input:checked{background:var(--dam-primary,#ab54db);border-color:var(--dam-primary,#ab54db)}" +
+      ".dam-inv-cb__input{-webkit-appearance:none;appearance:none;width:20px;height:20px;margin:1px 0 0;flex:0 0 20px;border:2px solid var(--dam-border-strong,#a8a3b5);border-radius:6px;background:var(--dam-surface,#fff);accent-color:var(--dam-primary,#005A29);cursor:pointer;position:relative;transition:background .15s ease,border-color .15s ease}" +
+      ".dam-inv-cb__input:checked{background:var(--dam-primary,#005A29);border-color:var(--dam-primary,#005A29)}" +
       ".dam-inv-cb__input:checked::after{content:\"\";position:absolute;left:5px;top:1px;width:5px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}" +
-      ".dam-inv-cb__input:focus-visible{outline:2px solid var(--dam-primary,#ab54db);outline-offset:2px}" +
+      ".dam-inv-cb__input:focus-visible{outline:2px solid var(--dam-primary,#005A29);outline-offset:2px}" +
       ".dam-inv-mail{margin-top:24px!important;display:block!important}" +
       ".dam-inv-mail__content{display:flex;flex-direction:column;gap:24px;padding:8px 4px 16px}" +
       ".dam-inv-mail__section{padding:16px 18px;border:1px solid #e8e8ee;border-radius:14px;background:#fff}" +
@@ -1116,4 +1116,19 @@
       var btn = e.target.closest(".inv-filter-btn");
       if (!btn) return;
       currentFilter = btn.getAttribute("data-filter") || "all";
-      
+      document.querySelectorAll(".inv-filter-btn").forEach(function (el) {
+        var on = el === btn;
+        el.classList.toggle("active", on);
+        el.classList.toggle("is-active", on);
+      });
+      updateSummary(visibleInvoices());
+      renderTable(allInvoices);
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();

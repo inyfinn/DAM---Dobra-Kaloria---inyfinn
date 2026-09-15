@@ -157,9 +157,9 @@
 
 #damIntegrations .dam-int-cta:hover,
 #damIntegrations .dam-integrations-page--settings .dam-int-tile__foot .dam-int-cta:hover {
-  border-color: var(--dam-primary, #ab54db);
-  background: #fbf7fe;
-  color: var(--dam-primary, #ab54db);
+  border-color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface));
+  color: var(--dam-primary, #005A29);
 }
 
 /* Wkrótce: white fill + ink text + neutral dashed (no geex lavender) */
@@ -197,7 +197,7 @@
 }
 
 #damIntegrations .dam-int-soon:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 55%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #005A29) 55%, transparent);
   outline-offset: 2px;
 }
 
@@ -303,13 +303,13 @@
 
 #damIntegrations .dam-int-config > summary:hover,
 #damIntegrations .dam-int-config[open] > summary {
-  border-color: var(--dam-primary, #ab54db);
-  background: #fbf7fe;
-  color: var(--dam-primary, #ab54db);
+  border-color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface));
+  color: var(--dam-primary, #005A29);
 }
 
 #damIntegrations .dam-int-config > summary:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 55%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #005A29) 55%, transparent);
   outline-offset: 2px;
 }
 
@@ -404,7 +404,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   #damIntegrations .dam-integrations-page--settings .dam-int-tile:hover {
-    border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 35%, var(--dam-border, #ececf2));
+    border-color: color-mix(in srgb, var(--dam-primary, #005A29) 35%, var(--dam-border, #ececf2));
     box-shadow: 0 6px 20px rgb(var(--dam-shadow-rgb, 70 66 85) / 0.08);
     transform: translateY(-1px);
   }

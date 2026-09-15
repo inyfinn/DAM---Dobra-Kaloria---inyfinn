@@ -253,11 +253,11 @@
       "cursor:pointer;box-shadow:none;-webkit-appearance:none;appearance:none}" +
       "#" +
       OVERLAY_ID +
-      " .dam-int-cta:hover{border-color:var(--dam-primary,#ab54db);background:#fbf7fe;" +
-      "color:var(--dam-primary,#ab54db)}" +
+      " .dam-int-cta:hover{border-color:var(--dam-primary,#005A29);background:color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface));" +
+      "color:var(--dam-primary,#005A29)}" +
       "#" +
       OVERLAY_ID +
-      " .dam-int-cta:focus-visible{outline:2px solid color-mix(in srgb,var(--dam-primary,#ab54db) 55%,transparent);" +
+      " .dam-int-cta:focus-visible{outline:2px solid color-mix(in srgb,var(--dam-primary,#005A29) 55%,transparent);" +
       "outline-offset:2px}" +
       ".dam-int-fmcg-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}" +
       ".dam-int-fmcg-actions .dam-int-cta," +

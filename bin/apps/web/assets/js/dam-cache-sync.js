@@ -170,7 +170,7 @@
       "}" +
       "#" + HOST_ID + " .dam-job-toast__meta{display:block;margin-top:2px;font-size:12px;font-weight:500;color:#5c5668;}" +
       "#" + HOST_ID + " .dam-job-toast__bar{height:6px;margin:10px 0 8px;border-radius:99px;background:var(--gray-color,#eceaf3);overflow:hidden;}" +
-      "#" + HOST_ID + " .dam-job-toast__fill{height:100%;width:0;border-radius:99px;background:var(--primary-color,#ab54db);transition:width .25s ease;}" +
+      "#" + HOST_ID + " .dam-job-toast__fill{height:100%;width:0;border-radius:99px;background:var(--primary-color,#005A29);transition:width .25s ease;}" +
       "#" + HOST_ID + " .dam-job-toast__actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}" +
       "#" + HOST_ID + " .dam-job-toast__btn," +
       "#" + HOST_ID + " .dam-job-toast__icon{" +
@@ -179,14 +179,15 @@
         "display:inline-flex;align-items:center;justify-content:center;padding:0 12px;" +
       "}" +
       "#" + HOST_ID + " .dam-job-toast__btn.is-ghost{background:var(--gray-color,#eceaf3);color:var(--body-color,#464255);}" +
-      "#" + HOST_ID + " .dam-job-toast__btn.is-primary{background:var(--primary-color,#ab54db);color:#fff;}" +
-      "#" + HOST_ID + " .dam-job-toast__btn.is-danger{background:color-mix(in srgb,var(--primary-color,#ab54db) 14%, #fff);color:#6b2d8a;}" +
-      "#" + HOST_ID + " .dam-job-toast__icon{background:transparent;color:var(--body-color,#464255);padding:0;}" +
+      "#" + HOST_ID + " .dam-job-toast__btn.is-primary{background:var(--primary-color,#005A29);color:#fff;}" +
+      "#" + HOST_ID + " .dam-job-toast__btn.is-danger{background:color-mix(in srgb,var(--primary-color,#005A29) 14%, #fff);color:var(--dam-primary,#005A29);}" +
+      "#" + HOST_ID + " .dam-job-toast__icon--close{color:var(--dam-danger,#ff5b5b);font-size:22px;line-height:1;}" +
+      "#" + HOST_ID + " .dam-job-toast__icon--close:hover{background:color-mix(in srgb,var(--dam-danger,#ff5b5b) 14%, transparent);}" +
       "#" + HOST_ID + " .dam-job-toast__btn:hover," +
-      "#" + HOST_ID + " .dam-job-toast__icon:hover{background:color-mix(in srgb,var(--primary-color,#ab54db) 12%, transparent);}" +
+      "#" + HOST_ID + " .dam-job-toast__icon:hover{background:color-mix(in srgb,var(--primary-color,#005A29) 12%, transparent);}" +
       "#" + HOST_ID + " .dam-job-toast__btn.is-primary:hover{background:#9a45c9;}" +
       "#" + HOST_ID + " .dam-job-toast__btn:focus-visible," +
-      "#" + HOST_ID + " .dam-job-toast__icon:focus-visible{outline:2px solid var(--primary-color,#ab54db);outline-offset:2px;}" +
+      "#" + HOST_ID + " .dam-job-toast__icon:focus-visible{outline:2px solid var(--primary-color,#005A29);outline-offset:2px;}" +
       "#" + PILL_ID + "{" +
         "position:fixed;right:76px;bottom:20px;z-index:11030;" +
         "min-height:" + MIN_TOUCH + "px;padding:0 14px;" +
@@ -210,10 +211,10 @@
       "#" + REPORT_ID + " .dam-index-report__lead{margin:0 0 12px;font-size:13px;color:#5c5668;font-weight:500;}" +
       "#" + REPORT_ID + " ul{margin:0;padding:0;list-style:none;}" +
       "#" + REPORT_ID + " li{padding:10px 0;border-top:1px solid #eceaf3;font-size:13px;}" +
-      "#" + REPORT_ID + " .dam-index-report__kind{display:inline-block;min-width:72px;font-size:11px;font-weight:700;color:#6b2d8a;}" +
+      "#" + REPORT_ID + " .dam-index-report__kind{display:inline-block;min-width:72px;font-size:11px;font-weight:700;color:var(--dam-primary,#005A29);}" +
       "#" + REPORT_ID + " .dam-index-report__actions{display:flex;gap:8px;margin-top:16px;}" +
       "#" + REPORT_ID + " button{min-width:" + MIN_TOUCH + "px;min-height:" + MIN_TOUCH + "px;border:0;border-radius:12px;padding:0 14px;font-weight:700;cursor:pointer;}" +
-      "#" + REPORT_ID + " .is-primary{background:var(--primary-color,#ab54db);color:#fff;}" +
+      "#" + REPORT_ID + " .is-primary{background:var(--primary-color,#005A29);color:#fff;}" +
       "#" + REPORT_ID + " .is-ghost{background:#eceaf3;color:#464255;}" +
       "html[data-theme='dark'] #" + HOST_ID + "{background:#1f1d27;color:#eceaf3;border-color:rgba(255,255,255,.08);}" +
       "html[data-theme='dark'] #" + HOST_ID + " .dam-job-toast__title{color:#fff;}" +
@@ -236,7 +237,7 @@
         "min-width:" + MIN_TOUCH + "px;min-height:" + MIN_TOUCH + "px;" +
         "border:0;border-radius:999px;cursor:pointer;pointer-events:auto;" +
         "background:var(--dam-surface,#fff);" +
-        "box-shadow:0 8px 24px color-mix(in srgb, var(--dam-dark, #17161E) 14%, transparent);" +
+        "box-shadow:0 8px 24px color-mix(in srgb, var(--dam-dark) 14%, transparent);" +
         "display:inline-flex;align-items:center;justify-content:center;padding:0;" +
       "}" +
       "#" + FAB_ID + " .dam-index-fab__hit:focus-visible{outline:2px solid var(--dam-primary);outline-offset:2px;}" +
@@ -311,7 +312,7 @@
           '<span class="dam-job-toast__path" id="damJobToastPath" hidden></span>' +
           '<span class="dam-job-toast__meta" id="damJobToastMeta"></span>' +
         "</div>" +
-        '<button type="button" class="dam-job-toast__icon" id="damJobToastMin" aria-label="Zwin" title="Zwin">_</button>' +
+        '<button type="button" class="dam-job-toast__icon dam-job-toast__icon--close" id="damJobToastMin" aria-label="Ukryj" title="Ukryj">×</button>' +
       "</div>" +
       '<div class="dam-job-toast__bar" id="damJobToastBar" aria-hidden="true"><div class="dam-job-toast__fill" id="damJobToastFill"></div></div>' +
       '<div class="dam-job-toast__actions" id="damJobToastActions">' +
@@ -321,16 +322,10 @@
         '<button type="button" class="dam-job-toast__btn is-primary" id="damJobToastReport" hidden>Raport</button>' +
       "</div>";
     document.body.appendChild(el);
-    _minimized = localStorage.getItem("dam_job_toast_min") === "1";
-    el.classList.toggle("is-min", _minimized);
     var minBtn = el.querySelector("#damJobToastMin");
     if (minBtn) {
       minBtn.addEventListener("click", function () {
-        _minimized = !_minimized;
-        localStorage.setItem("dam_job_toast_min", _minimized ? "1" : "0");
-        el.classList.toggle("is-min", _minimized);
-        minBtn.setAttribute("aria-label", _minimized ? "Rozwin" : "Zwin");
-        minBtn.textContent = _minimized ? "+" : "_";
+        collapseToastToFab();
       });
     }
     var cancelBtn = el.querySelector("#damJobToastCancel");
@@ -358,17 +353,7 @@
     if (closeBtn) {
       closeBtn.addEventListener("click", function () {
         ackReport(_lastReport || loadPersistedReport());
-        _toastPinned = false;
-        _awaitAck = false;
-        el.hidden = true;
-        countPill().hidden = true;
-        if (_fabPhase === "done") {
-          var badge = document.getElementById(FAB_ID);
-          if (badge) {
-            badge.hidden = false;
-            setFabBodyFlag(true);
-          }
-        }
+        collapseToastToFab();
       });
     }
     var reportBtn = el.querySelector("#damJobToastReport");
@@ -391,8 +376,15 @@
     }
   }
 
+  function isAuthSurface() {
+    if (typeof document === "undefined" || !document.body) return false;
+    if (document.body.classList.contains("authentication-page")) return true;
+    return !!document.getElementById("damAuthForm");
+  }
+
   function setFabBodyFlag(on) {
     if (!document.body) return;
+    if (isAuthSurface()) on = false;
     document.body.classList.toggle("dam-index-fab-on", !!on);
   }
 
@@ -404,16 +396,34 @@
     setFabBodyFlag(false);
   }
 
+  function collapseToastToFab() {
+    _toastPinned = false;
+    _awaitAck = false;
+    _minimized = false;
+    try {
+      localStorage.removeItem("dam_job_toast_min");
+    } catch (_e) {}
+    var toast = document.getElementById(HOST_ID);
+    if (toast) toast.hidden = true;
+    var pill = document.getElementById(PILL_ID);
+    if (pill) pill.hidden = true;
+    if (_fabPhase === "running") showFabRunning();
+    else if (_fabPhase === "done" || loadPersistedReport()) showFabDone();
+    else hideFab();
+  }
+
   function pinToastFromFab() {
     _toastPinned = true;
     _awaitAck = true;
+    _minimized = false;
     var toast = host();
     toast.hidden = false;
+    toast.classList.remove("is-min");
     applyView(
       { running: false },
       {
-        progress: { running: false },
-        rebuild_running: false,
+        progress: { running: _fabPhase === "running" },
+        rebuild_running: _fabPhase === "running",
         last_report: _lastReport || loadPersistedReport(),
       }
     );
@@ -455,6 +465,10 @@
   }
 
   function showFabRunning() {
+    if (isAuthSurface()) {
+      hideFab();
+      return;
+    }
     ensureCss();
     var el = fabHost();
     clearFabTimers();
@@ -474,6 +488,10 @@
   }
 
   function showFabDone() {
+    if (isAuthSurface()) {
+      hideFab();
+      return;
+    }
     ensureCss();
     var el = fabHost();
     var reduce =
@@ -673,35 +691,25 @@
       _wasRunning = false;
       fetchReport();
       showFabDone();
-      if (!toastShownToday()) {
-        _awaitAck = true;
-        markToastShownToday();
-      } else if (!_toastPinned) {
-        _awaitAck = false;
-      }
     }
 
     var persisted = loadPersistedReport();
-    if (!idxRun && persisted && !isAcked(persisted) && !toastShownToday() && !_toastPinned) {
-      _awaitAck = true;
-      markToastShownToday();
+    if (!idxRun && persisted && !isAcked(persisted) && _fabPhase === "idle") {
+      showFabDone();
     }
 
-    var showToast =
-      syncRun ||
-      _toastPinned ||
-      (!idxRun && _awaitAck) ||
-      (!idxRun && snoozed) ||
-      (!idxRun && pendingHourly && !snoozed);
-    if (idxRun && !_toastPinned) {
-      showToast = false;
-    }
+    /* Card only when user asks (FAB click) or cache download is blocking. Never nag "start za chwilę". */
+    var showToast = syncRun || _toastPinned;
 
     el.hidden = !showToast;
-    if (showToast && !idxRun && !syncRun && (_awaitAck || _toastPinned)) {
+    el.classList.remove("is-min");
+    _minimized = false;
+    if (showToast) {
       var hideBadge = document.getElementById(FAB_ID);
       if (hideBadge) hideBadge.hidden = true;
       setFabBodyFlag(false);
+    } else if (_fabPhase === "running" || _fabPhase === "done") {
+      setFabBodyFlag(true);
     }
 
     var lines = [];
@@ -715,13 +723,8 @@
       var eta = fmtEta(progress.eta_sec != null ? progress.eta_sec : progress.remaining_sec);
       lines.push(eta ? (tt("index.running", "Indeksowanie") + " · " + eta) : tt("index.running", "Indeksowanie"));
       if (progress.pct) pct = Math.max(pct, Number(progress.pct) || 0);
-    } else if (_awaitAck || _toastPinned) {
+    } else if (_toastPinned) {
       lines.push(tt("index.done", "Indeksowanie zakończone"));
-    } else if (pendingHourly && !snoozed) {
-      lines.push("Pełny skan ROOT · start za chwilę");
-    }
-    if (snoozed && !idxRun && !_awaitAck) {
-      lines.push("Indeksowanie odroczone do końca dnia");
     }
 
     var countTxt = "";
@@ -741,47 +744,39 @@
         " plików";
     }
     pill.textContent = countTxt;
-    pill.hidden = !showToast || !countTxt || _minimized;
+    pill.hidden = !showToast || !countTxt;
     if (!showToast) {
       return;
     }
 
-    if (_minimized) {
-      title.textContent = lines[0] || "Praca w tle";
-      if (nowEl) {
-        nowEl.hidden = !cur.label;
-        nowEl.textContent = cur.label ? "Teraz: " + cur.label : "";
-      }
-      if (pathEl) pathEl.hidden = true;
-      meta.textContent = "";
-      if (bar) bar.hidden = true;
-      if (actions) actions.hidden = true;
-    } else {
-      title.textContent = lines[0] || "";
-      if (nowEl) {
-        nowEl.hidden = !(idxRun && cur.label);
-        nowEl.textContent = cur.label ? "Teraz: " + cur.label : "";
-      }
-      if (pathEl) {
-        pathEl.hidden = !(idxRun && cur.path);
-        pathEl.textContent = cur.path ? shortPath(cur.path) : "";
-      }
-      meta.textContent = lines.slice(1).join(" · ");
-      if (bar) bar.hidden = !idxRun && !syncRun;
-      if (actions) actions.hidden = !(idxRun || snoozed || pendingHourly || _awaitAck);
+    title.textContent = lines[0] || "";
+    if (nowEl) {
+      nowEl.hidden = !(idxRun && cur.label);
+      nowEl.textContent = cur.label ? "Teraz: " + cur.label : "";
     }
+    if (pathEl) {
+      pathEl.hidden = !(idxRun && cur.path);
+      pathEl.textContent = cur.path ? shortPath(cur.path) : "";
+    }
+    meta.textContent = lines.slice(1).join(" · ");
+    if (bar) bar.hidden = !idxRun && !syncRun;
+    if (actions) actions.hidden = false;
     if (fill) fill.style.width = Math.max(4, Math.min(100, pct || (idxRun ? 12 : 8))) + "%";
     if (cancelBtn) {
       cancelBtn.hidden = !idxRun;
       cancelBtn.disabled = !idxRun;
     }
     if (snoozeBtn) {
-      snoozeBtn.hidden = _awaitAck && !idxRun;
-      snoozeBtn.setAttribute("data-until", snoozed ? "clear" : "eod");
-      snoozeBtn.textContent = snoozed ? "Wznów dziś" : "Nie dzisiaj";
+      snoozeBtn.hidden = true;
     }
-    if (closeBtn) closeBtn.hidden = !(_awaitAck && !idxRun);
-    if (reportBtn) reportBtn.hidden = !(_awaitAck && !idxRun);
+    if (closeBtn) {
+      closeBtn.hidden = false;
+      closeBtn.textContent = tt("index.close", "Zamknij");
+    }
+    if (reportBtn) {
+      reportBtn.hidden = false;
+      reportBtn.textContent = tt("index.report", "Raport");
+    }
   }
 
   function maybeStartDownload(sync) {
@@ -849,6 +844,10 @@
   }
 
   function start() {
+    if (isAuthSurface()) {
+      hideFab();
+      return;
+    }
     ensureCss();
     host();
     try {

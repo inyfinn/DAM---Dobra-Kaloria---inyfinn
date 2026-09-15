@@ -398,14 +398,14 @@
       ".dam-panel-head .dam-explorer-add-product-btn.dam-int-cta:hover," +
       ".dam-panel-head .dam-explorer-add-variant-btn.dam-int-cta:hover," +
       "#damExplorerAddVariantHead.dam-int-cta:hover{" +
-      "border-color:var(--dam-primary,#ab54db)!important;background:#fbf7fe!important;" +
-      "color:var(--dam-primary,#ab54db)!important}" +
+      "border-color:var(--dam-primary,#005A29)!important;background:color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface))!important;" +
+      "color:var(--dam-primary,#005A29)!important}" +
       ".dam-explorer-results__actions .dam-int-cta:focus-visible," +
       "#damExplorerAddCategory.dam-int-cta:focus-visible," +
       ".dam-panel-head .dam-explorer-add-product-btn.dam-int-cta:focus-visible," +
       ".dam-panel-head .dam-explorer-add-variant-btn.dam-int-cta:focus-visible," +
       "#damExplorerAddVariantHead.dam-int-cta:focus-visible{" +
-      "outline:2px solid color-mix(in srgb,var(--dam-primary,#ab54db) 55%,transparent);" +
+      "outline:2px solid color-mix(in srgb,var(--dam-primary,#005A29) 55%,transparent);" +
       "outline-offset:2px}" +
       "#damExplorerAddCategory.dam-int-cta--icon{" +
       "min-width:34px!important;width:34px!important;padding:0!important;flex:0 0 34px}" +
@@ -456,8 +456,8 @@
       "#damExplorerConfirmModal .dam-basepath-actions .dam-int-cta--cancel{" +
       "background:#fff!important;border:1px solid #e7e7e7!important;color:#464255!important}" +
       "#damExplorerConfirmModal .dam-basepath-actions .dam-int-cta--cancel:hover{" +
-      "border-color:var(--dam-primary,#ab54db)!important;background:#fbf7fe!important;" +
-      "color:var(--dam-primary,#ab54db)!important}" +
+      "border-color:var(--dam-primary,#005A29)!important;background:color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface))!important;" +
+      "color:var(--dam-primary,#005A29)!important}" +
       "#damExplorerConfirmModal .dam-basepath-actions .geex-btn--danger," +
       "#damExplorerConfirmModal .dam-basepath-actions .dam-int-cta--danger{" +
       "background:#dc2626!important;border:1px solid #dc2626!important;color:#fff!important}" +
@@ -465,7 +465,7 @@
       "#damExplorerConfirmModal .dam-basepath-actions .dam-int-cta--danger:hover{" +
       "background:#b91c1c!important;border-color:#b91c1c!important;color:#fff!important}" +
       "#damExplorerConfirmModal .dam-basepath-actions .geex-btn--primary{" +
-      "background:var(--dam-primary,#ab54db)!important;border:1px solid var(--dam-primary,#ab54db)!important;" +
+      "background:var(--dam-primary,#005A29)!important;border:1px solid var(--dam-primary,#005A29)!important;" +
       "color:#fff!important}" +
       "#damExplorerConfirmModal .dam-force-preview{display:flex;flex-direction:column;gap:20px;margin:0}" +
       "#damExplorerConfirmModal .dam-force-preview__head{" +
@@ -481,7 +481,7 @@
       "border-radius:999px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;line-height:1.2}" +
       "#damExplorerConfirmModal .dam-force-chip:hover{border-color:#cbb8e0;color:#464255}" +
       "#damExplorerConfirmModal .dam-force-chip.is-on{" +
-      "border-color:var(--dam-primary,#ab54db);background:#f7f0fc;color:var(--dam-primary,#ab54db)}" +
+      "border-color:var(--dam-primary,#005A29);background:color-mix(in srgb, var(--dam-primary, #005A29) 12%, var(--dam-surface));color:var(--dam-primary,#005A29)}" +
       "#damExplorerConfirmModal .dam-force-preview__list{" +
       "display:flex;flex-direction:column;gap:20px;margin:0;padding:0;list-style:none}" +
       "#damExplorerConfirmModal .dam-force-preview__empty{" +
@@ -540,7 +540,7 @@
       "appearance:none;border:0;background:transparent;padding:0;margin:0;" +
       "font-size:11px;font-weight:600;color:#8b8d97;cursor:pointer;text-align:left;" +
       "display:inline-flex;align-items:center;gap:4px}" +
-      "#damExplorerConfirmModal .dam-force-block__path-btn:hover{color:var(--dam-primary,#ab54db)}" +
+      "#damExplorerConfirmModal .dam-force-block__path-btn:hover{color:var(--dam-primary,#005A29)}" +
       "#damExplorerConfirmModal .dam-force-block__path{" +
       "margin:0;font-size:11px;line-height:1.4;color:#8a8494;word-break:break-all;" +
       "background:#fff;border:1px solid #ebe6f0;border-radius:6px;padding:8px 10px}" +
@@ -553,7 +553,7 @@
       "#damExplorerConfirmModal .dam-confirm-info-tile{" +
       "display:flex;gap:12px;align-items:flex-start;padding:16px 18px;" +
       "border:1px solid #ebe6f0;border-radius:12px;background:#faf9fb;margin:0}" +
-      "#damExplorerConfirmModal .dam-confirm-info-tile i{font-size:18px;color:var(--dam-primary,#ab54db);margin-top:1px}" +
+      "#damExplorerConfirmModal .dam-confirm-info-tile i{font-size:18px;color:var(--dam-primary,#005A29);margin-top:1px}" +
       "#damExplorerConfirmModal .dam-confirm-info-tile p{margin:0;font-size:13px;line-height:1.5;color:#464255}" +
       "html[data-theme=dark] #damExplorerConfirmModal .dam-explorer-confirm-modal{" +
       "background:var(--dam-surface,#1e1e28);color:#e8e6ef}" +
@@ -7270,8 +7270,20 @@
       if (text.length > 1200000) {
         throw new Error((label || "json") + "_too_large_for_main");
       }
-      /* Slim explorer (~0.5MB): parse on this turn. Worker parse hung the
-         return path (Wizualizacje → Eksplorer) while :8766 already had 200. */
+      /* Live explorer index is ~1 MB (not the 47 KB slim cited in DS).
+         Yield so first paint can land; sync JSON.parse of 985 KB locked
+         the main thread long enough that phone screenshots timed out. */
+      if (text.length > 400000) {
+        return new Promise(function (resolve, reject) {
+          setTimeout(function () {
+            try {
+              resolve(JSON.parse(text));
+            } catch (eParse) {
+              reject(eParse);
+            }
+          }, 0);
+        });
+      }
       return JSON.parse(text);
     });
   }
@@ -8498,6 +8510,8 @@
       try {
         dismissExplorerLoader();
         if (!explorerNeedsBind()) return;
+        /* Do not abort a live fetch — restart storm locked the main thread (≥12 s). */
+        if (explorerIndexInFlight) return;
         explorerIndexInFlight = null;
         explorerIndexBound = false;
         startExplorerIndexBind("watchdog-soft");
@@ -8511,6 +8525,7 @@
           if (explorerStatusIsLoading()) setStatus("");
           return;
         }
+        if (explorerIndexInFlight) return;
         explorerIndexInFlight = null;
         explorerIndexBound = false;
         startExplorerIndexBind("watchdog-hard");

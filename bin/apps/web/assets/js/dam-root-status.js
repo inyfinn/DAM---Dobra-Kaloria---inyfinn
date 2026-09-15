@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Status ROOT plikĂłw (nie API metadanych).
  * Online = da sie odczytaÄ‡ folder usera z -- ARCHIWUM -- / - EKSPORT / - POLSKA.
  * Offline = czerwona kropka + przycisk "WskaĹĽ Ĺ›cieĹĽkÄ™" + delikatny pasek u gĂłry okna.
@@ -332,7 +332,7 @@
     }
     if (document.querySelector("script[data-dam-cache-sync]")) return;
     var s = document.createElement("script");
-    s.src = "assets/js/dam-cache-sync.js?v=6.0.12";
+    s.src = "assets/js/dam-cache-sync.js?v=6.0.13";
     s.setAttribute("data-dam-cache-sync", "1");
     document.head.appendChild(s);
   }

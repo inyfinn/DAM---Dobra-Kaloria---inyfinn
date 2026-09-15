@@ -38,14 +38,14 @@
   height: 20px;
   border: none;
   background: transparent;
-  color: var(--dam-primary, #ab54db);
+  color: var(--dam-primary, #005A29);
   font-size: 13px;
   cursor: pointer;
   padding: 0;
   border-radius: 4px;
 }
 .dam-date-field__icon:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, transparent);
 }
 
 .dam-date-popover {
@@ -106,8 +106,8 @@
   font-size: 15px;
 }
 .dam-date-popover__nav:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, transparent);
-  color: var(--dam-primary, #ab54db);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, transparent);
+  color: var(--dam-primary, #005A29);
 }
 
 .dam-date-popover__weekdays {
@@ -158,19 +158,19 @@
   transition: background 0.12s ease, color 0.12s ease;
 }
 .dam-date-popover__day:hover:not([disabled]) {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
-  color: var(--dam-primary, #ab54db);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
+  color: var(--dam-primary, #005A29);
 }
 .dam-date-popover__day:focus-visible {
-  outline: 2px solid var(--dam-primary, #ab54db);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 1px;
 }
 .dam-date-popover__day.is-today {
-  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--dam-primary, #ab54db) 55%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--dam-primary, #005A29) 55%, transparent);
   font-weight: 700;
 }
 .dam-date-popover__day.is-selected {
-  background: var(--dam-primary, #ab54db);
+  background: var(--dam-primary, #005A29);
   color: #fff;
   font-weight: 700;
   box-shadow: none;
@@ -205,12 +205,12 @@
   background: rgba(70, 66, 85, 0.06);
 }
 .dam-date-popover__foot-btn--primary {
-  color: var(--dam-primary, #ab54db);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, transparent);
+  color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, transparent);
 }
 .dam-date-popover__foot-btn--primary:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 18%, transparent);
-  color: var(--dam-primary, #ab54db);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 18%, transparent);
+  color: var(--dam-primary, #005A29);
 }
 
 /* jQuery UI datepicker (Geex theme, legacy) - juz primary, tylko upewnienie

@@ -45,7 +45,7 @@
   padding: 10px 22px;
   font-size: 0.9rem;
   line-height: 1.35;
-  background: rgba(171, 84, 219, 0.1);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, transparent);
   color: #3a2a4a;
   border-bottom: 1px solid rgba(80, 90, 120, 0.1);
 }

@@ -294,13 +294,13 @@
 }
 
 .dam-project-card__title-link:hover {
-  color: var(--primary-color, #AB54DB);
+  color: var(--primary-color, #005A29);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .dam-project-card__title-link:focus-visible {
-  outline: 2px solid var(--primary-color, #AB54DB);
+  outline: 2px solid var(--primary-color, #005A29);
   outline-offset: 3px;
   border-radius: 4px;
 }
@@ -700,7 +700,7 @@ a.geex-btn__primary {
 .dam-action-tile > .dam-icon-svg {
   font-size: 22px;
   line-height: 1;
-  color: var(--primary-color, #AB54DB);
+  color: var(--primary-color, #005A29);
   width: 22px;
   height: 22px;
 }
@@ -722,12 +722,12 @@ a.geex-btn__primary {
 
 .dam-action-tile:hover:not(:disabled) {
   background: #fff;
-  border-color: rgba(171, 84, 219, 0.35);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 35%, transparent);
   transform: translateY(-1px);
 }
 
 .dam-action-tile:focus-visible {
-  outline: 2px solid var(--primary-color, #AB54DB);
+  outline: 2px solid var(--primary-color, #005A29);
   outline-offset: 2px;
 }
 
@@ -741,13 +741,13 @@ a.geex-btn__primary {
 }
 
 .dam-action-tile--primary {
-  background: rgba(171, 84, 219, 0.08);
-  border-color: rgba(171, 84, 219, 0.28);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, transparent);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 28%, transparent);
 }
 
 .dam-action-tile--primary:hover:not(:disabled) {
-  background: rgba(171, 84, 219, 0.14);
-  border-color: rgba(171, 84, 219, 0.45);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, transparent);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 45%, transparent);
 }
 
 @media (max-width: 575px) {
@@ -892,7 +892,7 @@ h2.geex-content__header__title.dam-project-title--light,
   pointer-events: none;
   padding: 10px 16px;
   border-radius: 10px;
-  background: #17161E;
+  background: var(--dam-dark);
   color: #fff;
   font-size: 0.8125rem;
   font-weight: 600;
@@ -1034,6 +1034,25 @@ h2.geex-content__header__title.dam-project-title--light,
   height: 100%;
 }
 
+#damProductCatalog.dam-integration-card {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+@media (max-width: 767.98px) {
+  #damProductCatalog.dam-integration-card {
+    height: auto;
+    padding: 8px;
+  }
+
+  #damProductCatalog.dam-integration-card p {
+    max-width: none;
+  }
+}
+
 .dam-integration-card h3 {
   margin: 0 0 0.5rem;
   font-size: 1.05rem;
@@ -1084,6 +1103,41 @@ h2.geex-content__header__title.dam-project-title--light,
 
   .geex-content {
     padding-inline: 1rem;
+    padding-bottom: calc(
+      var(--dam-control-h, 44px) * 2 + 28px + env(safe-area-inset-bottom, 0px)
+    );
+    scroll-padding-bottom: calc(
+      var(--dam-control-h, 44px) * 2 + 28px + env(safe-area-inset-bottom, 0px)
+    );
+  }
+
+  /* Stack both FABs in the safe corner; pad above keeps the last row readable. */
+  #damHelpFab,
+  #damHelpFab.dam-help-fab {
+    right: max(12px, env(safe-area-inset-right, 0px)) !important;
+    bottom: max(12px, env(safe-area-inset-bottom, 0px)) !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  #damIndexFabBadge {
+    right: max(12px, env(safe-area-inset-right, 0px)) !important;
+    bottom: calc(
+      12px + 44px + 8px + env(safe-area-inset-bottom, 0px)
+    ) !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  #damIndexCountPill {
+    right: max(12px, env(safe-area-inset-right, 0px)) !important;
+    bottom: calc(
+      12px + 44px + 8px + 44px + 8px + env(safe-area-inset-bottom, 0px)
+    ) !important;
   }
 }
 
@@ -1150,18 +1204,19 @@ h2.geex-content__header__title.dam-project-title--light,
 
 @media (min-width: 992px) {
   .geex-content__header {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     align-items: center;
     gap: var(--dam-bento-gap, 14px);
   }
 
   .geex-content__header__action {
     display: flex;
-    flex: 0 1 auto;
+    flex: 1 1 auto;
     flex-wrap: nowrap;
     align-items: center;
+    justify-content: flex-end;
     gap: var(--dam-bento-gap, 14px);
-    min-width: 0;
+    min-width: min-content;
   }
 
   .geex-content__header__customizer {
@@ -1170,62 +1225,139 @@ h2.geex-content__header__title.dam-project-title--light,
     align-items: center;
     gap: 8px;
     margin-inline-end: 0;
-    flex-shrink: 0;
+    flex: 0 0 auto;
   }
 
+  /* Status pills + min-width:0 + flex-end overflowed search onto "Dostosuj wygląd". */
   .geex-content__header__action__wrap {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
     flex-wrap: nowrap;
     justify-content: flex-end;
-    min-width: 0;
+    min-width: min-content;
+    max-width: 100%;
   }
 
   .geex-content__header__quickaction {
     flex-wrap: nowrap;
-    justify-content: flex-end;
+    justify-content: flex-start;
     gap: 8px;
+    min-width: min-content;
+    max-width: 100%;
   }
 }
 
 /* 767.98 = prog schowania sidebara. Przy pomiarze DPR 1.1 progi 480/576
    zadaje sie jako 538/644, wiec max-width:576px NIE wstaje na prawdziwym 576. */
 @media (max-width: 767.98px) {
-  .geex-content__header {
+  /* Phone header = title band + one overflow-x row (explorer chip scroller). */
+  .geex-content .geex-content__header {
     flex-direction: column;
+    flex-wrap: nowrap;
     align-items: stretch;
-    gap: 12px;
-  }
-
-  .geex-content__header__action {
-    flex-wrap: wrap;
-    width: 100%;
-    justify-content: space-between;
     gap: 8px;
+    max-height: 120px;
+    overflow: hidden;
   }
 
-  .geex-content__header__action__wrap {
-    flex: 1 1 100%;
-    width: 100%;
+  .geex-content .geex-content__header__content {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
     gap: 8px;
-    justify-content: flex-end;
+    min-height: var(--dam-control-h, 44px);
+    max-height: 52px;
+    min-width: 0;
   }
 
-  .geex-content__header__quickaction {
-    flex-wrap: wrap;
-    width: 100%;
-    gap: 8px;
-    justify-content: flex-end;
+  .geex-content .geex-content__header__content .dam-nav-trail {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    width: auto !important;
+    max-width: max-content;
+    min-height: var(--dam-control-h, 44px);
+    margin: 0;
   }
 
-  .geex-content__header__customizer {
-    flex-wrap: wrap;
-    margin-inline-end: 0;
-    gap: 8px;
+  .geex-content .geex-content__header__content .dam-breadcrumb {
+    display: none !important;
   }
 
-  .geex-btn.geex-btn__customizer {
-    min-height: 44px;
-    padding: 8px 12px;
+  .geex-content .geex-content__header__title,
+  .geex-content h2.geex-content__header__title {
+    flex: 1 1 auto;
+    min-width: 6ch;
+    margin: 0 !important;
+    font-size: var(--dam-fs-lg, 18px);
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .geex-content .geex-content__header__subtitle,
+  .geex-content .geex-content__header__subtitle.dam-page-sub,
+  .geex-content .dam-page-status,
+  .geex-content .dam-project-header-badges {
+    display: none !important;
+  }
+
+  .geex-content .geex-content__header__action,
+  .geex-content .geex-content__header__action__wrap,
+  .geex-content .geex-content__header__quickaction,
+  .geex-content .geex-content__header__customizer {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    align-items: center;
+    gap: 8px !important;
+  }
+
+  .geex-content .geex-content__header__action {
+    width: 100% !important;
+    max-width: 100% !important;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    min-height: var(--dam-control-h, 44px);
+    max-height: 52px;
+  }
+
+  .geex-content .geex-content__header__action::-webkit-scrollbar {
+    display: none;
+  }
+
+  .geex-content .geex-content__header__action__wrap {
+    margin-inline-start: auto;
+  }
+
+  .geex-content .geex-content__header__customizer .geex-btn__toggle-sidebar {
+    display: inline-flex !important;
+    min-width: var(--dam-control-h, 44px);
+    min-height: var(--dam-control-h, 44px);
+  }
+
+  .geex-content .geex-btn.geex-btn__customizer {
+    min-width: var(--dam-control-h, 44px);
+    min-height: var(--dam-control-h, 44px);
+    padding: 8px;
+  }
+
+  .geex-content .geex-btn.geex-btn__customizer > span {
+    display: none;
+  }
+
+  .geex-content .dam-root-status,
+  .geex-content .dam-db-status {
+    flex: 0 0 auto;
+    min-height: var(--dam-control-h, 44px);
+    max-height: var(--dam-control-h, 44px);
   }
 
   /* Cele dotyku powloki — padding/min-height, nie skala calego UI */
@@ -1377,4 +1509,151 @@ i.uil.uil-folder.dam-folder-item__icon {
   flex: 0 1 auto;
   min-width: 0;
   max-width: 100%;
+}
+
+/* Index report: compact docked card (not a full-viewport veil over the table). */
+#damIndexReport:not([hidden]),
+#damIndexReport.dam-index-report--docked:not([hidden]) {
+  position: fixed !important;
+  inset: auto 16px 96px auto !important;
+  top: auto !important;
+  left: auto !important;
+  right: 16px !important;
+  bottom: 96px !important;
+  z-index: 10080 !important;
+  display: block !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: min(360px, calc(100vw - 24px)) !important;
+  background: transparent !important;
+  padding: 0 !important;
+  pointer-events: none !important;
+}
+
+#damIndexReport[hidden] {
+  display: none !important;
+}
+
+#damIndexReport .dam-index-report__card {
+  pointer-events: auto;
+  width: min(360px, calc(100vw - 24px));
+  max-height: min(72vh, 560px);
+  overflow: auto;
+  background: var(--dam-surface);
+  color: var(--dam-text);
+  border: 1px solid var(--dam-border);
+  border-radius: var(--dam-radius-md, 12px);
+  padding: 16px 16px 12px;
+  box-shadow: var(--dam-shadow);
+}
+
+#damIndexReport h2 {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--dam-text);
+}
+
+#damIndexReport .dam-index-report__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#damIndexReport .dam-index-report__table th {
+  text-align: left;
+  font-weight: 500;
+  font-size: 13px;
+  padding: 6px 8px 6px 0;
+  color: var(--dam-text);
+  border-bottom: 1px solid var(--dam-border);
+}
+
+#damIndexReport .dam-index-report__num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--dam-border);
+}
+
+#damIndexReport .dam-index-report__zero {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--dam-text-muted);
+}
+
+#damIndexReport .dam-index-report__compare {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--dam-ok, #00b074);
+}
+
+#damIndexReport .dam-index-report__compare--fail,
+#damIndexReport .dam-index-report__warnings {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--dam-warn, #ffbb54);
+}
+
+#damIndexReport .dam-index-report__warnings {
+  padding-left: 18px;
+}
+
+#damIndexReport .dam-index-report__details {
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+#damIndexReport .dam-index-report__details ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+#damIndexReport .dam-index-report__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+#damIndexReport #damIndexReportClose,
+#damIndexReport .dam-index-report__actions .geex-btn {
+  min-width: var(--dam-control-h, 44px);
+  min-height: var(--dam-control-h, 44px);
+}
+
+@media (max-width: 767.98px) {
+  /* Same z-index 10080 as the desktop dock — bottom sheet, not a new stacking layer. */
+  #damIndexReport:not([hidden]),
+  #damIndexReport.dam-index-report--docked:not([hidden]),
+  #damIndexReport.dam-index-report--sheet:not([hidden]) {
+    inset: 0 !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    height: auto !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    background: color-mix(in srgb, var(--dam-dark) 40%, transparent) !important;
+    padding: 0 !important;
+    pointer-events: auto !important;
+  }
+
+  #damIndexReport .dam-index-report__card {
+    width: 100%;
+    max-width: none;
+    max-height: min(70vh, 560px);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  #damIndexReport .dam-index-report__table {
+    display: table;
+    width: 100%;
+  }
 }

@@ -174,7 +174,7 @@
   font-size: var(--dam-fs-lg, 16px);
   font-weight: 600;
   margin: 0 0 8px;
-  color: var(--dam-dark, #17161e);
+  color: var(--dam-dark);
 }
 
 .dam-hub-section-desc {

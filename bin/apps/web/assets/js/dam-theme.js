@@ -12,28 +12,49 @@
   var TUNING_MIN = -90;
   var TUNING_MAX = 90;
   var TUNING_WARN = 50;
-  var DEFAULT_SCHEME_ID = "default";
+  var DEFAULT_SCHEME_ID = "dobra-kaloria";
+  var DK_ACCENT = "#005A29";
+  var DK_ACCENT_DARK = "#00803A";
+  var DK_BG_DARK = "#060F0C";
+  var DK_SURF_DARK = "#0B1814";
+  var DK_CHROME_DARK = "#0E1E19";
+  var DK_SUNKEN_DARK = "#081310";
+  /* Light paper is shared with DAM fiolet. Green lives on accent + subaccent only. */
+  var SHARED_LIGHT_PAPER = {
+    bg: "#F7F2F7",
+    surface: "#FDFBFD",
+    elevated: "#FDFBFD",
+    input: "#FDFBFD",
+    chrome: "#EFE6EC",
+    border: "#EFE6EC",
+    sidebar: "#F7F2F7",
+    sidebarEnd: "#F7F2F7",
+  };
+  var DARK_ACCENT_L_FLOOR = 25.1;
+  var LADDER_MIGRATE_KEY = "dam_theme_ladder_v5";
+  var CONTRAST_AA = 4.5;
   var applyingScheme = false;
 
   var LIGHT_BASE = {
-    bg: "#f3f4f7",
-    surface: "#ffffff",
-    elevated: "#ffffff",
-    chrome: "#ececf2",
-    text: "#464255",
-    muted: "#8f8b9f",
-    border: "#ececf2",
-    dark: "#17161e",
+    bg: SHARED_LIGHT_PAPER.bg,
+    surface: SHARED_LIGHT_PAPER.surface,
+    elevated: SHARED_LIGHT_PAPER.elevated,
+    chrome: SHARED_LIGHT_PAPER.chrome,
+    text: "#172E24",
+    muted: "#5A7266",
+    border: SHARED_LIGHT_PAPER.border,
+    dark: "#060F0C",
+    input: SHARED_LIGHT_PAPER.input,
   };
   var DARK_BASE = {
-    bg: "#101114",
-    surface: "#1c1d24",
-    elevated: "#262730",
-    chrome: "#262730",
-    text: "#eeeaf6",
-    muted: "#b8b3c6",
-    border: "#2c2b36",
-    dark: "#0c0c10",
+    bg: "#060F0C",
+    surface: "#0B1814",
+    elevated: "#0B1814",
+    chrome: "#0E1E19",
+    text: "#EEF4F0",
+    muted: "#A8C4B6",
+    border: "#143028",
+    dark: "#060F0C",
   };
 
   function pack(bg, surface, elevated, chrome, border, text, muted, dark, accent) {
@@ -74,20 +95,113 @@
     ).toUpperCase();
   }
 
-  function colorifyToDam(id, label, group, bgDark, surfDark, accent, accentSoft) {
-    var lightBg = mixHexSimple("#F7F6F3", accent, 0.1);
-    var lightSurf = mixHexSimple("#FEFEFD", accent, 0.04);
-    var lightChrome = mixHexSimple("#ECE8E0", accent, 0.16);
-    var lightAccent = mixHexSimple(accent, "#1A1A1A", 0.22);
-    var darkElev = mixHexSimple(surfDark, "#FFFFFF", 0.1);
-    var darkBorder = mixHexSimple(surfDark, "#FFFFFF", 0.12);
+  function lightenTowardWhite(hex, amount) {
+    var rgb = hexToRgb(hex);
+    var hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+    return hslToHex(hsl.h, hsl.s, hsl.l + (100 - hsl.l) * amount);
+  }
+
+  function darkModeAccent(hex) {
+    var rgb = hexToRgb(hex);
+    var hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+    if (hsl.l < DARK_ACCENT_L_FLOOR) {
+      return hslToHex(hsl.h, hsl.s, DARK_ACCENT_L_FLOOR);
+    }
+    return String(hex || "").toUpperCase();
+  }
+
+  function hueTintedDark(accentHex, lightness, satFactor, hueNudge) {
+    var rgb = hexToRgb(accentHex);
+    var hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+    var sat = Math.max(18, Math.min(52, hsl.s * satFactor));
+    return hslToHex(hsl.h + (hueNudge || 0), sat, lightness);
+  }
+
+  function relativeLuminance(hex) {
+    var c = hexToRgb(hex);
+    function chan(v) {
+      var x = v / 255;
+      return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+    }
+    return 0.2126 * chan(c.r) + 0.7152 * chan(c.g) + 0.0722 * chan(c.b);
+  }
+
+  function contrastRatio(a, b) {
+    var l1 = relativeLuminance(a);
+    var l2 = relativeLuminance(b);
+    var hi = Math.max(l1, l2);
+    var lo = Math.min(l1, l2);
+    return (hi + 0.05) / (lo + 0.05);
+  }
+
+  function chromeAccent(hex) {
+    var raw = String(hex || "").toUpperCase();
+    if (!raw || raw === "#") return DK_ACCENT;
+    if (contrastRatio(raw, "#FFFFFF") >= CONTRAST_AA) return raw;
+    var rgb = hexToRgb(raw);
+    var hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+    var lo = 8;
+    var hi = hsl.l;
+    var best = hslToHex(hsl.h, hsl.s, 8);
+    var i;
+    for (i = 0; i < 30; i++) {
+      var mid = (lo + hi) / 2;
+      var cand = hslToHex(hsl.h, hsl.s, mid);
+      if (contrastRatio(cand, "#FFFFFF") >= CONTRAST_AA) {
+        best = cand;
+        lo = mid;
+      } else {
+        hi = mid;
+      }
+    }
+    return best;
+  }
+
+  function paleHueTint(accentHex, amount) {
+    return mixHexSimple("#FFFFFF", accentHex, amount);
+  }
+
+  function ensureCoolMint(hex) {
+    var rgb = hexToRgb(hex);
+    if (rgb.g > rgb.r && rgb.g >= rgb.b) return String(hex || "").toUpperCase();
+    var hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+    var out = hslToHex(150, Math.max(12, Math.min(36, hsl.s || 18)), hsl.l);
+    var o = hexToRgb(out);
+    if (o.g > o.r && o.g >= o.b) return out;
+    function hx(n) {
+      var s = Math.max(0, Math.min(255, Math.round(n))).toString(16);
+      return s.length === 1 ? "0" + s : s;
+    }
+    var g = Math.max(o.g, o.r + 2, o.b);
+    return ("#" + hx(Math.min(o.r, g - 2)) + hx(g) + hx(Math.min(o.b, g))).toUpperCase();
+  }
+
+  function colorifyToDam(id, label, group, _bgDark, _surfDark, accent, accentSoft) {
+    var identity = String(accent || DK_ACCENT).toUpperCase();
+    var slot3 = chromeAccent(identity);
+    var lightBg = paleHueTint(identity, 0.08);
+    var lightSurf = paleHueTint(identity, 0.035);
+    var lightElev = paleHueTint(identity, 0.055);
+    var lightChrome = paleHueTint(identity, 0.14);
+    var lightInput = paleHueTint(identity, 0.028);
+    var lightText = hueTintedDark(slot3, 18, 0.28, 0);
+    var lightMuted = hueTintedDark(slot3, 42, 0.22, 0);
+    var darkBg = hueTintedDark(slot3, 4.12, 0.444, 14);
+    var darkSurf = hueTintedDark(slot3, 6.86, 0.385, 12);
+    var darkElev = hueTintedDark(slot3, 8.63, 0.32, 12);
+    var darkBorder = hueTintedDark(slot3, 16.5, 0.28, 12);
+    var darkMuted = hueTintedDark(slot3, 68, 0.18, 8);
+    var darkText = lightenTowardWhite(hueTintedDark(slot3, 92, 0.08, 6), 0.15);
+    var darkAccent = darkModeAccent(chromeAccent(accentSoft || identity));
+    var light = pack(lightBg, lightSurf, lightElev, lightChrome, lightChrome, lightText, lightMuted, darkBg, slot3);
+    light.input = lightInput;
     return {
       id: id,
       label: label,
       group: group,
-      accent: accent,
-      light: pack(lightBg, lightSurf, "#FFFFFF", lightChrome, lightChrome, "#2A2620", "#6A6560", bgDark, lightAccent),
-      dark: pack(bgDark, surfDark, darkElev, surfDark, darkBorder, "#EEF0EF", "#B0BDB8", bgDark, accentSoft || accent),
+      accent: slot3,
+      light: light,
+      dark: pack(darkBg, darkSurf, darkSurf, darkElev, darkBorder, darkText, darkMuted, darkBg, darkAccent),
     };
   }
 
@@ -96,7 +210,7 @@
     ["colorify-deep", "Głęboka zieleń", "green", "#020806", "#040E0A", "#4A9B84", "#6DB89F"],
     ["colorify-hunter", "Myśliwska", "green", "#030908", "#05100C", "#355E3B", "#4A7C59"],
     ["colorify-marsh", "Bagno", "green", "#030A08", "#06100D", "#1C4B42", "#2A5C52"],
-    ["colorify-pine", "Sosna", "green", "#040B09", "#07110F", "#1C4B42", "#2D6B5E"],
+    ["colorify-pine", "Sosna", "green", "#040B09", "#07110F", "#1B6B3A", "#3D8F58"],
     ["colorify-jade", "Jadeit", "green", "#040C0A", "#081210", "#10B981", "#34D399"],
     ["colorify-fern", "Paproć", "green", "#040D0A", "#091311", "#3D8B37", "#5CB85C"],
     ["colorify-eucalyptus", "Eukaliptus", "green", "#050D0B", "#0A1412", "#44D7A8", "#7AE582"],
@@ -140,7 +254,7 @@
     warm: "colorify-olive",
     violet: "colorify-violet",
     earth: "colorify-stone",
-    brand: "colorify-sage",
+    brand: "dobra-kaloria",
     ocean: "colorify-sky",
     slate: "colorify-slate",
     rose: "colorify-rose",
@@ -157,16 +271,48 @@
     earth: "Ziemia",
   };
 
-  var SCHEMES = [
-    {
-      id: "default",
-      label: "DAM fiolet",
-      group: "dam",
-      accent: "#AB54DB",
-      light: pack(LIGHT_BASE.bg, LIGHT_BASE.surface, LIGHT_BASE.elevated, LIGHT_BASE.chrome, LIGHT_BASE.border, LIGHT_BASE.text, LIGHT_BASE.muted, LIGHT_BASE.dark, "#AB54DB"),
-      dark: pack(DARK_BASE.bg, DARK_BASE.surface, DARK_BASE.elevated, DARK_BASE.chrome, DARK_BASE.border, DARK_BASE.text, DARK_BASE.muted, DARK_BASE.dark, "#AB54DB"),
-    },
-  ].concat(
+  function applySharedLightPaper(pack) {
+    if (!pack) return pack;
+    pack.bg = SHARED_LIGHT_PAPER.bg;
+    pack.surface = SHARED_LIGHT_PAPER.surface;
+    pack.elevated = SHARED_LIGHT_PAPER.elevated;
+    pack.input = SHARED_LIGHT_PAPER.input;
+    pack.chrome = SHARED_LIGHT_PAPER.chrome;
+    pack.border = SHARED_LIGHT_PAPER.border;
+    return pack;
+  }
+
+  function usesSharedLightPaper(scheme) {
+    return scheme && (scheme.id === "dobra-kaloria" || scheme.id === "default");
+  }
+
+  function buildDobraKaloriaScheme() {
+    var built = colorifyToDam("dobra-kaloria", "Dobra Kaloria", "dam", DK_BG_DARK, DK_SURF_DARK, DK_ACCENT, DK_ACCENT_DARK);
+    built.accent = DK_ACCENT;
+    built.light.accent = DK_ACCENT;
+    applySharedLightPaper(built.light);
+    built.light.text = LIGHT_BASE.text;
+    built.light.muted = LIGHT_BASE.muted;
+    built.dark.bg = DK_BG_DARK;
+    built.dark.surface = DK_SURF_DARK;
+    built.dark.elevated = DK_SURF_DARK;
+    built.dark.chrome = DK_CHROME_DARK;
+    built.dark.border = "#143028";
+    built.dark.dark = DK_BG_DARK;
+    built.dark.accent = DK_ACCENT_DARK;
+    return built;
+  }
+
+  function buildDamVioletScheme() {
+    var built = colorifyToDam("default", "DAM fiolet", "dam", "#100814", "#1A1220", "#AB54DB", "#AB54DB");
+    var violet = chromeAccent("#AB54DB");
+    built.accent = violet;
+    built.light.accent = violet;
+    applySharedLightPaper(built.light);
+    return built;
+  }
+
+  var SCHEMES = [buildDobraKaloriaScheme(), buildDamVioletScheme()].concat(
     COLORIFY_POOL.map(function (row) {
       return colorifyToDam(row[0], row[1], row[2], row[3], row[4], row[5], row[6]);
     })
@@ -356,18 +502,24 @@
       var raw = localStorage.getItem("dam_accent");
       if (raw && /^#[0-9A-Fa-f]{6}$/.test(raw)) return raw.toUpperCase();
     } catch (e) { /* ignore */ }
-    return "#AB54DB";
+    return DK_ACCENT;
   }
 
   function clonePack(src) {
-    if (!src) return pack(
-      LIGHT_BASE.bg, LIGHT_BASE.surface, LIGHT_BASE.elevated, LIGHT_BASE.chrome,
-      LIGHT_BASE.border, LIGHT_BASE.text, LIGHT_BASE.muted, LIGHT_BASE.dark, ""
-    );
-    return pack(
+    if (!src) {
+      var fallback = pack(
+        LIGHT_BASE.bg, LIGHT_BASE.surface, LIGHT_BASE.elevated, LIGHT_BASE.chrome,
+        LIGHT_BASE.border, LIGHT_BASE.text, LIGHT_BASE.muted, LIGHT_BASE.dark, ""
+      );
+      fallback.input = LIGHT_BASE.input;
+      return fallback;
+    }
+    var cloned = pack(
       src.bg, src.surface, src.elevated, src.chrome || src.border,
       src.border, src.text, src.muted, src.dark, src.accent || ""
     );
+    if (src.input) cloned.input = src.input;
+    return cloned;
   }
 
   function getScheme(id) {
@@ -409,8 +561,7 @@
       if (raw && SCHEME_ALIASES[raw]) return SCHEME_ALIASES[raw];
       if (raw && SCHEME_BY_ID[raw]) return raw;
     } catch (e) { /* ignore */ }
-    var matched = matchSchemeByAccent(currentAccent());
-    return matched ? matched.id : DEFAULT_SCHEME_ID;
+    return DEFAULT_SCHEME_ID;
   }
 
   function resolveScheme() {
@@ -478,7 +629,9 @@
   function applyTokenPaint(mode, tuning) {
     var isDark = mode === "dark";
     var scheme = resolveScheme();
-    var base = clonePack((scheme && scheme[mode]) || (isDark ? DARK_BASE : LIGHT_BASE));
+    var rawPack = (scheme && scheme[mode]) || (isDark ? DARK_BASE : LIGHT_BASE);
+    var base = clonePack(rawPack);
+    if (rawPack && rawPack.input) base.input = rawPack.input;
     var t = (tuning && tuning[mode]) || TUNING_DEFAULTS[mode];
     var bgB = effectiveTuningDelta(t.bg_brightness);
     var bgS = effectiveTuningDelta(t.bg_saturation);
@@ -499,15 +652,42 @@
         chrome = adjustHexHsl(surface, 4, 0);
       }
     }
+    if (isDark && scheme && scheme.id === "custom") {
+      var srcAccent = currentAccent();
+      base.bg = hueTintedDark(srcAccent, 4.12, 0.444, 14);
+      base.surface = hueTintedDark(srcAccent, 6.86, 0.385, 12);
+      base.elevated = hueTintedDark(srcAccent, 6.86, 0.385, 12);
+      base.chrome = hueTintedDark(srcAccent, 8.63, 0.32, 12);
+      base.border = hueTintedDark(srcAccent, 16.5, 0.28, 12);
+      base.dark = base.bg;
+      bg = adjustHexHsl(base.bg, bgB, bgS);
+      surface = adjustHexHsl(base.surface, bgB, bgS);
+      elevated = adjustHexHsl(base.elevated, bgB, bgS);
+      chrome = adjustHexHsl(base.chrome, bgB * 0.4, bgS * 0.4);
+    }
     var accentHex = packAccent(scheme, mode);
+    if (isDark) accentHex = darkModeAccent(accentHex);
+    else accentHex = chromeAccent(accentHex);
     var accent = adjustHexHsl(accentHex, accB, accS);
+    if (!isDark && contrastRatio(accent, "#FFFFFF") < CONTRAST_AA) {
+      accent = chromeAccent(accent);
+    }
     var root = document.documentElement;
     root.setAttribute("data-dam-scheme", scheme.id);
     setVar(root, "--dam-surface-muted", bg);
     setVar(root, "--dam-bg", bg);
     setVar(root, "--dam-surface", surface);
-    setVar(root, "--dam-surface-elevated", elevated);
+    setVar(root, "--dam-surface-elevated", isDark ? surface : elevated);
     setVar(root, "--dam-chrome", chrome);
+    var sunken = isDark
+      ? mixHexSimple(bg, surface, 0.45)
+      : (base.bg || bg);
+    var inputBg = isDark
+      ? chrome
+      : (base.input || elevated || paleHueTint(accentHex, 0.028));
+    setVar(root, "--dam-surface-sunken", sunken);
+    setVar(root, "--dam-surface-raised", inputBg);
+    setVar(root, "--dam-input-bg", inputBg);
     setVar(root, "--dam-border", isDark ? adjustHexHsl(base.border, bgB * 0.3, bgS * 0.3) : base.border);
     setVar(root, "--dam-text", base.text);
     setVar(root, "--dam-text-muted", base.muted);
@@ -523,14 +703,26 @@
     setVar(root, "--body-color", base.text);
     setVar(root, "--desc-color", base.text);
     setVar(root, "--sec-color", base.muted);
-    setVar(root, "--gray-color", isDark ? "#d2cedc" : base.border);
+    setVar(root, "--gray-color", isDark ? adjustHexHsl(base.text, -6, -8) : chrome);
     setVar(root, "--light-color", bg);
     setVar(root, "--dark-color", base.dark);
     setVar(root, "--dam-bento-surface", surface);
     setVar(root, "--dam-bento-muted", bg);
-    setVar(root, "--dam-bento-border", isDark ? "rgba(255,255,255,0.10)" : "rgba(70,66,85,0.12)");
+    setVar(root, "--dam-bento-border", isDark
+      ? "rgba(255,255,255,0.10)"
+      : "color-mix(in srgb, " + chrome + " 70%, transparent)");
     setVar(root, "--dam-sticky-chrome-bg", bg);
     setVar(root, "--card-bg", surface);
+    var sidebarStart = isDark
+      ? bg
+      : (usesSharedLightPaper(scheme) ? SHARED_LIGHT_PAPER.sidebar : paleHueTint(accentHex, 0.018));
+    var sidebarEnd = isDark
+      ? mixHexSimple(bg, accent, 0.22)
+      : (usesSharedLightPaper(scheme) ? SHARED_LIGHT_PAPER.sidebarEnd : bg);
+    setVar(root, "--dam-sidebar-bg", sidebarStart);
+    setVar(root, "--dam-sidebar-bg-end", sidebarEnd);
+    setVar(root, "--dam-sidebar-grad", "linear-gradient(165deg, " + sidebarStart + " 0%, " + sidebarEnd + " 100%)");
+    setVar(root, "--dam-chrome-ink", isDark ? adjustHexHsl(accent, 8, -12) : adjustHexHsl(accent, -8, -6));
     root.style.backgroundColor = bg;
     return {
       bg: bg,
@@ -744,8 +936,8 @@
       ".dam-scheme-group__label{margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--dam-text-muted,#8b8d97);}" +
       "#damSchemePickerOverlay .dam-scheme-grid,.dam-scheme-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;width:100%;}" +
       ".dam-scheme-tile{display:flex;flex-direction:column;gap:6px;width:100%;min-width:0;min-height:44px;padding:8px;border:1px solid var(--dam-border,#ececf2);border-radius:12px;background:var(--dam-surface,#fff);color:var(--dam-text,#464255);cursor:pointer;text-align:left;font:inherit;box-sizing:border-box;}" +
-      ".dam-scheme-tile.is-active{border-color:var(--dam-primary,#ab54db);box-shadow:0 0 0 2px color-mix(in srgb,var(--dam-primary,#ab54db) 28%,transparent);}" +
-      ".dam-scheme-tile:focus-visible{outline:2px solid var(--dam-primary,#ab54db);outline-offset:2px;}" +
+      ".dam-scheme-tile.is-active{border-color:var(--dam-primary,#005A29);box-shadow:0 0 0 2px color-mix(in srgb,var(--dam-primary,#005A29) 28%,transparent);}" +
+      ".dam-scheme-tile:focus-visible{outline:2px solid var(--dam-primary,#005A29);outline-offset:2px;}" +
       ".dam-scheme-tile__swatches{display:grid;grid-template-columns:repeat(4,1fr);height:22px;border-radius:6px;overflow:hidden;border:1px solid color-mix(in srgb,var(--dam-text,#464255) 12%,transparent);}" +
       ".dam-scheme-tile__chip{display:block;min-width:0;height:100%;}" +
       ".dam-scheme-tile__label{font-size:11px;font-weight:600;line-height:1.25;color:var(--dam-text,#464255);}" +
@@ -757,20 +949,20 @@
       "#damSchemePickerOverlay .dam-scheme-picker__head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px 8px;flex:0 0 auto;}" +
       "#damSchemePickerOverlay .dam-scheme-picker__head h2{margin:0;font-size:16px;font-weight:700;line-height:1.3;}" +
       "#damSchemePickerOverlay .dam-scheme-picker__close{flex:0 0 auto;width:44px;height:44px;min-width:44px;min-height:44px;border:0;border-radius:10px;background:transparent;color:inherit;cursor:pointer;font-size:22px;line-height:1;}" +
-      "#damSchemePickerOverlay .dam-scheme-picker__close:hover{background:color-mix(in srgb,var(--dam-primary,#ab54db) 12%,transparent);}" +
+      "#damSchemePickerOverlay .dam-scheme-picker__close:hover{background:color-mix(in srgb,var(--dam-primary,#005A29) 12%,transparent);}" +
       "#damSchemePickerOverlay .dam-scheme-picker__hint{margin:0 16px 10px;font-size:12px;line-height:1.4;color:var(--dam-text-muted,#8b8d97);}" +
       "#damSchemePickerOverlay .dam-scheme-groups{flex:1 1 auto;min-height:0;overflow:auto;padding:0 16px 12px;}" +
       "#damSchemePickerOverlay .dam-scheme-picker__foot{flex:0 0 auto;display:flex;justify-content:flex-end;padding:10px 16px 14px;border-top:1px solid var(--dam-border,#ececf2);}" +
-      "#damSchemePickerOverlay .dam-scheme-picker__foot [data-scheme-picker-close]{min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--dam-primary,#ab54db);background:var(--dam-primary,#ab54db);color:#fff;font:inherit;font-weight:600;cursor:pointer;}" +
-      "html.dark .dam-scheme-tile,html[data-theme=dark] .dam-scheme-tile{background:var(--dam-surface-elevated,#262730);border-color:var(--dam-border,#2c2b36);}" +
-      "html.dark .dam-scheme-tile__label,html[data-theme=dark] .dam-scheme-tile__label{color:var(--dam-text,#eeeaf6);}" +
-      "html.dark #damSchemePickerOverlay .dam-scheme-picker-dialog,html[data-theme=dark] #damSchemePickerOverlay .dam-scheme-picker-dialog{background:var(--dam-surface-elevated,#262730);border-color:var(--dam-border,#2c2b36);}";
+      "#damSchemePickerOverlay .dam-scheme-picker__foot [data-scheme-picker-close]{min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--dam-primary,#005A29);background:var(--dam-primary,#005A29);color:#fff;font:inherit;font-weight:600;cursor:pointer;}" +
+      "html.dark .dam-scheme-tile,html[data-theme=dark] .dam-scheme-tile{background:var(--dam-surface-elevated);border-color:var(--dam-border);}" +
+      "html.dark .dam-scheme-tile__label,html[data-theme=dark] .dam-scheme-tile__label{color:var(--dam-text);}" +
+      "html.dark #damSchemePickerOverlay .dam-scheme-picker-dialog,html[data-theme=dark] #damSchemePickerOverlay .dam-scheme-picker-dialog{background:var(--dam-surface-elevated);border-color:var(--dam-border);}";
     document.head.appendChild(st);
   }
 
   function schemeSwatchHtml(pack) {
     var p = pack || LIGHT_BASE;
-    var bits = [p.bg, p.surface, p.accent || "#AB54DB", p.text];
+    var bits = [p.bg, p.surface, p.accent || DK_ACCENT, p.dark || p.text];
     return bits
       .map(function (c) {
         return '<span class="dam-scheme-tile__chip" style="background:' + escHtml(c) + '"></span>';
@@ -1051,6 +1243,9 @@
   }
 
   function hookAccent() {
+    if (window.DamAccent) {
+      DamAccent.DEFAULT = DK_ACCENT;
+    }
     if (!window.DamAccent || typeof DamAccent.apply !== "function") return;
     if (DamAccent.apply._damThemeHooked) return;
     var orig = DamAccent.apply;
@@ -1063,7 +1258,16 @@
     DamAccent.apply._damThemeHooked = true;
   }
 
+  function migrateDarkLadder() {
+    try {
+      if (localStorage.getItem(LADDER_MIGRATE_KEY) === "1") return;
+      resetTuning();
+      localStorage.setItem(LADDER_MIGRATE_KEY, "1");
+    } catch (e) { /* ignore */ }
+  }
+
   function boot() {
+    migrateDarkLadder();
     var id = currentSchemeId();
     writeSchemeId(id === "custom" ? "custom" : id, id === "custom" ? currentNamedSchemeId() : id);
     apply(currentPref());

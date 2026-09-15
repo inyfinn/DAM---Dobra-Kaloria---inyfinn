@@ -25,13 +25,13 @@
       "button.dam-int-cta:hover," +
       "a.dam-int-cta:hover," +
       "label.dam-int-cta:hover{" +
-      "border-color:var(--dam-primary,#ab54db);background:#fbf7fe;" +
-      "color:var(--dam-primary,#ab54db)}" +
+      "border-color:var(--dam-primary,#005A29);background:color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface));" +
+      "color:var(--dam-primary,#005A29)}" +
       ".dam-int-cta:focus-visible," +
       "button.dam-int-cta:focus-visible," +
       "a.dam-int-cta:focus-visible," +
       "label.dam-int-cta:focus-visible{" +
-      "outline:2px solid color-mix(in srgb,var(--dam-primary,#ab54db) 55%,transparent);" +
+      "outline:2px solid color-mix(in srgb,var(--dam-primary,#005A29) 55%,transparent);" +
       "outline-offset:2px}" +
       ".dam-int-cta:disabled," +
       ".dam-int-cta[aria-disabled='true']{opacity:.5;cursor:not-allowed}" +
@@ -48,9 +48,9 @@
       "background:color-mix(in srgb,var(--dam-ok,#00b074) 16%,#fff);" +
       "border-color:color-mix(in srgb,var(--dam-ok,#00b074) 28%,transparent)}" +
       ".dam-int-chip.dam-int-st--ready{" +
-      "color:var(--dam-primary,#ab54db);" +
-      "background:color-mix(in srgb,var(--dam-primary,#ab54db) 12%,#fff);" +
-      "border-color:color-mix(in srgb,var(--dam-primary,#ab54db) 24%,transparent)}" +
+      "color:var(--dam-primary,#005A29);" +
+      "background:color-mix(in srgb,var(--dam-primary,#005A29) 12%,#fff);" +
+      "border-color:color-mix(in srgb,var(--dam-primary,#005A29) 24%,transparent)}" +
       ".dam-int-chip.dam-int-st--wait{" +
       "color:#6a6570;" +
       "background:color-mix(in srgb,var(--dam-text-muted,#8b8d97) 14%,#fff);" +
@@ -75,17 +75,17 @@
       "cursor:pointer;" +
       "transition:background .15s ease,color .15s ease,border-color .15s ease}" +
       ".dam-int-filter:hover{" +
-      "border-color:color-mix(in srgb,var(--dam-primary,#ab54db) 35%,var(--dam-border,#ececf2));" +
+      "border-color:color-mix(in srgb,var(--dam-primary,#005A29) 35%,var(--dam-border,#ececf2));" +
       "color:var(--dam-text,#464255)}" +
       /* Outline selected (not solid purple fill) - Faktury / shared chips */ +
       ".dam-int-filter.active," +
       ".dam-int-filter.is-active{" +
-      "background:color-mix(in srgb,var(--dam-primary,#ab54db) 8%,#fff);" +
-      "border-color:var(--dam-primary,#ab54db);" +
-      "color:color-mix(in srgb,var(--dam-primary,#ab54db) 82%,#464255);" +
+      "background:color-mix(in srgb,var(--dam-primary,#005A29) 8%,#fff);" +
+      "border-color:var(--dam-primary,#005A29);" +
+      "color:color-mix(in srgb,var(--dam-primary,#005A29) 82%,#464255);" +
       "font-weight:600}" +
       ".dam-int-filter:focus-visible{" +
-      "outline:2px solid var(--dam-primary,#ab54db);outline-offset:2px}" +
+      "outline:2px solid var(--dam-primary,#005A29);outline-offset:2px}" +
       /* Page mounts */ +
       ".dam-inv-toolbar .dam-int-cta," +
       ".dam-inv-toolbar label.dam-int-cta," +

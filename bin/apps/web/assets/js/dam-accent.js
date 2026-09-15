@@ -4,7 +4,7 @@
  */
 (function () {
   var KEY = "dam_accent";
-  var DEFAULT = "#AB54DB";
+  var DEFAULT = "#005A29";
 
   function normalizeHex(raw) {
     var s = String(raw || "").trim();
@@ -85,8 +85,8 @@
     reset: reset,
     normalize: normalizeHex,
     presets: [
-      { id: "default", label: "Domyślny fiolet", hex: "#AB54DB" },
-      { id: "brand", label: "Dobra Kaloria", hex: "#008244" },
+      { id: "brand", label: "Dobra Kaloria", hex: "#005A29" },
+      { id: "default", label: "DAM fiolet", hex: "#AB54DB" },
       { id: "ocean", label: "Ocean", hex: "#0B6E99" },
       { id: "slate", label: "Szary", hex: "#475569" },
       { id: "rose", label: "Róż", hex: "#C02675" },

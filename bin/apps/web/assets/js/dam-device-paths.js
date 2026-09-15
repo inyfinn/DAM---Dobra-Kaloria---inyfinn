@@ -110,7 +110,7 @@
 
       ".dam-devpath-actions .dam-welcome-link:hover{" +
 
-      "border-color:var(--dam-primary,#AB54DB);background:#fbf7fe;color:var(--dam-primary,#AB54DB)}" +
+      "border-color:var(--dam-primary,#005A29);background:color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface));color:var(--dam-primary,#005A29)}" +
 
       ".dam-devpath-actions .dam-welcome-link.dam-devpath-del:hover," +
 
@@ -984,7 +984,7 @@
 
       "#damDisk.dam-device-paths--focus{" +
 
-      "outline:2px solid rgba(171,84,219,0.55);outline-offset:6px;" +
+      "outline:2px solid color-mix(in srgb, var(--dam-primary, #005A29) 55%, transparent);outline-offset:6px;" +
 
       "border-radius:12px;transition:outline-color .3s ease}";
 

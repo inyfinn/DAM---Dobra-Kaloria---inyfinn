@@ -161,26 +161,26 @@
     s.textContent =
       "#damLoader{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);" +
       "z-index:" + Z_INDEX + ";pointer-events:none;display:flex;align-items:center;justify-content:center;gap:12px;" +
-      "box-sizing:border-box;background:#fff;border:1px solid rgb(171 84 219 / .28);border-radius:999px;" +
+      "box-sizing:border-box;background:#fff;border:1px solid color-mix(in srgb, var(--dam-primary, #005A29) 28%, transparent);border-radius:999px;" +
       /* Inner padding larger so label+bar breathe (vizCtaNav20260721b) */
       "padding:16px 24px;box-shadow:0 14px 38px rgb(23 22 30 / .18);opacity:0;" +
       "will-change:left,top,opacity;}" +
       "#damLoader .dam-loader__spin{width:18px;height:18px;flex:0 0 18px;border-radius:50%;" +
-      "border:2.5px solid rgb(171 84 219 / .22);border-top-color:#ab54db;" +
+      "border:2.5px solid color-mix(in srgb, var(--dam-primary, #005A29) 22%, transparent);border-top-color:var(--dam-primary);" +
       "animation:damLoaderSpin .8s linear infinite;box-sizing:border-box;}" +
       "#damLoader .dam-loader__inner{display:flex;align-items:center;gap:12px;padding:2px 0;overflow:hidden;white-space:nowrap;}" +
       "#damLoader .dam-loader__label{font-size:12.5px;font-weight:600;color:#464255;" +
       "font-family:inherit;letter-spacing:.01em;}" +
       "#damLoader .dam-loader__bar{position:relative;width:160px;height:5px;border-radius:999px;" +
-      "background:rgb(171 84 219 / .16);overflow:hidden;flex:0 0 auto;}" +
+      "background:color-mix(in srgb, var(--dam-primary, #005A29) 16%, transparent);overflow:hidden;flex:0 0 auto;}" +
       "#damLoader .dam-loader__bar::after{content:\"\";position:absolute;top:0;bottom:0;left:-40%;width:40%;" +
-      "border-radius:999px;background:linear-gradient(90deg,#c07ae6,#ab54db);" +
+      "border-radius:999px;background:linear-gradient(90deg, color-mix(in srgb, var(--dam-primary, #005A29) 70%, #fff), var(--dam-primary));" +
       "animation:damLoaderSlide 1.5s cubic-bezier(.45,.05,.55,.95) infinite;}" +
       "@keyframes damLoaderSlide{0%{left:-40%}100%{left:105%}}" +
       "@keyframes damLoaderSpin{to{transform:rotate(360deg)}}" +
       "@media (prefers-reduced-motion: reduce){" +
       "#damLoader .dam-loader__bar::after{animation:none!important;}" +
-      "#damLoader .dam-loader__spin{animation:none!important;border-top-color:rgb(171 84 219 / .45);}}";
+      "#damLoader .dam-loader__spin{animation:none!important;border-top-color:color-mix(in srgb, var(--dam-primary, #005A29) 45%, transparent);}}";
     document.head.appendChild(s);
   }
 

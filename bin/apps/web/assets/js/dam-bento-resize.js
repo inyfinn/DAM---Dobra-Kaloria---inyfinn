@@ -377,7 +377,7 @@
       "}" +
       ".dam-bento-skel-cell{" +
       "pointer-events:none;z-index:0;" +
-      "border:1px dashed color-mix(in srgb,var(--dam-primary,#ab54db) 28%,var(--dam-border,#e4e2ea));" +
+      "border:1px dashed color-mix(in srgb,var(--dam-primary,#005A29) 28%,var(--dam-border,#e4e2ea));" +
       "border-radius:10px;" +
       "background:color-mix(in srgb,var(--dam-surface-muted,#f6f5f8) 70%,transparent);" +
       "opacity:0;transition:opacity .14s ease;" +
@@ -395,22 +395,22 @@
       "background:color-mix(in srgb,var(--dam-surface-muted,#f6f5f8) 85%,transparent);" +
       "}" +
       ".dam-bento-drop-ghost{" +
-      "border:2px dashed color-mix(in srgb,var(--dam-primary,#ab54db) 55%,transparent);" +
-      "background:color-mix(in srgb,var(--dam-primary,#ab54db) 10%,transparent);" +
-      "box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dam-primary,#ab54db) 18%,transparent);" +
+      "border:2px dashed color-mix(in srgb,var(--dam-primary,#005A29) 55%,transparent);" +
+      "background:color-mix(in srgb,var(--dam-primary,#005A29) 10%,transparent);" +
+      "box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dam-primary,#005A29) 18%,transparent);" +
       "}" +
       "@media (prefers-reduced-motion:no-preference){" +
       ".dam-bento-drop-ghost.is-bento-ghost-live{" +
       "animation:dam-bento-ghost-shimmer 1.1s ease-in-out infinite;" +
       "}" +
       "@keyframes dam-bento-ghost-shimmer{" +
-      "0%,100%{background:color-mix(in srgb,var(--dam-primary,#ab54db) 8%,transparent);}" +
-      "50%{background:color-mix(in srgb,var(--dam-primary,#ab54db) 16%,transparent);}" +
+      "0%,100%{background:color-mix(in srgb,var(--dam-primary,#005A29) 8%,transparent);}" +
+      "50%{background:color-mix(in srgb,var(--dam-primary,#005A29) 16%,transparent);}" +
       "}" +
       "}" +
       ".dam-bento-drop-ghost__label{" +
       "position:absolute;top:8px;left:10px;font-size:11px;font-weight:600;" +
-      "letter-spacing:.02em;color:color-mix(in srgb,var(--dam-primary,#ab54db) 80%,#464255);" +
+      "letter-spacing:.02em;color:color-mix(in srgb,var(--dam-primary,#005A29) 80%,#464255);" +
       "pointer-events:none;" +
       "}";
     document.head.appendChild(s);

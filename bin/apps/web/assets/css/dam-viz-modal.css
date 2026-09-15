@@ -337,8 +337,8 @@
 #damVizModal .dam-viz-modal__actions .geex-btn:not(.geex-btn--primary),
 #damMediaPreview .dam-viz-modal__actions .geex-btn:not(.geex-btn--primary) {
   background: var(--dam-surface, #fff) !important;
-  color: var(--dam-primary, #ab54db) !important;
-  border: 1px solid var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #ab54db) 50%, transparent)) !important;
+  color: var(--dam-primary, #005A29) !important;
+  border: 1px solid var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #005A29) 50%, transparent)) !important;
   box-shadow: none !important;
   outline: none;
   opacity: 1 !important;
@@ -348,10 +348,10 @@
 #damVizModal .dam-viz-modal__actions .geex-btn:not(.geex-btn--primary):focus-visible,
 #damMediaPreview .dam-viz-modal__actions .geex-btn:not(.geex-btn--primary):hover,
 #damMediaPreview .dam-viz-modal__actions .geex-btn:not(.geex-btn--primary):focus-visible {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, var(--dam-surface, #fff)) !important;
-  color: var(--dam-primary, #ab54db) !important;
-  border: 1px solid var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #ab54db) 50%, transparent)) !important;
-  outline: 1px solid var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #ab54db) 50%, transparent)) !important;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, var(--dam-surface, #fff)) !important;
+  color: var(--dam-primary, #005A29) !important;
+  border: 1px solid var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #005A29) 50%, transparent)) !important;
+  outline: 1px solid var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #005A29) 50%, transparent)) !important;
   outline-offset: 0 !important;
   opacity: 1 !important;
   visibility: visible !important;
@@ -392,9 +392,9 @@
 #damVizModal .dam-viz-modal__actions .dam-viz-icon-btn:focus-visible,
 #damMediaPreview .dam-viz-modal__actions .dam-viz-icon-btn:hover,
 #damMediaPreview .dam-viz-modal__actions .dam-viz-icon-btn:focus-visible {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, var(--dam-surface, #fff)) !important;
-  color: var(--dam-primary, #ab54db) !important;
-  border-color: var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #ab54db) 50%, transparent)) !important;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, var(--dam-surface, #fff)) !important;
+  color: var(--dam-primary, #005A29) !important;
+  border-color: var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #005A29) 50%, transparent)) !important;
   opacity: 1 !important;
   visibility: visible !important;
 }
@@ -554,8 +554,8 @@
 #damMediaPreview .dam-media-preview__studio-chip.is-active,
 #damMediaPreview .dam-media-preview__quality-pill.is-active {
   background: var(--dam-surface, #fff) !important;
-  border: 1px solid var(--dam-primary, #ab54db) !important;
-  color: color-mix(in srgb, var(--dam-primary, #ab54db) 72%, var(--dam-text, #3d2f4a)) !important;
+  border: 1px solid var(--dam-primary, #005A29) !important;
+  color: color-mix(in srgb, var(--dam-primary, #005A29) 72%, var(--dam-text, #3d2f4a)) !important;
   box-shadow: none !important;
 }
 
@@ -1424,14 +1424,14 @@ html.is-shift-revealed .dam-admin-shift-plus--tag,
   height: 28px;
   min-width: 28px;
   min-height: 28px;
-  border: 1.5px solid color-mix(in srgb, var(--dam-primary, #ab54db) 55%, var(--dam-border, #d7d7e0));
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 16%, var(--dam-surface, #fff));
-  color: var(--dam-primary, #7a3aa8);
+  border: 1.5px solid color-mix(in srgb, var(--dam-primary, #005A29) 55%, var(--dam-border, #d7d7e0));
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 16%, var(--dam-surface, #fff));
+  color: var(--dam-primary, #005A29);
   cursor: pointer;
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  box-shadow: 0 1px 4px color-mix(in srgb, var(--dam-primary, #ab54db) 28%, transparent);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--dam-primary, #005A29) 28%, transparent);
 }
 
 .dam-modal-tag-plus i,
@@ -1457,10 +1457,10 @@ html.is-shift-revealed .dam-admin-shift-plus--tag,
   max-height: 70px;
   aspect-ratio: 1;
   padding: 4px;
-  border: 1.5px dashed color-mix(in srgb, var(--dam-primary, #ab54db) 45%, var(--dam-border, #d7d7e0));
+  border: 1.5px dashed color-mix(in srgb, var(--dam-primary, #005A29) 45%, var(--dam-border, #d7d7e0));
   border-radius: 8px;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 6%, var(--dam-surface, #fff));
-  color: var(--dam-primary, #7a3aa8);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 6%, var(--dam-surface, #fff));
+  color: var(--dam-primary, #005A29);
   cursor: pointer;
   font-size: 10px;
   font-weight: 600;
@@ -1497,27 +1497,27 @@ html.is-shift-revealed .dam-admin-shift-plus--tile,
 html[data-theme="dark"] .dam-viz-modal-box,
 html[data-theme="dark"] #damVizModal .dam-viz-modal-box,
 html[data-theme="dark"] #damMediaPreview .dam-viz-modal-box {
-  background: var(--dam-surface, #201f28) !important;
+  background: var(--dam-surface) !important;
   color: var(--dam-text, #eeeaf6);
   box-shadow: 0 16px 56px rgba(0, 0, 0, 0.55);
 }
 
 html[data-theme="dark"] .dam-viz-modal-close {
-  background: var(--dam-surface-elevated, #2a2833) !important;
-  border-color: var(--dam-border, #2c2b36) !important;
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
   color: var(--dam-text, #eeeaf6) !important;
 }
 
 html[data-theme="dark"] .dam-viz-modal__thumb,
 html[data-theme="dark"] #damVizModal .dam-viz-modal__thumb,
 html[data-theme="dark"] #damMediaPreview .dam-viz-modal__thumb {
-  background: var(--dam-surface-muted, #17161e) !important;
+  background: var(--dam-surface-muted) !important;
 }
 
 html[data-theme="dark"] .dam-viz-modal__body,
 html[data-theme="dark"] #damVizModal .dam-viz-modal__body,
 html[data-theme="dark"] #damMediaPreview .dam-viz-modal__body {
-  background: var(--dam-surface, #201f28) !important;
+  background: var(--dam-surface) !important;
   color: var(--dam-text, #eeeaf6);
 }
 
@@ -1537,8 +1537,8 @@ html[data-theme="dark"] .dam-media-preview__assoc-empty {
 }
 
 html[data-theme="dark"] .dam-viz-modal__zoom {
-  background: color-mix(in srgb, var(--dam-surface, #201f28) 92%, transparent) !important;
-  border-color: var(--dam-border, #2c2b36) !important;
+  background: color-mix(in srgb, var(--dam-surface) 92%, transparent) !important;
+  border-color: var(--dam-border) !important;
 }
 
 html[data-theme="dark"] .dam-viz-modal__zoom-btn,
@@ -1611,8 +1611,8 @@ html[data-theme="dark"] .dam-viz-modal__zoom-label {
 }
 
 .dam-viz-modal__nav-btn:hover {
-  border-color: var(--dam-primary, #ab54db);
-  color: var(--dam-primary, #ab54db);
+  border-color: var(--dam-primary, #005A29);
+  color: var(--dam-primary, #005A29);
 }
 
 .dam-viz-modal__variant-head {

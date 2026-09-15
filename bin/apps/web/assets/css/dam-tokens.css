@@ -6,13 +6,16 @@
 :root {
   color-scheme: light;
   /* Early paint anti white-flash (before body CSS) */
-  background-color: var(--dam-surface-muted, #f5f6fa);
+  background-color: var(--dam-surface-muted, #f7f2f7);
 
-  /* Marka */
-  --dam-brand-green: #008244;
-  --dam-primary: #AB54DB;
-  --primary-color: var(--dam-primary, #AB54DB);
-  --dam-dark: #17161E;
+  /* Marka - Dobra Kaloria logo green (#005A29) is the destination accent */
+  --dam-brand-green: #005A29;
+  --dam-primary: #005A29;
+  --primary-color: var(--dam-primary, #005A29);
+  --dam-dark: #060F0C;
+  --dam-input-bg: #FDFBFD;
+  --dam-chrome: #EFE6EC;
+  --dam-chrome-ink: color-mix(in srgb, var(--dam-primary) 38%, var(--dam-text));
 
   /* Statusy */
   --dam-ok: #00b074;
@@ -22,17 +25,25 @@
   /* Info: ciemniejszy blekit (kontrast AA) */
   --info-color: #5B8DEF;
 
-  /* Powierzchnie (light) */
-  --dam-surface: #ffffff;
-  --dam-surface-muted: #f5f6fa;
-  --dam-border: #ececf2;
+  /* Fallback accent when a token miss occurs (never violet) */
+  --dam-fallback-accent: #005A29;
+
+  /* Surface ladder (light) — shared cool paper with DAM fiolet.
+     Green identity is accent + subaccent only, not a mint page wash. */
+  --dam-surface-sunken: #F7F2F7;   /* wells — same paper as page */
+  --dam-surface: #FDFBFD;          /* tiles / widgets / history panel */
+  --dam-surface-muted: #F7F2F7;    /* page bg */
+  --dam-surface-elevated: #FDFBFD; /* rows — near-white cards, not mint */
+  --dam-surface-raised: #FDFBFD;   /* inputs / inner chrome */
+  --dam-border: #EFE6EC;
+  --dam-bg: var(--dam-surface-muted);
 
   /* Mapowanie na Geex vars (nakladka, nie przepisujemy komponentow) */
   --white-color: var(--dam-surface);
   --section-color: var(--dam-surface-muted);
   --sectionTwo-color: var(--dam-surface-muted);
   --sectionThree-color: var(--dam-surface);
-  --gray-color: var(--dam-border);
+  --gray-color: var(--dam-chrome, var(--dam-border));
   --body-color: var(--dam-text);
   --desc-color: var(--dam-text);
   --sec-color: var(--dam-text-muted);
@@ -51,8 +62,8 @@
   --dam-font: "Jost", sans-serif;
   /* Geex overlay: style.css paints body, headings and p with --poppins (Poppins TRAP). */
   --poppins: var(--dam-font);
-  --dam-text: #464255;
-  --dam-text-muted: #8f8b9f;
+  --dam-text: #172E24;
+  --dam-text-muted: #5A7266;
   --dam-muted: var(--dam-text-muted);
 
   /* Skala tekstu */
@@ -91,7 +102,12 @@
   --dam-sidebar-nav-logout-mt: calc(50px * var(--dam-sidebar-nav-v-compact));
 
   /* Outline / ghost CTAs (icon-btn, win-btn outline, modal geex secondary) — 50% alpha */
-  --dam-btn-outline-border: color-mix(in srgb, var(--dam-primary, #ab54db) 50%, transparent);
+  --dam-btn-outline-border: color-mix(in srgb, var(--dam-primary, #005a29) 50%, transparent);
+
+  /* Sidebar surfaces - hue-tinted from accent; JS overwrites per scheme */
+  --dam-sidebar-bg: #F7F2F7;
+  --dam-sidebar-bg-end: #F7F2F7;
+  --dam-sidebar-grad: linear-gradient(165deg, var(--dam-sidebar-bg) 0%, var(--dam-sidebar-bg-end) 100%);
 
   /* Ksztalty — Geex DNA: card24 / btn18 / control sm8 / panel md12 */
   --dam-radius-lg: 24px;
@@ -132,8 +148,8 @@
   --dam-space-badge-pill-y: 2px;
   --dam-space-badge-pill-x: 8px;
 
-  /* Cien */
-  --dam-shadow-rgb: 23 22 30;
+  /* Cien - tinted from brand green, not violet-gray */
+  --dam-shadow-rgb: 10 26 21;
   --dam-shadow-alpha: 0.08;
   --dam-shadow: 0 10px 30px rgb(var(--dam-shadow-rgb) / var(--dam-shadow-alpha));
 
@@ -146,20 +162,32 @@
 
 html[data-theme="dark"] {
   color-scheme: dark;
-  background-color: var(--dam-surface-muted, #17161e);
+  background-color: var(--dam-bg, #060f0c);
 
-  --dam-surface: #201f28;
-  --dam-surface-muted: #17161e;
-  --dam-border: #2c2b36;
-  /* Primary text: AA ≥4.5:1 on #201f28 / #17161e */
-  --dam-text: #eeeaf6;
-  /* Secondary/meta: AA ≥4.5:1 on charcoal (was #9b97ab — marginal) */
-  --dam-text-muted: #b8b3c6;
+  /* Dark ladder (Dobra Kaloria, tuning = 0).
+     Page #060F0C is darker than tiles #0B1814 so cards read as tiles.
+     Inputs / inner chrome sit one hair above the tile (#0E1E19). */
+  --dam-surface-sunken: #081310;
+  --dam-surface: #0B1814;
+  --dam-surface-muted: #060F0C;
+  --dam-bg: #060F0C;
+  --dam-border: #143028;
+  /* Primary text: AA ≥4.5:1 on #0B1814 / #060F0C */
+  --dam-text: #EEF4F0;
+  --dam-text-muted: #A8C4B6;
   --dam-muted: var(--dam-text-muted);
   --dam-shadow-alpha: 0.35;
-  --dam-dark: #0e0d12;
-  /* Elevated input/toolbar fill (between surface and muted) */
-  --dam-surface-elevated: #2a2833;
+  --dam-dark: #060F0C;
+  --dam-surface-elevated: #0B1814;
+  --dam-surface-raised: #0E1E19;
+  --dam-input-bg: #0E1E19;
+  --dam-chrome: #0E1E19;
+  --dam-chrome-ink: color-mix(in srgb, var(--dam-primary) 42%, var(--dam-text));
+  --dam-sidebar-bg: #060F0C;
+  --dam-sidebar-bg-end: color-mix(in srgb, var(--dam-primary) 22%, #060F0C);
+  --dam-sidebar-grad: linear-gradient(165deg, var(--dam-sidebar-bg) 0%, var(--dam-sidebar-bg-end) 100%);
+  --dam-primary: #00803A;
+  --dam-shadow-rgb: 10 26 21;
 
   /* Geex overlay w dark — pelne mapowanie status/surface (F2)
      HARD: style.css paints body/h1–h6 with --gray-color in dark.
@@ -169,12 +197,12 @@ html[data-theme="dark"] {
   --section-color: var(--dam-surface-muted);
   --sectionTwo-color: var(--dam-surface-muted);
   --sectionThree-color: var(--dam-surface);
-  --gray-color: #d2cedc;
+  --gray-color: var(--dam-text-muted);
   --body-color: var(--dam-text);
   --desc-color: var(--dam-text);
   --sec-color: var(--dam-text-muted);
   --light-color: var(--dam-surface-muted);
-  /* Geex uses --dark-color as BODY BACKGROUND in dark (style.css). Keep charcoal. */
+  /* Geex uses --dark-color as BODY BACKGROUND in dark (style.css). Hue-tinted, not charcoal. */
   --dark-color: var(--dam-dark);
   --primary-color: var(--dam-primary);
   --success-color: var(--dam-ok);
@@ -188,3 +216,8 @@ html[data-theme="dark"] {
   --info-color-transparent: color-mix(in srgb, var(--info-color) 22%, transparent);
   --dark-color-transparent: color-mix(in srgb, var(--dam-dark) 35%, transparent);
 }
+
+/* iOS Safari zooms any focused control below 16 px. Desktop density stays 12. */
+@media (max-width: 767px) {
+  :root {
+    --dam-c

@@ -163,10 +163,17 @@
     if (global.DamCacheSync && typeof global.DamCacheSync.openReport === "function") {
       return "";
     }
-    var scanned = Number((rep && (rep.scanned || rep.product_count_after)) || 0);
-    var added = Number((rep && rep.added) || 0);
-    var changed = Number((rep && rep.changed) || 0);
-    var unchanged = Number((rep && rep.unchanged) || 0);
+    var counts = rep && rep.counts && typeof rep.counts === "object" ? rep.counts : {};
+    var scanned = Number(
+      counts.elements_scanned != null
+        ? counts.elements_scanned
+        : (rep && (rep.scanned || rep.product_count_after)) || 0
+    );
+    var added = Number(counts.new != null ? counts.new : (rep && rep.added) || 0);
+    var changed = Number(counts.updated != null ? counts.updated : (rep && rep.changed) || 0);
+    var unchanged = Number(
+      counts.unchanged != null ? counts.unchanged : (rep && rep.unchanged) || 0
+    );
     if (scanned || added || changed || unchanged) {
       return (
         "Nowe " +
@@ -190,7 +197,7 @@
     st.id = "dam-index-live-style";
     st.textContent =
       "#damJobToast #damJobToastClose{" +
-        "background:var(--primary-color,#ab54db);color:#fff;" +
+        "background:var(--primary-color,#005A29);color:#fff;" +
       "}" +
       "#damJobToast #damJobToastReport{" +
         "background:var(--gray-color,#eceaf3);color:var(--body-color,#464255);" +
@@ -243,6 +250,24 @@
     }
   }
 
+  function isPhoneChrome() {
+    return (
+      typeof global.matchMedia === "function" &&
+      global.matchMedia("(max-width: 767.98px)").matches
+    );
+  }
+
+  function placeIndexReport() {
+    var el = typeof document !== "undefined" ? document.getElementById("damIndexReport") : null;
+    if (!el) return;
+    el.classList.toggle("dam-index-report--sheet", isPhoneChrome());
+    if (el.getAttribute("data-dam-sheet-bound") === "1") return;
+    el.setAttribute("data-dam-sheet-bound", "1");
+    el.addEventListener("click", function (ev) {
+      if (ev.target === el) el.hidden = true;
+    });
+  }
+
   function wrapOpenReport() {
     var api = global.DamCacheSync;
     if (!api || typeof api.openReport !== "function" || api.__damLiveWrapped) return;
@@ -250,6 +275,10 @@
     var orig = api.openReport;
     api.openReport = function (rep) {
       orig(rep);
+      if (typeof global.__damPaintIndexReport === "function") {
+        global.__damPaintIndexReport(rep);
+      }
+      placeIndexReport();
     };
   }
 
@@ -287,8 +316,15 @@
     /* Honest counts live in DamCacheSync.openReport. Do not force "Nic nowego". */
   }
 
+  function isAuthSurface() {
+    if (typeof document === "undefined" || !document.body) return false;
+    if (document.body.classList.contains("authentication-page")) return true;
+    return !!document.getElementById("damAuthForm");
+  }
+
   function bootLiveUi() {
     if (global.__damIndexLiveBooted) return;
+    if (isAuthSurface()) return;
     global.__damIndexLiveBooted = true;
     injectLiveStyle();
     wrapOpenReport();
@@ -306,7 +342,9 @@
       global.addEventListener("dam:index-progress", function (ev) {
         applyLiveDom((ev && ev.detail) || {});
       });
+      global.addEventListener("resize", placeIndexReport);
     }
+    placeIndexReport();
     var tries = 0;
     (function waitCache() {
       wrapOpenReport();

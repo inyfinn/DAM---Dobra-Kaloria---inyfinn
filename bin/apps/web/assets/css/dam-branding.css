@@ -42,12 +42,12 @@
 }
 
 .dam-branding-discovery-chip:hover {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 35%, var(--dam-border));
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 35%, var(--dam-border));
 }
 
 .dam-branding-discovery-chip.is-active {
-  background: var(--dam-primary, #ab54db);
-  border-color: var(--dam-primary, #ab54db);
+  background: var(--dam-primary, #005A29);
+  border-color: var(--dam-primary, #005A29);
   color: #fff;
 }
 
@@ -71,7 +71,7 @@
 }
 
 .dam-branding-discovery-tile:hover {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 40%, var(--dam-border));
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 40%, var(--dam-border));
   box-shadow: 0 2px 8px rgba(70, 66, 85, 0.06);
 }
 
@@ -209,7 +209,7 @@
   width: 100%;
   margin: 0;
   padding-top: 8px;
-  border-top: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 14%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 14%, transparent);
   background: transparent;
   gap: 6px 8px;
 }
@@ -346,7 +346,7 @@
   width: min(560px, calc(100vw - 48px));
   max-width: calc(100vw - 48px);
   padding: 14px 40px 14px 18px;
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 22%, var(--dam-border, #ececf2));
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 22%, var(--dam-border, #ececf2));
   border-radius: 14px;
   background: rgb(255 255 255 / 0.96);
   box-shadow: 0 10px 28px rgb(35 32 46 / 0.14);
@@ -375,9 +375,9 @@
   flex: 0 0 auto;
   min-height: 36px;
   padding: 6px 14px;
-  border: 1px solid var(--dam-primary, #ab54db);
+  border: 1px solid var(--dam-primary, #005A29);
   border-radius: 6px;
-  background: var(--dam-primary, #ab54db);
+  background: var(--dam-primary, #005A29);
   color: #fff;
   font-size: 13px;
   font-weight: 600;
@@ -390,7 +390,7 @@
 }
 
 .dam-branding-cat-hint__cta:focus-visible {
-  outline: 2px solid var(--dam-primary, #ab54db);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 2px;
 }
 
@@ -418,7 +418,7 @@
 }
 
 .dam-branding-cat-hint__close:focus-visible {
-  outline: 2px solid var(--dam-primary, #ab54db);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 2px;
 }
 
@@ -454,39 +454,39 @@
 }
 
 .dam-branding-tab:hover {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 35%, var(--dam-border));
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 35%, var(--dam-border));
   color: var(--dam-text, #464255);
 }
 
 .dam-branding-tab.is-active {
-  background: var(--dam-primary, #ab54db);
-  border-color: var(--dam-primary, #ab54db);
+  background: var(--dam-primary, #005A29);
+  border-color: var(--dam-primary, #005A29);
   color: #fff;
 }
 
 .dam-branding-tab:focus-visible {
-  outline: 2px solid var(--dam-primary, #ab54db);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 2px;
 }
 
 .dam-branding-tab.dam-branding-tab--all {
   font-weight: 700;
   letter-spacing: 0.01em;
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, var(--dam-border, #ececf2));
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, #fff);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 45%, var(--dam-border, #ececf2));
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, #fff);
   color: var(--dam-text, #464255);
 }
 
 .dam-branding-tab.dam-branding-tab--all:hover {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 55%, var(--dam-border));
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 55%, var(--dam-border));
   color: var(--dam-text, #464255);
 }
 
 .dam-branding-tab.dam-branding-tab--all.is-active {
-  background: var(--dam-primary, #ab54db);
-  border-color: var(--dam-primary, #ab54db);
+  background: var(--dam-primary, #005A29);
+  border-color: var(--dam-primary, #005A29);
   color: #fff;
-  box-shadow: 0 1px 0 color-mix(in srgb, var(--dam-primary, #ab54db) 35%, transparent);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--dam-primary, #005A29) 35%, transparent);
 }
 
 .dam-branding-grid-toolbar {
@@ -576,7 +576,7 @@
   /* pad 15/26 = baza 7/14 +8/+12 — spójnie z Viz light count pill */
   padding: 15px 26px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 10%, var(--dam-border, #ececf2));
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 10%, var(--dam-border, #ececf2));
   /* HARD: always light elevated pill — never dark toast (user 2026-07-20) */
   background: var(--dam-surface, #fff);
   background: color-mix(in srgb, var(--dam-surface, #fff) 96%, transparent);
@@ -781,12 +781,12 @@
 }
 
 .dam-branding-campaign-chip:hover {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 40%, var(--dam-border));
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 40%, var(--dam-border));
 }
 
 .dam-branding-campaign-chip.is-active {
-  background: var(--dam-primary, #ab54db);
-  border-color: var(--dam-primary, #ab54db);
+  background: var(--dam-primary, #005A29);
+  border-color: var(--dam-primary, #005A29);
   color: #fff;
 }
 
@@ -814,17 +814,17 @@
 .dam-branding-clear-filters {
   margin-left: 8px;
   padding: 2px 10px;
-  border: 1px solid var(--dam-primary, #ab54db);
+  border: 1px solid var(--dam-primary, #005A29);
   border-radius: var(--dam-control-radius, 10px);
   background: transparent;
-  color: var(--dam-primary, #ab54db);
+  color: var(--dam-primary, #005A29);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
 }
 
 .dam-branding-clear-filters:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
 }
 
 .dam-branding-campaign-status {
@@ -851,8 +851,8 @@
 }
 
 .dam-branding-channel-pill.is-active {
-  background: var(--dam-primary, #ab54db);
-  border-color: var(--dam-primary, #ab54db);
+  background: var(--dam-primary, #005A29);
+  border-color: var(--dam-primary, #005A29);
   color: #fff;
 }
 
@@ -1158,9 +1158,9 @@
 }
 
 .dam-media-preview__variant-placeholder--video {
-  background: linear-gradient(145deg, #ede9fe 0%, #f5f3ff 100%);
-  color: #7c3aed;
-  border-color: #ddd6fe;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--dam-primary, #005A29) 12%, var(--dam-surface)) 0%, color-mix(in srgb, var(--dam-primary, #005A29) 6%, var(--dam-surface)) 100%);
+  color: var(--dam-primary, #005A29);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 22%, var(--dam-border));
 }
 
 .dam-media-preview__zoom {
@@ -1500,9 +1500,9 @@
 .dam-branding-empty__filter-chip {
   padding: 4px 10px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 28%, transparent);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 6%, var(--dam-surface, #fff));
-  color: var(--dam-primary, #ab54db);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 28%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 6%, var(--dam-surface, #fff));
+  color: var(--dam-primary, #005A29);
   font-size: 11px;
   font-weight: 600;
   font-family: inherit;
@@ -1511,7 +1511,7 @@
 
 .dam-branding-empty__filter-chip:hover,
 .dam-branding-empty__filter-chip:focus-visible {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, var(--dam-surface, #fff));
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, var(--dam-surface, #fff));
 }
 
 .dam-branding-empty .dam-branding-clear-filters,
@@ -1626,7 +1626,7 @@
   width: 88px;
   margin: 0;
   vertical-align: middle;
-  accent-color: var(--dam-primary, #ab54db);
+  accent-color: var(--dam-primary, #005A29);
 }
 
 .dam-branding-page-size__num {
@@ -1651,8 +1651,8 @@
 
 .dam-branding-page-size__num:focus {
   outline: none;
-  border-color: var(--dam-primary, #ab54db);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #ab54db) 18%, transparent);
+  border-color: var(--dam-primary, #005A29);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #005A29) 18%, transparent);
 }
 
 .dam-branding-page-size__ok,
@@ -1683,15 +1683,15 @@
 
 .dam-branding-page-size__ok:hover,
 .dam-branding-page-size .dam-int-cta:hover {
-  border-color: var(--dam-primary, #ab54db);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, var(--dam-surface, #fff));
-  color: var(--dam-primary, #ab54db);
+  border-color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface, #fff));
+  color: var(--dam-primary, #005A29);
 }
 
 .dam-branding-page-size.is-dirty .dam-branding-page-size__ok {
-  border-color: var(--dam-primary, #ab54db);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, var(--dam-surface, #fff));
-  color: var(--dam-primary, #ab54db);
+  border-color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, var(--dam-surface, #fff));
+  color: var(--dam-primary, #005A29);
 }
 
 .dam-branding-date-range {
@@ -1755,9 +1755,9 @@
 }
 
 .dam-branding-date-presets button.is-active {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 40%, transparent);
-  color: var(--dam-primary, #ab54db);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, var(--dam-surface, #fff));
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 40%, transparent);
+  color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface, #fff));
 }
 
 .dam-branding-sort {
@@ -1856,10 +1856,10 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
 }
 
 .dam-branding-clear-btn {
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 28%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 28%, transparent);
   border-radius: 999px;
   background: var(--dam-surface, #fff);
-  color: var(--dam-primary, #ab54db);
+  color: var(--dam-primary, #005A29);
   font-size: 12px;
   font-weight: 600;
   padding: 8px 14px;
@@ -1869,7 +1869,7 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
 
 .dam-branding-clear-btn:hover,
 .dam-branding-clear-btn:focus-visible {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, var(--dam-surface, #fff));
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface, #fff));
 }
 
 .dam-branding-card.dam-viz-card--clickable {
@@ -2095,7 +2095,7 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
   align-self: center;
   border-radius: 12px;
   overflow: hidden;
-  background: linear-gradient(145deg, #111827 0%, #0b1220 100%);
+  background: linear-gradient(145deg, var(--dam-surface-muted) 0%, var(--dam-dark) 100%);
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
 }
 
@@ -2274,7 +2274,7 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
 .dam-media-preview__ext-tag--mp4,
 .dam-media-preview__ext-tag--mov,
 .dam-media-preview__ext-tag--webm {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
   color: #7e22ce;
 }
 
@@ -2423,7 +2423,7 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
   padding: 0;
   font-size: 11px;
   font-weight: 600;
-  color: var(--dam-primary, #ab54db);
+  color: var(--dam-primary, #005A29);
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -2543,7 +2543,7 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
 .dam-media-preview__assoc-thumb-btn:hover,
 .dam-media-preview__assoc-thumb-btn:focus-visible {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgb(171 84 219 / 14%);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--dam-primary, #005A29) 14%, transparent);
 }
 
 .dam-media-preview__assoc-thumb {
@@ -2577,7 +2577,7 @@ html[data-theme="dark"] .dam-media-preview__elementy-panel .dam-media-preview__a
   background-position: 0 0, 0 5px, 5px -5px, -5px 0px !important;
 }
 html[data-theme="dark"] .dam-media-preview__elementy-panel .dam-media-preview__assoc-thumb {
-  background-color: #2a2933 !important;
+  background-color: var(--dam-surface-raised) !important;
   background-image:
     linear-gradient(45deg, #353440 25%, transparent 25%),
     linear-gradient(-45deg, #353440 25%, transparent 25%),
@@ -2603,7 +2603,7 @@ html[data-theme="dark"] .dam-media-preview__elementy-panel .dam-media-preview__a
 
 .dam-media-preview__assoc-name:hover,
 .dam-media-preview__assoc-name:focus-visible {
-  color: var(--dam-primary, #ab54db);
+  color: var(--dam-primary, #005A29);
   text-decoration: underline;
 }
 
@@ -2673,8 +2673,8 @@ html[data-theme="dark"] .dam-media-preview__elementy-panel .dam-media-preview__a
 }
 
 .dam-assoc-edit-toolbar__btn--primary {
-  background: var(--dam-primary, #ab54db);
-  border-color: var(--dam-primary, #ab54db);
+  background: var(--dam-primary, #005A29);
+  border-color: var(--dam-primary, #005A29);
   color: #fff;
 }
 
@@ -2735,7 +2735,7 @@ html[data-theme="dark"] .dam-media-preview__elementy-panel .dam-media-preview__a
 
 .dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt.is-selected {
   background: transparent;
-  box-shadow: inset 3px 0 0 #ab54db;
+  box-shadow: inset 3px 0 0 var(--dam-primary);
 }
 
 .dam-assoc-edit-popover__list {
@@ -2759,8 +2759,8 @@ html[data-theme="dark"] .dam-media-preview__elementy-panel .dam-media-preview__a
 
 /* Hover/selected — injected CSS w dam-assoc-edit.js (unikaj podwójnego migotania) */
 .dam-assoc-edit-popover__opt.is-selected:not(.is-pinned) {
-  background: #ede4fb;
-  box-shadow: inset 3px 0 0 #ab54db;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 16%, var(--dam-surface));
+  box-shadow: inset 3px 0 0 var(--dam-primary);
 }
 
 .dam-assoc-edit-popover__thumb-wrap {
@@ -2797,7 +2797,7 @@ html[data-theme="dark"] .dam-media-preview__elementy-panel .dam-media-preview__a
 
 .dam-assoc-edit-popover__check {
   width: 20px;
-  color: var(--dam-primary, #ab54db);
+  color: var(--dam-primary, #005A29);
   font-size: 16px;
 }
 
@@ -3013,15 +3013,15 @@ body.dam-media-preview-open {
 }
 
 .dam-media-preview__quality-pill:hover {
-  border-color: var(--dam-primary, #ab54db);
-  color: var(--dam-primary, #ab54db);
+  border-color: var(--dam-primary, #005A29);
+  color: var(--dam-primary, #005A29);
 }
 
 .dam-media-preview__quality-pill.is-active {
   background: #fff;
-  border-color: var(--dam-primary, #ab54db);
+  border-color: var(--dam-primary, #005A29);
   border-width: 1px;
-  color: color-mix(in srgb, var(--dam-primary, #ab54db) 72%, #3d2f4a);
+  color: color-mix(in srgb, var(--dam-primary, #005A29) 72%, #3d2f4a);
   box-shadow: none;
 }
 
@@ -3203,13 +3203,13 @@ body.dam-media-preview-open {
 }
 
 .dam-media-preview__all-file:hover {
-  border-color: var(--dam-primary, #ab54db);
+  border-color: var(--dam-primary, #005A29);
 }
 
 .dam-media-preview__all-file.is-active {
-  border-color: var(--dam-primary, #ab54db);
+  border-color: var(--dam-primary, #005A29);
   border-width: 2px;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--dam-primary, #ab54db) 25%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--dam-primary, #005A29) 25%, transparent);
 }
 
 .dam-media-preview__studio-frame {
@@ -3298,20 +3298,20 @@ body.dam-media-preview-open {
 }
 
 .dam-media-preview__studio-chip:hover {
-  border-color: var(--dam-primary, #ab54db);
-  color: color-mix(in srgb, var(--dam-primary, #ab54db) 85%, #3d2f4a);
+  border-color: var(--dam-primary, #005A29);
+  color: color-mix(in srgb, var(--dam-primary, #005A29) 85%, #3d2f4a);
 }
 
 .dam-media-preview__studio-chip.is-active {
   background: #fff;
-  border-color: var(--dam-primary, #ab54db);
+  border-color: var(--dam-primary, #005A29);
   border-width: 1px;
-  color: color-mix(in srgb, var(--dam-primary, #ab54db) 72%, #3d2f4a);
+  color: color-mix(in srgb, var(--dam-primary, #005A29) 72%, #3d2f4a);
   box-shadow: none;
 }
 .dam-media-preview__studio-chip:focus-visible,
 .dam-media-preview__quality-pill:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 55%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #005A29) 55%, transparent);
   outline-offset: 2px;
 }
 
@@ -3540,8 +3540,8 @@ body.dam-media-preview-open {
 
 /* Dark: count pill + clear filters — dark surface + light text (AA) */
 html[data-theme="dark"] .dam-branding-grid-count {
-  background: color-mix(in srgb, var(--dam-surface-elevated, #2a2833) 94%, transparent);
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 28%, var(--dam-border, #2c2b36));
+  background: color-mix(in srgb, var(--dam-surface-raised) 94%, transparent);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 28%, var(--dam-border));
   color: var(--dam-text, #eeeaf6);
   box-shadow:
     0 2px 8px rgb(0 0 0 / 0.28),
@@ -3550,16 +3550,16 @@ html[data-theme="dark"] .dam-branding-grid-count {
 
 html[data-theme="dark"] .dam-branding-clear-btn,
 html[data-theme="dark"] .dam-branding-clear-filters {
-  background: var(--dam-surface-elevated, #2a2833) !important;
+  background: var(--dam-surface-raised) !important;
   color: #e2c4f5 !important;
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 42%, var(--dam-border, #2c2b36)) !important;
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 42%, var(--dam-border)) !important;
 }
 
 html[data-theme="dark"] .dam-branding-clear-btn:hover,
 html[data-theme="dark"] .dam-branding-clear-btn:focus-visible,
 html[data-theme="dark"] .dam-branding-clear-filters:hover,
 html[data-theme="dark"] .dam-branding-clear-filters:focus-visible {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 18%, var(--dam-surface-elevated, #2a2833)) !important;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 18%, var(--dam-surface-raised)) !important;
   color: #f0e6fa !important;
 }
 
@@ -3570,19 +3570,19 @@ html[data-theme="dark"] .dam-toolbar-status {
 }
 
 html[data-theme="dark"] .dam-branding-page-size__num {
-  background: var(--dam-surface-elevated, #2a2833);
-  border-color: var(--dam-border, #2c2b36);
+  background: var(--dam-surface-raised);
+  border-color: var(--dam-border);
   color: var(--dam-text, #eeeaf6);
 }
 
 html[data-theme="dark"] .dam-branding-page-size__num:focus {
-  border-color: var(--dam-primary, #ab54db);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #ab54db) 28%, transparent);
+  border-color: var(--dam-primary, #005A29);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #005A29) 28%, transparent);
 }
 
 html[data-theme="dark"] .dam-branding-filters--meta .dam-branding-sort select,
 html[data-theme="dark"] .dam-branding-filters--meta select {
-  background: var(--dam-surface-elevated, #2a2833);
+  background: var(--dam-surface-raised);
   color: var(--dam-text, #eeeaf6);
   border-color: var(--dam-border);
 }

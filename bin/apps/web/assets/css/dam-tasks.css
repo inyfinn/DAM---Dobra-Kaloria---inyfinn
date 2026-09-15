@@ -99,8 +99,8 @@
 }
 
 .dam-tasks-btn--primary:hover {
-  background: #2f2c38;
-  border-color: #2f2c38;
+  background: var(--dam-surface-raised);
+  border-color: var(--dam-surface-raised);
   filter: none;
 }
 
@@ -117,7 +117,7 @@ body.dam-tasks-page .dam-tasks-btn--primary:focus-visible {
 /* Dostosuj pressed = layout-edit mode on */
 .dam-tasks-btn[data-customize][aria-pressed="true"],
 .dam-tasks-btn[data-customize].is-active {
-  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 55%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #005A29) 55%, transparent);
   outline-offset: 2px;
 }
 
@@ -869,7 +869,7 @@ html[data-theme="dark"] .dam-tasks-section {
 }
 
 html[data-theme="dark"] .dam-tasks-pill {
-  background: #2c2b36;
+  background: var(--dam-surface-raised);
   color: #c8c4d2;
 }
 
@@ -1035,7 +1035,7 @@ html[data-theme="dark"] .dam-tasks-skel__line,
 html[data-theme="dark"] .dam-tasks-skel__chip,
 html[data-theme="dark"] .dam-tasks-skel__input,
 html[data-theme="dark"] .dam-tasks-skel__notes {
-  background: #2a2f2c;
+  background: var(--dam-surface);
 }
 
 html[data-theme="dark"] .dam-tasks-skel__check::after,

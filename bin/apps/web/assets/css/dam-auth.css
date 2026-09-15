@@ -61,5 +61,39 @@
 }
 
 html[data-theme="dark"] .geex-content__authentication__content {
-  background: var(--dam-surface, #201f28);
+  background: var(--dam-surface);
+}
+
+/* Index toast / FAB — brak sensu na ekranie logowania */
+.authentication-page #damIndexFabBadge,
+.authentication-page #damJobToast,
+.authentication-page #damIndexCountPill {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/*
+ * Trailing icons — wyśrodkowanie względem pola 56px (Geex bottom:38px traci przy label-wrapper).
+ * margin-bottom inputu = 23px; środek pola = 23px + 28px od dołu grupy.
+ */
+.geex-content__authentication__form-group:not(.custom-checkbox) > i {
+  bottom: calc(23px + 28px);
+  transform: translateY(50%);
+  inset-inline-end: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--dam-touch-min, 44px);
+  height: var(--dam-touch-min, 44px);
+  min-width: var(--dam-touch-min, 44px);
+  min-height: var(--dam-touch-min, 44px);
+  font-size: 20px;
+  line-height: 1;
+  margin: 0;
+}
+
+.geex-content__authentication__form-group:not(.custom-checkbox) > i.toggle-password-type,
+.geex-content__authentication__form-group:not(.custom-checkbox) > #togglePassword {
+  cursor: pointer;
 }

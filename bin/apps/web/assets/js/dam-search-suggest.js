@@ -125,7 +125,7 @@
       ".dam-search-suggest[hidden]{display:none!important;}" +
       ".dam-search-suggest__item{display:flex;align-items:center;justify-content:space-between;gap:10px;" +
       "width:100%;padding:8px 12px;border:0;background:transparent;text-align:left;cursor:pointer;font:inherit;}" +
-      ".dam-search-suggest__item:hover,.dam-search-suggest__item.is-active{background:#f8f4fd;}" +
+      ".dam-search-suggest__item:hover,.dam-search-suggest__item.is-active{background:color-mix(in srgb, var(--dam-primary, #005A29) 10%, var(--dam-surface));}" +
       ".dam-search-suggest__term{font-weight:600;color:#464255;}" +
       ".dam-search-suggest__note{font-size:11px;color:#8b8d97;white-space:nowrap;}";
     document.head.appendChild(st);

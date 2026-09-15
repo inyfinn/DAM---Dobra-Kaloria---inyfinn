@@ -75,17 +75,17 @@
   transform: translateY(0) scale(0.98);
 }
 .dam-settings-page .dam-sw-btn:focus-visible {
-  outline: 2px solid var(--dam-primary, #ab54db);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 2px;
 }
 .dam-settings-page .dam-sw-btn--primary {
-  background: var(--dam-primary, #ab54db);
+  background: var(--dam-primary, #005A29);
   color: #fff;
-  border-color: var(--dam-primary, #ab54db);
+  border-color: var(--dam-primary, #005A29);
 }
 .dam-settings-page .dam-sw-btn--primary:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 88%, #000);
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 88%, #000);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 88%, #000);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 88%, #000);
   color: #fff;
 }
 .dam-settings-page .dam-sw-btn--ghost {
@@ -94,19 +94,19 @@
   border-color: var(--dam-border, #e7e7e7);
 }
 .dam-settings-page .dam-sw-btn--ghost:hover {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, var(--dam-border, #e7e7e7));
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, var(--dam-surface, #fff));
-  color: var(--dam-primary, #ab54db);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 45%, var(--dam-border, #e7e7e7));
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface, #fff));
+  color: var(--dam-primary, #005A29);
 }
 .dam-settings-page .dam-sw-btn--soft {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, var(--dam-surface, #fff));
-  color: var(--dam-primary, #ab54db);
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 28%, var(--dam-border, #e7e7e7));
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, var(--dam-surface, #fff));
+  color: var(--dam-primary, #005A29);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 28%, var(--dam-border, #e7e7e7));
 }
 .dam-settings-page .dam-sw-btn--soft:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 20%, var(--dam-surface, #fff));
-  border-color: var(--dam-primary, #ab54db);
-  color: var(--dam-primary, #ab54db);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 20%, var(--dam-surface, #fff));
+  border-color: var(--dam-primary, #005A29);
+  color: var(--dam-primary, #005A29);
 }
 
 /* Keyword search (settings) */
@@ -137,9 +137,9 @@
   box-sizing: border-box;
 }
 .dam-settings-search__input:focus {
-  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 45%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #005A29) 45%, transparent);
   outline-offset: 1px;
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 40%, #e4e4ea);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 40%, #e4e4ea);
 }
 .dam-settings-search__hint {
   margin: 6px 2px 0;
@@ -180,12 +180,12 @@
 }
 .dam-settings-jump-results__btn:hover,
 .dam-settings-jump-results__btn:focus-visible {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, #fff);
   outline: none;
 }
 .dam-settings-jump-results__btn i {
   font-size: 16px;
-  color: var(--dam-primary, #ab54db);
+  color: var(--dam-primary, #005A29);
   margin-top: 2px;
 }
 .dam-settings-jump-results__text {
@@ -207,7 +207,7 @@
   display: none;
 }
 .dam-widget.is-hash-focus {
-  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 55%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #005A29) 55%, transparent);
   outline-offset: 3px;
   border-radius: 14px;
 }
@@ -265,17 +265,17 @@
   font-size: 14px;
 }
 .dam-settings-jump__chip:hover {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, var(--dam-border, #e7e7e7));
-  color: var(--dam-primary, #ab54db);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, var(--dam-surface, #fff));
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 45%, var(--dam-border, #e7e7e7));
+  color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface, #fff));
 }
 .dam-settings-jump__chip.is-active {
-  border-color: var(--dam-primary, #ab54db);
-  color: var(--dam-primary, #ab54db);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, var(--dam-surface, #fff));
+  border-color: var(--dam-primary, #005A29);
+  color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, var(--dam-surface, #fff));
 }
 .dam-settings-jump__chip:focus-visible {
-  outline: 2px solid var(--dam-primary, #ab54db);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 2px;
 }
 .dam-settings-jump__clear {
@@ -299,7 +299,7 @@
   background: #fff5f5;
 }
 .dam-settings-jump__clear:focus-visible {
-  outline: 2px solid var(--dam-primary, #ab54db);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 2px;
 }
 
@@ -419,7 +419,7 @@
   margin: 0;
 }
 .dam-settings-grid .dam-widget__title i {
-  color: var(--dam-primary, #ab54db);
+  color: var(--dam-primary, #005A29);
   font-size: 18px;
 }
 .dam-settings-grid .dam-widget__meta {
@@ -492,8 +492,8 @@
   border-radius: 50%;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--dam-primary, #ab54db) 80%, #fff),
-    var(--dam-primary, #ab54db)
+    color-mix(in srgb, var(--dam-primary, #005A29) 80%, #fff),
+    var(--dam-primary, #005A29)
   );
   color: #fff;
   font-weight: 700;
@@ -521,6 +521,11 @@
 .dam-sw-profile__fields .dam-sw-field--full {
   grid-column: 1 / -1;
 }
+.dam-sw-profile__fields .dam-sw-profile__email {
+  text-overflow: clip;
+  overflow-x: auto;
+  white-space: nowrap;
+}
 
 .dam-sw-field label {
   display: block;
@@ -546,8 +551,8 @@
 .dam-sw-field .form-control:focus,
 .dam-sw-path .form-control:focus {
   outline: none;
-  border-color: var(--dam-primary, #ab54db);
-  box-shadow: 0 0 0 3px var(--primary-color-transparent, rgba(171, 84, 219, 0.15));
+  border-color: var(--dam-primary, #005A29);
+  box-shadow: 0 0 0 3px var(--primary-color-transparent, color-mix(in srgb, var(--dam-primary, #005A29) 15%, transparent));
 }
 .dam-sw-field input:disabled,
 .dam-sw-field input[readonly] {
@@ -598,15 +603,15 @@
   transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 .dam-theme-picker__btn.is-active {
-  border-color: var(--dam-primary, #ab54db);
-  color: var(--dam-primary, #ab54db);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, var(--dam-surface, #fff));
+  border-color: var(--dam-primary, #005A29);
+  color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, var(--dam-surface, #fff));
 }
 .dam-theme-picker__btn:hover {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 40%, var(--dam-border, #e7e7e7));
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 40%, var(--dam-border, #e7e7e7));
 }
 .dam-theme-picker__btn:focus-visible {
-  outline: 2px solid var(--dam-primary, #ab54db);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 2px;
 }
 
@@ -634,7 +639,7 @@
   box-shadow: inset 0 0 0 2px var(--dam-surface, #fff), 0 0 0 2px var(--dam-text, #464255);
 }
 .dam-accent-swatch:focus-visible {
-  outline: 2px solid var(--dam-primary, #ab54db);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 2px;
 }
 .dam-accent-custom {
@@ -669,14 +674,14 @@
 .dam-accent-preview__link {
   font-size: 13px;
   font-weight: 600;
-  color: var(--dam-primary, #ab54db);
+  color: var(--dam-primary, #005A29);
 }
 .dam-accent-preview__dot {
   display: inline-block;
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: var(--dam-primary, #ab54db);
+  background: var(--dam-primary, #005A29);
 }
 .visually-hidden {
   position: absolute !important;
@@ -747,7 +752,7 @@
   transition: background 0.18s ease;
 }
 .dam-toggle input:checked + .dam-toggle-track {
-  background: var(--dam-primary, #ab54db);
+  background: var(--dam-primary, #005A29);
 }
 .dam-toggle-thumb {
   position: absolute;
@@ -765,7 +770,7 @@
   left: 23px;
 }
 .dam-toggle input:focus-visible + .dam-toggle-track {
-  outline: 2px solid var(--dam-primary, #ab54db);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 2px;
 }
 
@@ -833,7 +838,7 @@
   font-size: 20px;
   color: #fff;
   flex-shrink: 0;
-  background: var(--dam-primary, #ab54db);
+  background: var(--dam-primary, #005A29);
 }
 .dam-int-card__icon--asana { background: #f06a6a; }
 .dam-int-card__icon--ms { background: #5059c9; }
@@ -867,7 +872,7 @@
   margin-top: 4px;
 }
 .dam-int-st--ok { color: var(--dam-ok, #2cbf44); }
-.dam-int-st--ready { color: var(--dam-primary, #ab54db); }
+.dam-int-st--ready { color: var(--dam-primary, #005A29); }
 .dam-int-st--wait { color: var(--dam-text-muted, #8b8d97); }
 .dam-int-st--plan { color: #b45309; }
 
@@ -974,8 +979,8 @@
   border-radius: 999px;
 }
 .dam-naming-pill--ui {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 14%, #fff);
-  color: var(--dam-primary, #ab54db);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, #fff);
+  color: var(--dam-primary, #005A29);
 }
 .dam-naming-pill--disk {
   background: #fff3e0;

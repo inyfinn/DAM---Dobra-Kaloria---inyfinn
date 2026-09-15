@@ -72,9 +72,9 @@ a.dam-int-cta {
   padding: var(--dam-space-btn-sm-y, 8px) var(--dam-space-btn-sm-x, 12px);
   border-radius: var(--dam-radius-btn-compact, 8px);
   /* Explorer-like outline — bez UA czarnej grubej ramki (button default) */
-  border: 1px solid #e7e7e7;
-  background: #fff;
-  color: #464255;
+  border: 1px solid var(--dam-border, #D5E3DA);
+  background: var(--dam-surface-raised, #FDFBFD);
+  color: var(--dam-text, #1A3328);
   box-shadow: none;
   cursor: pointer;
   font-family: inherit;
@@ -86,9 +86,9 @@ a.dam-int-cta {
 .dam-int-cta:hover,
 button.dam-int-cta:hover,
 a.dam-int-cta:hover {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, #e7e7e7);
-  background: #fbf7fe;
-  color: var(--dam-primary, #ab54db);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 45%, var(--dam-border, #D5E3DA));
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface));
+  color: var(--dam-primary, #005A29);
 }
 
 .dam-search-scope__btn {
@@ -118,46 +118,100 @@ a.dam-int-cta:hover {
 .geex-btn--primary,
 .dam-btn-primary {
   color: var(--white-color, #fff);
-  background-color: var(--dam-primary, var(--primary-color, #ab54db)) !important;
+  background-color: var(--dam-primary, var(--primary-color, #005A29)) !important;
   border: none !important;
 }
 
 .geex-btn--primary:hover,
-.geex-btn--primary:focus-visible,
 .geex-btn--primary.active,
 .dam-btn-primary:hover,
-.dam-btn-primary:focus-visible {
+a.geex-btn--primary:hover {
   color: var(--white-color, #fff) !important;
   background-color: color-mix(
     in srgb,
-    var(--dam-primary, var(--primary-color, #ab54db)) 86%,
+    var(--dam-primary, var(--primary-color, #005A29)) 86%,
     #000
   ) !important;
+  box-shadow: 0 4px 14px rgb(var(--dam-shadow-rgb, 23 22 30) / 0.18);
+}
+
+.geex-btn--primary:focus:not(:focus-visible),
+.dam-btn-primary:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.geex-btn--primary:focus-visible,
+.dam-btn-primary:focus-visible {
+  outline: 2px solid var(--dam-primary, var(--primary-color, #005A29));
+  outline-offset: 2px;
 }
 
 /* Secondary / win-btn — outline, no white-flash hover */
 .geex-btn--secondary,
 .geex-btn.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger),
 .dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger) {
-  color: var(--dam-primary, var(--primary-color, #ab54db)) !important;
+  color: var(--dam-primary, var(--primary-color, #005A29)) !important;
   background-color: var(--dam-surface, #fff) !important;
   border: 1px solid var(--dam-btn-outline-border) !important;
   box-shadow: none !important;
 }
 
 .geex-btn--secondary:hover,
-.geex-btn--secondary:focus-visible,
 .geex-btn.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):hover,
-.geex-btn.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):focus-visible,
-.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):hover,
-.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):focus-visible {
-  color: var(--dam-primary, var(--primary-color, #ab54db)) !important;
+.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):hover {
+  color: var(--dam-primary, var(--primary-color, #005A29)) !important;
   background-color: color-mix(
     in srgb,
-    var(--dam-primary, var(--primary-color, #ab54db)) 10%,
+    var(--dam-primary, var(--primary-color, #005A29)) 10%,
     var(--dam-surface, #fff)
   ) !important;
   border-color: var(--dam-btn-outline-border) !important;
+  box-shadow: 0 4px 14px rgb(var(--dam-shadow-rgb, 23 22 30) / 0.14);
+}
+
+.geex-btn--secondary:focus:not(:focus-visible),
+.geex-btn.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):focus:not(:focus-visible),
+.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):focus:not(:focus-visible) {
+  outline: none;
+}
+
+.geex-btn--secondary:focus-visible,
+.geex-btn.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):focus-visible,
+.dam-win-btn:not(.geex-btn--primary):not(.geex-btn--danger):focus-visible {
+  outline: 2px solid var(--dam-primary, var(--primary-color, #005A29));
+  outline-offset: 2px;
+}
+
+/* Missing Geex alias — outline / ghost, same tokens as secondary */
+.geex-btn--primary-transparent,
+.geex-btn.geex-btn--primary-transparent {
+  color: var(--dam-primary, var(--primary-color, #005A29)) !important;
+  background-color: var(--dam-surface, #fff) !important;
+  border: 1px solid var(--dam-btn-outline-border) !important;
+  box-shadow: none !important;
+}
+
+.geex-btn--primary-transparent:hover,
+.geex-btn.geex-btn--primary-transparent:hover {
+  color: var(--dam-primary, var(--primary-color, #005A29)) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--dam-primary, var(--primary-color, #005A29)) 10%,
+    var(--dam-surface, #fff)
+  ) !important;
+  border-color: var(--dam-btn-outline-border) !important;
+  box-shadow: 0 4px 14px rgb(var(--dam-shadow-rgb, 23 22 30) / 0.14);
+}
+
+.geex-btn--primary-transparent:focus:not(:focus-visible),
+.geex-btn.geex-btn--primary-transparent:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.geex-btn--primary-transparent:focus-visible,
+.geex-btn.geex-btn--primary-transparent:focus-visible {
+  outline: 2px solid var(--dam-primary, var(--primary-color, #005A29));
+  outline-offset: 2px;
 }
 
 /* Danger */
@@ -190,10 +244,10 @@ a.dam-int-cta:hover {
 .geex-btn--transparent:hover,
 .geex-btn--transparent:focus-visible,
 .geex-btn--transparent.active {
-  color: var(--dam-primary, var(--primary-color, #ab54db)) !important;
+  color: var(--dam-primary, var(--primary-color, #005A29)) !important;
   background-color: color-mix(
     in srgb,
-    var(--dam-primary, var(--primary-color, #ab54db)) 10%,
+    var(--dam-primary, var(--primary-color, #005A29)) 10%,
     transparent
   ) !important;
   border-color: var(--dam-btn-outline-border) !important;
@@ -286,10 +340,10 @@ a.dam-int-cta:hover {
 .dam-btn-icon:not(.dam-btn-icon-only):hover,
 .dam-btn-icon:not(.dam-btn-icon-only):focus-visible,
 .dam-btn-icon-only:hover {
-  color: var(--dam-primary, #ab54db);
+  color: var(--dam-primary, #005A29);
   background-color: color-mix(
     in srgb,
-    var(--dam-primary, #ab54db) 10%,
+    var(--dam-primary, #005A29) 10%,
     var(--dam-surface, #fff)
   );
   border-color: var(--dam-btn-outline-border);
@@ -303,7 +357,7 @@ html[data-theme="dark"] .dam-menu-toggle,
 html[data-theme="dark"] .dam-viz-icon-btn,
 html[data-theme="dark"] .dam-btn-icon:not(.dam-btn-icon-only),
 html[data-theme="dark"] .dam-btn-icon-only {
-  background-color: var(--dam-surface, #201f28) !important;
+  background-color: var(--dam-surface) !important;
 }
 
 html[data-theme="dark"] .geex-btn--secondary:hover,
@@ -314,10 +368,10 @@ html[data-theme="dark"] .dam-icon-btn:hover,
 html[data-theme="dark"] .dam-viz-icon-btn:hover:not(:disabled):not(.is-disabled) {
   background-color: color-mix(
     in srgb,
-    var(--dam-primary, #ab54db) 16%,
-    var(--dam-surface, #201f28)
+    var(--dam-primary, #005A29) 16%,
+    var(--dam-surface)
   ) !important;
-  color: var(--dam-primary, #ab54db) !important;
+  color: var(--dam-primary, #005A29) !important;
 }
 /* === /BUTTONS === */
 
@@ -474,7 +528,7 @@ html[data-theme="dark"] .dam-viz-badge--variants {
    FORBIDDEN here: clip-path, visibility, display, opacity rest on reveal-observed cards. */
 .dam-dash-panel {
   background: var(--dam-surface, #fff);
-  border: 1px solid var(--dam-border, #ececf2);
+  border: 1px solid var(--dam-border, #D5E3DA);
   border-radius: var(--dam-radius-md, 12px);
   box-shadow: none;
   padding: 16px 18px;
@@ -482,7 +536,7 @@ html[data-theme="dark"] .dam-viz-badge--variants {
 
 .dam-bento__cell {
   background: var(--dam-surface, #fff);
-  border: 1px solid var(--dam-border, #ececf2);
+  border: 1px solid var(--dam-border, #D5E3DA);
   border-radius: var(--dam-radius-md, 12px);
   box-shadow: none;
   padding: 16px 18px;
@@ -490,7 +544,7 @@ html[data-theme="dark"] .dam-viz-badge--variants {
 }
 
 .dam-bento__cell--muted {
-  background: var(--dam-surface-muted, #f5f6fa);
+  background: var(--dam-surface-muted, #F7F2F7);
 }
 
 .dam-bento__cell--bare {
@@ -508,7 +562,7 @@ html[data-theme="dark"] .dam-viz-badge--variants {
 
 .dam-dash-panel__item:hover,
 .dam-dash-panel__row:hover {
-  background: var(--dam-surface-muted, #f5f6fa);
+  background: var(--dam-surface-muted, #F7F2F7);
 }
 
 .dam-dash-modal__panel {
@@ -519,9 +573,53 @@ html[data-theme="dark"] .dam-viz-badge--variants {
   gap: 12px;
 }
 
-/* Sidebar chrome surfaces (spacing/radius/bg only; no reveal props) */
-.geex-sidebar {
-  background: var(--dam-surface, #fff);
+/* Sidebar chrome surfaces (spacing/radius/bg only; no reveal props).
+   Wins over Geex style.css dark gradient to #222. */
+.geex-sidebar,
+#damSidebar.geex-sidebar {
+  background-color: var(--dam-sidebar-bg, #fff);
+  background-image: var(--dam-sidebar-grad);
+}
+html[data-theme="light"] .geex-sidebar,
+html[data-theme="light"] #damSidebar.geex-sidebar {
+  background-color: var(--dam-sidebar-bg, #fff) !important;
+  background-image: var(--dam-sidebar-grad) !important;
+}
+html[data-theme="light"] .geex-sidebar .geex-sidebar__menu__link,
+html[data-theme="light"] .geex-sidebar .dam-nav-label,
+html[data-theme="light"] .geex-sidebar .geex-sidebar__footer {
+  color: var(--dam-text);
+}
+html[data-theme="light"] .geex-sidebar .geex-sidebar__menu__link.active,
+html[data-theme="light"] .geex-sidebar .geex-sidebar__menu__link[aria-current="page"],
+html[data-theme="light"] .geex-sidebar .geex-sidebar__menu__item.active > .geex-sidebar__menu__link {
+  color: var(--dam-primary, #005A29) !important;
+  font-weight: 700;
+}
+html[data-theme="dark"] .geex-sidebar,
+html.dark .geex-sidebar,
+html[data-theme="dark"] #damSidebar.geex-sidebar,
+html.dark #damSidebar.geex-sidebar {
+  background-color: var(--dam-sidebar-bg, var(--dam-dark)) !important;
+  background-image: var(--dam-sidebar-grad) !important;
+  border-color: var(--dam-border) !important;
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .geex-sidebar .geex-sidebar__menu__link,
+html.dark .geex-sidebar .geex-sidebar__menu__link,
+html[data-theme="dark"] .geex-sidebar .dam-nav-label,
+html.dark .geex-sidebar .dam-nav-label,
+html[data-theme="dark"] .geex-sidebar .geex-sidebar__footer,
+html.dark .geex-sidebar .geex-sidebar__footer {
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .geex-sidebar .geex-sidebar__menu__link.active,
+html.dark .geex-sidebar .geex-sidebar__menu__link.active,
+html[data-theme="dark"] .geex-sidebar .geex-sidebar__menu__link[aria-current="page"],
+html.dark .geex-sidebar .geex-sidebar__menu__link[aria-current="page"],
+html[data-theme="dark"] .geex-sidebar .geex-sidebar__menu__item.active > .geex-sidebar__menu__link,
+html.dark .geex-sidebar .geex-sidebar__menu__item.active > .geex-sidebar__menu__link {
+  color: var(--dam-text) !important;
 }
 
 .geex-sidebar__header {
@@ -586,9 +684,52 @@ html[data-theme="dark"] .dam-viz-badge--variants {
 .geex-content__header__popup.show,
 .dam-tag-edit-popover {
   background: var(--dam-surface, #fff);
-  border: 1px solid var(--dam-border, #ececf2);
+  border: 1px solid var(--dam-border, #D5E3DA);
   border-radius: var(--dam-radius-md, 12px);
   box-shadow: var(--dam-shadow);
   padding: 12px 14px;
 }
 /* === /PANELS === */
+
+/* iOS zoom gate: focusable controls ≥16 px under 768. Sizing only. */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="file"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]),
+  select,
+  textarea,
+  input.dam-search-input,
+  input.form-control,
+  select.form-select,
+  select.form-control,
+  textarea.form-control {
+    font-size: 16px !important;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="file"]),
+  select,
+  textarea {
+    min-height: 44px;
+  }
+}
+
+/* Light inner chrome: fields sit on white-mint, never gray #f3f4f6. */
+html[data-theme="light"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
+html[data-theme="light"] textarea,
+html[data-theme="light"] select {
+  background-color: var(--dam-input-bg, var(--dam-surface-raised));
+}
+
+/* Dark inner chrome: fields sit one hair above the tile, still green-tinted. */
+html[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+  background-color: var(--dam-input-bg, var(--dam-surface-raised));
+  border-color: var(--dam-border);
+  color: var(--dam-text);
+  accent-color: var(--dam-primary);
+}
+
+html[data-theme="dark"] input[type="checkbox"],
+html[data-theme="dark"] input[type="radio"] {
+  accent-color: var(--dam-primary);
+  background-color: var(--dam-input-bg, var(--dam-surface-raised));
+}

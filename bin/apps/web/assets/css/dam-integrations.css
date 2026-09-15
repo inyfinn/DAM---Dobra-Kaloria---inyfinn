@@ -87,7 +87,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .dam-integrations-page--bento .dam-int-tile:hover {
-    border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 35%, var(--dam-border, #ececf2));
+    border-color: color-mix(in srgb, var(--dam-primary, #005A29) 35%, var(--dam-border, #ececf2));
     box-shadow: 0 6px 20px rgb(var(--dam-shadow-rgb, 70 66 85) / 0.08);
     transform: translateY(-1px);
   }
@@ -160,9 +160,9 @@
 }
 
 .dam-int-chip.dam-int-st--ready {
-  color: var(--dam-primary, #ab54db);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, #fff);
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 24%, transparent);
+  color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, #fff);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 24%, transparent);
 }
 
 .dam-int-chip.dam-int-st--wait {
@@ -257,14 +257,14 @@
 .dam-int-cta:hover,
 .dam-integrations-page--bento .dam-int-tile__foot .dam-int-cta:hover,
 .dam-integrations-page--bento .dam-int-tile__foot .geex-btn:not(.geex-btn--primary):hover {
-  border-color: var(--dam-primary, #ab54db);
-  background: #fbf7fe;
-  color: var(--dam-primary, #ab54db);
+  border-color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface));
+  color: var(--dam-primary, #005A29);
 }
 
 .dam-int-cta:focus-visible,
 .dam-integrations-page--bento .dam-int-tile__foot .dam-int-cta:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 55%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #005A29) 55%, transparent);
   outline-offset: 2px;
 }
 
@@ -328,7 +328,7 @@
 
 .dam-int-soon:focus-visible,
 .dam-integrations-page--bento .dam-int-soon:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 55%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #005A29) 55%, transparent);
   outline-offset: 2px;
 }
 
@@ -387,19 +387,19 @@
 }
 
 .dam-integrations-page--bento .dam-int-config > summary:hover {
-  border-color: var(--dam-primary, #ab54db);
-  background: #fbf7fe;
-  color: var(--dam-primary, #ab54db);
+  border-color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface));
+  color: var(--dam-primary, #005A29);
 }
 
 .dam-integrations-page--bento .dam-int-config[open] > summary {
-  border-color: var(--dam-primary, #ab54db);
-  background: #fbf7fe;
-  color: var(--dam-primary, #ab54db);
+  border-color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface));
+  color: var(--dam-primary, #005A29);
 }
 
 .dam-integrations-page--bento .dam-int-config > summary:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 55%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #005A29) 55%, transparent);
   outline-offset: 2px;
 }
 
@@ -434,13 +434,13 @@ html[data-theme="dark"] .dam-integrations-page--bento .dam-int-tile--live {
   background:
     linear-gradient(
       165deg,
-      color-mix(in srgb, var(--dam-ok, #00b074) 18%, var(--dam-surface, #1a1d1b)) 0%,
-      var(--dam-surface, #1a1d1b) 55%
+      color-mix(in srgb, var(--dam-ok, #00b074) 18%, var(--dam-surface)) 0%,
+      var(--dam-surface) 55%
     );
 }
 
 html[data-theme="dark"] .dam-integrations-page--bento .dam-int-tile--planned {
-  background: color-mix(in srgb, var(--dam-surface-muted, #222) 70%, var(--dam-surface, #1a1d1b));
+  background: color-mix(in srgb, var(--dam-surface-muted) 70%, var(--dam-surface));
 }
 
 /* ---- Skeleton loading: solid fill (readable on light canvas) ----
