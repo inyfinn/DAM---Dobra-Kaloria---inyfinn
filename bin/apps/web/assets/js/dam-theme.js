@@ -19,23 +19,24 @@
   var DK_SURF_DARK = "#0B1814";
   var DK_CHROME_DARK = "#0E1E19";
   var DK_SUNKEN_DARK = "#081310";
-  /* Fiolet keeps lilac paper. DK / green-family use cooler near-white (G>=R)
-     so #005A29 does not opponent-process the page into rose. Not mint, not gray. */
+  /* Fiolet keeps lilac paper (DS §10.7). DK / green-family use cool near-white
+     (G>=R) — identity is accent, not a mint/sage bath. Tiles stay white so
+     they separate from canvas without dirtying the wash. */
   var SHARED_LIGHT_PAPER = {
     bg: "#F7F2F7",
-    surface: "#FDFBFD",
-    elevated: "#FDFBFD",
-    input: "#FDFBFD",
-    chrome: "#EFE6EC",
-    border: "#EFE6EC",
+    surface: "#FFFFFF",
+    elevated: "#FFFFFF",
+    input: "#FFFFFF",
+    chrome: "#E8DFEA",
+    border: "#E8DFEA",
     sidebar: "#F7F2F7",
     sidebarEnd: "#F7F2F7",
   };
   var DK_LIGHT_PAPER = {
     bg: "#F4F7F5",
-    surface: "#F8FAF9",
-    elevated: "#F8FAF9",
-    input: "#F8FAF9",
+    surface: "#FFFFFF",
+    elevated: "#FFFFFF",
+    input: "#FFFFFF",
     chrome: "#E4EBE7",
     border: "#E4EBE7",
     sidebar: "#F4F7F5",
@@ -190,15 +191,15 @@
   function colorifyToDam(id, label, group, _bgDark, _surfDark, accent, accentSoft) {
     var identity = String(accent || DK_ACCENT).toUpperCase();
     var slot3 = chromeAccent(identity);
-    var lightBg = paleHueTint(identity, 0.08);
-    var lightSurf = paleHueTint(identity, 0.035);
-    var lightElev = paleHueTint(identity, 0.055);
-    var lightChrome = paleHueTint(identity, 0.14);
-    var lightInput = paleHueTint(identity, 0.028);
+    var lightBg = paleHueTint(identity, 0.04);
+    var lightSurf = "#FFFFFF";
+    var lightElev = "#FFFFFF";
+    var lightChrome = paleHueTint(identity, 0.09);
+    var lightInput = "#FFFFFF";
     var lightText = hueTintedDark(slot3, 18, 0.28, 0);
     var lightMuted = hueTintedDark(slot3, 42, 0.22, 0);
     var darkBg = hueTintedDark(slot3, 4.12, 0.444, 14);
-    var darkSurf = hueTintedDark(slot3, 6.86, 0.385, 12);
+    var darkSurf = hueTintedDark(slot3, 6.86, 0.36, 12);
     var darkElev = hueTintedDark(slot3, 8.63, 0.32, 12);
     var darkBorder = hueTintedDark(slot3, 16.5, 0.28, 12);
     var darkMuted = hueTintedDark(slot3, 68, 0.18, 8);
@@ -677,10 +678,19 @@
       var surfRgb = hexToRgb(surface);
       var bgL = rgbToHsl(bgRgb.r, bgRgb.g, bgRgb.b).l;
       var surfL = rgbToHsl(surfRgb.r, surfRgb.g, surfRgb.b).l;
-      if (surfL <= bgL) {
-        surface = adjustHexHsl(bg, 6, 0);
+      if (surfL - bgL < 4) {
+        surface = adjustHexHsl(bg, 7, 0);
         elevated = adjustHexHsl(surface, 5, 0);
         chrome = adjustHexHsl(surface, 4, 0);
+      }
+    } else {
+      var lightBgRgb = hexToRgb(bg);
+      var lightSurfRgb = hexToRgb(surface);
+      var lightBgL = rgbToHsl(lightBgRgb.r, lightBgRgb.g, lightBgRgb.b).l;
+      var lightSurfL = rgbToHsl(lightSurfRgb.r, lightSurfRgb.g, lightSurfRgb.b).l;
+      if (lightSurfL - lightBgL < 3) {
+        surface = "#FFFFFF";
+        elevated = "#FFFFFF";
       }
     }
     if (isDark && scheme && scheme.id === "custom") {

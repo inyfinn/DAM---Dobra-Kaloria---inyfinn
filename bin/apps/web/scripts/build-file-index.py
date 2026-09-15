@@ -43,9 +43,30 @@ def _load_naming_dict() -> dict:
 
 NAMING = _load_naming_dict()
 
-_LIVE_PATH = Path(os.environ.get("DAM_INDEX_LIVE_FILE") or "")
-if not str(_LIVE_PATH):
-    _LIVE_PATH = WEB.parent / "desktop" / "data" / "index-live.json"
+def _default_index_live_path() -> Path:
+    return WEB.parent / "desktop" / "data" / "index-live.json"
+
+
+def resolve_index_live_path(raw: str | None = None) -> Path:
+    """Resolve DAM_INDEX_LIVE_FILE to a writable file path.
+
+    ``Path("")`` is ``Path(".")`` on Windows (empty name). ``with_suffix``
+    then raises ``ValueError: WindowsPath('.') has an empty name`` and the
+    whole product rebuild dies before scan. Treat empty / ``.`` as unset.
+    """
+    if raw is None:
+        raw = os.environ.get("DAM_INDEX_LIVE_FILE")
+    text = (raw or "").strip()
+    default = _default_index_live_path()
+    if not text or text in {".", "./", ".\\"}:
+        return default
+    path = Path(text)
+    if not path.name or path.name == ".":
+        return default
+    return path
+
+
+_LIVE_PATH = resolve_index_live_path()
 _LIVE_LAST = 0.0
 _LIVE_PRODUCT = ""
 _LIVE_SLOT = ""
@@ -119,7 +140,7 @@ def touch_index_live(
             ),
             flush=True,
         )
-    except OSError:
+    except (OSError, UnicodeEncodeError):
         pass
 
 

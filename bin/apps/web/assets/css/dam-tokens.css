@@ -13,7 +13,7 @@
   --dam-primary: #005A29;
   --primary-color: var(--dam-primary, #005A29);
   --dam-dark: #060F0C;
-  --dam-input-bg: #F8FAF9;
+  --dam-input-bg: #FFFFFF;
   --dam-chrome: #E4EBE7;
   --dam-chrome-ink: color-mix(in srgb, var(--dam-primary) 38%, var(--dam-text));
 
@@ -28,13 +28,14 @@
   /* Fallback accent when a token miss occurs (never violet) */
   --dam-fallback-accent: #005A29;
 
-  /* Surface ladder (light) — DK cool near-white (G>=R). Not lilac #F7F2F7
-     (reads rose next to #005A29). Not mint wash. Fiolet scheme paints its own paper in JS. */
-  --dam-surface-sunken: #F4F7F5;   /* wells — same paper as page */
-  --dam-surface: #F8FAF9;          /* tiles / widgets / history panel */
-  --dam-surface-muted: #F4F7F5;    /* page bg */
-  --dam-surface-elevated: #F8FAF9; /* rows — near-white cards, not mint */
-  --dam-surface-raised: #F8FAF9;   /* inputs / inner chrome */
+  /* Surface ladder (light) — DS §10.7 cool near-white (G>=R). Identity is
+     accent, not a sage bath. Tiles stay white so they lift off the canvas.
+     Fiolet scheme paints its own lilac paper in JS. */
+  --dam-surface-sunken: #F4F7F5;
+  --dam-surface: #FFFFFF;
+  --dam-surface-muted: #F4F7F5;
+  --dam-surface-elevated: #FFFFFF;
+  --dam-surface-raised: #FFFFFF;
   --dam-border: #E4EBE7;
   --dam-bg: var(--dam-surface-muted);
 
@@ -164,9 +165,7 @@ html[data-theme="dark"] {
   color-scheme: dark;
   background-color: var(--dam-bg, #060f0c);
 
-  /* Dark ladder (Dobra Kaloria, tuning = 0).
-     Page #060F0C is darker than tiles #0B1814 so cards read as tiles.
-     Inputs / inner chrome sit one hair above the tile (#0E1E19). */
+  /* Dark ladder — DS §10.7: canvas #060F0C, tiles #0B1814, chrome #0E1E19. */
   --dam-surface-sunken: #081310;
   --dam-surface: #0B1814;
   --dam-surface-muted: #060F0C;

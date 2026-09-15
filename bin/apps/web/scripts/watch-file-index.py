@@ -70,11 +70,42 @@ def watch_product_roots(base: Path) -> list[Path]:
     return [r for r in roots if r.is_dir()]
 
 
+def _builder_env() -> dict[str, str]:
+    """Same DAM_INDEX_LIVE_FILE contract as index_supervisor / bridge rebuild."""
+    try:
+        from index_supervisor import index_builder_env
+
+        return index_builder_env()
+    except Exception:
+        env = os.environ.copy()
+        live = DESKTOP_DATA / "index-live.json"
+        raw = (env.get("DAM_INDEX_LIVE_FILE") or "").strip()
+        if not raw or raw in {".", "./", ".\\"}:
+            env["DAM_INDEX_LIVE_FILE"] = str(live)
+        return env
+
+
 def watch_branding_roots(base: Path) -> list[Path]:
-    """Materials / print / branding folders — changes trigger branding pipeline only."""
+    """Full branding scan set from build-branding-index.scan_marketing_roots.
+
+    Any new file under these trees (image, video, svg, vector, doc — whatever
+    branding already indexes) must trigger the branding pipeline immediately.
+    Product DK/GC trees stay on watch_product_roots (file-index + branding hook).
+    """
+    polska = base / "- POLSKA"
+    eksport = base / "- EKSPORT"
     roots = [
-        base / "- POLSKA" / "03 - MATERIAŁY GRAFICZNE",
-        base / "- POLSKA" / "03 - MATERIALY GRAFICZNE",
+        polska / "- BRANDING i MARKA -",
+        polska / "02 - FIRMOWE MATERIAŁY",
+        polska / "02 - FIRMOWE MATERIALY",
+        polska / "03 - MATERIAŁY GRAFICZNE",
+        polska / "03 - MATERIALY GRAFICZNE",
+        polska / "04 - PROCESY",
+        polska / "05 - SOCIAL MEDIA",
+        polska / "06 - STRONY WWW - INTERNET",
+        polska / "07 - E-COMMERCE",
+        polska / "08 - KAMAPANIE",
+        eksport / "- BRANDING i MARKA -",
     ]
     out: list[Path] = []
     seen: set[str] = set()
@@ -360,6 +391,7 @@ def rebuild_with_lock(
             encoding="utf-8",
             errors="replace",
             bufsize=1,
+            env=_builder_env(),
         )
     except Exception as exc:  # noqa: BLE001
         _write_status(
