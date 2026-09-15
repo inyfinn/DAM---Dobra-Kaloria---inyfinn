@@ -123,8 +123,8 @@ html[data-theme="dark"] .geex-content__authentication__content__logo .logo-lite 
   border-radius: 999px !important;
   border: none !important;
   box-shadow: none !important;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 16%, transparent) !important;
-  color: #7A3AA8 !important;
+  background: color-mix(in srgb, var(--dam-primary) 16%, transparent) !important;
+  color: var(--dam-chrome-ink, var(--dam-text)) !important;
 }
 
 .geex-content__header__action .geex-content__header__badge.dam-badge--msg,
@@ -149,8 +149,8 @@ html[data-theme="dark"] .geex-content__authentication__content__logo .logo-lite 
   padding: 5px 12px;
   border: none;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 14%, transparent);
-  color: #7A3AA8;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, transparent);
+  color: var(--dam-chrome-ink, var(--dam-text));
   font-size: 12px;
   font-weight: 700;
   line-height: 1.25;
@@ -158,8 +158,8 @@ html[data-theme="dark"] .geex-content__authentication__content__logo .logo-lite 
   text-decoration: none;
 }
 .dam-lang-trigger:hover .dam-lang-code {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 22%, transparent);
-  color: #5c2d85;
+  background: color-mix(in srgb, var(--dam-primary) 22%, transparent);
+  color: var(--dam-chrome-ink, var(--dam-text));
 }
 .dam-lang-trigger {
   padding: 4px 2px !important;
@@ -169,7 +169,7 @@ html[data-theme="dark"] .geex-content__authentication__content__logo .logo-lite 
   flex: 0 0 auto;
 }
 .dam-lang-option.active .dam-lang-code {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
 }
 
 /* Cienkie ikony Unicons zamiast grubych fill-SVG z demo Geex */
@@ -177,13 +177,13 @@ html[data-theme="dark"] .geex-content__authentication__content__logo .logo-lite 
 .geex-content__header__quickaction__link > i.uil {
   font-size: 20px;
   line-height: 1;
-  color: #5a5a68;
+  color: var(--dam-text-muted);
   font-weight: 400;
 }
 
 .geex-content__header__quickaction__link:hover > .dam-header-icon,
 .geex-content__header__quickaction__link:hover > i.uil {
-  color: var(--primary-color, #AB54DB);
+  color: var(--primary-color, #005A29);
 }
 
 .geex-content__header__action {
@@ -323,7 +323,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .geex-content__header__popup--message .geex-content__header__popup__content::-webkit-scrollbar-thumb,
 .geex-content__header__popup--notification .geex-content__header__popup__content::-webkit-scrollbar-thumb {
-  background: var(--primary-color-transparent, color-mix(in srgb, var(--dam-primary, #ab54db) 35%, transparent));
+  background: var(--primary-color-transparent, color-mix(in srgb, var(--dam-primary, #005A29) 35%, transparent));
   border-radius: 8px;
 }
 
@@ -356,7 +356,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   font-size: 12px;
   font-weight: 700;
   color: #fff;
-  background: var(--primary-color, #AB54DB);
+  background: var(--primary-color, #005A29);
 }
 
 .geex-content__header__popup--notification .dam-popup-head__count {
@@ -389,14 +389,14 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-msg-tab:hover,
 .dam-msg-tab:focus-visible {
-  color: var(--primary-color, #AB54DB);
+  color: var(--primary-color, #005A29);
   outline: none;
 }
 
 .dam-msg-tab.is-active {
   font-weight: 700;
-  color: var(--primary-color, #AB54DB);
-  border-bottom-color: var(--primary-color, #AB54DB);
+  color: var(--primary-color, #005A29);
+  border-bottom-color: var(--primary-color, #005A29);
 }
 
 /* Wiersze: oddech, czytelna hierarchia */
@@ -425,7 +425,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .geex-content__header__popup--message .geex-content__header__popup__link:hover .geex-content__header__popup__item__title,
 .geex-content__header__popup--notification .geex-content__header__popup__link:hover .geex-content__header__popup__item__title {
-  color: var(--primary-color, #AB54DB);
+  color: var(--primary-color, #005A29);
 }
 
 .geex-content__header__popup--message .geex-content__header__popup__item__img,
@@ -438,8 +438,8 @@ body:has(.geex-customizer.active) .geex-content__header {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, transparent);
-  color: var(--primary-color, #AB54DB);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, transparent);
+  color: var(--primary-color, #005A29);
   font-size: 20px;
 }
 
@@ -504,8 +504,8 @@ body:has(.geex-customizer.active) .geex-content__header {
   border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, transparent);
-  color: var(--primary-color, #AB54DB);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, transparent);
+  color: var(--primary-color, #005A29);
 }
 
 .dam-msg-resize-handle {
@@ -565,7 +565,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-msg-footer-link a {
   font-size: 13px;
-  color: var(--primary-color, #AB54DB);
+  color: var(--primary-color, #005A29);
   font-weight: 600;
   text-decoration: none;
 }
@@ -665,8 +665,8 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-brand-chip-btn--dk.is-active {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 18%, transparent);
-  color: var(--dam-primary, #AB54DB);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 18%, transparent);
+  color: var(--dam-primary, #005A29);
   opacity: 1;
 }
 
@@ -685,7 +685,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-brand-chip-btn:focus-visible {
-  outline: 2px solid var(--dam-primary, #AB54DB);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 2px;
 }
 
@@ -735,8 +735,8 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-viz-viewbtn.is-active {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
-  color: var(--primary-color, #AB54DB);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
+  color: var(--primary-color, #005A29);
 }
 
 .dam-viz-scale {
@@ -749,7 +749,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-viz-scale input[type="range"] {
   width: 88px;
-  accent-color: var(--primary-color, #AB54DB);
+  accent-color: var(--primary-color, #005A29);
 }
 
 /* Viz studio: hero + Z tlem / Bez tla */
@@ -780,13 +780,13 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-viz-bg-tab:hover {
-  border-color: var(--primary-color, #AB54DB);
+  border-color: var(--primary-color, #005A29);
 }
 
 .dam-viz-bg-tab.is-active {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
-  border-color: var(--primary-color, #AB54DB);
-  color: var(--primary-color, #AB54DB);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
+  border-color: var(--primary-color, #005A29);
+  color: var(--primary-color, #005A29);
 }
 
 .dam-viz-bg-tab__n {
@@ -823,7 +823,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-viz-hero__open:focus-visible {
-  outline: 2px solid var(--primary-color, #AB54DB);
+  outline: 2px solid var(--primary-color, #005A29);
   outline-offset: 2px;
 }
 
@@ -855,7 +855,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-viz-hero__persp {
   font-weight: 700;
   font-size: 14px;
-  color: var(--primary-color, #AB54DB);
+  color: var(--primary-color, #005A29);
 }
 
 .dam-viz-hero__meta {
@@ -966,9 +966,9 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-add-variant-btn:hover {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, transparent) !important;
-  color: var(--dam-primary, #AB54DB) !important;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 4%, transparent) !important;
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 45%, transparent) !important;
+  color: var(--dam-primary, #005A29) !important;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 4%, transparent) !important;
 }
 
 .dam-lightbox {
@@ -1052,7 +1052,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   min-width: 0;
   min-height: 0;
   height: 100%;
-  background: #111318;
+  background: var(--dam-surface-sunken);
   position: relative;
   overflow: hidden;
 }
@@ -1105,7 +1105,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-lb-tool:hover:not(:disabled) {
-  background: var(--primary-color, #AB54DB);
+  background: var(--primary-color, #005A29);
 }
 
 .dam-lb-tool:disabled {
@@ -1131,7 +1131,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   overflow: auto;
   padding: 10px 14px;
   min-height: 0;
-  background: #111318;
+  background: var(--dam-surface-sunken);
 }
 
 .dam-lightbox__frame {
@@ -1213,8 +1213,8 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-lb-chip.is-active {
-  background: var(--primary-color, #AB54DB);
-  border-color: var(--primary-color, #AB54DB);
+  background: var(--primary-color, #005A29);
+  border-color: var(--primary-color, #005A29);
   color: #fff;
 }
 
@@ -1250,18 +1250,18 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-lb-size:hover {
-  border-color: var(--primary-color, #AB54DB);
+  border-color: var(--primary-color, #005A29);
 }
 
 .dam-lb-size:focus-visible {
-  outline: 2px solid var(--primary-color, #AB54DB);
+  outline: 2px solid var(--primary-color, #005A29);
   outline-offset: 2px;
 }
 
 .dam-lb-size.is-active {
-  border-color: var(--primary-color, #AB54DB);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, transparent);
-  box-shadow: inset 0 0 0 1px var(--primary-color, #AB54DB);
+  border-color: var(--primary-color, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, transparent);
+  box-shadow: inset 0 0 0 1px var(--primary-color, #005A29);
 }
 
 .dam-lb-size__code {
@@ -1289,7 +1289,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-lb-size.is-active .dam-lb-size__ext {
-  color: var(--primary-color, #AB54DB);
+  color: var(--primary-color, #005A29);
 }
 
 /* legacy variant cards (keep for safety if old markup) */
@@ -1537,13 +1537,13 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-lb-persp:hover {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, transparent);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 45%, transparent);
 }
 
 .dam-lb-persp.is-active {
-  border-color: var(--primary-color, #AB54DB);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, transparent);
-  box-shadow: inset 0 0 0 1px var(--primary-color, #AB54DB);
+  border-color: var(--primary-color, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, transparent);
+  box-shadow: inset 0 0 0 1px var(--primary-color, #005A29);
 }
 
 .dam-lb-persp__code {
@@ -1561,7 +1561,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-lb-persp.is-active .dam-lb-persp__code {
-  color: var(--primary-color, #AB54DB);
+  color: var(--primary-color, #005A29);
 }
 
 .dam-lb-size__tag {
@@ -1572,8 +1572,8 @@ body:has(.geex-customizer.active) .geex-content__header {
   text-transform: uppercase;
   padding: 1px 5px;
   border-radius: 4px;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
-  color: var(--primary-color, #AB54DB);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
+  color: var(--primary-color, #005A29);
   margin-top: 2px;
 }
 
@@ -1674,14 +1674,14 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-nav-back:hover,
 .dam-nav-back:focus-visible {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, transparent);
-  border-color: var(--dam-primary, #AB54DB);
-  color: var(--dam-primary, #AB54DB);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, transparent);
+  border-color: var(--dam-primary, #005A29);
+  color: var(--dam-primary, #005A29);
   outline: none;
 }
 
 .dam-nav-back:focus-visible {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dam-primary, #ab54db) 25%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dam-primary, #005A29) 25%, transparent);
 }
 
 .dam-nav-back i {
@@ -1721,7 +1721,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-breadcrumb__link {
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   text-decoration: none;
   font-weight: 500;
   padding: 4px 2px;
@@ -1877,15 +1877,15 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-cost-bucket:hover,
 .dam-cost-bucket:focus-visible {
-  border-color: var(--dam-primary, #AB54DB);
-  color: #7A3AA8;
+  border-color: var(--dam-primary, #005A29);
+  color: var(--dam-chrome-ink, var(--dam-text));
   outline: none;
 }
 
 .dam-cost-bucket.is-active {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
-  border-color: var(--dam-primary, #AB54DB);
-  color: #7A3AA8;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
+  border-color: var(--dam-primary, #005A29);
+  color: var(--dam-chrome-ink, var(--dam-text));
   font-weight: 600;
 }
 
@@ -1936,8 +1936,8 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-cost-picker__search:focus,
 .dam-cost-picker__select:focus {
-  border-color: var(--dam-primary, #AB54DB);
-  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 25%, transparent);
+  border-color: var(--dam-primary, #005A29);
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #005A29) 25%, transparent);
   outline-offset: 0;
 }
 
@@ -1950,8 +1950,8 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-cost-picker__selected {
   padding: 14px 16px;
   border-radius: 12px;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--dam-primary, #ab54db) 10%, transparent), color-mix(in srgb, var(--dam-primary, #ab54db) 4%, transparent));
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 22%, transparent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--dam-primary, #005A29) 10%, transparent), color-mix(in srgb, var(--dam-primary, #005A29) 4%, transparent));
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 22%, transparent);
 }
 
 .dam-cost-picker__selected-kicker {
@@ -1959,7 +1959,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #7A3AA8;
+  color: var(--dam-chrome-ink, var(--dam-text));
   margin-bottom: 4px;
 }
 
@@ -2004,7 +2004,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-cost-total {
-  background: linear-gradient(135deg, var(--dam-primary, #AB54DB), #7c3aed);
+  background: linear-gradient(135deg, var(--dam-primary, #005A29), color-mix(in srgb, var(--dam-primary) 72%, #000));
   color: #fff;
   border-radius: 12px;
   padding: 20px;
@@ -2158,7 +2158,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-search-hits a:hover,
 .dam-search-suggest a:hover {
-  background: #f8f4fd;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, var(--dam-surface));
 }
 
 .dam-search-hits--panel {
@@ -2185,12 +2185,12 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-search-hit__row:hover {
-  background: #f8f4fd;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, var(--dam-surface));
 }
 
 .dam-search-hit__row.is-selected {
-  background: #ede4fb;
-  box-shadow: inset 3px 0 0 #ab54db;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 16%, var(--dam-surface));
+  box-shadow: inset 3px 0 0 var(--dam-primary);
 }
 
 .dam-search-hit__check {
@@ -2208,8 +2208,8 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-search-hit__check.is-on {
-  border-color: #ab54db;
-  background: #ab54db;
+  border-color: var(--dam-primary);
+  background: var(--dam-primary);
   color: #fff;
 }
 
@@ -2278,7 +2278,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-search-scope-mount {
   margin-top: 0;
   padding: 8px 2px 2px;
-  border-top: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
 }
 .dam-search-scope {
   display: flex;
@@ -2515,8 +2515,8 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 .dam-assoc-edit-popover__list .dam-assoc-edit-popover__opt-row > .dam-assoc-edit-popover__expand:hover,
 .dam-assoc-edit-popover__pinned .dam-assoc-edit-popover__opt-row > .dam-assoc-edit-popover__expand:hover {
-  color: #7a3aa8;
-  background: #f8f4fd;
+  color: var(--dam-chrome-ink, var(--dam-text));
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, var(--dam-surface));
 }
 .dam-assoc-edit-popover__list .dam-search-hit__head,
 .dam-assoc-edit-popover__pinned .dam-search-hit__head {
@@ -2540,28 +2540,28 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-assoc-edit-popover__pinned .dam-search-hit__row:hover,
 .dam-assoc-edit-popover__list .dam-search-hit__row.is-preview-active,
 .dam-assoc-edit-popover__pinned .dam-search-hit__row.is-preview-active:not(.is-selected) {
-  background: #f8f4fd;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, var(--dam-surface));
 }
 .dam-assoc-edit-popover__list .dam-search-hit__row.is-selected,
 .dam-assoc-edit-popover__pinned .dam-search-hit__row.is-selected {
-  background: #ede4fb;
-  box-shadow: inset 3px 0 0 #ab54db;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 16%, var(--dam-surface));
+  box-shadow: inset 3px 0 0 var(--dam-primary);
 }
 .dam-assoc-edit-popover__pinned .dam-search-hit__row.is-selected {
   background: transparent;
-  box-shadow: inset 3px 0 0 #ab54db;
+  box-shadow: inset 3px 0 0 var(--dam-primary);
 }
 .dam-assoc-edit-popover__pinned .dam-search-hit__row.is-preview-active {
   background: transparent;
   box-shadow: none;
 }
 .dam-assoc-edit-popover__pinned .dam-search-hit__row.is-preview-active.is-selected {
-  box-shadow: inset 3px 0 0 #ab54db;
+  box-shadow: inset 3px 0 0 var(--dam-primary);
 }
 .dam-assoc-edit-popover__check-label {
   font-size: 11px;
   font-weight: 600;
-  color: #ab54db;
+  color: var(--dam-primary);
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
@@ -2573,7 +2573,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   min-width: 72px;
   max-width: 100%;
   justify-content: flex-end;
-  color: #ab54db;
+  color: var(--dam-primary);
 }
 .dam-search-hit--material .dam-search-hit__badge {
   color: var(--dam-primary);
@@ -2626,8 +2626,8 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-tag-chip:hover {
-  border-color: var(--dam-primary, #AB54DB);
-  color: var(--dam-primary, #AB54DB);
+  border-color: var(--dam-primary, #005A29);
+  color: var(--dam-primary, #005A29);
 }
 
 .dam-explorer-card {
@@ -2645,8 +2645,8 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-explorer-card:hover {
-  border-color: var(--dam-primary, #AB54DB);
-  background: #fbf7fe;
+  border-color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface));
 }
 
 .dam-explorer-card strong {
@@ -2695,19 +2695,19 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-viz-zoom-control__label i {
   font-size: 14px;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
 }
 
 /* Design system (globalnie): zaden suwak w panelu DAM nie ma prawa uzyc
    domyslnego akcentu przegladarki (zolty na Windows/Chrome) - zawsze primary. */
 input[type="range"] {
-  accent-color: var(--dam-primary, #AB54DB);
+  accent-color: var(--dam-primary, #005A29);
 }
 
 .dam-viz-zoom-control input[type="range"] {
   width: 110px;
   max-width: 18vw;
-  accent-color: var(--dam-primary, #AB54DB);
+  accent-color: var(--dam-primary, #005A29);
   cursor: pointer;
 }
 
@@ -2715,7 +2715,7 @@ input[type="range"] {
   min-width: 3.2em;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
 }
 
 @media (max-width: 575.98px) {
@@ -2928,10 +2928,10 @@ html[data-theme="dark"] .dam-viz-card .dam-viz-card__title {
   transform-origin: center center;
 }
 html[data-theme="dark"] .dam-viz-thumb {
-  background: var(--dam-surface, #1e1d24);
+  background: var(--dam-surface);
 }
 html[data-theme="dark"] .dam-viz-thumb__img {
-  background-color: var(--dam-surface, #1e1d24);
+  background-color: var(--dam-surface);
   background-image: none;
 }
 
@@ -2969,8 +2969,8 @@ html[data-theme="dark"] .dam-viz-thumb__img {
    marka=fiolet, kategoria/typ=zielony, smak/subcat=fiolet, opakowanie/nosnik=pomarancz,
    warianty=teal (nie czerwony), jezyk=mietowy, brak indeksu=szary jasniejszy tekst */
 .dam-viz-badge--brand {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
-  color: var(--dam-primary, #AB54DB);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
+  color: var(--dam-primary, #005A29);
 }
 
 .dam-viz-badge--cat {
@@ -2994,8 +2994,8 @@ html[data-theme="dark"] .dam-viz-thumb__img {
 }
 
 .dam-viz-badge--subcat {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, transparent);
-  color: #7A3AA8;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, transparent);
+  color: var(--dam-chrome-ink, var(--dam-text));
 }
 
 .dam-viz-badge--carrier {
@@ -3004,8 +3004,8 @@ html[data-theme="dark"] .dam-viz-thumb__img {
 }
 
 .dam-viz-badge--meta {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
-  color: var(--dam-primary, #AB54DB);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
+  color: var(--dam-primary, #005A29);
 }
 
 .dam-viz-badge--variants {
@@ -3125,8 +3125,8 @@ html[data-theme="dark"] .dam-viz-thumb__img {
 .dam-viz-card__show-indexes.geex-btn:hover,
 .dam-viz-card__show-indexes.geex-btn:focus-visible {
   border: none !important;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, transparent) !important;
-  color: var(--dam-primary, #ab54db);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, transparent) !important;
+  color: var(--dam-primary, #005A29);
   box-shadow: none !important;
 }
 
@@ -3165,10 +3165,10 @@ body.file-manager .geex-content__header__subtitle {
 .geex-sidebar__menu__link.active,
 .geex-sidebar__menu__link[aria-current="page"] {
   position: relative;
-  color: var(--dam-primary, #ab54db) !important;
+  color: var(--dam-primary, #005A29) !important;
   /* Soft left radius so accent bar + fill meet (18px left radius was leaving a white crescent) */
   border-radius: 6px 18px 18px 6px !important;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 16%, transparent) !important;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 16%, transparent) !important;
   background-clip: border-box !important;
   font-weight: 600;
   box-shadow: none !important;
@@ -3185,7 +3185,7 @@ body.file-manager .geex-content__header__subtitle {
   bottom: var(--dam-sidebar-nav-active-inset, 6.8px);
   width: 3px;
   border-radius: 0 2px 2px 0;
-  background: var(--dam-primary, #ab54db);
+  background: var(--dam-primary, #005A29);
   pointer-events: none;
   z-index: 1;
 }
@@ -3201,13 +3201,13 @@ body.file-manager .geex-content__header__subtitle {
 .geex-sidebar__menu__item.active > .geex-sidebar__menu__link i,
 .geex-sidebar__menu__link.active i,
 .geex-sidebar__menu__link[aria-current="page"] i {
-  color: var(--dam-primary, #ab54db) !important;
+  color: var(--dam-primary, #005A29) !important;
 }
 
 body.dam-sidebar-collapsed .geex-sidebar__menu__item.active > .geex-sidebar__menu__link,
 body.dam-sidebar-collapsed .geex-sidebar__menu__link.active,
 body.dam-sidebar-collapsed .geex-sidebar__menu__link[aria-current="page"] {
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--dam-primary, #ab54db) 55%, transparent);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--dam-primary, #005A29) 55%, transparent);
 }
 
 /* ---------- Sidebar collapse ---------- */
@@ -3305,15 +3305,15 @@ body.dam-sidebar-collapsed .geex-sidebar__menu__link[aria-current="page"] {
   margin: 0;
   flex-shrink: 0;
   z-index: 60;
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 35%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 35%, transparent);
   background: #fff;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   border-radius: 8px;
   cursor: pointer;
   pointer-events: auto;
 }
 .dam-sidebar-collapse-btn--legacy {
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 35%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 35%, transparent);
   border-radius: 8px;
   background: rgba(255,255,255,0.06);
   color: inherit;
@@ -3342,7 +3342,7 @@ body.dam-sidebar-collapsed .geex-sidebar {
   z-index: 100;
   /* cienki scroll 2px */
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, transparent) transparent;
+  scrollbar-color: color-mix(in srgb, var(--dam-primary, #005A29) 45%, transparent) transparent;
 }
 body.dam-sidebar-collapsed .geex-sidebar::-webkit-scrollbar {
   width: 2px;
@@ -3351,7 +3351,7 @@ body.dam-sidebar-collapsed .geex-sidebar::-webkit-scrollbar-track {
   background: transparent;
 }
 body.dam-sidebar-collapsed .geex-sidebar::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 45%, transparent);
   border-radius: 2px;
 }
 /* Zwinięte menu: TYLKO ikony - etykiety ukryte (wczesniej selector zle zlaczone z footerem) */
@@ -3434,7 +3434,7 @@ body.dam-sidebar-has-compact-footer .geex-sidebar__footer__author {
   font-weight: 600;
 }
 .dam-footer-author-link:hover {
-  color: var(--primary-color, #AB54DB);
+  color: var(--primary-color, #005A29);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -3568,12 +3568,12 @@ body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link:hover i,
 body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link.default-active i,
 body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link.active i,
 body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link[aria-current="page"] i {
-  color: var(--dam-primary, #ab54db) !important;
+  color: var(--dam-primary, #005A29) !important;
 }
 body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link:hover svg path,
 body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link.active svg path,
 body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link[aria-current="page"] svg path {
-  fill: var(--dam-primary, #ab54db);
+  fill: var(--dam-primary, #005A29);
 }
 html[data-theme="dark"] body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link i {
   color: #c4c8d2 !important;
@@ -3622,7 +3622,7 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 /* Tablica wyszukiwania: input + chipy + wyniki w jednym polu (light surface) */
 .dam-search-wrap--panel {
   background: var(--dam-surface, #fff);
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 32%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 32%, transparent);
   border-radius: 12px;
   /* Rowny rytm z .dam-viz-secondary-filters / filtrami meta */
   padding: var(--dam-space-filter-pad-y) var(--dam-panel-pad-x);
@@ -3642,7 +3642,7 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   font-size: 20px;
   pointer-events: none;
 }
@@ -3650,7 +3650,7 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   width: 100%;
   min-height: 44px;
   padding: 10px 40px 10px 40px !important;
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 22%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 22%, transparent) !important;
   border-radius: 9px !important;
   background: var(--dam-surface-muted, #faf9fc) !important;
   font-size: 14px !important;
@@ -3659,12 +3659,12 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 }
 .dam-search-wrap--panel .dam-search-input {
   border-color: transparent !important;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 6%, var(--dam-surface-muted, #f4f1fa)) !important;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 6%, var(--dam-surface-muted, #f4f1fa)) !important;
 }
 .dam-search-wrap--panel .dam-search-input:focus {
   border-color: transparent !important;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, var(--dam-surface-muted, #efeaf8)) !important;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #ab54db) 18%, transparent) !important;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, var(--dam-surface-muted, #efeaf8)) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #005A29) 18%, transparent) !important;
 }
 /* Wyniki w tej samej bialej tablicy (nie osobny overlay na szarym) */
 .dam-search-wrap--panel .dam-search-results {
@@ -3674,7 +3674,7 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   top: auto;
   margin-top: 8px;
   border: none;
-  border-top: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 14%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 14%, transparent);
   border-radius: 0;
   box-shadow: none;
   max-height: min(320px, 45vh);
@@ -3682,7 +3682,7 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 .dam-search-wrap--panel .dam-search-scope-mount {
   margin-top: 8px;
   padding: 8px 0 0;
-  border-top: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
 }
 /* Picker / popover: jedno pole, bez podwojnej ramki (panel padding + input pill) */
 .dam-search-wrap--picker {
@@ -3698,7 +3698,7 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 .dam-search-wrap--picker .dam-search-input {
   min-height: 40px;
   padding: 8px 12px 8px 38px !important;
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 28%, #d8d8e0) !important;
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 28%, #d8d8e0) !important;
   border-radius: 10px !important;
   background: var(--dam-surface, #fff) !important;
   font-size: 13px !important;
@@ -3706,9 +3706,9 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   box-shadow: 0 1px 2px rgba(23, 22, 30, 0.04);
 }
 .dam-search-wrap--picker .dam-search-input:focus {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 55%, #d8d8e0) !important;
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 55%, #d8d8e0) !important;
   background: var(--dam-surface, #fff) !important;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #ab54db) 16%, transparent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #005A29) 16%, transparent) !important;
 }
 .dam-search-wrap--picker .dam-search-input-wrap .uil-search {
   left: 11px;
@@ -3751,8 +3751,8 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   padding: 0;
 }
 .dam-search-clear:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, transparent);
-  color: var(--dam-primary, #AB54DB);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, transparent);
+  color: var(--dam-primary, #005A29);
 }
 .dam-search-clear[hidden] {
   display: none !important;
@@ -3762,10 +3762,10 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   line-height: 1;
 }
 .dam-search-input:focus {
-  border-color: var(--dam-primary, #AB54DB) !important;
+  border-color: var(--dam-primary, #005A29) !important;
   outline: none;
   background: #fff !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dam-primary, #ab54db) 15%, transparent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dam-primary, #005A29) 15%, transparent) !important;
 }
 
 /* Secondary filters (Wizualizacje / Eksplorer / Branding meta): rytm jak Branding meta */
@@ -4129,7 +4129,7 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 }
 .dam-tag-group--smak .dam-tag-pill,
 .dam-prod-tag.dam-tag-group--smak {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
   color: #8B3DB8;
 }
 .dam-tag-group--typ .dam-tag-pill,
@@ -4156,8 +4156,8 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 }
 /* Podkategoria (np. "Kulki Surowe") - ten sam fiolet co dam-viz-badge--subcat */
 .dam-tag-group--podkategoria .dam-tag-pill {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, transparent);
-  color: #7A3AA8;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, transparent);
+  color: var(--dam-chrome-ink, var(--dam-text));
 }
 .dam-tag-groups--subcat {
   margin-top: -4px;
@@ -4167,10 +4167,10 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   filter: brightness(0.95);
 }
 .dam-tag-more {
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 35%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 35%, transparent);
   border-radius: 999px;
   background: #fff;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
@@ -4179,12 +4179,12 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   flex: 0 0 auto;
 }
 .dam-tag-more:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, transparent);
 }
 .dam-tag-more-legacy {
   border: none;
   background: none;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   font-size: 11px;
   cursor: pointer;
   padding: 2px 6px;
@@ -4597,13 +4597,13 @@ body::-webkit-scrollbar-button,
 }
 .dam-nav-circles .dam-viz-icon-btn--explorer,
 .dam-nav-circles--tiles .dam-viz-icon-btn--explorer {
-  border-color: var(--dam-primary, #ab54db);
+  border-color: var(--dam-primary, #005A29);
   color: #fff;
-  background: var(--dam-primary, #ab54db);
+  background: var(--dam-primary, #005A29);
 }
 .dam-nav-circles .dam-viz-icon-btn--explorer:hover:not(:disabled):not(.is-disabled),
 .dam-nav-circles--tiles .dam-viz-icon-btn--explorer:hover:not(:disabled):not(.is-disabled) {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 88%, #000);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 88%, #000);
   color: #fff;
 }
 .dam-nav-circles .dam-viz-icon-btn:not(.dam-viz-icon-btn--explorer):hover:not(:disabled):not(.is-disabled),
@@ -4716,12 +4716,12 @@ body::-webkit-scrollbar-button,
   border-radius: 8px;
   font-size: 13px;
   color: var(--dam-text, #292640);
-  background: var(--dam-surface-elevated, var(--dam-surface, #fff));
+  background: var(--dam-input-bg, var(--dam-surface-raised, var(--dam-surface, #fff)));
 }
 .dam-life-hist__search-input:focus {
-  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 45%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #005A29) 45%, transparent);
   outline-offset: 1px;
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 40%, rgba(70, 66, 85, 0.14));
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 40%, rgba(70, 66, 85, 0.14));
 }
 .dam-life-hist__detail {
   display: block;
@@ -4957,8 +4957,8 @@ body::-webkit-scrollbar-button,
   padding: 8px 12px;
   margin-bottom: 10px;
   border-radius: 8px;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 20%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 20%, transparent);
   font-size: 12px;
   color: #464255;
 }
@@ -5007,9 +5007,9 @@ body::-webkit-scrollbar-button,
   cursor: pointer;
 }
 .dam-welcome-link:hover {
-  border-color: var(--dam-primary, #AB54DB);
-  background: #fbf7fe;
-  color: var(--dam-primary, #AB54DB);
+  border-color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface));
+  color: var(--dam-primary, #005A29);
 }
 .dam-welcome-hint {
   font-size: 11px;
@@ -5048,10 +5048,10 @@ body::-webkit-scrollbar-button,
   width: 36px;
   height: 36px;
   padding: 0;
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 40%, transparent);
   border-radius: 10px;
   background: #fff;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(70, 66, 85, 0.06);
   transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
@@ -5061,8 +5061,8 @@ body::-webkit-scrollbar-button,
   line-height: 1;
 }
 .dam-panel-nav-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, transparent);
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 35%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, transparent);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 35%, transparent);
 }
 .dam-panel-nav-btn:disabled {
   opacity: 0.35;
@@ -5070,7 +5070,7 @@ body::-webkit-scrollbar-button,
   color: #8b8d97;
 }
 .dam-panel-nav-btn:focus-visible {
-  outline: 2px solid var(--dam-primary, #AB54DB);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 2px;
 }
 .dam-panel-head__place {
@@ -5087,9 +5087,9 @@ body::-webkit-scrollbar-button,
   height: 44px;
   flex-shrink: 0;
   border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 28%, transparent);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, transparent);
-  color: var(--dam-primary, #AB54DB);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 28%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, transparent);
+  color: var(--dam-primary, #005A29);
 }
 .dam-panel-head__icon i {
   font-size: 22px;
@@ -5182,7 +5182,7 @@ body::-webkit-scrollbar-button,
   align-self: center;
 }
 .dam-prod-row__chevron {
-  color: var(--dam-primary, #ab54db);
+  color: var(--dam-primary, #005A29);
   font-size: 22px;
   line-height: 1;
   flex-shrink: 0;
@@ -5194,7 +5194,7 @@ body::-webkit-scrollbar-button,
 }
 .dam-prod-row:hover {
   background: #f4f1f9;
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 22%, transparent);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 22%, transparent);
 }
 /* Liczba wariantow po prawej: styl jak .dam-tag-more, +100% (22px) + tag WARIANTY */
 .dam-prod-row__variants {
@@ -5214,10 +5214,10 @@ body::-webkit-scrollbar-button,
   align-items: center;
   justify-content: center;
   min-width: 2.1em;
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 28%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 28%, transparent);
   border-radius: 999px;
   background: #fff;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   font-size: 20px;
   font-weight: 500;
   line-height: 1.2;
@@ -5272,8 +5272,8 @@ body::-webkit-scrollbar-button,
   white-space: nowrap;
 }
 .dam-index-chip--admin {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, transparent);
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 28%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 28%, transparent);
   padding: 2px 4px 2px 10px;
   border-radius: 999px;
   font-weight: 500;
@@ -5311,8 +5311,8 @@ body::-webkit-scrollbar-button,
   flex-shrink: 0;
   min-height: 24px;
   border: 0;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 14%, transparent);
-  color: #7A3AA8;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, transparent);
+  color: var(--dam-chrome-ink, var(--dam-text));
   font-size: calc(var(--dam-tag-fs-pill, 10.5px) + 1px);
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -5325,18 +5325,18 @@ body::-webkit-scrollbar-button,
   transition: background 0.18s ease, color 0.18s ease, transform 0.12s ease;
 }
 .dam-index-action:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 22%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 22%, transparent);
   color: #5f2d82;
 }
 .dam-index-action:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 45%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #005A29) 45%, transparent);
   outline-offset: 2px;
 }
 .dam-index-action:active {
   transform: scale(0.98);
 }
 .dam-index-chip--editing .dam-index-action {
-  background: var(--dam-primary, #AB54DB);
+  background: var(--dam-primary, #005A29);
   color: #fff;
 }
 .dam-index-chip--editing .dam-index-action:hover {
@@ -5396,7 +5396,7 @@ body::-webkit-scrollbar-button,
   border-color: #f5c4c3;
 }
 .dam-rev-row.is-latest {
-  border-left: 3px solid var(--dam-primary, #AB54DB);
+  border-left: 3px solid var(--dam-primary, #005A29);
 }
 .dam-rev-latest-tag {
   display: inline-block;
@@ -5404,7 +5404,7 @@ body::-webkit-scrollbar-button,
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   margin-left: 4px;
 }
 .dam-rev-row__main {
@@ -5421,9 +5421,9 @@ body::-webkit-scrollbar-button,
   margin-top: 2px;
 }
 .dam-rev-open {
-  border: 1px solid var(--dam-primary, #AB54DB);
+  border: 1px solid var(--dam-primary, #005A29);
   background: #fff;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   border-radius: 6px;
   padding: 4px 10px;
   font-size: 12px;
@@ -5516,12 +5516,12 @@ button.dam-status-badge.dam-tag-editable:hover {
   transform: translateY(1px);
 }
 .dam-lifecycle__btn:focus-visible {
-  outline: 2px solid var(--dam-primary, #AB54DB);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 2px;
 }
 .dam-lifecycle__btn.is-on {
-  border-color: var(--dam-primary, #AB54DB);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
+  border-color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
   color: #7a2fa8;
 }
 .dam-lifecycle__btn--ok.is-on {
@@ -5549,7 +5549,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   pointer-events: none;
   position: relative;
   color: transparent !important;
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, #e7e7e7);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 45%, #e7e7e7);
   background: #faf7fd;
 }
 .dam-lifecycle__btn.is-pending::after {
@@ -5561,12 +5561,12 @@ button.dam-status-badge.dam-tag-editable:hover {
   height: 14px;
   margin: -7px 0 0 -7px;
   border: 2px solid #e0d0ef;
-  border-top-color: var(--dam-primary, #ab54db);
+  border-top-color: var(--dam-primary, #005A29);
   border-radius: 50%;
   animation: dam-db-spin 0.7s linear infinite;
 }
 .dam-carrier-card.is-lifecycle-pending {
-  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 35%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #005A29) 35%, transparent);
   outline-offset: -1px;
 }
 .dam-carrier-card.is-lifecycle-pending .dam-lifecycle__btn:not(.is-pending) {
@@ -5606,7 +5606,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   height: 20px;
   padding: 0 6px;
   border-radius: 999px;
-  background: var(--dam-primary, #ab54db);
+  background: var(--dam-primary, #005A29);
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -5678,7 +5678,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 
 .dam-lifecycle-history__letter {
   font-weight: 600;
-  color: var(--dam-primary, #ab54db);
+  color: var(--dam-primary, #005A29);
 }
 
 .dam-lifecycle-history__meta {
@@ -5769,7 +5769,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 .dam-file-row__icon {
   font-size: 18px;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   width: 22px;
   text-align: center;
   flex-shrink: 0;
@@ -5815,11 +5815,11 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 .dam-file-copy:hover,
 .dam-file-reveal:hover {
-  color: var(--dam-primary, #AB54DB);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, transparent);
+  color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, transparent);
 }
 .dam-file-reveal {
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
 }
 .dam-carrier-toggle__actions {
   display: inline-flex;
@@ -6087,14 +6087,14 @@ button.dam-status-badge.dam-tag-editable:hover {
   cursor: pointer;
 }
 .dam-folder-item:hover {
-  background: #f8f4fd;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, var(--dam-surface));
 }
 .dam-folder-item.is-active {
   background: #f4ecfd;
 }
 .dam-folder-item__icon {
   font-size: 18px;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
 }
 .dam-folder-item__name {
   /* Global: jak .dam-prod-row__title */
@@ -6267,7 +6267,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   transform: translateX(14px);
 }
 .dam-switch__input:focus-visible + .dam-switch__track {
-  outline: 2px solid var(--primary-color, #AB54DB);
+  outline: 2px solid var(--primary-color, #005A29);
   outline-offset: 2px;
 }
 .dam-switch__label {
@@ -6320,15 +6320,15 @@ button.dam-status-badge.dam-tag-editable:hover {
 
 .dam-filter-trigger:hover,
 .dam-filter-trigger:focus-visible {
-  border-color: var(--dam-primary, #AB54DB);
-  color: var(--dam-primary, #AB54DB);
+  border-color: var(--dam-primary, #005A29);
+  color: var(--dam-primary, #005A29);
   outline: none;
 }
 
 .dam-filter-trigger.is-active {
-  border-color: var(--dam-primary, #AB54DB);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 7%, transparent);
-  color: var(--dam-primary, #AB54DB);
+  border-color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 7%, transparent);
+  color: var(--dam-primary, #005A29);
 }
 
 /* Dropdown panel */
@@ -6376,7 +6376,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-filter-cb {
   width: 15px;
   height: 15px;
-  accent-color: var(--dam-primary, #AB54DB);
+  accent-color: var(--dam-primary, #005A29);
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -6402,8 +6402,8 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 
 .dam-filter-btn:hover {
-  border-color: var(--dam-primary, #AB54DB);
-  color: var(--dam-primary, #AB54DB);
+  border-color: var(--dam-primary, #005A29);
+  color: var(--dam-primary, #005A29);
 }
 
 /* ================================================================== */
@@ -6438,7 +6438,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-brand-check input[type="checkbox"] {
   width: 14px;
   height: 14px;
-  accent-color: var(--dam-primary, #AB54DB);
+  accent-color: var(--dam-primary, #005A29);
   cursor: pointer;
 }
 
@@ -6461,8 +6461,8 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 
 .dam-brand-btn:hover {
-  border-color: var(--dam-primary, #AB54DB);
-  color: var(--dam-primary, #AB54DB);
+  border-color: var(--dam-primary, #005A29);
+  color: var(--dam-primary, #005A29);
 }
 
 .dam-brand-chip {
@@ -6484,7 +6484,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 /* Explorer v3: MIX collapsible section                               */
 /* ================================================================== */
 .dam-mix-section {
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 18%, transparent);
   border-radius: 12px;
   margin: 0 0 18px;
   overflow: hidden;
@@ -6498,7 +6498,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   gap: 8px;
   width: 100%;
   padding: 12px 14px;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 6%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 6%, transparent);
   border: none;
   cursor: pointer;
   font-size: 12px;
@@ -6508,7 +6508,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 
 .dam-mix-toggle:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 11%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 11%, transparent);
 }
 
 .dam-mix-toggle i {
@@ -6567,9 +6567,9 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 
 .dam-carrier-card.is-expanded {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, transparent);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 45%, transparent);
   background: #fff;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
 }
 
 .dam-carrier-card--aktualne {
@@ -6627,17 +6627,17 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 
 .dam-carrier-toggle-row:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 5%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 5%, transparent);
 }
 
 .dam-carrier-toggle-row:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 45%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #005A29) 45%, transparent);
   outline-offset: -2px;
   border-radius: 10px;
 }
 
 .dam-carrier-card.is-expanded .dam-carrier-toggle-row {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 4%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 4%, transparent);
 }
 
 .dam-carrier-toggle-row__body {
@@ -7043,7 +7043,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   width: 28px;
   height: 28px;
   font-size: 20px;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   text-align: center;
   line-height: 1;
   pointer-events: none;
@@ -7184,8 +7184,8 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 
 .dam-check-action:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
-  color: var(--dam-primary, #AB54DB);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
+  color: var(--dam-primary, #005A29);
 }
 
 .dam-check-action--danger:hover {
@@ -7203,7 +7203,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-elements-picker__use {
   white-space: nowrap;
   font-weight: 600;
-  color: var(--dam-primary, #AB54DB) !important;
+  color: var(--dam-primary, #005A29) !important;
 }
 
 /* ================================================================== */
@@ -7276,7 +7276,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   border: none;
   border-radius: 3px;
   cursor: pointer;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   transition: opacity 0.12s ease;
 }
 
@@ -7302,7 +7302,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-show-older-btn {
   border: none;
   background: none;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
@@ -7560,8 +7560,8 @@ button.dam-status-badge.dam-tag-editable:hover {
   font-size: 18px;
 }
 .dam-viz-modal__zoom-btn:hover {
-  background: #f8f4fd;
-  color: var(--dam-primary, #AB54DB);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, var(--dam-surface));
+  color: var(--dam-primary, #005A29);
 }
 .dam-viz-modal__zoom-label {
   min-width: 44px;
@@ -7579,7 +7579,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 
 .dam-viz-modal__zoom-label[contenteditable="true"]:focus {
-  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 35%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #005A29) 35%, transparent);
   outline-offset: 1px;
   border-bottom-color: transparent;
 }
@@ -7745,13 +7745,13 @@ button.dam-status-badge.dam-tag-editable:hover {
   color: inherit;
 }
 .dam-viz-modal__variant:hover {
-  border-color: var(--dam-primary, #AB54DB);
-  background: #fbf7fe;
+  border-color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface));
 }
 .dam-viz-modal__variant.is-active {
-  border-color: var(--dam-primary, #AB54DB);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #ab54db) 20%, transparent);
-  background: #fbf7fe;
+  border-color: var(--dam-primary, #005A29);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #005A29) 20%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface));
 }
 .dam-viz-modal__variant-thumb {
   width: 56px;
@@ -7809,8 +7809,8 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 .dam-viz-missing-lang-request {
   border: none;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 14%, transparent);
-  color: var(--dam-primary, #AB54DB);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, transparent);
+  color: var(--dam-primary, #005A29);
   border-radius: 50%;
   width: 22px;
   height: 22px;
@@ -7827,7 +7827,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   inset: -8px;
 }
 .dam-viz-missing-lang-request:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 28%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 28%, transparent);
 }
 
 .dam-viz-modal__actions {
@@ -7883,7 +7883,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-viz-modal__actions .geex-btn:not(.geex-btn--primary),
 .dam-viz-modal__actions .geex-btn.dam-win-btn:not(.geex-btn--primary) {
   background: #fff;
-  border-color: var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #ab54db) 50%, transparent));
+  border-color: var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #005A29) 50%, transparent));
 }
 
 .dam-viz-modal__cta {
@@ -7957,11 +7957,11 @@ button.dam-status-badge.dam-tag-editable:hover {
 
 .dam-viz-modal__carrier--editable {
   cursor: pointer;
-  text-decoration: underline dotted color-mix(in srgb, var(--dam-primary, #ab54db) 45%, transparent);
+  text-decoration: underline dotted color-mix(in srgb, var(--dam-primary, #005A29) 45%, transparent);
   text-underline-offset: 3px;
 }
 .dam-viz-modal__carrier--editable:hover {
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
 }
 
 .dam-viz-icon-btn {
@@ -7970,9 +7970,9 @@ button.dam-status-badge.dam-tag-editable:hover {
   height: 36px;
   border-radius: 50%;
   /* Global outline family: 50% transparent border (token --dam-btn-outline-border) */
-  border: 1.5px solid var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #ab54db) 50%, transparent));
+  border: 1.5px solid var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #005A29) 50%, transparent));
   background: transparent;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -8005,16 +8005,16 @@ button.dam-status-badge.dam-tag-editable:hover {
   flex: 0 0 21.6px;
 }
 .dam-viz-icon-btn--explorer {
-  border-color: var(--dam-primary, #ab54db);
-  background: var(--dam-primary, #ab54db);
+  border-color: var(--dam-primary, #005A29);
+  background: var(--dam-primary, #005A29);
   color: #fff;
 }
 .dam-viz-icon-btn--explorer:hover:not(:disabled):not(.is-disabled) {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 88%, #000);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 88%, #000);
   color: #fff;
 }
 .dam-viz-icon-btn:hover:not(:disabled):not(.is-disabled):not(.dam-viz-icon-btn--explorer) {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, transparent);
 }
 .dam-viz-icon-btn:disabled,
 .dam-viz-icon-btn.is-disabled {
@@ -8094,7 +8094,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   position: fixed;
   z-index: 20060;
   background: #fff;
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 22%, transparent);
   border-radius: 10px;
   box-shadow: 0 10px 28px rgba(70, 66, 85, 0.2);
   padding: 12px 14px;
@@ -8135,17 +8135,17 @@ button.dam-status-badge.dam-tag-editable:hover {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 40%, transparent);
   border-radius: 999px;
   background: #fff;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   font-size: 12px;
   font-weight: 600;
   padding: 5px 12px;
   cursor: pointer;
 }
 .dam-variant-info__copy:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, transparent);
 }
 
 /* Tooltip: NAD modalem (9999) i popoverem (10060). Szeroki, cienki tekst. */
@@ -8159,7 +8159,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   letter-spacing: 0.01em;
   padding: 8px 14px;
   border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 22%, transparent);
   pointer-events: none;
   min-width: 160px;
   max-width: min(520px, calc(100vw - 24px));
@@ -8200,7 +8200,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 
 .dam-db-status:hover,
 .dam-db-status:focus-visible {
-  background: color-mix(in srgb, var(--primary-color, #ab54db) 10%, var(--gray-color, #eceaf3));
+  background: color-mix(in srgb, var(--primary-color, #005A29) 10%, var(--gray-color, #eceaf3));
   outline: none;
 }
 .dam-db-status__label {
@@ -8257,8 +8257,8 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-db-status__refresh:focus-visible,
 .dam-root-status__refresh:hover,
 .dam-root-status__refresh:focus-visible {
-  color: var(--primary-color, #ab54db);
-  background: color-mix(in srgb, var(--primary-color, #ab54db) 10%, transparent);
+  color: var(--primary-color, #005A29);
+  background: color-mix(in srgb, var(--primary-color, #005A29) 10%, transparent);
   outline: none;
 }
 .dam-db-status__refresh.is-busy i,
@@ -8354,13 +8354,13 @@ button.dam-db-mode-chip {
   font-family: inherit;
 }
 button.dam-db-mode-chip[aria-pressed="true"] {
-  border-color: var(--dam-primary, #AB54DB);
-  background: var(--dam-primary, #AB54DB);
+  border-color: var(--dam-primary, #005A29);
+  background: var(--dam-primary, #005A29);
   color: #fff;
   box-shadow: none;
 }
 button.dam-db-mode-chip:focus-visible {
-  outline: 2px solid var(--dam-primary, #AB54DB);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 2px;
 }
 .dam-db-mode-chip {
@@ -8390,17 +8390,17 @@ button.dam-db-mode-chip:focus-visible {
   pointer-events: none;
 }
 .dam-db-mode-chip:hover {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 35%, transparent);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 6%, transparent);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 35%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 6%, transparent);
 }
 .dam-db-mode-chip:has(input:checked) {
-  border-color: var(--dam-primary, #AB54DB);
-  background: var(--dam-primary, #AB54DB);
+  border-color: var(--dam-primary, #005A29);
+  background: var(--dam-primary, #005A29);
   color: #fff;
   box-shadow: none;
 }
 .dam-db-mode-chip:has(input:focus-visible) {
-  outline: 2px solid var(--dam-primary, #AB54DB);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 2px;
 }
 .dam-db-panel__sources {
@@ -8427,16 +8427,16 @@ button.dam-db-mode-chip:focus-visible {
   transition: border-color 0.2s ease, background-color 0.2s ease, opacity 0.28s ease;
 }
 .dam-db-source:hover {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 28%, transparent);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 28%, transparent);
 }
 .dam-db-source:focus-visible {
-  outline: 2px solid var(--dam-primary, #AB54DB);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 2px;
 }
 .dam-db-source.is-active,
 .dam-db-source.is-dump-picked {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 40%, transparent);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 7%, transparent);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 40%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 7%, transparent);
 }
 .dam-db-source.is-dim {
   opacity: 0.72;
@@ -8478,8 +8478,8 @@ button.dam-db-mode-chip:focus-visible {
   transition: transform 0.12s ease;
 }
 .dam-db-check input:checked + .dam-db-check__box {
-  background: var(--dam-primary, #AB54DB);
-  border-color: var(--dam-primary, #AB54DB);
+  background: var(--dam-primary, #005A29);
+  border-color: var(--dam-primary, #005A29);
 }
 .dam-db-check input:checked + .dam-db-check__box::after {
   transform: rotate(45deg) scale(1);
@@ -8489,7 +8489,7 @@ button.dam-db-mode-chip:focus-visible {
   cursor: not-allowed;
 }
 .dam-db-check input:focus-visible + .dam-db-check__box {
-  outline: 2px solid var(--dam-primary, #AB54DB);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 2px;
 }
 .dam-db-source__body {
@@ -8512,7 +8512,7 @@ button.dam-db-mode-chip:focus-visible {
   font-style: normal;
   font-size: 10px;
   font-weight: 700;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -8543,7 +8543,7 @@ button.dam-db-mode-chip:focus-visible {
   overflow: hidden;
 }
 .dam-db-source__note a {
-  color: var(--primary-color, #AB54DB);
+  color: var(--primary-color, #005A29);
   text-decoration: underline;
 }
 .dam-db-source--dump {
@@ -8674,7 +8674,7 @@ button.dam-db-mode-chip:focus-visible {
 .dam-db-sync-toast__title {
   font-size: 13px;
   font-weight: 700;
-  color: #17161e;
+  color: var(--dam-text);
   line-height: 1.25;
 }
 .dam-db-sync-toast__badge {
@@ -8682,7 +8682,7 @@ button.dam-db-mode-chip:focus-visible {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--primary-color, #ab54db);
+  color: var(--primary-color, #005A29);
 }
 .dam-db-sync-toast__track {
   height: 3px;
@@ -8696,7 +8696,7 @@ button.dam-db-mode-chip:focus-visible {
   width: 0;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--primary-color, #ab54db), #2cbf44);
+  background: linear-gradient(90deg, var(--primary-color, #005A29), #2cbf44);
   transform-origin: left center;
 }
 .dam-db-sync-toast__steps {
@@ -8716,7 +8716,7 @@ button.dam-db-mode-chip:focus-visible {
   color: rgba(70, 66, 85, 0.55);
 }
 .dam-db-sync-toast__step.is-active {
-  color: #17161e;
+  color: var(--dam-text);
   font-weight: 600;
 }
 .dam-db-sync-toast__step.is-done {
@@ -8736,7 +8736,7 @@ button.dam-db-mode-chip:focus-visible {
   position: relative;
 }
 .dam-db-sync-toast__step.is-active .dam-db-sync-toast__mark {
-  border-color: var(--primary-color, #ab54db);
+  border-color: var(--primary-color, #005A29);
   border-top-color: transparent;
   animation: dam-db-sync-spin 0.75s linear infinite;
 }
@@ -8897,7 +8897,7 @@ body.dam-bridge-offline .dam-offline-bar {
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--primary-color, #AB54DB);
+  color: var(--primary-color, #005A29);
 }
 .dam-help-modal__title {
   margin: 0;
@@ -8938,10 +8938,10 @@ body.dam-bridge-offline .dam-offline-bar {
   max-width: min(15.5rem, 42vw);
   margin: 0;
   padding: 8px 11px;
-  border: 1px solid rgba(171, 84, 219, 0.28);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 28%, transparent);
   border-radius: 10px;
-  background: rgba(171, 84, 219, 0.06);
-  color: var(--primary-color, #AB54DB);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 6%, transparent);
+  color: var(--primary-color, #005A29);
   font-size: 11px;
   font-weight: 600;
   line-height: 1.25;
@@ -8956,12 +8956,12 @@ body.dam-bridge-offline .dam-offline-bar {
   flex: 0 0 auto;
 }
 .dam-help-modal__restart:hover {
-  background: rgba(171, 84, 219, 0.12);
-  border-color: rgba(171, 84, 219, 0.45);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 45%, transparent);
   color: #8f3dc0;
 }
 .dam-help-modal__restart:focus-visible {
-  outline: 2px solid var(--primary-color, #AB54DB);
+  outline: 2px solid var(--primary-color, #005A29);
   outline-offset: 2px;
 }
 .dam-help-modal__body {
@@ -9023,7 +9023,7 @@ body.dam-bridge-offline .dam-offline-bar {
   border: 1px solid #f0f0f3;
 }
 .dam-help-card > i {
-  color: var(--primary-color, #AB54DB);
+  color: var(--primary-color, #005A29);
   font-size: 20px;
   flex: 0 0 auto;
   margin-top: 2px;
@@ -9064,7 +9064,7 @@ body.dam-bridge-offline .dam-offline-bar {
   font-size: 13px;
 }
 .dam-help-modal__more a {
-  color: var(--primary-color, #AB54DB);
+  color: var(--primary-color, #005A29);
   font-weight: 600;
   text-decoration: none;
 }
@@ -9085,9 +9085,9 @@ body.dam-help-open {
   height: 44px;
   border: none;
   border-radius: 999px;
-  background: var(--dam-primary, #AB54DB);
+  background: var(--dam-primary, #005A29);
   color: #fff;
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--dam-primary, #ab54db) 35%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--dam-primary, #005A29) 35%, transparent);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -9100,11 +9100,11 @@ body.dam-help-open {
 .dam-help-fab:hover {
   background: #9a45c9;
   color: #fff;
-  box-shadow: 0 10px 28px color-mix(in srgb, var(--dam-primary, #ab54db) 45%, transparent);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--dam-primary, #005A29) 45%, transparent);
   transform: translateY(-1px);
 }
 .dam-help-fab:focus-visible {
-  outline: 2px solid var(--dam-primary, #AB54DB);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 3px;
 }
 .dam-help-fab:active {
@@ -9152,8 +9152,8 @@ body.dam-help-open .dam-help-fab {
 .dam-help-modal__section--admin {
   padding: 12px 14px;
   border-radius: 12px;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 5%, transparent);
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 16%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 16%, transparent);
 }
 
 /* Pelna pomoc - wyszukiwarka problemow */
@@ -9179,7 +9179,7 @@ body.dam-help-open .dam-help-fab {
   box-shadow: 0 4px 16px rgba(23, 22, 30, 0.04);
 }
 .dam-help-page__search i {
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   font-size: 20px;
 }
 .dam-help-page__search input {
@@ -9223,7 +9223,7 @@ body.dam-help-open .dam-help-fab {
   letter-spacing: 0.04em;
 }
 .dam-help-page__group-title i {
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   font-size: 18px;
 }
 .dam-faq-item {
@@ -9244,7 +9244,7 @@ body.dam-help-open .dam-help-fab {
   line-height: 1.35;
 }
 .dam-faq-q i {
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   flex-shrink: 0;
   margin-top: 2px;
 }
@@ -9300,34 +9300,34 @@ body.dam-help-open .dam-help-fab {
 .dam-admin-header-switch {
   height: 36px;
   padding: 0 10px 0 8px;
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 35%, transparent);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, transparent);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 35%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, transparent);
   border-radius: 999px;
   gap: 6px;
 }
 .dam-admin-header-switch .dam-switch__label {
-  color: #7A3AA8;
+  color: var(--dam-chrome-ink, var(--dam-text));
   font-size: 11px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 .dam-admin-header-switch.is-off,
 .dam-admin-header-switch:has(.dam-switch__input:not(:checked)) {
-  background: #f5f5f7;
-  border-color: #E7E7E7;
+  background: var(--dam-surface-muted);
+  border-color: var(--dam-border);
 }
 .dam-admin-header-switch.is-off .dam-switch__label,
 .dam-admin-header-switch:has(.dam-switch__input:not(:checked)) .dam-switch__label {
-  color: #5a5a68;
+  color: var(--dam-text-muted);
 }
 .dam-admin-header-switch .dam-switch__input:checked + .dam-switch__track {
-  background: var(--dam-primary, #AB54DB);
+  background: var(--dam-primary, #005A29);
 }
 
 /* Admin mode: ten sam radius co Geex, kompaktowy padding, delikatny akcent (nie osobny styl) */
 .dam-admin-control {
   outline: none;
-  border: 1.5px solid color-mix(in srgb, var(--dam-primary, #ab54db) 55%, transparent) !important;
+  border: 1.5px solid color-mix(in srgb, var(--dam-primary, #005A29) 55%, transparent) !important;
   border-radius: var(--btn-radius, 50px) !important;
   background: #fff !important;
   color: #464255 !important;
@@ -9341,9 +9341,9 @@ body.dam-help-open .dam-help-fab {
   font-size: 13px !important;
 }
 .dam-admin-control:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, transparent) !important;
-  border-color: var(--dam-primary, #AB54DB) !important;
-  color: var(--dam-primary, #AB54DB) !important;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, transparent) !important;
+  border-color: var(--dam-primary, #005A29) !important;
+  color: var(--dam-primary, #005A29) !important;
 }
 .dam-admin-slot {
   display: inline-flex;
@@ -9372,9 +9372,9 @@ body.dam-help-open .dam-help-fab {
 
 .dam-admin-btn.is-on,
 .dam-admin-btn[aria-pressed="true"] {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent) !important;
-  border-color: var(--dam-primary, #AB54DB) !important;
-  color: var(--dam-primary, #AB54DB) !important;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent) !important;
+  border-color: var(--dam-primary, #005A29) !important;
+  color: var(--dam-primary, #005A29) !important;
 }
 
 .dam-admin-extra {
@@ -9399,9 +9399,9 @@ body.dam-help-open .dam-help-fab {
   flex: 0 0 auto;
 }
 .dam-admin-control.is-on {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent) !important;
-  border-color: var(--dam-primary, #AB54DB) !important;
-  color: var(--dam-primary, #AB54DB) !important;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent) !important;
+  border-color: var(--dam-primary, #005A29) !important;
+  color: var(--dam-primary, #005A29) !important;
 }
 
 /* Demo: delikatna zolta obwodka */
@@ -9450,8 +9450,8 @@ body.dam-help-open .dam-help-fab {
   cursor: pointer;
 }
 .dam-viz-badge--hidden:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 14%, transparent);
-  color: var(--dam-primary, #AB54DB);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, transparent);
+  color: var(--dam-primary, #005A29);
 }
 
 /* Tagi klikalne - smukle wizualnie, touch target >= 44px przez niewidoczna hit-area
@@ -9480,7 +9480,7 @@ button.dam-viz-badge::before {
 .dam-badge-tag:focus-visible,
 button.dam-viz-badge:focus-visible,
 .dam-admin-control:focus-visible {
-  outline: 2px solid var(--dam-primary, #AB54DB);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 2px;
 }
 .dam-viz-badge--more {
@@ -9585,7 +9585,7 @@ button.dam-viz-badge:focus-visible,
 .dam-inbox-tag__main > i {
   font-size: 18px;
   line-height: 1;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   flex: 0 0 auto;
   opacity: 0.9;
 }
@@ -9595,14 +9595,14 @@ button.dam-viz-badge:focus-visible,
   white-space: nowrap;
 }
 .dam-inbox-tag:hover {
-  border-color: var(--dam-primary, #AB54DB);
+  border-color: var(--dam-primary, #005A29);
 }
 .dam-inbox-tag:hover .dam-inbox-tag__main > i {
   opacity: 1;
 }
 .dam-inbox-tag.is-active {
-  background: var(--dam-primary, #AB54DB);
-  border-color: var(--dam-primary, #AB54DB);
+  background: var(--dam-primary, #005A29);
+  border-color: var(--dam-primary, #005A29);
   color: #fff;
 }
 .dam-inbox-tag.is-active .dam-inbox-tag__main > i {
@@ -9623,8 +9623,8 @@ button.dam-viz-badge:focus-visible,
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
   letter-spacing: 0.01em;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
-  color: var(--dam-primary, #AB54DB);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
+  color: var(--dam-primary, #005A29);
   opacity: 1;
   flex: 0 0 auto;
 }
@@ -9636,12 +9636,12 @@ button.dam-viz-badge:focus-visible,
   height: 22px;
   min-width: 22px;
   padding: 2px 8px;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
-  color: var(--dam-primary, #AB54DB);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
+  color: var(--dam-primary, #005A29);
 }
 .dam-inbox-subtab.is-active .dam-inbox-count {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 16%, transparent);
-  color: #7a3aa8;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 16%, transparent);
+  color: var(--dam-chrome-ink, var(--dam-text));
 }
 .dam-inbox-list {
   list-style: none;
@@ -9665,14 +9665,14 @@ button.dam-viz-badge:focus-visible,
 }
 .dam-inbox-item:hover {
   border-color: #d4b3e8;
-  box-shadow: 0 2px 10px color-mix(in srgb, var(--dam-primary, #ab54db) 8%, transparent);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--dam-primary, #005A29) 8%, transparent);
 }
 .dam-inbox-item.is-unread {
-  border-left: 3px solid var(--dam-primary, #AB54DB);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 3%, transparent);
+  border-left: 3px solid var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 3%, transparent);
 }
 .dam-inbox-item.is-expanded {
-  border-color: var(--dam-primary, #AB54DB);
+  border-color: var(--dam-primary, #005A29);
 }
 .dam-inbox-item--empty {
   display: block;
@@ -9778,8 +9778,8 @@ button.dam-viz-badge:focus-visible,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, transparent);
-  color: var(--dam-primary, #AB54DB);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, transparent);
+  color: var(--dam-primary, #005A29);
   font-size: 18px;
   margin-top: 0;
 }
@@ -9841,8 +9841,8 @@ button.dam-viz-badge:focus-visible,
   font-weight: 500;
   padding: 5px 12px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
-  color: var(--dam-primary, #AB54DB);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
+  color: var(--dam-primary, #005A29);
   line-height: 1.25;
   letter-spacing: 0.01em;
 }
@@ -9877,7 +9877,7 @@ button.dam-viz-badge:focus-visible,
 .dam-inbox-item__read {
   border: 0;
   background: transparent;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -9893,7 +9893,7 @@ button.dam-viz-badge:focus-visible,
 
 /* Moderacja w Inbox (admin) - touch 44px */
 .dam-inbox-item--mod {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 22%, transparent);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 22%, transparent);
 }
 .dam-inbox-zgloszenie-tabs {
   display: flex;
@@ -9934,12 +9934,12 @@ button.dam-viz-badge:focus-visible,
 }
 .dam-inbox-subtab.is-active {
   background: #fff;
-  border-color: var(--dam-primary, #AB54DB);
-  color: #17161e;
+  border-color: var(--dam-primary, #005A29);
+  color: var(--dam-text);
   box-shadow: 0 1px 0 rgba(23, 22, 30, 0.04);
 }
 .dam-inbox-subtab.is-active > i {
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   opacity: 1;
 }
 .dam-inbox-subtab .dam-inbox-count {
@@ -9953,8 +9953,8 @@ button.dam-viz-badge:focus-visible,
   margin: 0 0 12px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 6%, transparent);
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 18%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 18%, transparent);
 }
 .dam-inbox-hist-bar[hidden] {
   display: none !important;
@@ -10096,8 +10096,8 @@ button.dam-viz-badge:focus-visible,
 }
 .dam-inbox-hist-item__btn:hover,
 .dam-inbox-hist-item__btn:focus-visible {
-  border-color: var(--dam-primary, #AB54DB);
-  color: #17161e;
+  border-color: var(--dam-primary, #005A29);
+  color: var(--dam-text);
 }
 .dam-inbox-hist-item__btn--undo {
   border-color: rgba(255, 91, 91, 0.4);
@@ -10223,7 +10223,7 @@ button.dam-viz-badge:focus-visible,
   min-width: 0;
 }
 .dam-inbox-item__product-name:hover {
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
 }
 .dam-inbox-item__change {
   display: inline-flex;
@@ -10234,11 +10234,11 @@ button.dam-viz-badge:focus-visible,
   color: #464255;
   padding: 4px 10px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 18%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 18%, transparent);
 }
 .dam-inbox-item__change > i {
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   font-size: 14px;
 }
 .dam-inbox-item__change-from {
@@ -10246,7 +10246,7 @@ button.dam-viz-badge:focus-visible,
   text-decoration: line-through;
 }
 .dam-inbox-item__change-to {
-  color: #17161e;
+  color: var(--dam-text);
 }
 .dam-inbox-item__product-badges {
   display: flex;
@@ -10392,9 +10392,9 @@ button.dam-viz-badge:focus-visible,
   background: #fff;
 }
 .dam-inbox-mod__select:focus {
-  outline: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 45%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--dam-primary, #005A29) 45%, transparent);
   outline-offset: 1px;
-  border-color: var(--dam-primary, #AB54DB);
+  border-color: var(--dam-primary, #005A29);
 }
 @media (max-width: 560px) {
   .dam-inbox-mod {
@@ -10480,12 +10480,12 @@ button.dam-viz-badge:focus-visible,
   min-height: 44px;
 }
 .dam-viz-request-channel:hover {
-  border-color: var(--dam-primary, #AB54DB);
+  border-color: var(--dam-primary, #005A29);
 }
 .dam-viz-request-channel input {
   width: 16px;
   height: 16px;
-  accent-color: var(--dam-primary, #AB54DB);
+  accent-color: var(--dam-primary, #005A29);
 }
 .dam-viz-request-bulk {
   display: flex;
@@ -10610,13 +10610,13 @@ button.dam-viz-badge:focus-visible,
   cursor: pointer;
 }
 #damThumbPicker .dam-tag-edit-popover__confirm {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 14%, #fff);
-  border: 1px solid color-mix(in srgb, var(--dam-primary, #ab54db) 55%, #fff);
-  color: #7a3aa8;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, #fff);
+  border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 55%, #fff);
+  color: var(--dam-chrome-ink, var(--dam-text));
 }
 #damThumbPicker .dam-tag-edit-popover__confirm[data-confirm] {
-  background: var(--dam-primary, #ab54db);
-  border-color: var(--dam-primary, #ab54db);
+  background: var(--dam-primary, #005A29);
+  border-color: var(--dam-primary, #005A29);
   color: #fff;
 }
 #damThumbPicker .dam-tag-edit-popover__confirm[data-confirm]:disabled {
@@ -10706,8 +10706,8 @@ button.dam-viz-badge:focus-visible,
   font-size: 18px;
 }
 .dam-tag-edit-popover__close:hover {
-  background: #f8f4fd;
-  color: var(--dam-primary, #ab54db);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, var(--dam-surface));
+  color: var(--dam-primary, #005A29);
 }
 /* Paseczek wyszukiwania na gorze listy typow - live filter, autofocus (2026-07-18) */
 .dam-tag-edit-popover__search-wrap {
@@ -10751,8 +10751,8 @@ button.dam-viz-badge:focus-visible,
   max-height: none;
 }
 .dam-tag-edit-popover__opt.is-selected {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
-  color: #7A3AA8;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
+  color: var(--dam-chrome-ink, var(--dam-text));
   font-weight: 600;
 }
 .dam-tag-edit-popover__opt--none {
@@ -10789,18 +10789,18 @@ button.dam-viz-badge:focus-visible,
 }
 .dam-tag-edit-popover__confirm,
 #damTagEditPopover .dam-tag-edit-popover__confirm {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 14%, #fff);
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 55%, #fff);
-  color: #7a3aa8;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, #fff);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 55%, #fff);
+  color: var(--dam-chrome-ink, var(--dam-text));
 }
 .dam-tag-edit-popover__confirm:hover,
 #damTagEditPopover .dam-tag-edit-popover__confirm:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 22%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 22%, #fff);
 }
 .dam-tag-edit-popover__confirm[data-confirm],
 #damTagEditPopover .dam-tag-edit-popover__confirm[data-confirm] {
-  background: var(--dam-primary, #ab54db);
-  border-color: var(--dam-primary, #ab54db);
+  background: var(--dam-primary, #005A29);
+  border-color: var(--dam-primary, #005A29);
   color: #fff;
 }
 .dam-tag-edit-popover__confirm[data-confirm]:hover,
@@ -10815,8 +10815,8 @@ button.dam-viz-badge:focus-visible,
 }
 .dam-tag-edit-popover__cancel:hover,
 #damTagEditPopover .dam-tag-edit-popover__cancel:hover {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 40%, #e2e2ea);
-  color: #7a3aa8;
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 40%, #e2e2ea);
+  color: var(--dam-chrome-ink, var(--dam-text));
 }
 .dam-tag-edit-popover__foot {
   flex: 0 0 auto;
@@ -10852,7 +10852,7 @@ button.dam-viz-badge:focus-visible,
   background: #f5f6fa;
 }
 .dam-tag-edit-popover__opt.is-current {
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   font-weight: 600;
 }
 .dam-tag-edit-popover__foot {
@@ -10861,9 +10861,9 @@ button.dam-viz-badge:focus-visible,
 }
 .dam-tag-edit-popover__addtype {
   width: 100%;
-  border: 1px dashed var(--dam-primary, #AB54DB);
+  border: 1px dashed var(--dam-primary, #005A29);
   background: none;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
   border-radius: 6px;
   padding: 8px;
   font-size: 12px;
@@ -10871,7 +10871,7 @@ button.dam-viz-badge:focus-visible,
   min-height: 36px;
 }
 .dam-tag-edit-popover__addtype:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, transparent);
 }
 
 .dam-moderation-list {
@@ -11010,12 +11010,12 @@ button.dam-viz-badge:focus-visible,
   flex-direction: row;
   align-items: center;
   gap: 8px;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 6%, transparent);
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 25%, transparent);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 6%, transparent);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 25%, transparent);
 }
 .dam-thumb-picker__item--folder i {
   font-size: 18px;
-  color: var(--dam-primary, #AB54DB);
+  color: var(--dam-primary, #005A29);
 }
 .dam-thumb-picker__item img {
   width: 100%;
@@ -11050,7 +11050,7 @@ button.dam-viz-badge:focus-visible,
   padding: 12px 12px;
   border-radius: 12px;
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--dam-primary, #ab54db) 10%, transparent), color-mix(in srgb, var(--dam-primary, #ab54db) 3%, transparent)),
+    linear-gradient(135deg, color-mix(in srgb, var(--dam-primary, #005A29) 10%, transparent), color-mix(in srgb, var(--dam-primary, #005A29) 3%, transparent)),
     #f6f5f8;
 }
 
@@ -11060,7 +11060,7 @@ button.dam-viz-badge:focus-visible,
   flex: 0 0 44px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid color-mix(in srgb, var(--dam-primary, #ab54db) 35%, transparent);
+  border: 2px solid color-mix(in srgb, var(--dam-primary, #005A29) 35%, transparent);
   background: #fff;
 }
 
@@ -11133,18 +11133,18 @@ button.dam-viz-badge:focus-visible,
 
 .geex-content__header__popup--author.dam-user-menu .dam-user-menu__link i {
   font-size: 18px;
-  color: var(--dam-primary, #AB54DB) !important;
+  color: var(--dam-primary, #005A29) !important;
   width: 1.1em;
   text-align: center;
 }
 
 .geex-content__header__popup--author.dam-user-menu .dam-user-menu__link:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, transparent) !important;
-  color: var(--dam-primary, #AB54DB) !important;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, transparent) !important;
+  color: var(--dam-primary, #005A29) !important;
 }
 
 .geex-content__header__popup--author.dam-user-menu .dam-user-menu__link:focus-visible {
-  outline: 2px solid var(--dam-primary, #AB54DB);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 1px;
 }
 
@@ -11209,8 +11209,8 @@ button.dam-viz-badge:focus-visible,
 }
 
 .dam-user-menu__logout:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent) !important;
-  color: var(--dam-primary, #AB54DB) !important;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent) !important;
+  color: var(--dam-primary, #005A29) !important;
 }
 
 .geex-content__header__popup--author.dam-user-menu .geex-content__header__popup__content {
@@ -11590,16 +11590,16 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
 }
 #damMediaPreviewStudio .dam-media-preview__studio-chip:hover,
 #damVizModalStudio .dam-media-preview__studio-chip:hover {
-  border-color: var(--dam-primary, #ab54db);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 8%, #fff);
-  color: color-mix(in srgb, var(--dam-primary, #ab54db) 85%, #3d2f4a);
+  border-color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, #fff);
+  color: color-mix(in srgb, var(--dam-primary, #005A29) 85%, #3d2f4a);
 }
 /* Quiet outline selection — no solid purple fill (readable muted accent). */
 #damMediaPreviewStudio .dam-media-preview__studio-chip.is-active,
 #damVizModalStudio .dam-media-preview__studio-chip.is-active {
   background: #fff;
-  border: 1px solid var(--dam-primary, #ab54db);
-  color: color-mix(in srgb, var(--dam-primary, #ab54db) 72%, #3d2f4a);
+  border: 1px solid var(--dam-primary, #005A29);
+  color: color-mix(in srgb, var(--dam-primary, #005A29) 72%, #3d2f4a);
   box-shadow: none;
 }
 #damMediaPreviewStudio .dam-media-preview__studio-chip.is-active small,
@@ -11668,7 +11668,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   color: #6b6778;
 }
 .dam-media-preview__elementy-toggle[aria-expanded="true"] {
-  color: var(--dam-primary, #ab54db);
+  color: var(--dam-primary, #005A29);
 }
 .dam-media-preview__elementy-panel {
   margin-top: 2px;
@@ -11786,7 +11786,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
 }
 .dam-life-hist__act.is-pending {
   position: relative;
-  color: var(--dam-primary, #ab54db);
+  color: var(--dam-primary, #005A29);
   border-color: #e2d3f2;
 }
 .dam-life-hist__act--restore:hover,
@@ -11808,8 +11808,8 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   height: 22px;
   padding: 0 8px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, transparent);
-  color: var(--dam-primary, #ab54db);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
+  color: var(--dam-primary, #005A29);
   font-size: 11.5px;
   font-weight: 700;
 }
@@ -11855,8 +11855,8 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   padding-right: 4px;
 }
 .dam-life-hist__item--current .dam-life-hist__body {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 28%, var(--dam-border, rgba(70, 66, 85, 0.12)));
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 5%, var(--dam-surface, #fff));
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 28%, var(--dam-border, rgba(70, 66, 85, 0.12)));
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 5%, var(--dam-surface, #fff));
 }
 .dam-life-hist__meta-inline {
   display: inline-flex;
@@ -11869,7 +11869,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   font-size: 10.5px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--dam-hash, var(--dam-primary, #ab54db));
+  color: var(--dam-hash, var(--dam-primary, #005A29));
   letter-spacing: 0.02em;
 }
 .dam-life-hist__note {
@@ -11877,7 +11877,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   color: var(--dam-text-muted, #6b6980);
 }
 .dam-life-hist__note--current {
-  color: var(--dam-primary, #ab54db);
+  color: var(--dam-primary, #005A29);
   font-weight: 600;
 }
 .dam-life-hist__note strong {
@@ -11917,11 +11917,11 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
 .dam-life-hist__body {
   flex: 1 1 auto;
   min-width: 0;
-  background: var(--dam-surface-elevated, var(--dam-surface, #fff));
-  border: 1px solid var(--dam-border, rgba(70, 66, 85, 0.09));
+  background: var(--dam-surface-elevated, var(--dam-surface));
+  border: 1px solid var(--dam-border);
   border-radius: 10px;
   padding: 8px 10px;
-  box-shadow: 0 1px 4px rgba(70, 66, 85, 0.05);
+  box-shadow: 0 1px 4px rgb(var(--dam-shadow-rgb) / 0.06);
 }
 .dam-life-hist__row1 {
   display: flex;
@@ -11973,8 +11973,8 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
 .dam-life-hist__act:hover {
-  background: #f8f4fd;
-  color: var(--dam-primary, #ab54db);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, var(--dam-surface));
+  color: var(--dam-primary, #005A29);
   border-color: #e2d3f2;
 }
 .dam-life-hist__empty {
@@ -11991,7 +11991,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
 }
 .dam-life-hist__empty i {
   font-size: 26px;
-  color: color-mix(in srgb, var(--dam-primary, #ab54db) 55%, #8b8d97);
+  color: color-mix(in srgb, var(--dam-primary, #005A29) 55%, #8b8d97);
 }
 .dam-life-hist__empty p {
   margin: 0;
@@ -12107,8 +12107,8 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
 }
 .dam-thumb-picker__nav-btn:hover:not(:disabled) {
-  background: #f8f4fd;
-  color: var(--dam-primary, #ab54db);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, var(--dam-surface));
+  color: var(--dam-primary, #005A29);
   border-color: #e2d3f2;
 }
 .dam-thumb-picker__nav-btn:disabled {
@@ -12141,7 +12141,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
 }
 .dam-thumb-picker__crumb:hover {
   background: #f3ecfb;
-  color: var(--dam-primary, #ab54db);
+  color: var(--dam-primary, #005A29);
 }
 .dam-thumb-picker__crumb.is-current {
   color: #464255;
@@ -12174,10 +12174,10 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   font-size: 14px;
 }
 .dam-thumb-picker__view-btn:hover {
-  color: var(--dam-primary, #ab54db);
+  color: var(--dam-primary, #005A29);
 }
 .dam-thumb-picker__view-btn.is-active {
-  background: var(--dam-primary, #ab54db);
+  background: var(--dam-primary, #005A29);
   color: #fff;
 }
 /* Nowe widoki pickera (thumbs / list / tiles) - scoped przez [data-view],
@@ -12213,8 +12213,8 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   min-width: 0;
 }
 .dam-thumb-picker__grid[data-view] .dam-thumb-picker__item:hover {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 40%, #ececf1);
-  box-shadow: 0 6px 18px rgba(171, 84, 219, 0.12);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 40%, #ececf1);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
   transform: translateY(-1px);
 }
 .dam-thumb-picker__grid[data-view="list"] .dam-thumb-picker__item {
@@ -12240,7 +12240,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
 }
 .dam-thumb-picker__grid[data-view] .dam-thumb-picker__item--folder i {
   font-size: 30px;
-  color: color-mix(in srgb, var(--dam-primary, #ab54db) 70%, #8b8d97);
+  color: color-mix(in srgb, var(--dam-primary, #005A29) 70%, #8b8d97);
 }
 .dam-thumb-picker__grid[data-view="list"] .dam-thumb-picker__item--folder i {
   font-size: 20px;
@@ -12392,8 +12392,8 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
 
 .dam-assoc-action-menu__item:hover,
 .dam-assoc-action-menu__item:focus-visible {
-  background: #fbf7fe;
-  color: var(--dam-primary, #ab54db);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-surface));
+  color: var(--dam-primary, #005A29);
   transform: translateY(-1px);
 }
 
@@ -12485,38 +12485,38 @@ button.dam-viz-badge,
    ============================================================ */
 html[data-theme="dark"] .dam-search-wrap--panel,
 html[data-theme="dark"] .dam-search-wrap--panel.dam-search-wrap--branding-chrome {
-  background: var(--dam-surface, #201f28);
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 38%, var(--dam-border, #2c2b36));
+  background: var(--dam-surface);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 38%, var(--dam-border));
   box-shadow: 0 2px 14px rgb(0 0 0 / 0.32);
   color: var(--dam-text, #eeeaf6);
 }
 
 html[data-theme="dark"] .dam-search-input {
-  background: var(--dam-surface-elevated, #2a2833) !important;
+  background: var(--dam-input-bg, var(--dam-surface-raised)) !important;
   color: var(--dam-text, #eeeaf6) !important;
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 28%, var(--dam-border, #2c2b36)) !important;
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 28%, var(--dam-border)) !important;
   caret-color: var(--dam-text, #eeeaf6);
 }
 
 html[data-theme="dark"] .dam-search-wrap--panel .dam-search-input {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 10%, var(--dam-surface-elevated, #2a2833)) !important;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, var(--dam-input-bg, var(--dam-surface-raised))) !important;
   color: var(--dam-text, #eeeaf6) !important;
 }
 
 html[data-theme="dark"] .dam-search-wrap--panel .dam-search-input:focus {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 16%, var(--dam-surface-elevated, #2a2833)) !important;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #ab54db) 28%, transparent) !important;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 16%, var(--dam-input-bg, var(--dam-surface-raised))) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #005A29) 28%, transparent) !important;
 }
 
 html[data-theme="dark"] .dam-search-wrap--picker .dam-search-input {
-  background: var(--dam-surface-elevated, #2a2833) !important;
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 32%, var(--dam-border, #2c2b36)) !important;
+  background: var(--dam-input-bg, var(--dam-surface-raised)) !important;
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 32%, var(--dam-border)) !important;
   color: var(--dam-text, #eeeaf6) !important;
 }
 
 html[data-theme="dark"] .dam-search-wrap--picker .dam-search-input:focus {
-  background: var(--dam-surface-elevated, #2a2833) !important;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #ab54db) 24%, transparent) !important;
+  background: var(--dam-input-bg, var(--dam-surface-raised)) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #005A29) 24%, transparent) !important;
 }
 
 html[data-theme="dark"] .dam-search-input::placeholder {
@@ -12539,24 +12539,24 @@ html[data-theme="dark"] .dam-global-search-block .dam-explorer-toolbar {
 }
 
 html[data-theme="dark"] {
-  --dam-sticky-chrome-bg-frost: color-mix(in srgb, var(--dam-sticky-chrome-bg, #1a1922) 92%, transparent);
+  --dam-sticky-chrome-bg-frost: color-mix(in srgb, var(--dam-surface) 92%, transparent);
 }
 
 /* Geex secondary / outline buttons — no white flash in dark */
 html[data-theme="dark"] .geex-btn--primary-transparent,
 html[data-theme="dark"] .geex-btn.geex-btn--primary-transparent {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 14%, var(--dam-surface, #201f28)) !important;
-  color: #e2c4f5 !important;
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, var(--dam-border, #2c2b36)) !important;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, var(--dam-surface)) !important;
+  color: var(--dam-text) !important;
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 45%, var(--dam-border)) !important;
 }
 
 html[data-theme="dark"] .geex-btn--primary-transparent:hover,
 html[data-theme="dark"] .geex-btn--primary-transparent:focus-visible,
 html[data-theme="dark"] .geex-btn.geex-btn--primary-transparent:hover,
 html[data-theme="dark"] .geex-btn.geex-btn--primary-transparent:focus-visible {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 24%, var(--dam-surface, #201f28)) !important;
-  color: #f0e6fa !important;
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 55%, var(--dam-border, #2c2b36)) !important;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 24%, var(--dam-surface)) !important;
+  color: var(--dam-text) !important;
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 55%, var(--dam-border)) !important;
 }
 
 html[data-theme="dark"] .geex-content__header__quickaction__link > .dam-header-icon,
@@ -12581,27 +12581,27 @@ html[data-theme="dark"] body {
 
 /* Header chrome: Wstecz + status pills — no white / light-gray glare */
 html[data-theme="dark"] .dam-nav-back {
-  background: var(--dam-surface-elevated, #2a2833);
-  border-color: var(--dam-border, #2c2b36);
+  background: var(--dam-surface-elevated);
+  border-color: var(--dam-border);
   color: var(--dam-text, #eeeaf6);
 }
 
 html[data-theme="dark"] .dam-nav-back:hover,
 html[data-theme="dark"] .dam-nav-back:focus-visible {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 16%, var(--dam-surface-elevated, #2a2833));
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, var(--dam-border, #2c2b36));
-  color: #e2c4f5;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 16%, var(--dam-surface-elevated));
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 45%, var(--dam-border));
+  color: var(--dam-text);
 }
 
 html[data-theme="dark"] .dam-root-status,
 html[data-theme="dark"] .dam-db-status {
-  background: var(--dam-surface-elevated, #2a2833);
+  background: var(--dam-surface-elevated);
   color: var(--dam-text, #eeeaf6);
 }
 
 html[data-theme="dark"] .dam-db-status:hover,
 html[data-theme="dark"] .dam-db-status:focus-visible {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 14%, var(--dam-surface-elevated, #2a2833));
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, var(--dam-surface-elevated));
 }
 
 html[data-theme="dark"] .dam-db-status__refresh,
@@ -12611,33 +12611,33 @@ html[data-theme="dark"] .dam-db-status__label {
 }
 
 html[data-theme="dark"] .dam-root-status__btn {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 16%, var(--dam-surface, #201f28));
-  color: #e2c4f5;
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 40%, var(--dam-border, #2c2b36));
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 16%, var(--dam-surface));
+  color: var(--dam-text);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 40%, var(--dam-border));
 }
 
 html[data-theme="dark"] .dam-root-status__btn:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 24%, var(--dam-surface, #201f28));
-  color: #f0e6fa;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 24%, var(--dam-surface));
+  color: var(--dam-text);
 }
 
 /* Compact switches in toolbars (archive / Liczby przy tagach etc.) */
 html[data-theme="dark"] .dam-switch,
 html[data-theme="dark"] .dam-switch.is-off,
 html[data-theme="dark"] .dam-switch:has(.dam-switch__input:not(:checked)) {
-  background: var(--dam-surface-elevated, #2a2833);
-  border-color: var(--dam-border, #2c2b36);
+  background: var(--dam-surface-elevated);
+  border-color: var(--dam-border);
   color: var(--dam-text-muted, #b8b3c6);
 }
 
 html[data-theme="dark"] .dam-switch:has(.dam-switch__input:checked) {
-  background: color-mix(in srgb, #2cbf44 14%, var(--dam-surface-elevated, #2a2833));
-  border-color: color-mix(in srgb, #2cbf44 40%, var(--dam-border, #2c2b36));
+  background: color-mix(in srgb, #2cbf44 14%, var(--dam-surface-elevated));
+  border-color: color-mix(in srgb, #2cbf44 40%, var(--dam-border));
 }
 
 html[data-theme="dark"] .dam-switch__track {
   background: #3a3846;
-  border-color: var(--dam-border, #2c2b36);
+  border-color: var(--dam-border);
 }
 
 html[data-theme="dark"] .dam-switch__input:checked + .dam-switch__track {
@@ -12651,24 +12651,24 @@ html[data-theme="dark"] .dam-switch__label {
 html[data-theme="dark"] .dam-admin-header-switch,
 html[data-theme="dark"] .dam-admin-header-switch.is-off,
 html[data-theme="dark"] .dam-admin-header-switch:has(.dam-switch__input:not(:checked)) {
-  background: var(--dam-surface-elevated, #2a2833);
-  border-color: var(--dam-border, #2c2b36);
+  background: var(--dam-surface-elevated);
+  border-color: var(--dam-border);
 }
 
 html[data-theme="dark"] .dam-admin-header-switch .dam-switch__label,
 html[data-theme="dark"] .dam-admin-header-switch.is-off .dam-switch__label,
 html[data-theme="dark"] .dam-admin-header-switch:has(.dam-switch__input:not(:checked)) .dam-switch__label {
-  color: #e2c4f5;
+  color: var(--dam-chrome-ink, var(--dam-text));
 }
 
 html[data-theme="dark"] .dam-admin-header-switch:has(.dam-switch__input:checked) {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 18%, var(--dam-surface-elevated, #2a2833));
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, var(--dam-border, #2c2b36));
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 18%, var(--dam-surface-elevated));
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 45%, var(--dam-border));
 }
 
 /* Global +N count bubble (Branding + Viz thumbs) — single source of truth */
 :root {
-  --dam-count-bubble-bg: var(--dam-primary, #ab54db);
+  --dam-count-bubble-bg: var(--dam-primary, #005A29);
   --dam-count-bubble-color: #fff;
   --dam-count-bubble-size: 28px;
   --dam-count-bubble-font: 12px;
@@ -12730,36 +12730,28 @@ html[data-theme="dark"] .dam-admin-header-switch:has(.dam-switch__input:checked)
 }
 
 /* ============================================================
-   Theme tokens (Colorify-style): light white/gray -> dark charcoal
-   html.dark AND html[data-theme="dark"]. No invert().
+   Theme aliases only. Surfaces live in dam-tokens.css + dam-theme.js.
+   Do not re-declare charcoal hex here (violet-era gray override).
    ============================================================ */
 :root {
-  --dam-bg: var(--dam-surface-muted, #f3f4f7);
-  --dam-chrome: var(--dam-border, #ececf2);
-  --dam-hash: var(--dam-primary, #ab54db);
+  --dam-bg: var(--dam-surface-muted);
+  --dam-chrome: var(--dam-border);
+  --dam-hash: var(--dam-primary);
   --dam-on-accent: #ffffff;
 }
 
 html.dark,
 html[data-theme="dark"] {
   color-scheme: dark;
-  background-color: var(--dam-surface-muted, #101114);
-  --dam-bg: var(--dam-surface-muted, #101114);
-  --dam-surface-muted: #101114;
-  --dam-surface: #1c1d24;
-  --dam-surface-elevated: #262730;
-  --dam-chrome: #262730;
-  --dam-border: #2c2b36;
-  --dam-text: #eeeaf6;
-  --dam-text-muted: #b8b3c6;
-  --dam-muted: var(--dam-text-muted);
-  --dam-dark: #0c0c10;
-  --dam-hash: color-mix(in srgb, var(--dam-primary, #ab54db) 78%, #fff);
+  background-color: var(--dam-surface-muted);
+  --dam-bg: var(--dam-surface-muted);
+  --dam-chrome: var(--dam-surface-elevated);
+  --dam-hash: color-mix(in srgb, var(--dam-primary) 78%, #fff);
   --white-color: var(--dam-surface);
   --section-color: var(--dam-surface-muted);
   --sectionTwo-color: var(--dam-surface-muted);
   --sectionThree-color: var(--dam-surface);
-  --gray-color: #d2cedc;
+  --gray-color: var(--dam-text-muted);
   --body-color: var(--dam-text);
   --desc-color: var(--dam-text);
   --sec-color: var(--dam-text-muted);
@@ -12778,7 +12770,7 @@ html.dark .geex-content,
 html[data-theme="dark"] .geex-content,
 html.dark .geex-main-content,
 html[data-theme="dark"] .geex-main-content {
-  background-color: var(--dam-surface-muted, #101114);
+  background-color: var(--dam-surface-muted);
   color: var(--dam-text, #eeeaf6);
 }
 
@@ -12804,13 +12796,21 @@ html.dark .dam-explorer-results__toolbar,
 html[data-theme="dark"] .dam-explorer-results__toolbar,
 html.dark #damExplorerMain,
 html[data-theme="dark"] #damExplorerMain {
-  background: var(--dam-surface, #1c1d24);
+  background: var(--dam-surface);
   color: var(--dam-text, #eeeaf6);
-  border-color: var(--dam-border, #2c2b36);
+  border-color: var(--dam-border);
+}
+
+#damSettingsChangeHistoryPanel {
+  background: var(--dam-surface);
 }
 
 html.dark .dam-life-hist__body,
-html[data-theme="dark"] .dam-life-hist__body,
+html[data-theme="dark"] .dam-life-hist__body {
+  background: var(--dam-surface);
+  color: var(--dam-text);
+  border-color: var(--dam-border);
+}
 html.dark .dam-life-hist__search-input,
 html[data-theme="dark"] .dam-life-hist__search-input,
 html.dark .dam-life-hist__act,
@@ -12829,9 +12829,9 @@ html.dark .dam-settings-page textarea,
 html[data-theme="dark"] .dam-settings-page textarea,
 html.dark .dam-settings-page select,
 html[data-theme="dark"] .dam-settings-page select {
-  background: var(--dam-surface-elevated, #262730);
+  background: var(--dam-input-bg, var(--dam-surface-raised));
   color: var(--dam-text, #eeeaf6);
-  border-color: var(--dam-border, #2c2b36);
+  border-color: var(--dam-border);
 }
 
 html.dark .dam-life-hist__title,
@@ -12886,19 +12886,19 @@ html.dark .dam-life-hist a,
 html[data-theme="dark"] .dam-life-hist a,
 html.dark .dam-changelog-history a,
 html[data-theme="dark"] .dam-changelog-history a {
-  color: var(--dam-hash, var(--dam-primary, #c9a0e8));
+  color: var(--dam-hash, var(--dam-primary, #005A29));
 }
 
 html.dark .dam-life-hist__act:hover,
 html[data-theme="dark"] .dam-life-hist__act:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 16%, var(--dam-surface-elevated, #262730));
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 16%, var(--dam-surface-elevated));
   color: var(--dam-hash, var(--dam-primary));
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 40%, var(--dam-border, #2c2b36));
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 40%, var(--dam-border));
 }
 
 html.dark .dam-life-hist__empty,
 html[data-theme="dark"] .dam-life-hist__empty {
-  border-color: var(--dam-border, #2c2b36);
+  border-color: var(--dam-border);
   color: var(--dam-text-muted, #b8b3c6);
 }
 
@@ -12915,9 +12915,9 @@ html[data-theme="dark"] .dam-lang-code {
 
 html.dark .dam-theme-picker__btn,
 html[data-theme="dark"] .dam-theme-picker__btn {
-  background: var(--dam-surface-elevated, #262730);
+  background: var(--dam-surface-elevated);
   color: var(--dam-text, #eeeaf6);
-  border-color: var(--dam-border, #2c2b36);
+  border-color: var(--dam-border);
 }
 
 /* Settings: Colorify-like HSL tuning + export */
@@ -12948,9 +12948,9 @@ html[data-theme="dark"] .dam-theme-picker__btn {
   cursor: pointer;
 }
 .dam-theme-tune__tab.is-active {
-  border-color: var(--dam-primary, #ab54db);
-  color: var(--dam-primary, #ab54db);
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 12%, var(--dam-surface, #fff));
+  border-color: var(--dam-primary, #005A29);
+  color: var(--dam-primary, #005A29);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, var(--dam-surface, #fff));
 }
 .dam-theme-tune__grid {
   display: grid;
@@ -12975,7 +12975,7 @@ html[data-theme="dark"] .dam-theme-picker__btn {
 .dam-theme-tune__row input[type="range"] {
   width: 100%;
   min-height: 28px;
-  accent-color: var(--dam-primary, #ab54db);
+  accent-color: var(--dam-primary, #005A29);
 }
 .dam-theme-tune__row input[type="number"] {
   min-height: 44px;
@@ -13001,23 +13001,23 @@ html[data-theme="dark"] .dam-theme-picker__btn {
 }
 html.dark .dam-theme-tune__tab,
 html[data-theme="dark"] .dam-theme-tune__tab {
-  background: var(--dam-surface-elevated, #262730);
+  background: var(--dam-surface-elevated);
   color: var(--dam-text, #eeeaf6);
-  border-color: var(--dam-border, #2c2b36);
+  border-color: var(--dam-border);
 }
 html.dark .dam-theme-tune__tab.is-active,
 html[data-theme="dark"] .dam-theme-tune__tab.is-active {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 16%, var(--dam-surface-elevated, #262730));
-  color: var(--dam-hash, var(--dam-primary, #c9a0e8));
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, var(--dam-border, #2c2b36));
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 16%, var(--dam-surface-elevated));
+  color: var(--dam-hash, var(--dam-primary, #005A29));
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 45%, var(--dam-border));
 }
 html.dark .dam-theme-tune__row label,
 html[data-theme="dark"] .dam-theme-tune__row label,
 html.dark .dam-theme-tune__row input[type="number"],
 html[data-theme="dark"] .dam-theme-tune__row input[type="number"] {
   color: var(--dam-text, #eeeaf6);
-  background: var(--dam-surface-elevated, #262730);
-  border-color: var(--dam-border, #2c2b36);
+  background: var(--dam-surface-elevated);
+  border-color: var(--dam-border);
 }
 
 /* Appearance: scheme tiles left, HSL+export condensed to <=50% */
@@ -13104,14 +13104,14 @@ html[data-theme="dark"] .dam-theme-tune__row input[type="number"] {
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .dam-scheme-tile:hover {
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, var(--dam-border, #ececf2));
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 45%, var(--dam-border, #ececf2));
 }
 .dam-scheme-tile.is-active {
-  border-color: var(--dam-primary, #ab54db);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #ab54db) 28%, transparent);
+  border-color: var(--dam-primary, #005A29);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #005A29) 28%, transparent);
 }
 .dam-scheme-tile:focus-visible {
-  outline: 2px solid var(--dam-primary, #ab54db);
+  outline: 2px solid var(--dam-primary, #005A29);
   outline-offset: 2px;
 }
 .dam-scheme-tile__swatches {
@@ -13160,8 +13160,8 @@ html[data-theme="dark"] .dam-theme-tune__row input[type="number"] {
 
 html.dark .dam-scheme-tile,
 html[data-theme="dark"] .dam-scheme-tile {
-  background: var(--dam-surface-elevated, #262730);
-  border-color: var(--dam-border, #2c2b36);
+  background: var(--dam-surface-elevated);
+  border-color: var(--dam-border);
 }
 html.dark .dam-scheme-tile__label,
 html[data-theme="dark"] .dam-scheme-tile__label {
@@ -13171,20 +13171,20 @@ html[data-theme="dark"] .dam-scheme-tile__label {
 /* Explorer / viz: unselected scope pills, cat mode, brand off, lang select, quick links */
 html.dark .dam-search-scope__btn:not(.is-on),
 html[data-theme="dark"] .dam-search-scope__btn:not(.is-on) {
-  background: var(--dam-surface, #1c1d24);
-  border-color: var(--dam-border, #2c2b36);
+  background: var(--dam-surface);
+  border-color: var(--dam-border);
   color: var(--dam-text-muted, #b8b3c6);
 }
 html.dark .dam-search-scope__btn:not(.is-on):hover:not(:disabled):not(.is-disabled),
 html[data-theme="dark"] .dam-search-scope__btn:not(.is-on):hover:not(:disabled):not(.is-disabled) {
-  background: var(--dam-surface-elevated, #262730);
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 35%, var(--dam-border, #2c2b36));
+  background: var(--dam-surface-elevated);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 35%, var(--dam-border));
   color: var(--dam-text, #eeeaf6);
 }
 html.dark .dam-search-scope__btn.is-on,
 html[data-theme="dark"] .dam-search-scope__btn.is-on {
-  background: var(--dam-primary, #ab54db);
-  border-color: var(--dam-primary, #ab54db);
+  background: var(--dam-primary, #005A29);
+  border-color: var(--dam-primary, #005A29);
   color: var(--dam-on-accent, #fff);
 }
 
@@ -13192,24 +13192,24 @@ html.dark .dam-db-mode-chip:not(:has(input:checked)),
 html[data-theme="dark"] .dam-db-mode-chip:not(:has(input:checked)),
 html.dark button.dam-db-mode-chip[aria-pressed="false"],
 html[data-theme="dark"] button.dam-db-mode-chip[aria-pressed="false"] {
-  background: var(--dam-surface, #1c1d24);
-  border-color: var(--dam-border, #2c2b36);
+  background: var(--dam-surface);
+  border-color: var(--dam-border);
   color: var(--dam-text-muted, #b8b3c6);
 }
 html.dark .dam-db-mode-chip:not(:has(input:checked)):hover,
 html[data-theme="dark"] .dam-db-mode-chip:not(:has(input:checked)):hover,
 html.dark button.dam-db-mode-chip[aria-pressed="false"]:hover,
 html[data-theme="dark"] button.dam-db-mode-chip[aria-pressed="false"]:hover {
-  background: var(--dam-surface-elevated, #262730);
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 35%, var(--dam-border, #2c2b36));
+  background: var(--dam-surface-elevated);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 35%, var(--dam-border));
   color: var(--dam-text, #eeeaf6);
 }
 html.dark .dam-db-mode-chip:has(input:checked),
 html[data-theme="dark"] .dam-db-mode-chip:has(input:checked),
 html.dark button.dam-db-mode-chip[aria-pressed="true"],
 html[data-theme="dark"] button.dam-db-mode-chip[aria-pressed="true"] {
-  background: var(--dam-primary, #ab54db);
-  border-color: var(--dam-primary, #ab54db);
+  background: var(--dam-primary, #005A29);
+  border-color: var(--dam-primary, #005A29);
   color: var(--dam-on-accent, #fff);
 }
 
@@ -13217,16 +13217,16 @@ html.dark .dam-brand-chip-btn.is-off,
 html[data-theme="dark"] .dam-brand-chip-btn.is-off,
 html.dark .dam-brand-chip-btn:not(.is-active),
 html[data-theme="dark"] .dam-brand-chip-btn:not(.is-active) {
-  background: var(--dam-surface, #1c1d24);
+  background: var(--dam-surface);
   color: var(--dam-text-muted, #b8b3c6);
-  border: 1px solid var(--dam-border, #2c2b36);
+  border: 1px solid var(--dam-border);
   opacity: 1;
 }
 html.dark .dam-brand-chip-btn.is-off:hover,
 html[data-theme="dark"] .dam-brand-chip-btn.is-off:hover,
 html.dark .dam-brand-chip-btn:not(.is-active):hover,
 html[data-theme="dark"] .dam-brand-chip-btn:not(.is-active):hover {
-  background: var(--dam-surface-elevated, #262730);
+  background: var(--dam-surface-elevated);
   color: var(--dam-text, #eeeaf6);
   filter: none;
 }
@@ -13241,31 +13241,79 @@ html.dark .dam-viz-secondary-filters .form-select,
 html[data-theme="dark"] .dam-viz-secondary-filters .form-select,
 html.dark .dam-filter-trigger,
 html[data-theme="dark"] .dam-filter-trigger {
-  background: var(--dam-surface, #1c1d24);
-  border-color: var(--dam-border, #2c2b36);
+  background: var(--dam-surface);
+  border-color: var(--dam-border);
   color: var(--dam-text, #eeeaf6);
 }
 html.dark .dam-filter-trigger:hover,
 html[data-theme="dark"] .dam-filter-trigger:hover {
-  background: var(--dam-surface-elevated, #262730);
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 35%, var(--dam-border, #2c2b36));
+  background: var(--dam-surface-elevated);
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 35%, var(--dam-border));
   color: var(--dam-text, #eeeaf6);
 }
 
 html.dark .dam-welcome-link,
 html[data-theme="dark"] .dam-welcome-link {
-  background: var(--dam-surface, #1c1d24);
-  border-color: var(--dam-border, #2c2b36);
+  background: var(--dam-surface);
+  border-color: var(--dam-border);
   color: var(--dam-text, #eeeaf6);
 }
 html.dark .dam-welcome-link:hover,
 html[data-theme="dark"] .dam-welcome-link:hover {
-  background: color-mix(in srgb, var(--dam-primary, #ab54db) 14%, var(--dam-surface-elevated, #262730));
-  border-color: color-mix(in srgb, var(--dam-primary, #ab54db) 45%, var(--dam-border, #2c2b36));
-  color: var(--dam-hash, var(--dam-primary, #c9a0e8));
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, var(--dam-surface-elevated));
+  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 45%, var(--dam-border));
+  color: var(--dam-hash, var(--dam-primary, #005A29));
 }
 html.dark .dam-welcome-section__title,
 html[data-theme="dark"] .dam-welcome-section__title,
 html.dark .dam-welcome-hint,
 html[data-theme="dark"] .dam-welcome-hint {
+  color: var(--dam-text-muted);
+}
+
+/* Phone touch — M09 tabs, M10 window buttons, B12 slot rows.
+   Beats dam-dashboard.css 31px !important and dam-app.css 30px rows.
+   Frozen .dam-viz-card__body anatomy is not restyled here. */
+@media (max-width: 767.98px) {
+  html body button.dam-asana-home__tab,
+  html body .dam-asana-home__tab {
+    min-height: var(--dam-control-h);
+    min-width: var(--dam-control-h);
+    padding: 10px 12px;
+    box-sizing: border-box;
+  }
+
+  html body .dam-widget--viz-latest .dam-nav-circles--tiles .dam-viz-icon-btn,
+  html body .dam-widget--viz-latest .dam-nav-circles--tiles .dam-viz-icon-btn.dam-win-btn,
+  html body .dam-widget--branding-latest .dam-nav-circles--tiles .dam-viz-icon-btn,
+  html body .dam-widget--branding-latest .dam-nav-circles--tiles .dam-viz-icon-btn.dam-win-btn,
+  html body .dam-widget--media-latest .dam-nav-circles--tiles .dam-viz-icon-btn,
+  html body .dam-widget--media-latest .dam-nav-circles--tiles .dam-viz-icon-btn.dam-win-btn,
+  html body button.dam-viz-icon-btn.dam-win-btn,
+  html body .dam-nav-circles--tiles .dam-viz-icon-btn.dam-win-btn,
+  html body .dam-nav-circles .dam-viz-icon-btn.dam-win-btn {
+    width: var(--dam-control-h) !important;
+    height: var(--dam-control-h) !important;
+    min-width: var(--dam-control-h) !important;
+    min-height: var(--dam-control-h) !important;
+    flex: 0 0 var(--dam-control-h) !important;
+    flex-basis: var(--dam-control-h) !important;
+    box-sizing: border-box;
+  }
+
+  html body .dam-slot-row.dam-slot-row--interactive {
+    min-height: var(--dam-control-h);
+    padding-top: 10px;
+    padding-bottom: 10px;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  html body .dam-slot-row__actions .geex-btn,
+  html body .dam-slot-row__actions .dam-btn-icon-only {
+    min-height: var(--dam-control-h);
+    min-width: var(--dam-control-h);
+  }
+}
  

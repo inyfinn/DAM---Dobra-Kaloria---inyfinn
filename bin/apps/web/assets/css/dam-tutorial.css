@@ -195,7 +195,7 @@
 }
 
 .dam-tut__sample-ico--folder {
-  color: var(--dam-primary, #ab54db);
+  color: var(--dam-primary, #005A29);
 }
 
 .dam-tut__go {
@@ -283,11 +283,11 @@
 .dam-tut__btn:hover:not(:disabled) {
   background: color-mix(
     in srgb,
-    var(--dam-primary, #ab54db) 10%,
+    var(--dam-primary, #005A29) 10%,
     var(--dam-surface, #fff)
   );
   border-color: var(--dam-btn-outline-border, var(--dam-border, #ececf2));
-  color: var(--dam-primary, #ab54db);
+  color: var(--dam-primary, #005A29);
 }
 
 .dam-tut__btn:disabled {
@@ -440,6 +440,23 @@
   text-align: center;
 }
 
+.dam-tut-invite__close {
+  display: none;
+}
+
+.dam-tut-invite__details {
+  margin: 0;
+}
+
+.dam-tut-invite__summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.dam-tut-invite__summary::-webkit-details-marker {
+  display: none;
+}
+
 @media (max-width: 640px) {
   .dam-tut__ctrl {
     gap: 6px;
@@ -453,16 +470,150 @@
   .dam-tut__phase-label {
     font-size: var(--dam-fs-xs, 11px);
   }
-  .dam-tut-invite {
-    right: 12px;
-    width: min(390px, calc(100vw - 24px));
-    --tut-medal: 88px;
-    --tut-invite-hang: calc(var(--tut-medal) + 14px);
-    padding: 18px 16px;
+}
+
+/* M22 — phone: one-line bar (48px). Board stays clear; close hit 44×44. */
+@media (max-width: 767.98px) {
+  :root {
+    --dam-tut-invite-bar-h: 48px;
+    --dam-tut-invite-board-pad: 64px;
   }
+
+  .dam-tut-invite {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    height: var(--dam-tut-invite-bar-h);
+    min-height: var(--dam-tut-invite-bar-h);
+    max-height: var(--dam-tut-invite-bar-h);
+    --tut-medal: 32px;
+    --tut-invite-hang: 0px;
+    padding: 2px 2px 2px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .dam-tut-invite::after {
+    left: 0;
+    border-radius: var(--dam-radius-md, 12px) var(--dam-radius-md, 12px) 0 0;
+  }
+
+  .dam-tut-invite:not(:has(.dam-tut-invite__details[open])) .dam-tut-invite__mascot {
+    display: none;
+  }
+
   .dam-tut-invite .dam-tut-invite__mascot {
-    left: calc(-1 * var(--tut-invite-hang));
-    top: 4px;
+    position: relative;
+    left: 0;
+    top: 0;
+    flex: 0 0 var(--tut-medal);
+    width: var(--tut-medal);
+    height: var(--tut-medal);
+  }
+
+  .dam-tut-invite .dam-tut-invite__mascot-img {
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .dam-tut-invite__body {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-right: 0;
+  }
+
+  .dam-tut-invite__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: static;
+    flex: 0 0 var(--dam-control-h, 44px);
+    z-index: 2;
+    width: var(--dam-control-h, 44px);
+    height: var(--dam-control-h, 44px);
+    min-width: var(--dam-control-h, 44px);
+    min-height: var(--dam-control-h, 44px);
+    margin-left: auto;
+    padding: 0;
+    border: 1px solid var(--dam-border);
+    border-radius: var(--dam-radius-sm, 8px);
+    background: var(--dam-surface);
+    color: var(--dam-text);
+    font-size: var(--dam-fs-lg, 16px);
+    line-height: 1;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+
+  .dam-tut-invite__close span {
+    font-size: var(--dam-fs-lg, 16px);
+    line-height: 1;
+  }
+
+  .dam-tut-invite__summary {
+    display: flex;
+    align-items: center;
+    min-height: 0;
+    height: 44px;
+  }
+
+  .dam-tut-invite__text {
+    margin: 0;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--dam-fs-sm, 12px);
+    line-height: 1.2;
+  }
+
+  .dam-tut-invite__details:not([open]) .dam-tut-invite__actions {
+    display: none;
+  }
+
+  .dam-tut-invite:has(.dam-tut-invite__details[open]) {
+    height: auto;
+    max-height: none;
+    min-height: var(--dam-tut-invite-bar-h);
+    padding: 8px 8px 12px 12px;
+    overflow: visible;
+  }
+
+  .dam-tut-invite__details[open] .dam-tut-invite__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .dam-tut-invite__details[open] .dam-tut-invite__text {
+    white-space: normal;
+    text-overflow: unset;
+    overflow: visible;
+  }
+
+  .dam-tut-invite__actions .dam-tut__btn {
+    min-height: var(--dam-control-h, 44px);
+    min-width: var(--dam-control-h, 44px);
+  }
+
+  body:has(#damTutorialInvite) .geex-content,
+  body:has(#damTutorialInvite) .dam-dash-grid,
+  body:has(#damTutorialInvite) .dam-asana-home__list {
+    padding-bottom: var(--dam-tut-invite-board-pad);
+  }
+
+  body:has(#damTutorialInvite .dam-tut-invite__details[open]) .geex-content,
+  body:has(#damTutorialInvite .dam-tut-invite__details[open]) .dam-dash-grid,
+  body:has(#damTutorialInvite .dam-tut-invite__details[open]) .dam-asana-home__list {
+    padding-bottom: 200px;
   }
 }
 

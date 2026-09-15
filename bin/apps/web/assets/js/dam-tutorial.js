@@ -1959,20 +1959,31 @@
 
   function showInvite() {
     if (document.getElementById("damTutorialInvite")) return;
+    var isPhone = false;
+    try {
+      isPhone = !!(window.matchMedia && window.matchMedia("(max-width: 767.98px)").matches);
+    } catch (ePhone) { /* ignore */ }
     var box = document.createElement("div");
     box.id = "damTutorialInvite";
-    box.className = "dam-tut-invite";
+    box.className = "dam-tut-invite" + (isPhone ? " dam-tut-invite--phone" : "");
     box.setAttribute("role", "dialog");
     box.setAttribute("aria-label", "Zaproszenie do samouczka");
     box.innerHTML =
+      '<button type="button" class="dam-tut-invite__close" data-tut-invite="later" aria-label="Zamknij">' +
+        '<span aria-hidden="true">&times;</span>' +
+      "</button>" +
       '<div class="dam-tut-invite__mascot" aria-hidden="true"><span class="dam-tut-invite__mascot-img"></span></div>' +
       '<div class="dam-tut-invite__body">' +
-        '<p class="dam-tut-invite__text"></p>' +
-        '<div class="dam-tut-invite__actions">' +
-          '<button type="button" class="dam-tut__btn dam-tut__btn--primary" data-tut-invite="yes">Jasne, pokaż</button>' +
-          '<button type="button" class="dam-tut__btn" data-tut-invite="later">Nie teraz</button>' +
-          '<button type="button" class="dam-tut__btn dam-tut__btn--quiet" data-tut-invite="never">Nie pytaj więcej</button>' +
-        "</div>" +
+        '<details class="dam-tut-invite__details"' + (isPhone ? "" : " open") + ">" +
+          '<summary class="dam-tut-invite__summary">' +
+            '<span class="dam-tut-invite__text"></span>' +
+          "</summary>" +
+          '<div class="dam-tut-invite__actions">' +
+            '<button type="button" class="dam-tut__btn dam-tut__btn--primary" data-tut-invite="yes">Jasne, pokaż</button>' +
+            '<button type="button" class="dam-tut__btn" data-tut-invite="later">Nie teraz</button>' +
+            '<button type="button" class="dam-tut__btn dam-tut__btn--quiet" data-tut-invite="never">Nie pytaj więcej</button>' +
+          "</div>" +
+        "</details>" +
       "</div>";
     document.body.appendChild(box);
     var inviteTextEl = box.querySelector(".dam-tut-invite__text");
@@ -1985,7 +1996,13 @@
 
     box.addEventListener("click", function (e) {
       var btn = e.target && e.target.closest ? e.target.closest("[data-tut-invite]") : null;
-      if (!btn) return;
+      if (!btn) {
+        var details = box.querySelector(".dam-tut-invite__details");
+        if (details && !details.open && !(e.target.closest && e.target.closest("summary"))) {
+          details.open = true;
+        }
+        return;
+      }
       var action = btn.getAttribute("data-tut-invite");
       if (action === "yes") {
         start();
