@@ -1,9 +1,9 @@
 {
-  "version": "1.0.75",
+  "version": "1.7.5",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-09-15",
-  "note": "Semver baseline z liczby commitów na main (2026-09-15): n=173 → 1.0.73, ten release +0.0.1 → 1.0.74. Formula: commits<100 → 0.0.{n}; commits≥100 → 1.0.{n-100}. Każdy kolejny commit produktowy +0.0.1 patch. Pliki sync: version.json, dam-version.js, runtime_config.py, DAM-Setup.iss, #damSidebarVersion.",
+  "note": "User mapping 2026-09-15: n=175 commits on main → 1.7.5 (not project rule 1.0.{n-100}=1.0.75). Formula used: 1.{(n-100)//10}.{(n-100)%10}. Pliki sync: version.json, dam-version.js, runtime_config.py, DAM-Setup.iss, #damSidebarVersion.",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
     "asset_name": "DAM-Setup.exe"

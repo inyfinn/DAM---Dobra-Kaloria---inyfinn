@@ -1,3 +1,11 @@
+## 2026-09-15 - v1.7.5 cache provenance + first-run NAS pack
+
+**Komenda/Akcja:** Manifest + SQLite provenance; first-run fetch z Panel-DAM/bin/PAMIEC-PODRECZNA; bump 1.7.5 (user: 175 commitow, nie 1.0.75); push; instalator.
+
+**Log/Status:** `dam_kv_local.thumb-cache-manifest` (generated_at, file_count, total_bytes, last_mtime, source, synced_at). Porownanie pusto/delta/match. NAS manifest HTTPS potwierdzony 12937 / 102921212. Pack `cache-pack.tar` odswiezony. UI leftovers: bez restylu pill/win-btn (juz 44px); `dam-app.css?v=1.7.5` na index/explorer/visualizations/branding.
+
+**Zrodla:** dam_thumb_cache.py, dam_db.py, sync-pamiec-podreczna.py, dam-repo-pull.sh.
+
 ## 2026-09-13 - v6.0.7 scheme picker overlay (facts, bez PASS)
 
 **Komenda/Akcja:** 41 kafelkow z karty Wyglad do osobnego okna. 2 kolumny, klik nie zamyka. Commit + push + instalator.

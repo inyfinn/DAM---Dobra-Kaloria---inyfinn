@@ -4,9 +4,9 @@
   <script src="./assets/js/dam-panic-reload.js?v=5.0.196"></script>
   <script>(function(){try{var r=document.documentElement,p=localStorage.getItem('dam_theme_pref')||localStorage.getItem('theme')||'light',t=p;if(p==='system'){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}if(t!=='dark'&&t!=='light')t='light';r.setAttribute('data-theme',t);r.style.colorScheme=t;r.classList.toggle('dark',t==='dark');if(p==='system'||p==='dark'||p==='light')r.setAttribute('data-dam-theme-pref',p);}catch(e){}})();</script>
   <style id="dam-shell-boot-critical">
-html.dam-booting{background:#f3f5f4}html.dam-booting.dark,html.dam-booting[data-theme="dark"]{background:#101114}html.dam-booting body,body.is-booting{opacity:0!important;pointer-events:none}
+html.dam-booting{background:#F3F6F4}html.dam-booting.dark,html.dam-booting[data-theme="dark"]{background:#060F0C}html.dam-booting body,body.is-booting{opacity:0!important;pointer-events:none}
   </style>
-  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=5.0.196">
+  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=1.0.80">
   <script>
   (function(){var r=document.documentElement;if(!r.classList.contains("dam-booting"))r.classList.add("dam-booting");setTimeout(function(){if(window.__damBootWatchdog)window.__damBootWatchdog("4.5s");},4500);})();
   </script>
@@ -19,18 +19,18 @@ html.dam-booting{background:#f3f5f4}html.dam-booting.dark,html.dam-booting[data-
   <link rel="stylesheet" href="./assets/css/dam-fonts.css?v=5.0.205">
 
   <link rel="stylesheet" href="./assets/css/style.css?v=5.0.196">
-  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=5.0.196">
-  <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=5.0.196">
-  <link rel="stylesheet" href="./assets/css/dam-app.css?v=5.0.198">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=6.0.7">
-  <link rel="stylesheet" href="./assets/css/dam-dashboard.css?v=5.0.196">
+  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=1.0.81">
+  <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=1.0.81">
+  <link rel="stylesheet" href="./assets/css/dam-app.css?v=1.0.83">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=1.0.81">
+  <link rel="stylesheet" href="./assets/css/dam-dashboard.css?v=1.0.79">
   <link rel="stylesheet" href="./assets/css/dam-bento.css?v=5.0.196">
-  <link rel="stylesheet" href="./assets/css/dam-accent.css?v=5.0.196">
-  <link rel="stylesheet" href="./assets/css/dam-settings.css?v=5.0.196">
-  <link rel="stylesheet" href="./assets/css/dam-integrations.css?v=5.0.196">
-  <link rel="stylesheet" href="./assets/css/dam-integrations-settings.css?v=5.0.196">
-  <script src="./assets/js/dam-theme.js?v=6.0.7"></script>
-  <script src="./assets/js/dam-accent.js?v=5.0.196"></script>
+  <link rel="stylesheet" href="./assets/css/dam-accent.css?v=1.0.78">
+  <link rel="stylesheet" href="./assets/css/dam-settings.css?v=1.0.79">
+  <link rel="stylesheet" href="./assets/css/dam-integrations.css?v=1.0.79">
+  <link rel="stylesheet" href="./assets/css/dam-integrations-settings.css?v=1.0.79">
+  <script src="./assets/js/dam-theme.js?v=1.0.81"></script>
+  <script src="./assets/js/dam-accent.js?v=1.0.79"></script>
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
 </head>
 <body class="geex-dashboard dam-app is-booting">
@@ -119,17 +119,17 @@ html.dam-booting{background:#f3f5f4}html.dam-booting.dark,html.dam-booting[data-
                   <label for="settingProfileName">Wyświetlana nazwa</label>
                   <input type="text" id="settingProfileName" autocomplete="name">
                 </div>
-                <div class="dam-sw-field">
-                  <label for="settingProfileTitle">Stanowisko / podpis</label>
-                  <input type="text" id="settingProfileTitle" placeholder="np. GRAFIK - MARKETING">
-                </div>
-                <div class="dam-sw-field">
+                <div class="dam-sw-field dam-sw-field--full">
                   <label for="settingProfilePhone">Telefon</label>
                   <input type="tel" id="settingProfilePhone" autocomplete="tel">
                 </div>
-                <div class="dam-sw-field">
+                <div class="dam-sw-field dam-sw-field--full">
                   <label for="settingProfileEmail">E-mail (konto)</label>
-                  <input type="email" id="settingProfileEmail" readonly disabled>
+                  <input type="email" id="settingProfileEmail" class="dam-sw-profile__email" readonly disabled>
+                </div>
+                <div class="dam-sw-field">
+                  <label for="settingProfileTitle">Stanowisko / podpis</label>
+                  <input type="text" id="settingProfileTitle" placeholder="np. GRAFIK - MARKETING">
                 </div>
                 <div class="dam-sw-field">
                   <label for="settingProfileRole">Rola w DAM</label>
@@ -552,20 +552,20 @@ html.dam-booting{background:#f3f5f4}html.dam-booting.dark,html.dam-booting[data-
   <script src="./assets/js/dam-api.js?v=6.0.0"></script>
   <script src="./assets/js/dam-i18n.js?v=5.0.196"></script>
   <script src="./assets/js/dam-runtime.js?v=5.0.196"></script>
-  <script src="./assets/js/dam-version.js?v=6.0.9"></script>
-	<script src="./assets/js/dam-shell.js?v=6.0.9"></script>
-  <script src="./assets/js/dam-loader.js?v=6.0.9"></script>
+  <script src="./assets/js/dam-version.js?v=1.7.5"></script>
+	<script src="./assets/js/dam-shell.js?v=1.0.79"></script>
+  <script src="./assets/js/dam-loader.js?v=1.0.79"></script>
   <script src="./assets/js/dam-tooltips.js?v=5.0.196"></script>
   <script src="./assets/js/dam-paths.js?v=6.0.0"></script>
   <script src="./assets/js/dam-labels.js?v=5.0.196"></script>
   <script src="./assets/js/dam-badges.js?v=5.0.196"></script>
-  <script src="./assets/js/dam-tag-edit.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-tag-edit.js?v=1.0.79"></script>
   <script src="./assets/js/dam-user-prefs.js?v=5.0.196"></script>
-  <script src="./assets/js/dam-danger.js?v=5.0.196"></script>
-  <script src="./assets/js/dam-fmcg-catalog.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-danger.js?v=1.0.79"></script>
+  <script src="./assets/js/dam-fmcg-catalog.js?v=1.0.79"></script>
   <script src="./assets/js/dam-integrations.js?v=5.0.196"></script>
   <script src="./assets/js/dam-settings.js?v=6.0.7"></script>
-  <script src="./assets/js/dam-device-paths.js?v=5.0.196"></script>
+  <script src="./assets/js/dam-device-paths.js?v=1.0.79"></script>
   <style id="damDangerZoneCss">
     /* Pełna szerokość w siatce 12-col (bez .dam-sw--danger w dam-settings.css) */
     .dam-settings-grid > .dam-sw--danger,

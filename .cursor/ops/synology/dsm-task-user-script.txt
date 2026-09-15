@@ -1,0 +1,2 @@
+# Paste this single line into DSM Task Scheduler -> Task Settings -> User-defined script
+/bin/sh /var/services/homes/Inyfinn/bin/dam-repo-pull.sh

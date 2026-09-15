@@ -18,9 +18,11 @@ import os
 import shutil
 import subprocess
 import sys
+import tarfile
 import threading
 import time
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -807,18 +809,34 @@ def _warm_worker_loop() -> None:
 
 # ---------------------------------------------------------------------------
 # NAS seed download + publish (not in Windows installer).
-# Remote: W:\web\Panel-DAM\pamiec-podreczna  (RaiDrive /volume1/web/Panel-DAM)
-# HTTPS:  https://inyfinn.synology.me/Panel-DAM/pamiec-podreczna/
-# Local:  {REPO_ROOT}/PAMIEC-PODRECZNA  (bin/PAMIEC-PODRECZNA). Never X: or M:.
+# SoT: /volume1/web/Panel-DAM/bin/PAMIEC-PODRECZNA  (never a pre-git sidecar).
+# HTTPS: https://inyfinn.synology.me/Panel-DAM/bin/PAMIEC-PODRECZNA/
+# W:     W:\web\Panel-DAM\bin\PAMIEC-PODRECZNA
+# Local: {REPO_ROOT}/PAMIEC-PODRECZNA  (bin/PAMIEC-PODRECZNA). Never X: or M:.
+# SSH:   syno-ddns (same host as .cursor/ops/synology/sync-pamiec-podreczna.py).
 # ---------------------------------------------------------------------------
 import socket
 import urllib.error
 import urllib.request
 
-NAS_CACHE_URL_DEFAULT = "https://inyfinn.synology.me/Panel-DAM/pamiec-podreczna"
-NAS_CACHE_PATH_DEFAULT = Path(r"W:\web\Panel-DAM\pamiec-podreczna")
+NAS_CACHE_URL_DEFAULT = "https://inyfinn.synology.me/Panel-DAM/bin/PAMIEC-PODRECZNA"
+NAS_CACHE_PATH_DEFAULT = Path(r"W:\web\Panel-DAM\bin\PAMIEC-PODRECZNA")
+NAS_CACHE_SSH_DEST = "/volume1/web/Panel-DAM/bin/PAMIEC-PODRECZNA"
+NAS_SSH_HOST_DEFAULT = "syno-ddns"
 SEED_THUMB_HINT = 329
 LOW_LOCAL_THUMBS = 80
+MANIFEST_NAME = "manifest.json"
+PACK_NAME = "cache-pack.tar"
+FILES_TSV_NAME = "files.tsv"
+PROVENANCE_SKIP = frozenset(
+    {
+        MANIFEST_NAME,
+        PACK_NAME,
+        "cache-pack.meta.json",
+        FILES_TSV_NAME,
+        ".dam-write-probe",
+    }
+)
 SYNC_STATUS_FILE = DESKTOP_DIR / "data" / "cache-sync-status.json"
 PUBLISH_QUEUE_FILE = DESKTOP_DIR / "data" / "cache-publish-queue.json"
 
@@ -850,8 +868,384 @@ def nas_cache_path() -> Path:
     return Path(override) if override else NAS_CACHE_PATH_DEFAULT
 
 
+def nas_ssh_host() -> str:
+    return (os.environ.get("DAM_NAS_SSH_HOST") or NAS_SSH_HOST_DEFAULT).strip() or NAS_SSH_HOST_DEFAULT
+
+
+def nas_ssh_dest() -> str:
+    return (os.environ.get("DAM_NAS_SSH_DEST") or NAS_CACHE_SSH_DEST).rstrip("/")
+
+
 def _utc_iso() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def _mtime_ts(val) -> float:
+    if val is None or val == "":
+        return 0.0
+    if isinstance(val, (int, float)):
+        return float(val)
+    text = str(val).strip()
+    try:
+        return float(text)
+    except (TypeError, ValueError):
+        pass
+    iso = text
+    if iso.endswith("Z"):
+        iso = iso[:-1] + "+00:00"
+    try:
+        return datetime.fromisoformat(iso).timestamp()
+    except ValueError:
+        return 0.0
+
+
+def _unix_to_iso(ts: float) -> str:
+    if not ts:
+        return ""
+    try:
+        return datetime.fromtimestamp(float(ts), tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    except (OSError, OverflowError, ValueError):
+        return ""
+
+
+def local_tree_stats() -> dict:
+    """Folder scan used to decide fetch. Skips pack/manifest sidecars."""
+    root = cache_root()
+    file_count = 0
+    total_bytes = 0
+    last_unix = 0.0
+    try:
+        for dirpath, _dirnames, filenames in os.walk(root):
+            for name in filenames:
+                if name in PROVENANCE_SKIP:
+                    continue
+                full = Path(dirpath) / name
+                try:
+                    st = full.stat()
+                except OSError:
+                    continue
+                file_count += 1
+                total_bytes += int(st.st_size)
+                if st.st_mtime > last_unix:
+                    last_unix = float(st.st_mtime)
+    except OSError:
+        pass
+    generated = _utc_iso()
+    return {
+        "generated_at": generated,
+        "file_count": file_count,
+        "total_bytes": total_bytes,
+        "last_mtime": _unix_to_iso(last_unix) or generated,
+        "last_mtime_unix": last_unix,
+        "root": str(root),
+    }
+
+
+def provenance_payload(*, source: str, synced_at: str | None = None) -> dict:
+    stats = local_tree_stats()
+    out = {
+        "generated_at": stats["generated_at"],
+        "file_count": stats["file_count"],
+        "total_bytes": stats["total_bytes"],
+        "last_mtime": stats["last_mtime"],
+        "last_mtime_unix": stats["last_mtime_unix"],
+        "source": source,
+    }
+    if synced_at:
+        out["synced_at"] = synced_at
+    return out
+
+
+def local_manifest_path() -> Path:
+    return cache_root() / MANIFEST_NAME
+
+
+def write_local_manifest(payload: dict) -> Path:
+    disk = {
+        "generated_at": payload.get("generated_at") or _utc_iso(),
+        "file_count": int(payload.get("file_count") or 0),
+        "total_bytes": int(payload.get("total_bytes") or 0),
+        "last_mtime": payload.get("last_mtime") or "",
+        "source": payload.get("source") or "local",
+    }
+    if payload.get("last_mtime_unix") is not None:
+        disk["last_mtime_unix"] = payload.get("last_mtime_unix")
+    _write_json_atomic(local_manifest_path(), disk)
+    return local_manifest_path()
+
+
+def persist_cache_state(*, source: str, synced: bool = True) -> dict:
+    now = _utc_iso()
+    payload = provenance_payload(source=source, synced_at=now if synced else None)
+    write_local_manifest(payload)
+    try:
+        import dam_db
+
+        dam_db.kv_local_set(
+            dam_db.THUMB_CACHE_MANIFEST_KEY,
+            payload,
+            updated_by="dam-cache",
+        )
+    except Exception:
+        pass
+    try:
+        import pg_db
+
+        pg_db.upsert_thumb_cache_manifest(payload, updated_by="dam-cache")
+    except Exception:
+        pass
+    return payload
+
+
+def read_db_cache_state() -> dict:
+    try:
+        import dam_db
+
+        data = dam_db.kv_local_get(dam_db.THUMB_CACHE_MANIFEST_KEY, {})
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def decide_cache_action(
+    remote: dict | None,
+    local: dict | None,
+    db: dict | None = None,
+) -> str:
+    """Synology is SoT. empty→download, remote newer→delta, match→noop."""
+    local = local or {}
+    local_n = int(local.get("file_count") or 0)
+    local_b = int(local.get("total_bytes") or 0)
+    if remote is None:
+        return "blocked" if local_n == 0 else "noop"
+    remote_n = int(remote.get("file_count") or 0)
+    remote_b = int(remote.get("total_bytes") or 0)
+    if local_n == 0:
+        return "download"
+    if remote_n > local_n or remote_b > local_b:
+        return "delta"
+    remote_mt = _mtime_ts(remote.get("last_mtime_unix") or remote.get("last_mtime"))
+    local_mt = _mtime_ts(local.get("last_mtime_unix") or local.get("last_mtime"))
+    if remote_mt > local_mt + 1.0:
+        return "delta"
+    db_synced = _mtime_ts((db or {}).get("synced_at") or (db or {}).get("generated_at"))
+    remote_gen = _mtime_ts(remote.get("generated_at"))
+    if db_synced and remote_gen > db_synced + 1.0 and remote_n >= local_n:
+        return "delta"
+    return "noop"
+
+
+def _ssh_run(host: str, remote: str, stdin: bytes | None = None) -> subprocess.CompletedProcess[bytes]:
+    cmd = [
+        "ssh",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=20",
+        host,
+        remote,
+    ]
+    return subprocess.run(cmd, input=stdin, capture_output=True)
+
+
+def ssh_reachable() -> bool:
+    try:
+        proc = _ssh_run(nas_ssh_host(), "true")
+        return proc.returncode == 0
+    except OSError:
+        return False
+
+
+def _walk_tree_sizes(root: Path) -> dict[str, int]:
+    files: dict[str, int] = {}
+    if not root.is_dir():
+        return files
+    for dirpath, _dirnames, filenames in os.walk(root):
+        for name in filenames:
+            if name in PROVENANCE_SKIP:
+                continue
+            full = Path(dirpath) / name
+            rel = full.relative_to(root).as_posix()
+            try:
+                files[rel] = int(full.stat().st_size)
+            except OSError:
+                continue
+    return files
+
+
+def _walk_remote_ssh() -> dict[str, int]:
+    dest = nas_ssh_dest()
+    script = (
+        f"DEST={dest!r}\n"
+        "if [ ! -d \"$DEST\" ]; then exit 0; fi\n"
+        "find \"$DEST\" -type f -printf '%s\\t%P\\n'\n"
+    )
+    proc = _ssh_run(nas_ssh_host(), "sh -s", stdin=script.encode("utf-8"))
+    if proc.returncode != 0:
+        return {}
+    files: dict[str, int] = {}
+    text = (proc.stdout or b"").decode("utf-8", "replace")
+    for line in text.splitlines():
+        if not line.strip() or "\t" not in line:
+            continue
+        size_s, rel = line.split("\t", 1)
+        name = Path(rel.replace("\\", "/")).name
+        if name in PROVENANCE_SKIP:
+            continue
+        try:
+            files[rel.replace("\\", "/")] = int(size_s)
+        except ValueError:
+            continue
+    return files
+
+
+def _safe_extract_tar(tf: tarfile.TarFile, dest: Path) -> int:
+    dest_r = dest.resolve()
+    extracted = 0
+    for member in tf:
+        name = (member.name or "").replace("\\", "/").lstrip("/")
+        if not name or name.endswith("/"):
+            continue
+        if Path(name).name in PROVENANCE_SKIP:
+            continue
+        target = (dest / name).resolve()
+        if not str(target).startswith(str(dest_r)):
+            continue
+        tf.extract(member, dest)
+        extracted += 1
+    return extracted
+
+
+def _pull_ssh_rels(rels: list[str]) -> int:
+    if not rels:
+        return 0
+    dest = nas_ssh_dest()
+    local = cache_root()
+    local.mkdir(parents=True, exist_ok=True)
+    proc = subprocess.Popen(
+        [
+            "ssh",
+            "-o",
+            "BatchMode=yes",
+            "-o",
+            "ConnectTimeout=20",
+            nas_ssh_host(),
+            f"tar -cf - -C {dest!r} -T -",
+        ],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    assert proc.stdin is not None
+    proc.stdin.write("\n".join(rels).encode("utf-8"))
+    proc.stdin.close()
+    extracted = 0
+    assert proc.stdout is not None
+    with tarfile.open(fileobj=proc.stdout, mode="r|") as tf:
+        extracted = _safe_extract_tar(tf, local)
+    stderr = proc.stderr.read() if proc.stderr else b""
+    code = proc.wait()
+    if code != 0 and extracted == 0:
+        raise RuntimeError(
+            (stderr or b"").decode("utf-8", "replace").strip() or f"ssh tar rc={code}"
+        )
+    return extracted
+
+
+def _pull_ssh_full() -> int:
+    dest = nas_ssh_dest()
+    local = cache_root()
+    local.mkdir(parents=True, exist_ok=True)
+    excludes = " ".join(f"--exclude={name}" for name in sorted(PROVENANCE_SKIP))
+    proc = subprocess.Popen(
+        [
+            "ssh",
+            "-o",
+            "BatchMode=yes",
+            "-o",
+            "ConnectTimeout=20",
+            nas_ssh_host(),
+            f"tar -cf - -C {dest!r} {excludes} .",
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    extracted = 0
+    assert proc.stdout is not None
+    with tarfile.open(fileobj=proc.stdout, mode="r|") as tf:
+        extracted = _safe_extract_tar(tf, local)
+    stderr = proc.stderr.read() if proc.stderr else b""
+    code = proc.wait()
+    if code != 0 and extracted == 0:
+        raise RuntimeError(
+            (stderr or b"").decode("utf-8", "replace").strip() or f"ssh tar rc={code}"
+        )
+    return extracted
+
+
+def _copy_missing_from_dir(src: Path) -> int:
+    if not src.is_dir():
+        return 0
+    dest_root = cache_root()
+    copied = 0
+    remote = _walk_tree_sizes(src)
+    local = _walk_tree_sizes(dest_root)
+    for rel, size in remote.items():
+        if local.get(rel) == size:
+            continue
+        src_f = src / Path(*rel.split("/"))
+        dest_f = dest_root / Path(*rel.split("/"))
+        if _copy_path_atomic(src_f, dest_f):
+            copied += 1
+    return copied
+
+
+def _pull_https_pack() -> int:
+    url = nas_cache_url() + "/" + PACK_NAME
+    raw = _http_get_bytes(url, timeout=300.0)
+    if not raw:
+        return 0
+    dest = cache_root()
+    dest.mkdir(parents=True, exist_ok=True)
+    extracted = 0
+    with tarfile.open(fileobj=io.BytesIO(raw), mode="r:*") as tf:
+        extracted = _safe_extract_tar(tf, dest)
+    return extracted
+
+
+def _load_remote_files_tsv(source: str) -> dict[str, int]:
+    text = ""
+    if source == "https":
+        raw = _http_get_bytes(nas_cache_url() + "/" + FILES_TSV_NAME, timeout=60.0)
+        if raw:
+            text = raw.decode("utf-8", "replace")
+    else:
+        p = nas_cache_path() / FILES_TSV_NAME
+        if p.is_file():
+            try:
+                text = p.read_text(encoding="utf-8")
+            except OSError:
+                text = ""
+    files: dict[str, int] = {}
+    for line in text.splitlines():
+        if not line.strip() or "\t" not in line:
+            continue
+        size_s, rel = line.split("\t", 1)
+        name = Path(rel.replace("\\", "/")).name
+        if name in PROVENANCE_SKIP:
+            continue
+        try:
+            files[rel.replace("\\", "/")] = int(size_s)
+        except ValueError:
+            continue
+    return files
+
+
+def _http_get_to_file(url: str, dest: Path, timeout: float = 60.0) -> bool:
+    body = _http_get_bytes(url, timeout=timeout)
+    if not body:
+        return False
+    return _copy_bytes_atomic(dest, body)
 
 
 def _write_json_atomic(path: Path, payload: dict) -> None:
@@ -927,15 +1321,20 @@ def sync_status() -> dict:
         nas_ok = nas_p.is_dir()
     except OSError:
         nas_ok = False
+    tree = local_tree_stats()
+    db_state = read_db_cache_state()
     out.update(
         {
             "ok": True,
             "local": stats,
+            "tree": tree,
+            "db": db_state,
             "nas_url": nas_cache_url(),
             "nas_path": str(nas_p),
+            "nas_ssh_dest": nas_ssh_dest(),
             "nas_writable": False,
             "nas_present": nas_ok,
-            "needs_download": bool(stats["avif"] < LOW_LOCAL_THUMBS),
+            "needs_download": bool(tree["file_count"] == 0),
             "seed_hint": SEED_THUMB_HINT,
         }
     )
@@ -1004,13 +1403,56 @@ def _load_manifest_nas_file() -> tuple[dict | None, str]:
     return None, "nas_bad_json"
 
 
-def load_remote_manifest() -> tuple[dict | None, str]:
+def _remote_stats_from_ssh() -> dict | None:
+    dest = nas_ssh_dest()
+    script = (
+        f"DEST={dest!r}\n"
+        "if [ ! -d \"$DEST\" ]; then echo MISSING; exit 0; fi\n"
+        "n=$(find \"$DEST\" -type f "
+        "! -name manifest.json ! -name cache-pack.tar "
+        "! -name cache-pack.meta.json ! -name files.tsv "
+        "! -name .dam-write-probe | wc -l)\n"
+        "b=$(find \"$DEST\" -type f "
+        "! -name manifest.json ! -name cache-pack.tar "
+        "! -name cache-pack.meta.json ! -name files.tsv "
+        "! -name .dam-write-probe -printf '%s\\n' | awk '{s+=$1} END {print s+0}')\n"
+        "mt=$(find \"$DEST\" -type f "
+        "! -name manifest.json ! -name cache-pack.tar "
+        "! -name cache-pack.meta.json ! -name files.tsv "
+        "! -name .dam-write-probe -printf '%T@\\n' | sort -n | tail -1)\n"
+        "echo \"$n $b ${mt:-0}\"\n"
+    )
+    proc = _ssh_run(nas_ssh_host(), "sh -s", stdin=script.encode("utf-8"))
+    if proc.returncode != 0:
+        return None
+    text = (proc.stdout or b"").decode("utf-8", "replace").strip()
+    if not text or text.startswith("MISSING"):
+        return None
+    parts = text.split()
+    if len(parts) < 3:
+        return None
+    last_unix = float(parts[2])
+    return {
+        "generated_at": _utc_iso(),
+        "file_count": int(float(parts[0])),
+        "total_bytes": int(float(parts[1])),
+        "last_mtime": _unix_to_iso(last_unix),
+        "last_mtime_unix": last_unix,
+        "source": "synology",
+    }
+
+
+def load_remote_manifest(*, allow_ssh: bool = False) -> tuple[dict | None, str]:
     data, src = _load_manifest_https()
     if data:
         return data, src
     data2, src2 = _load_manifest_nas_file()
     if data2:
         return data2, src2
+    if allow_ssh and ssh_reachable():
+        ssh_stats = _remote_stats_from_ssh()
+        if ssh_stats:
+            return ssh_stats, "ssh"
     return None, src if src != "https_fail" else src2
 
 
@@ -1125,66 +1567,18 @@ def _merge_rel_index_from_remote(source: str) -> None:
         _save_rel_index()
 
 
-def run_cache_download(*, force: bool = False) -> dict:
-    """Copy missing NAS thumbs into local PAMIEC-PODRECZNA. Never writes X:/M:."""
-    stats = local_thumb_stats()
-    if not force and stats["avif"] >= LOW_LOCAL_THUMBS:
-        _set_sync(
-            running=False,
-            phase="idle",
-            message="local_ok",
-            done=stats["avif"],
-            total=stats["avif"],
-            error="",
-        )
-        return {"ok": True, "started": False, "reason": "local_ok", "local": stats}
-
-    manifest, source = load_remote_manifest()
-    if not manifest:
-        fallback_dir = nas_cache_path() / "thumbs"
-        files: list[dict] = []
-        try:
-            if fallback_dir.is_dir():
-                for p in fallback_dir.iterdir():
-                    if p.suffix.lower() in (".avif", ".jpg") and p.is_file():
-                        files.append({"digest": p.stem, "ext": p.suffix.lstrip(".").lower(), "size": p.stat().st_size})
-                source = "nas_file"
-        except OSError:
-            files = []
-        if not files:
-            _set_sync(
-                running=False,
-                phase="error",
-                error="manifest_unavailable",
-                source=source,
-                message="Brak manifestu NAS",
-            )
-            return {"ok": False, "error": "manifest_unavailable", "source": source, "local": stats}
-        manifest = {"files": files, "thumb_count": len(files)}
-    else:
-        files = _manifest_files(manifest)
-
-    total = len(files) or int(manifest.get("thumb_count") or 0)
-    t0 = time.time()
-    _set_sync(
-        running=True,
-        phase="download",
-        done=0,
-        total=total,
-        copied=0,
-        skipped=0,
-        error="",
-        source=source,
-        started_at=_utc_iso(),
-        finished_at="",
-        eta_sec=None,
-        message="Pobieram pamiec podreczna",
-    )
+def _download_listed_thumbs(manifest: dict, source: str) -> tuple[int, int, int]:
+    files = _manifest_files(manifest)
+    if not files:
+        return 0, 0, 0
+    total = len(files)
     copied = 0
     skipped = 0
     done = 0
+    t0 = time.time()
     local_thumbs = cache_root() / "thumbs"
     local_thumbs.mkdir(parents=True, exist_ok=True)
+    fetch_src = "https" if source == "https" else "nas_file"
     for item in files:
         digest = str(item.get("digest") or "").strip().lower()
         ext = str(item.get("ext") or "avif").lstrip(".").lower() or "avif"
@@ -1195,7 +1589,7 @@ def run_cache_download(*, force: bool = False) -> dict:
             skipped += 1
             done += 1
         else:
-            body = _fetch_remote_thumb(digest, ext, "https" if source == "https" else "nas_file")
+            body = _fetch_remote_thumb(digest, ext, fetch_src)
             if body and _copy_bytes_atomic(dest, body):
                 copied += 1
                 done += 1
@@ -1216,31 +1610,164 @@ def run_cache_download(*, force: bool = False) -> dict:
             source=source,
             message=f"Pobieram pamiec podreczna ({done}/{total})",
         )
-    try:
-        _merge_rel_index_from_remote("https" if source == "https" else "nas_file")
-    except Exception:
-        pass
+    return copied, skipped, total
+
+
+def _download_https_file_index(source: str) -> int:
+    remote = _load_remote_files_tsv(source)
+    if not remote:
+        return 0
+    local = _walk_tree_sizes(cache_root())
+    copied = 0
+    missing = [rel for rel, size in remote.items() if local.get(rel) != size]
+    total = len(missing)
+    for i, rel in enumerate(missing, 1):
+        dest = cache_root() / Path(*rel.split("/"))
+        url = nas_cache_url() + "/" + rel
+        if source == "https":
+            ok = _http_get_to_file(url, dest)
+        else:
+            src = nas_cache_path() / Path(*rel.split("/"))
+            ok = src.is_file() and _copy_path_atomic(src, dest)
+        if ok:
+            copied += 1
+        _set_sync(
+            running=True,
+            phase="download",
+            done=i,
+            total=total,
+            copied=copied,
+            source=source,
+            message=f"Pobieram pamiec podreczna ({i}/{total})",
+        )
+    return copied
+
+
+def _fetch_cache_tree(*, action: str, source: str, manifest: dict | None) -> tuple[int, str]:
+    """Return (copied, used_source). Never writes X:/ or M:."""
+    if nas_cache_path().is_dir():
+        copied = _copy_missing_from_dir(nas_cache_path())
+        if copied or action == "delta":
+            return copied, "nas_file"
+        if action == "download" and copied == 0 and local_tree_stats()["file_count"] > 0:
+            return 0, "nas_file"
+    if ssh_reachable():
+        if action == "download":
+            return _pull_ssh_full(), "ssh"
+        remote = _walk_remote_ssh()
+        local = _walk_tree_sizes(cache_root())
+        missing = sorted(rel for rel, size in remote.items() if local.get(rel) != size)
+        return _pull_ssh_rels(missing), "ssh"
+    packed = _pull_https_pack()
+    if packed:
+        return packed, "https-pack"
+    listed = _download_https_file_index("https" if source == "https" else source)
+    if listed:
+        return listed, "https-files"
+    if manifest:
+        copied, _skipped, _total = _download_listed_thumbs(manifest, source or "https")
+        return copied, source or "https"
+    return 0, source or ""
+
+
+def run_cache_download(*, force: bool = False) -> dict:
+    """Compare local folder + SQLite vs Synology manifest, then fetch if needed."""
+    local = local_tree_stats()
+    db_state = read_db_cache_state()
+    manifest, source = load_remote_manifest(allow_ssh=True)
+    action = "download" if force else decide_cache_action(manifest, local, db_state)
+    if action == "noop":
+        persisted = persist_cache_state(source=source or "local", synced=True)
+        _set_sync(
+            running=False,
+            phase="idle",
+            message="match",
+            done=local["file_count"],
+            total=int((manifest or {}).get("file_count") or local["file_count"]),
+            error="",
+            source=source,
+            action="noop",
+        )
+        return {
+            "ok": True,
+            "started": False,
+            "reason": "match",
+            "action": "noop",
+            "local": local_thumb_stats(),
+            "tree": persisted,
+            "remote": manifest,
+            "source": source,
+        }
+    if action == "blocked":
+        # Manifest missing (HTTPS 404 until NAS write). Still try SSH / W: / pack.
+        action = "download"
+
+    total = int((manifest or {}).get("file_count") or 0)
     _set_sync(
-        running=False,
-        phase="idle",
-        done=done,
+        running=True,
+        phase="download",
+        done=0,
         total=total,
-        copied=copied,
-        skipped=skipped,
-        finished_at=_utc_iso(),
-        eta_sec=0,
-        message="Gotowe",
+        copied=0,
+        skipped=0,
         error="",
+        source=source,
+        action=action,
+        started_at=_utc_iso(),
+        finished_at="",
+        eta_sec=None,
+        message="Pobieram pamiec podreczna",
     )
-    return {
-        "ok": True,
-        "started": True,
-        "copied": copied,
-        "skipped": skipped,
-        "total": total,
-        "source": source,
-        "local": local_thumb_stats(),
-    }
+    used_source = source
+    copied = 0
+    try:
+        copied, used_source = _fetch_cache_tree(
+            action=action,
+            source=source,
+            manifest=manifest,
+        )
+        try:
+            _merge_rel_index_from_remote("https" if used_source.startswith("https") else "nas_file")
+        except Exception:
+            pass
+        persisted = persist_cache_state(source=used_source or "synology", synced=True)
+        after = local_tree_stats()
+        _set_sync(
+            running=False,
+            phase="idle",
+            done=after["file_count"],
+            total=int((manifest or {}).get("file_count") or after["file_count"]),
+            copied=copied,
+            skipped=max(0, after["file_count"] - copied),
+            finished_at=_utc_iso(),
+            eta_sec=0,
+            message="Gotowe",
+            error="",
+            source=used_source,
+            action=action,
+        )
+        return {
+            "ok": True,
+            "started": True,
+            "action": action,
+            "copied": copied,
+            "skipped": max(0, after["file_count"] - copied),
+            "total": after["file_count"],
+            "source": used_source,
+            "local": local_thumb_stats(),
+            "tree": persisted,
+            "remote": manifest,
+        }
+    except Exception as exc:  # noqa: BLE001
+        _set_sync(
+            running=False,
+            phase="error",
+            error=str(exc),
+            message="Blad pobierania",
+            source=used_source,
+            action=action,
+        )
+        return {"ok": False, "error": str(exc), "action": action, "source": used_source}
 
 
 def start_cache_download(*, force: bool = False) -> dict:
@@ -1248,9 +1775,23 @@ def start_cache_download(*, force: bool = False) -> dict:
     with _sync_lock:
         if _sync_state.get("running"):
             return {"ok": True, "started": False, "running": True, "sync": dict(_sync_state)}
-    stats = local_thumb_stats()
-    if not force and stats["avif"] >= LOW_LOCAL_THUMBS:
-        return {"ok": True, "started": False, "reason": "local_ok", "local": stats}
+    local = local_tree_stats()
+    db_state = read_db_cache_state()
+    manifest, source = load_remote_manifest()
+    action = "download" if force else decide_cache_action(manifest, local, db_state)
+    if action == "noop":
+        persist_cache_state(source=source or "local", synced=True)
+        return {
+            "ok": True,
+            "started": False,
+            "reason": "match",
+            "action": "noop",
+            "local": local_thumb_stats(),
+            "tree": local,
+            "remote": manifest,
+        }
+    if action == "blocked":
+        action = "download"
 
     def _worker() -> None:
         global _sync_thread_started
@@ -1264,13 +1805,22 @@ def start_cache_download(*, force: bool = False) -> dict:
     with _sync_lock:
         _sync_state["running"] = True
         _sync_state["phase"] = "download"
+        _sync_state["action"] = action
         _sync_thread_started = True
     threading.Thread(target=_worker, daemon=True, name="dam-cache-download").start()
-    return {"ok": True, "started": True, "running": True, "local": stats}
+    return {
+        "ok": True,
+        "started": True,
+        "running": True,
+        "action": action,
+        "local": local_thumb_stats(),
+        "tree": local,
+        "remote": manifest,
+    }
 
 
 def ensure_boot_sync() -> dict:
-    """Bridge boot: first-run download if local thumbs are sparse. Non-blocking."""
+    """Bridge boot: compare folder + SQLite vs Synology, fetch when needed."""
     return start_cache_download(force=False)
 
 
@@ -1334,9 +1884,15 @@ def build_local_manifest(*, publisher: str = "") -> dict:
                 "size": size,
             }
         )
+    tree = local_tree_stats()
     return {
         "version": 1,
-        "generated_at": _utc_iso(),
+        "generated_at": tree["generated_at"],
+        "file_count": tree["file_count"],
+        "total_bytes": tree["total_bytes"],
+        "last_mtime": tree["last_mtime"],
+        "last_mtime_unix": tree["last_mtime_unix"],
+        "source": "local",
         "publisher": publisher or _publisher_name(),
         "thumb_count": stats["avif"] + stats["jpg"],
         "avif": stats["avif"],
@@ -1491,6 +2047,7 @@ def _publish_new_thumbs_locked(*, publisher: str) -> dict:
     except Exception:
         kv_ok = False
         table_ok = False
+    persist_cache_state(source="local", synced=True)
     return {
         "ok": True,
         "copied": copied,

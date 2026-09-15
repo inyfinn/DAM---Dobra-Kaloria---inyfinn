@@ -1192,6 +1192,70 @@ def read_audit(limit: int = 100) -> dict[str, Any]:
     }
 
 
+THUMB_CACHE_MANIFEST_KEY = "thumb-cache-manifest"
+
+
+def _ensure_kv_local(conn: sqlite3.Connection) -> None:
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS dam_kv_local (
+          store_key TEXT PRIMARY KEY,
+          payload TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          updated_by TEXT NOT NULL DEFAULT ''
+        )
+        """
+    )
+
+
+def kv_local_get(store_key: str, default: Any = None) -> Any:
+    """Odczyt z istniejacej tabeli dam_kv_local (lustro offline / first-run)."""
+    conn = _connect_sqlite()
+    try:
+        _ensure_kv_local(conn)
+        row = conn.execute(
+            "SELECT payload FROM dam_kv_local WHERE store_key = ?",
+            (store_key,),
+        ).fetchone()
+        if row is None:
+            return default
+        raw = row["payload"] if isinstance(row, sqlite3.Row) else row[0]
+        if isinstance(raw, (dict, list)):
+            return raw
+        try:
+            return json.loads(raw)
+        except (TypeError, json.JSONDecodeError):
+            return default
+    except Exception:
+        return default
+    finally:
+        conn.close()
+
+
+def kv_local_set(store_key: str, payload: Any, updated_by: str = "") -> str:
+    """Zapis do dam_kv_local. Nie tworzy drugiej bazy ani nowej tabeli produktowej."""
+    now = _utc()
+    blob = json.dumps(payload, ensure_ascii=False)
+    conn = _connect_sqlite()
+    try:
+        _ensure_kv_local(conn)
+        conn.execute(
+            """
+            INSERT INTO dam_kv_local (store_key, payload, updated_at, updated_by)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(store_key) DO UPDATE SET
+              payload=excluded.payload,
+              updated_at=excluded.updated_at,
+              updated_by=excluded.updated_by
+            """,
+            (store_key, blob, now, updated_by or "dam-cache"),
+        )
+        conn.commit()
+        return now
+    finally:
+        conn.close()
+
+
 def apply_shared_change(store_key: str, change: dict, *, updated_by: str = "") -> dict[str, Any]:
     """Scalenie dokumentu wspoldzielonego w transakcji PG. Bez mostu HTTP.
 
