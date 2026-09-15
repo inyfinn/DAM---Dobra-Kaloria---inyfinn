@@ -19,7 +19,8 @@
   var DK_SURF_DARK = "#0B1814";
   var DK_CHROME_DARK = "#0E1E19";
   var DK_SUNKEN_DARK = "#081310";
-  /* Light paper is shared with DAM fiolet. Green lives on accent + subaccent only. */
+  /* Fiolet keeps lilac paper. DK / green-family use cooler near-white (G>=R)
+     so #005A29 does not opponent-process the page into rose. Not mint, not gray. */
   var SHARED_LIGHT_PAPER = {
     bg: "#F7F2F7",
     surface: "#FDFBFD",
@@ -30,21 +31,31 @@
     sidebar: "#F7F2F7",
     sidebarEnd: "#F7F2F7",
   };
+  var DK_LIGHT_PAPER = {
+    bg: "#F4F7F5",
+    surface: "#F8FAF9",
+    elevated: "#F8FAF9",
+    input: "#F8FAF9",
+    chrome: "#E4EBE7",
+    border: "#E4EBE7",
+    sidebar: "#F4F7F5",
+    sidebarEnd: "#F4F7F5",
+  };
   var DARK_ACCENT_L_FLOOR = 25.1;
   var LADDER_MIGRATE_KEY = "dam_theme_ladder_v5";
   var CONTRAST_AA = 4.5;
   var applyingScheme = false;
 
   var LIGHT_BASE = {
-    bg: SHARED_LIGHT_PAPER.bg,
-    surface: SHARED_LIGHT_PAPER.surface,
-    elevated: SHARED_LIGHT_PAPER.elevated,
-    chrome: SHARED_LIGHT_PAPER.chrome,
+    bg: DK_LIGHT_PAPER.bg,
+    surface: DK_LIGHT_PAPER.surface,
+    elevated: DK_LIGHT_PAPER.elevated,
+    chrome: DK_LIGHT_PAPER.chrome,
     text: "#172E24",
     muted: "#5A7266",
-    border: SHARED_LIGHT_PAPER.border,
+    border: DK_LIGHT_PAPER.border,
     dark: "#060F0C",
-    input: SHARED_LIGHT_PAPER.input,
+    input: DK_LIGHT_PAPER.input,
   };
   var DARK_BASE = {
     bg: "#060F0C",
@@ -271,26 +282,44 @@
     earth: "Ziemia",
   };
 
-  function applySharedLightPaper(pack) {
-    if (!pack) return pack;
-    pack.bg = SHARED_LIGHT_PAPER.bg;
-    pack.surface = SHARED_LIGHT_PAPER.surface;
-    pack.elevated = SHARED_LIGHT_PAPER.elevated;
-    pack.input = SHARED_LIGHT_PAPER.input;
-    pack.chrome = SHARED_LIGHT_PAPER.chrome;
-    pack.border = SHARED_LIGHT_PAPER.border;
+  function applyPaperPack(pack, paper) {
+    if (!pack || !paper) return pack;
+    pack.bg = paper.bg;
+    pack.surface = paper.surface;
+    pack.elevated = paper.elevated;
+    pack.input = paper.input;
+    pack.chrome = paper.chrome;
+    pack.border = paper.border;
     return pack;
   }
 
+  function applySharedLightPaper(pack) {
+    return applyPaperPack(pack, SHARED_LIGHT_PAPER);
+  }
+
+  function applyDkLightPaper(pack) {
+    return applyPaperPack(pack, DK_LIGHT_PAPER);
+  }
+
   function usesSharedLightPaper(scheme) {
-    return scheme && (scheme.id === "dobra-kaloria" || scheme.id === "default");
+    return scheme && scheme.id === "default";
+  }
+
+  function usesDkCoolPaper(scheme) {
+    return scheme && (scheme.id === "dobra-kaloria" || scheme.group === "green");
+  }
+
+  function lightPaperFor(scheme) {
+    if (usesSharedLightPaper(scheme)) return SHARED_LIGHT_PAPER;
+    if (usesDkCoolPaper(scheme)) return DK_LIGHT_PAPER;
+    return null;
   }
 
   function buildDobraKaloriaScheme() {
     var built = colorifyToDam("dobra-kaloria", "Dobra Kaloria", "dam", DK_BG_DARK, DK_SURF_DARK, DK_ACCENT, DK_ACCENT_DARK);
     built.accent = DK_ACCENT;
     built.light.accent = DK_ACCENT;
-    applySharedLightPaper(built.light);
+    applyDkLightPaper(built.light);
     built.light.text = LIGHT_BASE.text;
     built.light.muted = LIGHT_BASE.muted;
     built.dark.bg = DK_BG_DARK;
@@ -314,7 +343,9 @@
 
   var SCHEMES = [buildDobraKaloriaScheme(), buildDamVioletScheme()].concat(
     COLORIFY_POOL.map(function (row) {
-      return colorifyToDam(row[0], row[1], row[2], row[3], row[4], row[5], row[6]);
+      var built = colorifyToDam(row[0], row[1], row[2], row[3], row[4], row[5], row[6]);
+      if (built.group === "green") applyDkLightPaper(built.light);
+      return built;
     })
   );
   var SCHEME_BY_ID = {};
@@ -713,12 +744,13 @@
       : "color-mix(in srgb, " + chrome + " 70%, transparent)");
     setVar(root, "--dam-sticky-chrome-bg", bg);
     setVar(root, "--card-bg", surface);
+    var paper = lightPaperFor(scheme);
     var sidebarStart = isDark
       ? bg
-      : (usesSharedLightPaper(scheme) ? SHARED_LIGHT_PAPER.sidebar : paleHueTint(accentHex, 0.018));
+      : (paper ? paper.sidebar : paleHueTint(accentHex, 0.018));
     var sidebarEnd = isDark
       ? mixHexSimple(bg, accent, 0.22)
-      : (usesSharedLightPaper(scheme) ? SHARED_LIGHT_PAPER.sidebarEnd : bg);
+      : (paper ? paper.sidebarEnd : bg);
     setVar(root, "--dam-sidebar-bg", sidebarStart);
     setVar(root, "--dam-sidebar-bg-end", sidebarEnd);
     setVar(root, "--dam-sidebar-grad", "linear-gradient(165deg, " + sidebarStart + " 0%, " + sidebarEnd + " 100%)");

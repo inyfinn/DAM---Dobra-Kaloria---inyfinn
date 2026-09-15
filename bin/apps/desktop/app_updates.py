@@ -56,14 +56,29 @@ def parse_version(raw: str) -> tuple[int, ...]:
     return tuple(int(p) for p in parts) if parts else (0,)
 
 
-def is_newer(latest: str, current: str) -> bool:
-    """True tylko gdy latest jest sciśle nowszy od current (prefiks v obcięty)."""
-    a = parse_version(latest)
-    b = parse_version(current)
+def _cmp_version(a_raw: str, b_raw: str) -> int:
+    a = parse_version(a_raw)
+    b = parse_version(b_raw)
     n = max(len(a), len(b))
     a = a + (0,) * (n - len(a))
     b = b + (0,) * (n - len(b))
-    return a > b
+    if a > b:
+        return 1
+    if a < b:
+        return -1
+    return 0
+
+
+def is_newer(latest: str, current: str) -> bool:
+    """True tylko gdy latest jest sciśle nowszy od current (prefiks v obcięty)."""
+    return _cmp_version(latest, current) > 0
+
+
+def is_stale_older(remote: str, current: str) -> bool:
+    """True gdy remote jest starszy (np. leftover Release 1.0.74 przy produkcie 1.7.9)."""
+    if not remote or not current:
+        return False
+    return _cmp_version(remote, current) < 0
 
 
 def _parse_version(raw: str) -> tuple[int, ...]:
@@ -326,31 +341,48 @@ def _git_origin_version() -> str:
         return ""
 
 
+def _consider_remote(ver: str, current: str) -> str:
+    """Jedna linia produktu: ignoruj leftover starszy (1.0.x przy 1.7.x)."""
+    cand = _strip_v(ver)
+    if not cand:
+        return ""
+    if is_stale_older(cand, current):
+        return ""
+    return cand
+
+
+def _pick_product_latest(current: str, github_raw: str, git_raw: str) -> tuple[str, str]:
+    latest = current
+    source = "installed"
+    for ver, src in ((git_raw, "git"), (github_raw, "github")):
+        cand = _consider_remote(ver, current)
+        if not cand:
+            continue
+        if is_newer(cand, latest):
+            latest = cand
+            source = src
+        elif _cmp_version(cand, latest) == 0 and source == "installed":
+            source = src
+    return latest, source
+
+
 def _public_result(data: dict[str, Any]) -> dict[str, Any]:
-    """Zawsze przepusc przez porownanie vs biezaca wersja. Bez tokenu."""
+    """Jedna wersja produktu. Stary tag GitHub (1.0.74) nie wygrywa z 1.7.x."""
     cur = current_version()
-    latest = str(data.get("latest") or cur)
-    github_latest = latest
+    github_raw = _strip_v(str(data.get("latest") or ""))
     git_ver = _git_origin_version() if is_portable_repo() else ""
-    latest_source = "github"
-    if not is_newer(latest, cur):
-        if git_ver and is_newer(git_ver, cur):
-            latest = git_ver
-            latest_source = "git"
-        else:
-            latest = cur
-            latest_source = "installed"
+    latest, latest_source = _pick_product_latest(cur, github_raw, git_ver)
     url = str(data.get("download_url") or "")
     err = str(data.get("error") or "")
     ok = bool(data.get("ok", True)) and not err
-    newer = is_newer(latest, cur) if latest_source == "github" else False
-    setup_ok = _is_setup_download_url(url)
+    newer = is_newer(latest, cur)
+    setup_ok = _is_setup_download_url(url) and latest_source == "github" and newer
     out = {
         "ok": ok,
         "current": cur,
         "latest": latest or cur,
-        "github_latest": github_latest,
-        "git_latest": git_ver,
+        "github_latest": latest if latest_source == "github" else latest,
+        "git_latest": _consider_remote(git_ver, cur),
         "latest_source": latest_source,
         "update_available": bool(ok and newer and setup_ok),
         "download_url": url if setup_ok else "",
@@ -367,7 +399,7 @@ def _public_result(data: dict[str, Any]) -> dict[str, Any]:
         out["error"] = err
         out["update_available"] = False
         out["download_url"] = ""
-    if data.get("asset_api_url"):
+    if setup_ok and data.get("asset_api_url"):
         out["asset_api_url"] = str(data.get("asset_api_url") or "")
     return out
 
@@ -452,10 +484,14 @@ def _select_release(
             pre.append((rel, asset))
         else:
             stable.append((rel, asset))
+    def _semver_key(item: tuple[dict[str, Any], dict[str, str]]) -> tuple[int, ...]:
+        rel, _asset = item
+        return parse_version(str(rel.get("tag_name") or rel.get("name") or ""))
+
     if stable:
-        return stable[0]
+        return max(stable, key=_semver_key)
     if pre:
-        return pre[0]
+        return max(pre, key=_semver_key)
     return None
 
 

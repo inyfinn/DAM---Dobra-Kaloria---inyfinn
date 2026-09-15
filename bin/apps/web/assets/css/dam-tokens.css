@@ -6,15 +6,15 @@
 :root {
   color-scheme: light;
   /* Early paint anti white-flash (before body CSS) */
-  background-color: var(--dam-surface-muted, #f7f2f7);
+  background-color: var(--dam-surface-muted, #F4F7F5);
 
   /* Marka - Dobra Kaloria logo green (#005A29) is the destination accent */
   --dam-brand-green: #005A29;
   --dam-primary: #005A29;
   --primary-color: var(--dam-primary, #005A29);
   --dam-dark: #060F0C;
-  --dam-input-bg: #FDFBFD;
-  --dam-chrome: #EFE6EC;
+  --dam-input-bg: #F8FAF9;
+  --dam-chrome: #E4EBE7;
   --dam-chrome-ink: color-mix(in srgb, var(--dam-primary) 38%, var(--dam-text));
 
   /* Statusy */
@@ -28,14 +28,14 @@
   /* Fallback accent when a token miss occurs (never violet) */
   --dam-fallback-accent: #005A29;
 
-  /* Surface ladder (light) — shared cool paper with DAM fiolet.
-     Green identity is accent + subaccent only, not a mint page wash. */
-  --dam-surface-sunken: #F7F2F7;   /* wells — same paper as page */
-  --dam-surface: #FDFBFD;          /* tiles / widgets / history panel */
-  --dam-surface-muted: #F7F2F7;    /* page bg */
-  --dam-surface-elevated: #FDFBFD; /* rows — near-white cards, not mint */
-  --dam-surface-raised: #FDFBFD;   /* inputs / inner chrome */
-  --dam-border: #EFE6EC;
+  /* Surface ladder (light) — DK cool near-white (G>=R). Not lilac #F7F2F7
+     (reads rose next to #005A29). Not mint wash. Fiolet scheme paints its own paper in JS. */
+  --dam-surface-sunken: #F4F7F5;   /* wells — same paper as page */
+  --dam-surface: #F8FAF9;          /* tiles / widgets / history panel */
+  --dam-surface-muted: #F4F7F5;    /* page bg */
+  --dam-surface-elevated: #F8FAF9; /* rows — near-white cards, not mint */
+  --dam-surface-raised: #F8FAF9;   /* inputs / inner chrome */
+  --dam-border: #E4EBE7;
   --dam-bg: var(--dam-surface-muted);
 
   /* Mapowanie na Geex vars (nakladka, nie przepisujemy komponentow) */
@@ -105,8 +105,8 @@
   --dam-btn-outline-border: color-mix(in srgb, var(--dam-primary, #005a29) 50%, transparent);
 
   /* Sidebar surfaces - hue-tinted from accent; JS overwrites per scheme */
-  --dam-sidebar-bg: #F7F2F7;
-  --dam-sidebar-bg-end: #F7F2F7;
+  --dam-sidebar-bg: #F4F7F5;
+  --dam-sidebar-bg-end: #F4F7F5;
   --dam-sidebar-grad: linear-gradient(165deg, var(--dam-sidebar-bg) 0%, var(--dam-sidebar-bg-end) 100%);
 
   /* Ksztalty — Geex DNA: card24 / btn18 / control sm8 / panel md12 */

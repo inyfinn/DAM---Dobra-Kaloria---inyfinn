@@ -1575,33 +1575,52 @@
     });
   }
 
+  function userMenuUpdateLabel() {
+    return tt("update.check_now", "Sprawd\u017A aktualizacj\u0119");
+  }
+
+  function triggerAppUpdateCheck(e) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (window.DamAppUpdate && typeof window.DamAppUpdate.checkFromMenu === "function") {
+      window.DamAppUpdate.checkFromMenu();
+      return;
+    }
+    if (window.DamAppUpdate && typeof window.DamAppUpdate.checkRemote === "function") {
+      window.DamAppUpdate.checkRemote(true);
+    }
+  }
+
   function authorPopupInnerHtml() {
+    var guest = tt("user.profile", "Profil") === "Profil" ? "U\u017Cytkownik" : "User";
     return (
       '<div class="geex-content__header__popup__header dam-user-menu__identity">' +
         '<div class="geex-content__header__popup__header__img dam-user-menu__avatar"><img src="assets/img/avatar/avatar-male.svg" alt="" /></div>' +
         '<div class="geex-content__header__popup__header__content dam-user-menu__meta">' +
-          '<h3 class="geex-content__header__popup__header__title dam-user-menu__name">UĹĽytkownik</h3>' +
+          '<h3 class="geex-content__header__popup__header__title dam-user-menu__name">' + guest + "</h3>" +
           '<span class="geex-content__header__popup__header__subtitle dam-user-menu__role"></span>' +
         "</div></div>" +
       /* Bez aria-label na nav/legal: dam-tooltips.js tipuje kazdy [aria-label] */
       /* i pokazywal stray tip "Konto" / "Dokumenty" nad Wyloguj. */
       '<nav class="dam-user-menu__nav">' +
         '<ul class="geex-content__header__popup__items dam-user-menu__items">' +
-          '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link dam-user-menu__link" href="profile.html" role="menuitem"><i class="uil uil-user"></i><span>Profil</span></a></li>' +
-          '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link dam-user-menu__link" href="settings.html" role="menuitem"><i class="uil uil-cog"></i><span>Ustawienia</span></a></li>' +
-          '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link dam-user-menu__link" href="help.html" role="menuitem"><i class="uil uil-question-circle"></i><span>Pomoc</span></a></li>' +
-          '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link dam-user-menu__link dam-user-menu__update" href="#" id="damUserMenuUpdate" role="menuitem"><i class="uil uil-cloud-download"></i><span>SprawdĹş aktualizacjÄ™</span></a></li>' +
+          '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link dam-user-menu__link" href="profile.html" role="menuitem"><i class="uil uil-user"></i><span>' + tt("user.profile", "Profil") + "</span></a></li>" +
+          '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link dam-user-menu__link" href="settings.html" role="menuitem"><i class="uil uil-cog"></i><span>' + tt("user.settings", "Ustawienia") + "</span></a></li>" +
+          '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link dam-user-menu__link" href="help.html" role="menuitem"><i class="uil uil-question-circle"></i><span>' + tt("user.help", "Pomoc") + "</span></a></li>" +
+          '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link dam-user-menu__link dam-user-menu__update" href="#" id="damUserMenuUpdate" role="menuitem"><i class="uil uil-cloud-download"></i><span>' + userMenuUpdateLabel() + "</span></a></li>" +
         "</ul>" +
       "</nav>" +
       '<div class="dam-user-menu__legal">' +
-        '<a class="dam-user-menu__legal-link" href="privacy.html">PrywatnoĹ›Ä‡</a>' +
-        '<span class="dam-user-menu__legal-sep" aria-hidden="true">Â·</span>' +
-        '<a class="dam-user-menu__legal-link" href="terms.html">Regulamin</a>' +
-        '<span class="dam-user-menu__legal-sep" aria-hidden="true">Â·</span>' +
-        '<a class="dam-user-menu__legal-link" href="license.html">Licencja</a>' +
+        '<a class="dam-user-menu__legal-link" href="privacy.html">' + tt("user.privacy", "Prywatno\u015B\u0107") + "</a>" +
+        '<span class="dam-user-menu__legal-sep" aria-hidden="true">\u00B7</span>' +
+        '<a class="dam-user-menu__legal-link" href="terms.html">' + tt("user.terms", "Regulamin") + "</a>" +
+        '<span class="dam-user-menu__legal-sep" aria-hidden="true">\u00B7</span>' +
+        '<a class="dam-user-menu__legal-link" href="license.html">' + tt("user.license", "Licencja") + "</a>" +
       "</div>" +
       '<div class="geex-content__header__popup__footer dam-user-menu__footer">' +
-        '<a href="#" class="geex-content__header__popup__footer__link dam-user-menu__logout" role="menuitem"><i class="uil uil-signout"></i><span>Wyloguj</span></a>' +
+        '<a href="#" class="geex-content__header__popup__footer__link dam-user-menu__logout" role="menuitem"><i class="uil uil-signout"></i><span>' + tt("user.logout", "Wyloguj") + "</span></a>" +
       "</div>"
     );
   }
@@ -1610,17 +1629,7 @@
     var btn = document.getElementById("damUserMenuUpdate");
     if (!btn || btn._damUpdBound) return;
     btn._damUpdBound = true;
-    btn.addEventListener("click", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      if (window.DamAppUpdate && typeof window.DamAppUpdate.checkFromMenu === "function") {
-        window.DamAppUpdate.checkFromMenu();
-        return;
-      }
-      if (window.DamAppUpdate && typeof window.DamAppUpdate.checkRemote === "function") {
-        window.DamAppUpdate.checkRemote(true);
-      }
-    });
+    btn.addEventListener("click", triggerAppUpdateCheck);
   }
 
   function ensureUpdateMenuItem(popup) {
@@ -1632,7 +1641,9 @@
         var item = document.createElement("li");
         item.className = "geex-content__header__popup__item";
         item.innerHTML =
-          '<a class="geex-content__header__popup__link dam-user-menu__link dam-user-menu__update" href="#" id="damUserMenuUpdate" role="menuitem"><i class="uil uil-cloud-download"></i><span>SprawdĹş aktualizacjÄ™</span></a>';
+          '<a class="geex-content__header__popup__link dam-user-menu__link dam-user-menu__update" href="#" id="damUserMenuUpdate" role="menuitem"><i class="uil uil-cloud-download"></i><span>' +
+          userMenuUpdateLabel() +
+          "</span></a>";
         li.parentNode.insertBefore(item, li.nextSibling);
       }
     }
@@ -1640,7 +1651,7 @@
     if (upd) {
       upd.style.minHeight = "44px";
       var span = upd.querySelector("span");
-      if (span) span.textContent = "SprawdĹş aktualizacjÄ™";
+      if (span) span.textContent = userMenuUpdateLabel();
     }
     bindUserMenuUpdate();
   }
@@ -1659,7 +1670,7 @@
     }
     popup.classList.add("dam-user-menu");
     popup.setAttribute("role", "menu");
-    popup.setAttribute("aria-label", "Menu uĹĽytkownika");
+    popup.setAttribute("aria-label", tt("user.menu", "Menu u\u017Cytkownika"));
     popup.innerHTML = authorPopupInnerHtml();
   }
 
@@ -2164,8 +2175,9 @@
       profile: tt("user.profile", "Profil"),
       settings: tt("user.settings", "Ustawienia"),
       help: tt("user.help", "Pomoc"),
+      update: userMenuUpdateLabel(),
       logout: tt("user.logout", "Wyloguj"),
-      privacy: tt("user.privacy", "PrywatnoĹ›Ä‡"),
+      privacy: tt("user.privacy", "Prywatno\u015B\u0107"),
       terms: tt("user.terms", "Regulamin"),
       license: tt("user.license", "Licencja"),
     };
@@ -2177,6 +2189,7 @@
     document.querySelectorAll(".dam-user-menu__link").forEach(function (a) {
       var href = (a.getAttribute("href") || "").split("/").pop();
       var label = byHref[href];
+      if (a.id === "damUserMenuUpdate") label = labels.update;
       if (!label) return;
       var icon = a.querySelector("i");
       a.innerHTML = "";
@@ -2216,17 +2229,7 @@
   function polishGeexChrome() {
     var customizerLabel = tt("customizer.title", "Dostosuj wyglÄ…d");
     document.querySelectorAll(".geex-btn__customizer > span").forEach(function (el) {
-      var parts = String(customizerLabel || "").trim().split(/\s+/);
-      if (parts.length >= 2) {
-        el.innerHTML =
-          '<span class="dam-status-line">' +
-          parts[0] +
-          '</span><span class="dam-status-line">' +
-          parts.slice(1).join(" ") +
-          "</span>";
-      } else {
-        el.textContent = customizerLabel;
-      }
+      el.textContent = customizerLabel;
     });
     document.querySelectorAll(".geex-customizer__title").forEach(function (el) {
       el.textContent = customizerLabel;
@@ -3218,7 +3221,7 @@
     // Wersja + aktualizacje (takze przed logowaniem na signin)
     if (!window.DamAppUpdate) {
       var upd = document.createElement("script");
-      upd.src = "assets/js/dam-app-update.js?v=6.0.4";
+      upd.src = "assets/js/dam-app-update.js?v=6.0.5";
       document.head.appendChild(upd);
     }
 
@@ -3318,6 +3321,7 @@
     finishBoot: finishBoot,
     loadAsanaTasks: loadAsanaTasks,
     polishChrome: polishGeexChrome,
+    checkForUpdate: triggerAppUpdateCheck,
     polishPageSubs: polishPageSubs,
     injectNavTrail: injectNavTrail,
     setTrailLeaf: setTrailLeaf,

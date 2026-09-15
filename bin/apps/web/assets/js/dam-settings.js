@@ -1270,6 +1270,27 @@
       });
   }
 
+  function bindSettingsUpdateCheck() {
+    var btn = document.getElementById("damSettingsCheckUpdate");
+    if (!btn || btn._damUpdBound) return;
+    btn._damUpdBound = true;
+    btn.addEventListener("click", function (e) {
+      if (window.DamShell && typeof window.DamShell.checkForUpdate === "function") {
+        window.DamShell.checkForUpdate(e);
+        return;
+      }
+      if (window.DamAppUpdate && typeof window.DamAppUpdate.checkFromMenu === "function") {
+        e.preventDefault();
+        window.DamAppUpdate.checkFromMenu();
+        return;
+      }
+      if (window.DamAppUpdate && typeof window.DamAppUpdate.checkRemote === "function") {
+        e.preventDefault();
+        window.DamAppUpdate.checkRemote(true);
+      }
+    });
+  }
+
   function loadAppUpdates() {
     var curEl = document.getElementById("damUpdateCurrent");
     var latEl = document.getElementById("damUpdateLatest");
@@ -1363,12 +1384,14 @@
           notesEl.hidden = false;
           notesEl.textContent = t(
             "update.available",
-            "Dostępna wersja {latest} (masz {current}).",
-            { latest: lat, current: cur }
+            "Dostępna jest nowsza wersja ({latest}).",
+            { latest: lat }
           );
         } else {
           notesEl.hidden = false;
-          notesEl.textContent = t("update.already_latest", "Masz najnowszą wersję.");
+          notesEl.textContent = t("update.already_latest", "Masz najnowszą wersję ({current}).", {
+            current: cur,
+          });
         }
       }
       if (!real) {
@@ -1405,13 +1428,16 @@
               DamNotify.info(t("update.check_failed", "Nie udało się sprawdzić aktualizacji"));
             } else if (isReal(data)) {
               DamNotify.info(
-                t("update.available", "Dostępna wersja {latest} (masz {current}).", {
+                t("update.available", "Dostępna jest nowsza wersja ({latest}).", {
                   latest: data.latest,
-                  current: data.current,
                 })
               );
             } else {
-              DamNotify.info(t("update.already_latest", "Masz najnowszą wersję."));
+              DamNotify.info(
+                t("update.already_latest", "Masz najnowszą wersję ({current}).", {
+                  current: data.current || "",
+                })
+              );
             }
           }
         })
@@ -1895,6 +1921,7 @@
     gateAdminSettingsUi();
     loadInstructions();
     loadAppUpdates();
+    bindSettingsUpdateCheck();
     loadNaming();
     loadElementyConversion();
     loadIntegrations();

@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="pl" dir="ltr" class="dam-booting">
 <head>
   <script src="./assets/js/dam-panic-reload.js?v=5.0.196"></script>
@@ -19,17 +19,17 @@ html.dam-booting{background:#F3F6F4}html.dam-booting.dark,html.dam-booting[data-
   <link rel="stylesheet" href="./assets/css/dam-fonts.css?v=5.0.205">
 
   <link rel="stylesheet" href="./assets/css/style.css?v=5.0.196">
-  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=1.7.8">
-  <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=1.7.8">
-  <link rel="stylesheet" href="./assets/css/dam-app.css?v=1.0.85">
+  <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=1.7.10">
+  <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=1.7.10">
+  <link rel="stylesheet" href="./assets/css/dam-app.css?v=1.0.87">
   <link rel="stylesheet" href="./assets/css/dam-brand.css?v=1.7.7">
   <link rel="stylesheet" href="./assets/css/dam-dashboard.css?v=1.0.79">
   <link rel="stylesheet" href="./assets/css/dam-bento.css?v=5.0.196">
   <link rel="stylesheet" href="./assets/css/dam-accent.css?v=1.0.78">
-  <link rel="stylesheet" href="./assets/css/dam-settings.css?v=1.0.79">
+  <link rel="stylesheet" href="./assets/css/dam-settings.css?v=1.0.82">
   <link rel="stylesheet" href="./assets/css/dam-integrations.css?v=1.0.79">
   <link rel="stylesheet" href="./assets/css/dam-integrations-settings.css?v=1.0.79">
-  <script src="./assets/js/dam-theme.js?v=1.7.8"></script>
+  <script src="./assets/js/dam-theme.js?v=1.7.10"></script>
   <script src="./assets/js/dam-accent.js?v=1.0.79"></script>
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
 </head>
@@ -75,6 +75,10 @@ html.dam-booting{background:#F3F6F4}html.dam-booting.dark,html.dam-booting[data-
           <p class="dam-settings-hero__sub">Tu ustawiasz to, co widzisz w panelu: imię, kolory, jasny/ciemny motyw i ścieżkę do plików. Wybierz kategorię poniżej, żeby zobaczyć tylko potrzebne karty. Na końcu kliknij Zapisz.</p>
         </div>
         <div class="dam-settings-hero__actions">
+          <button type="button" class="dam-sw-btn dam-sw-btn--ghost" id="damSettingsCheckUpdate" data-i18n-tip="update.check_now_tip">
+            <i class="uil uil-cloud-download" aria-hidden="true"></i>
+            <span data-i18n="update.check_now">Sprawdź aktualizację</span>
+          </button>
           <button type="button" class="dam-sw-btn dam-sw-btn--primary" id="settingsSave" data-dam-tip="Zapisuje profil, wygląd, preferencje i powiadomienia">Zapisz ustawienia</button>
           <span class="dam-settings-save-msg" id="settingsSaveMsg">Zapisano</span>
         </div>
@@ -552,8 +556,8 @@ html.dam-booting{background:#F3F6F4}html.dam-booting.dark,html.dam-booting[data-
   <script src="./assets/js/dam-api.js?v=6.0.0"></script>
   <script src="./assets/js/dam-i18n.js?v=5.0.196"></script>
   <script src="./assets/js/dam-runtime.js?v=5.0.196"></script>
-  <script src="./assets/js/dam-version.js?v=1.7.8"></script>
-	<script src="./assets/js/dam-shell.js?v=1.0.79"></script>
+  <script src="./assets/js/dam-version.js?v=1.7.11"></script>
+	<script src="./assets/js/dam-shell.js?v=1.0.81"></script>
   <script src="./assets/js/dam-loader.js?v=1.0.79"></script>
   <script src="./assets/js/dam-tooltips.js?v=5.0.196"></script>
   <script src="./assets/js/dam-paths.js?v=6.0.0"></script>
@@ -564,7 +568,7 @@ html.dam-booting{background:#F3F6F4}html.dam-booting.dark,html.dam-booting[data-
   <script src="./assets/js/dam-danger.js?v=1.0.79"></script>
   <script src="./assets/js/dam-fmcg-catalog.js?v=1.0.79"></script>
   <script src="./assets/js/dam-integrations.js?v=5.0.196"></script>
-  <script src="./assets/js/dam-settings.js?v=6.0.7"></script>
+  <script src="./assets/js/dam-settings.js?v=6.0.9"></script>
   <script src="./assets/js/dam-device-paths.js?v=1.0.79"></script>
   <style id="damDangerZoneCss">
     /* Pełna szerokość w siatce 12-col (bez .dam-sw--danger w dam-settings.css) */

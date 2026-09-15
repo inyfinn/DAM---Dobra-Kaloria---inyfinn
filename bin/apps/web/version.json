@@ -1,9 +1,9 @@
 {
-  "version": "1.7.8",
+  "version": "1.7.11",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-09-15",
-  "note": "1.7.8 = DK light paper shares DAM fiolet (#F7F2F7 / #FDFBFD); green = accent + subaccent only. Pliki sync: version.json, dam-version.js, runtime_config.py, DAM-Setup.iss, #damSidebarVersion.",
+  "note": "1.7.11 = empty DAM_INDEX_LIVE_FILE no longer crashes rebuild; branding watcher includes 07 E-COMMERCE so kampanie videos ingest immediately. Sync: version.json, dam-version.js, runtime_config.py, DAM-Setup.iss.",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
     "asset_name": "DAM-Setup.exe"

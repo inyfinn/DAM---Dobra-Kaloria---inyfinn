@@ -14,13 +14,96 @@
   max-width: 1400px;
 }
 
+/* Title/breadcrumb own row. Pills never share the H1 line. Hero stays below. */
+.dam-settings-page > .geex-content__header {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 8px;
+  min-height: 0;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 3;
+  overflow: visible;
+}
+
+.dam-settings-page > .geex-content__header .geex-content__header__content {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+
+.dam-settings-page > .geex-content__header .geex-content__header__title {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.dam-settings-page > .geex-content__header .geex-content__header__subtitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: min(62ch, 100%);
+}
+
+.dam-settings-page > .geex-content__header .geex-content__header__action,
+.dam-settings-page > .geex-content__header .geex-content__header__action__wrap,
+.dam-settings-page > .geex-content__header .geex-content__header__quickaction,
+.dam-settings-page > .geex-content__header .geex-content__header__customizer {
+  flex-wrap: nowrap;
+  align-items: center;
+  min-width: 0;
+}
+
+.dam-settings-page > .geex-content__header .geex-content__header__action {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 100%;
+  justify-content: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.dam-settings-page > .geex-content__header .geex-content__header__action::-webkit-scrollbar {
+  display: none;
+}
+
+.dam-settings-page .geex-btn.geex-btn__customizer,
+.dam-settings-page .geex-btn.geex-btn__customizer > span {
+  white-space: nowrap;
+}
+
+.dam-settings-hero__actions .dam-sw-btn {
+  white-space: nowrap;
+  flex: 0 0 auto;
+  width: auto;
+}
+
+@media (max-width: 1280px) {
+  .dam-settings-page > .geex-content__header .geex-content__header__subtitle {
+    display: none;
+  }
+}
+
 .dam-settings-hero {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
+  margin-top: 4px;
   margin-bottom: 20px;
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
 }
 
 .dam-settings-hero__sub {

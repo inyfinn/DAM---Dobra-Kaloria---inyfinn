@@ -203,8 +203,8 @@
     var lat = String(data.latest || cur);
     var msg = tr(
       "update.banner",
-      "Dostępna wersja {latest} (masz {current}).",
-      { latest: lat, current: cur }
+      "Dostępna jest nowsza wersja ({latest}).",
+      { latest: lat }
     );
     var dismiss = tr("update.dismiss", "Ukryj na dziś");
     var html =
@@ -228,39 +228,26 @@
   }
 
   function showCheckResult(data) {
-    var cur = String((data && data.current) || global.DAM_APP_VERSION || "?");
-    var lat = String((data && data.latest) || "-");
-    var src = String((data && data.latest_source) || "");
-    var gitLat = String((data && data.git_latest) || "");
+    var cur = String((data && data.current) || global.DAM_APP_VERSION || "");
+    var lat = String((data && data.latest) || cur);
     var msg;
     if (!data || data.ok === false) {
       msg = tr("update.check_failed", "Nie udało się sprawdzić aktualizacji");
-    } else if (isRealUpdate(data)) {
-      msg = tr("update.available", "Dostępna wersja {latest} (masz {current}).", {
+    } else if (isRealUpdate(data) || (lat && cmpVer(lat, cur) > 0)) {
+      msg = tr("update.available", "Dostępna jest nowsza wersja ({latest}).", {
         latest: lat,
-        current: cur,
       });
-    } else if (src === "git" && gitLat && cmpVer(gitLat, cur) > 0) {
-      msg =
-        "Na origin/main jest " +
-        gitLat +
-        " (masz " +
-        cur +
-        "). Zamknij DAM, zrób git pull i uruchom DAM.exe.";
-    } else if (src === "installed" || cmpVer(lat, cur) <= 0) {
-      msg = tr("update.already_latest", "Masz najnowszą wersję.") + " Zainstalowana: " + cur;
-      if (data && data.github_latest && String(data.github_latest) !== cur) {
-        msg += " GitHub Releases: " + data.github_latest + ".";
-      }
     } else {
-      msg = tr("update.already_latest", "Masz najnowszą wersję.") + " " + cur + " / " + lat;
+      msg = tr("update.already_latest", "Masz najnowszą wersję ({current}).", {
+        current: cur || "?",
+      });
     }
     showBanner("<span>" + msg + "</span>", { autoHideMs: 7000 });
     return data;
   }
 
   function checkFromMenu() {
-    showBanner("<span>Sprawdzanie aktualizacji…</span>");
+    showBanner("<span>" + tr("update.checking", "Sprawdzanie aktualizacji…") + "</span>");
     return checkRemote(true).then(function (data) {
       return showCheckResult(data);
     });

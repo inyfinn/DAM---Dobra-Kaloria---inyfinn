@@ -1162,18 +1162,14 @@ h2.geex-content__header__title.dam-project-title--light,
 }
 
 .geex-btn.geex-btn__customizer > span {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
+  display: inline;
   max-width: none;
   font-size: 12px;
   font-weight: 600;
-  line-height: 1.15;
+  line-height: 1.2;
   letter-spacing: 0.01em;
-  white-space: normal;
+  white-space: nowrap;
   text-align: left;
-  gap: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1204,9 +1200,23 @@ h2.geex-content__header__title.dam-project-title--light,
 
 @media (min-width: 992px) {
   .geex-content__header {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     gap: var(--dam-bento-gap, 14px);
+    min-height: 64px;
+  }
+
+  .geex-content__header__content {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .geex-content__header__subtitle,
+  .geex-content__header__subtitle.dam-page-sub {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: min(42ch, 100%);
   }
 
   .geex-content__header__action {
