@@ -35,6 +35,8 @@
     sidebar: "#F7F2F7",
     sidebarEnd: "#F7F2F7",
   };
+  /* Green-family BASE only. Per-scheme canvas is whisper-mixed from this + accent.
+     Jadeit gold: mix(#F4F7F5, #0C875E, 0.04) ≈ #EBF2ED. Literal 0.10 = sage #DDECE6. */
   var DK_LIGHT_PAPER = {
     bg: "#F4F7F5",
     surface: "#FFFFFF",
@@ -45,6 +47,8 @@
     sidebar: "#F4F7F5",
     sidebarEnd: "#F4F7F5",
   };
+  var WARM_FAMILY_BG = "#FAF5F6";
+  var PAPER_WHISPER_T = 0.04;
   /* Fiolet gap copied as luminance, not hue: canvas #F7F2F7 vs tiles #FFFFFF.
      DK canvas is a whisper off-white (not sage #F4F7F5, not cream #FDF8EC).
      Tiles / inputs stay #FFFFFF like fiolet cards. */
@@ -320,6 +324,29 @@
     return applyPaperPack(pack, DK_LIGHT_PAPER);
   }
 
+  /* Whisper canvas only (--dam-bg / muted / sidebar). Tiles stay #FFFFFF.
+     Same visual as sliders -15 / +15 baked into the hex; UI defaults stay 0. */
+  function applyWhisperCanvas(pack, familyBg, accentHex) {
+    if (!pack) return pack;
+    var bg = mixHexSimple(familyBg, accentHex, PAPER_WHISPER_T);
+    pack.bg = bg;
+    pack.surface = "#FFFFFF";
+    pack.elevated = "#FFFFFF";
+    pack.input = "#FFFFFF";
+    pack.sidebar = bg;
+    pack.sidebarEnd = bg;
+    return pack;
+  }
+
+  function applyGreenWhisper(pack, accentHex) {
+    applyDkLightPaper(pack);
+    return applyWhisperCanvas(pack, DK_LIGHT_PAPER.bg, accentHex);
+  }
+
+  function applyWarmWhisper(pack, accentHex) {
+    return applyWhisperCanvas(pack, WARM_FAMILY_BG, accentHex);
+  }
+
   function applyDkShopPaper(pack) {
     return applyPaperPack(pack, DK_SHOP_PAPER);
   }
@@ -332,14 +359,24 @@
     return scheme && scheme.id === "dobra-kaloria";
   }
 
-  function usesDkCoolPaper(scheme) {
-    return scheme && scheme.group === "green";
+  function paperFromPack(pack) {
+    if (!pack) return null;
+    return {
+      bg: pack.bg,
+      surface: pack.surface,
+      elevated: pack.elevated,
+      input: pack.input || "#FFFFFF",
+      chrome: pack.chrome,
+      border: pack.border,
+      sidebar: pack.sidebar || pack.bg,
+      sidebarEnd: pack.sidebarEnd || pack.sidebar || pack.bg,
+    };
   }
 
   function lightPaperFor(scheme) {
     if (usesSharedLightPaper(scheme)) return SHARED_LIGHT_PAPER;
     if (usesDkShopPaper(scheme)) return DK_SHOP_PAPER;
-    if (usesDkCoolPaper(scheme)) return DK_LIGHT_PAPER;
+    if (scheme && scheme.light) return paperFromPack(scheme.light);
     return null;
   }
 
@@ -372,7 +409,8 @@
   var SCHEMES = [buildDobraKaloriaScheme(), buildDamVioletScheme()].concat(
     COLORIFY_POOL.map(function (row) {
       var built = colorifyToDam(row[0], row[1], row[2], row[3], row[4], row[5], row[6]);
-      if (built.group === "green") applyDkLightPaper(built.light);
+      if (built.group === "green") applyGreenWhisper(built.light, built.accent);
+      else if (built.group === "warm") applyWarmWhisper(built.light, built.accent);
       return built;
     })
   );

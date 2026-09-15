@@ -1,3 +1,17 @@
+## 2026-09-15 - v1.8.6 whisper papers per colorify accent
+
+**Komenda/Akcja:** User: zielone nie jeden szary; Jadeit `#F4F7F5` → `#EBF2ED` (10% akcentu na papierze). Cieple nie jedno `#FAF5F6`. Sliderow nie ruszac. Juz doskonale — tylko leciutko.
+
+**Log/Status:**
+- Formula: `mix(familyPaper, chromeAccent, 0.04)` sRGB. Userowe 10% (`0.10`) daje sage `#DDECE6`. Gold Jadeit ≈ `#EBF2ED` przy `0.04` (to samo co slider -15/+15 upieczone w hex).
+- Zielone: baza `#F4F7F5`. Cieple: baza `#FAF5F6`. Kafelki `#FFFFFF`. Fiolet / DK shop bez zmian.
+- Slider HTML i `TUNING_DEFAULTS` zostaja 0.
+- Wersja 1.8.6 (186).
+
+**Efekt/Fix:** Kazdy zielony/cieply zestaw ma wlasny szept akcentu na `--dam-bg` / sidebar.
+
+**Zrodla:** dam-theme.js `PAPER_WHISPER_T`, `applyGreenWhisper`, `applyWarmWhisper`.
+
 ## 2026-09-15 - v1.8.5 chrome: white icon tiles, no Asana stripe, one radius
 
 **Komenda/Akcja:** User: brudne szare ikony viz, gruby pasek Asana, mieszane radiusy header, tlo sidebara. Ship 1.8.5 (184 juz na footerze).
