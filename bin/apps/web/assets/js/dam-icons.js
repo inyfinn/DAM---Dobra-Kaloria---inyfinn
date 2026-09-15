@@ -98,11 +98,18 @@
           .querySelectorAll(".dam-check-row--open, .dam-slot-row--open")
           .forEach(function (r) {
             r.classList.remove("dam-check-row--open", "dam-slot-row--open");
+            var closedAct =
+              r.querySelector(".dam-check-row__actions") ||
+              r.querySelector(".dam-slot-row__actions");
+            if (closedAct) closedAct.setAttribute("hidden", "");
           });
         if (willOpen) {
           row.classList.add(
             row.classList.contains("dam-slot-row") ? "dam-slot-row--open" : "dam-check-row--open"
           );
+          act.removeAttribute("hidden");
+        } else if (act) {
+          act.setAttribute("hidden", "");
         }
       });
       row.addEventListener("keydown", function (e) {

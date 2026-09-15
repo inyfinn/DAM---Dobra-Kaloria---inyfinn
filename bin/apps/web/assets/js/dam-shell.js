@@ -1219,14 +1219,19 @@
     var ver = String(window.DAM_APP_VERSION || "3.1.0").replace(/^v/i, "");
     var footer = ensureSidebarFooterEl();
     if (footer) {
+      document.body.classList.add("dam-sidebar-has-compact-footer");
       footer.innerHTML =
-        '<p class="geex-sidebar__footer__copyright" data-i18n="nav.brand_sub">' + brandSub + '</p>' +
-        '<p class="geex-sidebar__footer__author">' +
+        '<p class="geex-sidebar__footer__copyright dam-sidebar-footer-line">' +
           '<a class="dam-footer-author-link" href="https://inyfinn.art" target="_blank" rel="noopener noreferrer" data-i18n="footer.made_by">' +
             madeBy +
-          "</a> &copy; " + year +
+          "</a> &copy; " +
+          year +
+          ' · <span class="dam-sidebar-version" id="damSidebarVersion" title="Wersja programu DAM"></span>' +
         "</p>" +
-        '<span class="dam-sidebar-version" id="damSidebarVersion" title="Wersja programu DAM"></span>';
+        '<p class="geex-sidebar__footer__author" hidden aria-hidden="true">' +
+          '<span data-i18n="nav.brand_sub">' +
+          brandSub +
+          "</span></p>";
       /* Morph GSAP moze zostawic autoAlpha:0 - twardy reset widocznosci expanded. */
       footer.style.removeProperty("opacity");
       footer.style.removeProperty("visibility");
@@ -1726,6 +1731,39 @@
     } catch (e2) {
       /* ignore */
     }
+  }
+
+  /** Header „Dostosuj wygląd” → te same prefs co Ustawienia → Wygląd (#damAppearance). */
+  function bindAppearanceCustomizerToSettings() {
+    if (document.documentElement.getAttribute("data-dam-customizer-link") === "1") return;
+    document.documentElement.setAttribute("data-dam-customizer-link", "1");
+    if (window.jQuery) {
+      try {
+        window.jQuery(".geex-btn__customizer").off("click");
+      } catch (eOff) {
+        /* ignore */
+      }
+    }
+    document.addEventListener(
+      "click",
+      function (e) {
+        var btn =
+          e.target.closest &&
+          e.target.closest(".geex-content__header__action .geex-btn__customizer, .geex-content__header__customizer .geex-btn__customizer");
+        if (!btn || btn.closest(".geex-customizer")) return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (window.jQuery) {
+          try {
+            window.jQuery(".geex-customizer").removeClass("active");
+          } catch (eCls) {
+            /* ignore */
+          }
+        }
+        window.location.href = "settings.html#damAppearance";
+      },
+      true
+    );
   }
 
   /** Sync Geex customizer Motyw -> dam_theme_pref (main.js ustawia tylko theme). */
@@ -3198,6 +3236,7 @@
 
     ensureAppearanceCustomizer();
     ensureCustomizerPeek();
+    bindAppearanceCustomizerToSettings();
     bindThemeCustomizerSync();
     ensureHeaderChrome();
     normalizeHeaderIcons();

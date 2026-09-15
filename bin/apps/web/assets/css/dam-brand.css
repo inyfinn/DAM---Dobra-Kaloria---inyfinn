@@ -1805,6 +1805,30 @@ body:has(.geex-customizer.active) .geex-content__header {
   padding: 0;
 }
 
+.dam-cost-base-rates {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dam-bento-gap, 14px);
+}
+
+.dam-cost-base-rates .dam-cost-card__title,
+.dam-cost-base-rates .dam-cost-card__sub,
+.dam-cost-base-rates .dam-cost-picker__count {
+  margin: 0;
+}
+
+.dam-cost-base-rates .dam-cost-base-search {
+  margin: 0;
+}
+
+.dam-cost-base-rates .dam-cost-base-kinds {
+  margin: 0;
+}
+
+.dam-cost-base-rates .dam-cost-table-wrap {
+  margin-top: 2px;
+}
+
 .dam-cost-picker {
   display: flex;
   flex-direction: column;
@@ -3365,9 +3389,9 @@ body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link .dam-nav-labe
 }
 
 .geex-sidebar__footer .dam-sidebar-version {
-  display: block;
+  display: inline;
   text-align: left;
-  margin: 10px 0 0;
+  margin: 0;
   padding: 0;
   font-size: calc(11px * var(--dam-sidebar-nav-scale, 0.85));
   font-weight: 600;
@@ -3375,6 +3399,21 @@ body.dam-sidebar-collapsed .geex-sidebar .geex-sidebar__menu__link .dam-nav-labe
   color: var(--dam-text-muted, #8a8696);
   letter-spacing: 0.02em;
   white-space: nowrap;
+}
+
+.geex-sidebar__footer__copyright.dam-sidebar-footer-line {
+  margin: 0;
+  font-size: calc(11px * var(--dam-sidebar-nav-scale, 0.85));
+  line-height: 1.35;
+  color: var(--dam-text-muted, #8a8696);
+}
+
+.geex-sidebar__footer__copyright.dam-sidebar-footer-line .dam-footer-author-link {
+  font-weight: 600;
+}
+
+body.dam-sidebar-has-compact-footer .geex-sidebar__footer__author {
+  display: none !important;
 }
 
 #damAppVersionPill {
@@ -8138,8 +8177,8 @@ button.dam-status-badge.dam-tag-editable:hover {
   align-items: center;
   gap: 8px;
   margin-right: 10px;
-  padding: 8px 14px;
-  min-height: 56px;
+  padding: 6px 12px;
+  min-height: 44px;
   border-radius: 18px;
   background: var(--gray-color, #eceaf3);
   border: none;
@@ -13229,16 +13268,4 @@ html.dark .dam-welcome-section__title,
 html[data-theme="dark"] .dam-welcome-section__title,
 html.dark .dam-welcome-hint,
 html[data-theme="dark"] .dam-welcome-hint {
-  color: var(--dam-text-muted, #b8b3c6);
-}
-
-html.dark .dam-switch,
-html.dark .dam-switch.is-off,
-html.dark .dam-switch:has(.dam-switch__input:not(:checked)),
-html[data-theme="dark"] .dam-switch,
-html[data-theme="dark"] .dam-switch.is-off,
-html[data-theme="dark"] .dam-switch:has(.dam-switch__input:not(:checked)) {
-  background: var(--dam-surface-elevated, #262730);
-  border-color: var(--dam-border, #2c2b36);
-  color: var(--dam-text-muted, #b8b3c6);
-}
+ 

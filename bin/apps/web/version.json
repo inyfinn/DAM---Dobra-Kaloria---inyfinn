@@ -1,10 +1,11 @@
 {
-  "version": "6.0.12",
+  "version": "1.0.74",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
-  "released_at": "2026-09-14",
-  "note": "6.0.12: wstecz myszy, Pokaż indeksy, kalkulacja lewa+ADMIN, kwoty bazowe, Faktury porównanie, sidebar bez kalkulatora. 6.0.11: instalator u użytkownika; dymek indeksu z Zamknij/Raport.",
+  "released_at": "2026-09-15",
+  "note": "Semver baseline z liczby commitów na main (2026-09-15): n=173 → 1.0.73, ten release +0.0.1 → 1.0.74. Formula: commits<100 → 0.0.{n}; commits≥100 → 1.0.{n-100}. Każdy kolejny commit produktowy +0.0.1 patch. Pliki sync: version.json, dam-version.js, runtime_config.py, DAM-Setup.iss, #damSidebarVersion.",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
-    "asset_name": "DAM-Setup.exe",
-   
+    "asset_name": "DAM-Setup.exe"
+  }
+}

@@ -836,6 +836,17 @@ a.geex-btn__primary {
   display: none !important;
 }
 
+.dam-slot-checklist .dam-slot-row--open .dam-slot-row__actions,
+.dam-slot-checklist .dam-slot-row--interactive:focus-visible .dam-slot-row__actions {
+  display: inline-flex !important;
+}
+
+.dam-card-checklist .dam-check-row--open .dam-check-row__actions,
+.dam-checklist.dam-card-checklist .dam-check-row--open .dam-check-row__actions,
+.dam-card-checklist .dam-check-row--interactive:focus-visible .dam-check-row__actions {
+  display: inline-flex !important;
+}
+
 .dam-slot-row__actions .geex-btn {
   min-height: 34px;
   padding: 6px 10px;
@@ -1084,8 +1095,8 @@ h2.geex-content__header__title.dam-project-title--light,
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 56px;
-  padding: 8px 14px;
+  min-height: 44px;
+  padding: 6px 12px;
   line-height: 1.15;
 }
 
@@ -1135,6 +1146,45 @@ h2.geex-content__header__title.dam-project-title--light,
   flex-wrap: wrap;
   min-width: 0;
   max-width: 100%;
+}
+
+@media (min-width: 992px) {
+  .geex-content__header {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: var(--dam-bento-gap, 14px);
+  }
+
+  .geex-content__header__action {
+    display: flex;
+    flex: 0 1 auto;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: var(--dam-bento-gap, 14px);
+    min-width: 0;
+  }
+
+  .geex-content__header__customizer {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+    margin-inline-end: 0;
+    flex-shrink: 0;
+  }
+
+  .geex-content__header__action__wrap {
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    min-width: 0;
+  }
+
+  .geex-content__header__quickaction {
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
 }
 
 /* 767.98 = prog schowania sidebara. Przy pomiarze DPR 1.1 progi 480/576
