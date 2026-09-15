@@ -13,15 +13,16 @@
   var TUNING_MAX = 90;
   var TUNING_WARN = 50;
   var DEFAULT_SCHEME_ID = "dobra-kaloria";
-  var DK_ACCENT = "#005A29";
-  var DK_ACCENT_DARK = "#00803A";
+  /* Shop 2026-09-15 https://dobrakaloria.pl/ — logo SVG + theme-color/CTA neighbor.
+     #005A29 was institutional forest; shop CTA is #007936, logo fill is #008244. */
+  var DK_ACCENT = "#008244";
+  var DK_ACCENT_DARK = "#008244";
   var DK_BG_DARK = "#060F0C";
   var DK_SURF_DARK = "#0B1814";
   var DK_CHROME_DARK = "#0E1E19";
   var DK_SUNKEN_DARK = "#081310";
-  /* Fiolet keeps lilac paper (DS §10.7). DK / green-family use cool near-white
-     (G>=R) — identity is accent, not a mint/sage bath. Tiles stay white so
-     they separate from canvas without dirtying the wash. */
+  /* Fiolet keeps lilac paper. Other green-family colorify keep cool near-white
+     (unchanged). Dobra Kaloria light paper follows the shop, not mint sludge. */
   var SHARED_LIGHT_PAPER = {
     bg: "#F7F2F7",
     surface: "#FFFFFF",
@@ -42,21 +43,33 @@
     sidebar: "#F4F7F5",
     sidebarEnd: "#F4F7F5",
   };
+  /* Shop cream is the PAGE (user invert 2026-09-15): canvas/sidebar #FDF8EC,
+     tiles/inputs #FFFFFF so cards sit on cream — not a white hospital sheet. */
+  var DK_SHOP_PAPER = {
+    bg: "#FDF8EC",
+    surface: "#FFFFFF",
+    elevated: "#FFFFFF",
+    input: "#FFFFFF",
+    chrome: "#E8DFD4",
+    border: "#E8DFD4",
+    sidebar: "#FDF8EC",
+    sidebarEnd: "#FDF8EC",
+  };
   var DARK_ACCENT_L_FLOOR = 25.1;
-  var LADDER_MIGRATE_KEY = "dam_theme_ladder_v5";
+  var LADDER_MIGRATE_KEY = "dam_theme_ladder_v6";
   var CONTRAST_AA = 4.5;
   var applyingScheme = false;
 
   var LIGHT_BASE = {
-    bg: DK_LIGHT_PAPER.bg,
-    surface: DK_LIGHT_PAPER.surface,
-    elevated: DK_LIGHT_PAPER.elevated,
-    chrome: DK_LIGHT_PAPER.chrome,
-    text: "#172E24",
-    muted: "#5A7266",
-    border: DK_LIGHT_PAPER.border,
+    bg: DK_SHOP_PAPER.bg,
+    surface: DK_SHOP_PAPER.surface,
+    elevated: DK_SHOP_PAPER.elevated,
+    chrome: DK_SHOP_PAPER.chrome,
+    text: "#1A1A1A",
+    muted: "#6B635C",
+    border: DK_SHOP_PAPER.border,
     dark: "#060F0C",
-    input: DK_LIGHT_PAPER.input,
+    input: DK_SHOP_PAPER.input,
   };
   var DARK_BASE = {
     bg: "#060F0C",
@@ -302,16 +315,25 @@
     return applyPaperPack(pack, DK_LIGHT_PAPER);
   }
 
+  function applyDkShopPaper(pack) {
+    return applyPaperPack(pack, DK_SHOP_PAPER);
+  }
+
   function usesSharedLightPaper(scheme) {
     return scheme && scheme.id === "default";
   }
 
+  function usesDkShopPaper(scheme) {
+    return scheme && scheme.id === "dobra-kaloria";
+  }
+
   function usesDkCoolPaper(scheme) {
-    return scheme && (scheme.id === "dobra-kaloria" || scheme.group === "green");
+    return scheme && scheme.group === "green";
   }
 
   function lightPaperFor(scheme) {
     if (usesSharedLightPaper(scheme)) return SHARED_LIGHT_PAPER;
+    if (usesDkShopPaper(scheme)) return DK_SHOP_PAPER;
     if (usesDkCoolPaper(scheme)) return DK_LIGHT_PAPER;
     return null;
   }
@@ -320,7 +342,7 @@
     var built = colorifyToDam("dobra-kaloria", "Dobra Kaloria", "dam", DK_BG_DARK, DK_SURF_DARK, DK_ACCENT, DK_ACCENT_DARK);
     built.accent = DK_ACCENT;
     built.light.accent = DK_ACCENT;
-    applyDkLightPaper(built.light);
+    applyDkShopPaper(built.light);
     built.light.text = LIGHT_BASE.text;
     built.light.muted = LIGHT_BASE.muted;
     built.dark.bg = DK_BG_DARK;
@@ -683,7 +705,7 @@
         elevated = adjustHexHsl(surface, 5, 0);
         chrome = adjustHexHsl(surface, 4, 0);
       }
-    } else {
+    } else if (!(scheme && scheme.id === "dobra-kaloria")) {
       var lightBgRgb = hexToRgb(bg);
       var lightSurfRgb = hexToRgb(surface);
       var lightBgL = rgbToHsl(lightBgRgb.r, lightBgRgb.g, lightBgRgb.b).l;
@@ -722,7 +744,9 @@
     setVar(root, "--dam-chrome", chrome);
     var sunken = isDark
       ? mixHexSimple(bg, surface, 0.45)
-      : (base.bg || bg);
+      : (scheme && scheme.id === "dobra-kaloria"
+        ? DK_SHOP_PAPER.sidebar
+        : (base.bg || bg));
     var inputBg = isDark
       ? chrome
       : (base.input || elevated || paleHueTint(accentHex, 0.028));
