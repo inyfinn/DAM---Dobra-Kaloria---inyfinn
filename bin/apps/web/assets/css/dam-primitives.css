@@ -21,13 +21,13 @@ p {
 /* === BUTTONS === */
 /* Canonical: .geex-btn (+ --primary / --secondary / --danger / --ghost / --sm).
    Alias (F3): .dam-win-btn, .dam-btn-primary share anatomy; HTML classes kept.
-   Tokens: --dam-radius-btn 18, --dam-space-btn-* 15×25, --dam-control-h 44.
+   Tokens: --dam-radius-btn 6 (shop .btn .4rem), --dam-space-btn-* 15×25, --dam-control-h 44.
    Anti white-flash: hover uses color-mix / tinted primary — never force #fff fill
    that fights colored text (Geex default hover white-on-primary is OK for filled). */
 .geex-btn {
   --_dam-btn-pad-y: var(--dam-space-btn-y, 15px);
   --_dam-btn-pad-x: var(--dam-space-btn-x, 25px);
-  --_dam-btn-radius: var(--dam-radius-btn, 18px);
+  --_dam-btn-radius: var(--dam-radius-btn, 6px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -127,12 +127,8 @@ a.dam-int-cta:hover {
 .dam-btn-primary:hover,
 a.geex-btn--primary:hover {
   color: var(--white-color, #fff) !important;
-  background-color: color-mix(
-    in srgb,
-    var(--dam-primary, var(--primary-color, #005A29)) 86%,
-    #000
-  ) !important;
-  box-shadow: 0 4px 14px rgb(var(--dam-shadow-rgb, 23 22 30) / 0.18);
+  background-color: var(--dam-primary-hover, #00642E) !important;
+  box-shadow: none;
 }
 
 .geex-btn--primary:focus:not(:focus-visible),
@@ -291,7 +287,7 @@ a.geex-btn--primary:hover {
   width: var(--dam-control-h, 44px);
   height: var(--dam-control-h, 44px);
   padding: 0;
-  border-radius: var(--dam-radius-sm, var(--dam-control-radius, 8px));
+  border-radius: var(--dam-radius-btn, 6px);
   border: 1px solid var(--dam-btn-outline-border);
   background-color: var(--dam-surface, #fff);
   color: var(--dam-text, #464255);
@@ -372,6 +368,21 @@ html[data-theme="dark"] .dam-viz-icon-btn:hover:not(:disabled):not(.is-disabled)
     var(--dam-surface)
   ) !important;
   color: var(--dam-primary, #005A29) !important;
+}
+
+/* Header cluster: one shop radius — no pill vs square mix */
+.geex-content__header__action .geex-btn,
+.geex-content__header__action .geex-btn__customizer,
+.geex-btn.geex-btn__customizer,
+.geex-content__header__action .dam-root-status,
+.geex-content__header__action .dam-db-status,
+.geex-content__header__action .dam-lang-code,
+.geex-content__header__action .dam-admin-header-switch,
+.geex-content__header__action .geex-content__header__badge,
+.geex-content__header__action .dam-root-status__refresh,
+.geex-content__header__action .dam-db-status__refresh,
+.geex-content__header__action .dam-root-status__btn {
+  border-radius: var(--dam-radius-btn, 6px) !important;
 }
 /* === /BUTTONS === */
 
@@ -555,14 +566,14 @@ html[data-theme="dark"] .dam-viz-badge--variants {
 
 .dam-dash-panel__item,
 .dam-dash-panel__row {
-  border-radius: var(--dam-radius-sm, 8px);
+  border-radius: var(--dam-radius-btn, 6px);
   padding: 8px 10px;
   gap: 8px;
 }
 
 .dam-dash-panel__item:hover,
 .dam-dash-panel__row:hover {
-  background: var(--dam-surface-muted, #F7F2F7);
+  background: var(--dam-surface-sunken);
 }
 
 .dam-dash-modal__panel {
@@ -582,8 +593,10 @@ html[data-theme="dark"] .dam-viz-badge--variants {
 }
 html[data-theme="light"] .geex-sidebar,
 html[data-theme="light"] #damSidebar.geex-sidebar {
-  background-color: var(--dam-sidebar-bg, #fff) !important;
-  background-image: var(--dam-sidebar-grad) !important;
+  background-color: var(--dam-bg) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
 }
 html[data-theme="light"] .geex-sidebar .geex-sidebar__menu__link,
 html[data-theme="light"] .geex-sidebar .dam-nav-label,

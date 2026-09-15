@@ -8,9 +8,9 @@
   --ds-gap: 20px;
   --ds-pad-y: 24px;
   --ds-pad-x: 26px;
-  --ds-ctrl-h: 44px;
-  --ds-ctrl-fs: 13px;
-  --ds-ctrl-radius: 10px;
+  --ds-ctrl-h: var(--dam-control-h, 44px);
+  --ds-ctrl-fs: var(--dam-fs-md, 13px);
+  --ds-ctrl-radius: var(--dam-radius-btn, 6px);
   max-width: 1400px;
 }
 
@@ -167,8 +167,8 @@
   border-color: var(--dam-primary, #005A29);
 }
 .dam-settings-page .dam-sw-btn--primary:hover {
-  background: color-mix(in srgb, var(--dam-primary, #005A29) 88%, #000);
-  border-color: color-mix(in srgb, var(--dam-primary, #005A29) 88%, #000);
+  background: var(--dam-primary-hover, #00642E);
+  border-color: var(--dam-primary-hover, #00642E);
   color: #fff;
 }
 .dam-settings-page .dam-sw-btn--ghost {
@@ -211,12 +211,12 @@
   width: 100%;
   min-height: var(--ds-ctrl-h, 44px);
   padding: 0 14px 0 38px;
-  border: 1px solid #e4e4ea;
-  border-radius: var(--ds-ctrl-radius, 10px);
-  background: #fff;
+  border: 1px solid var(--dam-border);
+  border-radius: var(--ds-ctrl-radius, var(--dam-radius-btn, 6px));
+  background: var(--dam-input-bg, var(--dam-surface));
   font: inherit;
   font-size: var(--ds-ctrl-fs, 13px);
-  color: #1c1c22;
+  color: var(--dam-text);
   box-sizing: border-box;
 }
 .dam-settings-search__input:focus {
@@ -333,8 +333,8 @@
   align-items: center;
   gap: 6px;
   padding: 0 14px;
-  min-height: 40px;
-  border-radius: 999px;
+  min-height: var(--dam-control-h, 44px);
+  border-radius: var(--dam-radius-btn, 6px);
   border: 1px solid var(--dam-border, #e7e7e7);
   background: var(--dam-surface, #fff);
   color: var(--dam-text, #464255);
@@ -365,10 +365,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   margin-left: 4px;
-  border-radius: 999px;
+  border-radius: var(--dam-radius-btn, 6px);
   border: 1px solid var(--dam-border, #e7e7e7);
   background: var(--dam-surface, #fff);
   color: var(--dam-text-muted, #8b8d97);
@@ -541,8 +541,8 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--dam-surface-muted, #f3f4f6);
+  border-radius: var(--dam-radius-btn, 6px);
+  background: var(--dam-surface-sunken, #F5F5F5);
   color: var(--dam-text-muted, #6b7280);
   width: fit-content;
 }
@@ -1059,7 +1059,7 @@
   font-size: 11px;
   font-weight: 600;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: var(--dam-radius-btn, 6px);
 }
 .dam-naming-pill--ui {
   background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, #fff);
@@ -1170,6 +1170,4 @@
   .dam-settings-page code,
   .dam-instr-item__meta,
   .dam-settings-jump-results__where {
-    font-size: 12px;
-  }
-}
+    fo

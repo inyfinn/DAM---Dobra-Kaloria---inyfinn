@@ -7,7 +7,7 @@
  * Awaria = html.dam-boot-failed + #damBootFail (wlasny ekran DAM).
  */
 html.dam-booting {
-  background: #FDF8EC; /* shop cream page; tokens not loaded yet */
+  background: #F6F7F6; /* DK canvas whisper; tokens not loaded yet */
 }
 
 html.dam-booting[data-theme="dark"] {
@@ -15,7 +15,7 @@ html.dam-booting[data-theme="dark"] {
 }
 
 html.dam-boot-failed {
-  background: #FDF8EC;
+  background: #F6F7F6;
 }
 
 html.dam-boot-failed[data-theme="dark"] {
@@ -73,8 +73,8 @@ html.dam-boot-failed .geex-content:not(.dam-boot-fail) {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: #FDF8EC;
-  color: #1A1A1A;
+  background: #F6F7F6;
+  color: #222222;
   font-family: Jost, "Segoe UI", sans-serif;
 }
 

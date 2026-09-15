@@ -120,7 +120,7 @@ html[data-theme="dark"] .geex-content__authentication__content__logo .logo-lite 
   font-size: 11px !important;
   font-weight: 700;
   line-height: 1.25;
-  border-radius: 999px !important;
+  border-radius: var(--dam-radius-btn, 6px) !important;
   border: none !important;
   box-shadow: none !important;
   background: color-mix(in srgb, var(--dam-primary) 16%, transparent) !important;
@@ -148,7 +148,7 @@ html[data-theme="dark"] .geex-content__authentication__content__logo .logo-lite 
   min-height: 28px;
   padding: 5px 12px;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--dam-radius-btn, 6px);
   background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, transparent);
   color: var(--dam-chrome-ink, var(--dam-text));
   font-size: 12px;
@@ -4571,11 +4571,11 @@ body::-webkit-scrollbar-button,
   box-sizing: border-box;
   transform: none;
   zoom: 1;
-  border-radius: 10px !important;
+  border-radius: var(--dam-radius-btn, 6px) !important;
   border-width: 1px;
-  border-color: var(--dam-border, #e4e2ea);
-  color: #5c5868;
-  background: var(--dam-surface-muted, #f6f5f8);
+  border-color: var(--dam-border);
+  color: var(--dam-text);
+  background: var(--dam-surface);
   box-shadow: none;
 }
 .dam-nav-circles--tiles .dam-viz-icon-btn i,
@@ -4592,9 +4592,9 @@ body::-webkit-scrollbar-button,
   width: 32px;
   height: 32px;
   flex: 0 0 32px;
-  border-color: var(--dam-border, #e4e2ea);
-  color: #5c5868;
-  background: #fff;
+  border-color: var(--dam-border);
+  color: var(--dam-text);
+  background: var(--dam-surface);
 }
 .dam-nav-circles .dam-viz-icon-btn i,
 .dam-nav-circles .dam-viz-icon-btn .dam-icon-svg {
@@ -4617,9 +4617,9 @@ body::-webkit-scrollbar-button,
 }
 .dam-nav-circles .dam-viz-icon-btn:not(.dam-viz-icon-btn--explorer):hover:not(:disabled):not(.is-disabled),
 .dam-nav-circles--tiles .dam-viz-icon-btn:not(.dam-viz-icon-btn--explorer):hover:not(:disabled):not(.is-disabled) {
-  background: rgba(92, 88, 104, 0.08);
-  color: #3d3a48;
-  border-color: #c8c4d2;
+  background: color-mix(in srgb, var(--dam-primary) 10%, var(--dam-surface));
+  color: var(--dam-primary);
+  border-color: var(--dam-border);
 }
 
 /* ---------- Product / revision lists ---------- */
@@ -7977,7 +7977,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   flex: 0 0 auto;
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: var(--dam-radius-btn, 6px);
   /* Global outline family: 50% transparent border (token --dam-btn-outline-border) */
   border: 1.5px solid var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #005A29) 50%, transparent));
   background: transparent;
@@ -8188,8 +8188,9 @@ button.dam-status-badge.dam-tag-editable:hover {
   margin-right: 10px;
   padding: 6px 12px;
   min-height: 44px;
-  border-radius: 18px;
-  background: var(--gray-color, #eceaf3);
+  border-radius: var(--dam-radius-btn, 6px);
+  background: var(--dam-surface);
+  border: 1px solid var(--dam-border);
   border: none;
   font-size: 12px;
   font-weight: 600;
@@ -8209,7 +8210,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 
 .dam-db-status:hover,
 .dam-db-status:focus-visible {
-  background: color-mix(in srgb, var(--primary-color, #005A29) 10%, var(--gray-color, #eceaf3));
+  background: color-mix(in srgb, var(--dam-primary) 10%, var(--dam-surface));
   outline: none;
 }
 .dam-db-status__label {
@@ -8248,7 +8249,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   min-height: 30px;
   margin: 0 -4px 0 2px;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--dam-radius-btn, 6px);
   background: transparent;
   color: var(--body-color, #464255);
   cursor: pointer;
@@ -9311,7 +9312,7 @@ body.dam-help-open .dam-help-fab {
   padding: 0 10px 0 8px;
   border-color: color-mix(in srgb, var(--dam-primary, #005A29) 35%, transparent);
   background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, transparent);
-  border-radius: 999px;
+  border-radius: var(--dam-radius-btn, 6px);
   gap: 6px;
 }
 .dam-admin-header-switch .dam-switch__label {
@@ -12743,7 +12744,6 @@ html[data-theme="dark"] .dam-admin-header-switch:has(.dam-switch__input:checked)
    Do not re-declare charcoal hex here (violet-era gray override).
    ============================================================ */
 :root {
-  --dam-bg: var(--dam-surface-muted);
   --dam-chrome: var(--dam-border);
   --dam-hash: var(--dam-primary);
   --dam-on-accent: #ffffff;

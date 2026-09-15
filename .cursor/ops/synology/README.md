@@ -53,7 +53,7 @@ powershell -File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pr
 Optional Windows Task Scheduler (when this PC is on), every 4 hours, same clock as the git pull:
 
 ```
-schtasks /Create /TN "DAM-PAMIEC-PODRECZNA-sync" /SC DAILY /ST 00:20 /RI 240 /DU 24:00 /RL LIMITED /F /TR "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\.cursor\ops\synology\sync-pamiec-podreczna.ps1\""
+schtasks /Create /TN "DAM-PAMIEC-PODRECZNA-sync" /SC DAILY /ST 00:20 /RI 240 /DU 24:00 /RL LIMITED /F /TR "wscript.exe \"D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\.cursor\ops\synology\sync-pamiec-podreczna-hidden.vbs\""
 ```
 
 `Panel-DAM/data/*.json` on the NAS is leftover from the old web-only mirror, not the thumb cache. It stays **inside** `Panel-DAM`. If that folder exists without `.git`, the pull script **inits in place**. It must never create a sibling (`*.pre-git*`, `*.bak`, timestamped sidecars). There is exactly one panel folder: `/volume1/web/Panel-DAM`.
@@ -74,7 +74,7 @@ schtasks /Create /TN "DAM-PAMIEC-PODRECZNA-sync" /SC DAILY /ST 00:20 /RI 240 /DU
 | `.cursor/ops/synology/dsm-task-user-script.txt` | One-liner to paste into DSM |
 | `.cursor/ops/synology/sync-pamiec-podreczna.py` | Incremental cache copy (size-compare, tar over SSH) |
 | `.cursor/ops/synology/sync-pamiec-podreczna.ps1` | PowerShell wrapper for the cache copy |
-| `.cursor/ops/synology/sync-pamiec-podreczna.cmd` | Task Scheduler entry (no password) |
+| `.cursor/ops/synology/sync-pamiec-podreczna.cmd` | Fallback only — do **not** register this (visible `cmd.exe`) |
 | `.cursor/ops/synology/DAM-PAMIEC-PODRECZNA-sync.xml` | Task definition used to register the job |
 | `.cursor/ops/synology/_count-nas-cache.py` | Read-only NAS file/byte count |
 | `/var/services/homes/Inyfinn/bin/dam-repo-pull.sh` | Copy the DSM task actually runs (works before this folder is on `main`) |

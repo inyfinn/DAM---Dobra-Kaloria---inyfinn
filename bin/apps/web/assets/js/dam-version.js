@@ -12,13 +12,13 @@
 
 
 
-  global.DAM_APP_VERSION = "1.8.3";
+  global.DAM_APP_VERSION = "1.8.5";
 
 
 
   function formatVersion(v) {
 
-    return String(v || "1.8.3").replace(/^v/i, "");
+    return String(v || "1.8.5").replace(/^v/i, "");
 
   }
 
@@ -124,7 +124,7 @@
 
     if (!raw || raw === "0.0.0") {
 
-      raw = global.DAM_APP_VERSION || "1.8.3";
+      raw = global.DAM_APP_VERSION || "1.8.5";
 
     }
 

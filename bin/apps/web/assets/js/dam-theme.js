@@ -13,9 +13,11 @@
   var TUNING_MAX = 90;
   var TUNING_WARN = 50;
   var DEFAULT_SCHEME_ID = "dobra-kaloria";
-  /* Shop 2026-09-15 https://dobrakaloria.pl/ — logo SVG + theme-color/CTA neighbor.
-     #005A29 was institutional forest; shop CTA is #007936, logo fill is #008244. */
-  var DK_ACCENT = "#008244";
+  /* Shop 2026-09-15 https://dobrakaloria.pl/ theme-d2c8261578.css
+     .btn-primary { background-color:#007936 } hover/active #00642E
+     body { background-color:#fff }  #FDF8EC = category tile only, not page. */
+  var DK_ACCENT = "#007936";
+  var DK_ACCENT_HOVER = "#00642E";
   var DK_ACCENT_DARK = "#008244";
   var DK_BG_DARK = "#060F0C";
   var DK_SURF_DARK = "#0B1814";
@@ -43,20 +45,23 @@
     sidebar: "#F4F7F5",
     sidebarEnd: "#F4F7F5",
   };
-  /* Shop cream is the PAGE (user invert 2026-09-15): canvas/sidebar #FDF8EC,
-     tiles/inputs #FFFFFF so cards sit on cream — not a white hospital sheet. */
+  /* Fiolet gap copied as luminance, not hue: canvas #F7F2F7 vs tiles #FFFFFF.
+     DK canvas is a whisper off-white (not sage #F4F7F5, not cream #FDF8EC).
+     Tiles / inputs stay #FFFFFF like fiolet cards. */
   var DK_SHOP_PAPER = {
-    bg: "#FDF8EC",
+    bg: "#F6F7F6",
     surface: "#FFFFFF",
     elevated: "#FFFFFF",
     input: "#FFFFFF",
-    chrome: "#E8DFD4",
-    border: "#E8DFD4",
-    sidebar: "#FDF8EC",
-    sidebarEnd: "#FDF8EC",
+    chrome: "#E4E6E4",
+    border: "#E4E6E4",
+    sidebar: "#F6F7F6",
+    sidebarEnd: "#F6F7F6",
+    well: "#F2F3F2",
+    accentHover: DK_ACCENT_HOVER,
   };
   var DARK_ACCENT_L_FLOOR = 25.1;
-  var LADDER_MIGRATE_KEY = "dam_theme_ladder_v6";
+  var LADDER_MIGRATE_KEY = "dam_theme_ladder_v8";
   var CONTRAST_AA = 4.5;
   var applyingScheme = false;
 
@@ -65,8 +70,8 @@
     surface: DK_SHOP_PAPER.surface,
     elevated: DK_SHOP_PAPER.elevated,
     chrome: DK_SHOP_PAPER.chrome,
-    text: "#1A1A1A",
-    muted: "#6B635C",
+    text: "#222222",
+    muted: "#6B6B6B",
     border: DK_SHOP_PAPER.border,
     dark: "#060F0C",
     input: DK_SHOP_PAPER.input,
@@ -705,7 +710,10 @@
         elevated = adjustHexHsl(surface, 5, 0);
         chrome = adjustHexHsl(surface, 4, 0);
       }
-    } else if (!(scheme && scheme.id === "dobra-kaloria")) {
+    } else if (scheme && scheme.id === "dobra-kaloria") {
+      surface = "#FFFFFF";
+      elevated = "#FFFFFF";
+    } else {
       var lightBgRgb = hexToRgb(bg);
       var lightSurfRgb = hexToRgb(surface);
       var lightBgL = rgbToHsl(lightBgRgb.r, lightBgRgb.g, lightBgRgb.b).l;
@@ -745,7 +753,7 @@
     var sunken = isDark
       ? mixHexSimple(bg, surface, 0.45)
       : (scheme && scheme.id === "dobra-kaloria"
-        ? DK_SHOP_PAPER.sidebar
+        ? (DK_SHOP_PAPER.well || "#F5F5F5")
         : (base.bg || bg));
     var inputBg = isDark
       ? chrome
@@ -760,6 +768,10 @@
     setVar(root, "--dam-dark", base.dark);
     setVar(root, "--dam-primary", accent);
     setVar(root, "--primary-color", accent);
+    var hoverHex = (!isDark && scheme && scheme.id === "dobra-kaloria")
+      ? DK_ACCENT_HOVER
+      : adjustHexHsl(accent, isDark ? 8 : -10, 0);
+    setVar(root, "--dam-primary-hover", hoverHex);
     setVar(root, "--dam-hash", isDark ? adjustHexHsl(accent, 12, -8) : accent);
     setVar(root, "--white-color", surface);
     setVar(root, "--section-color", bg);

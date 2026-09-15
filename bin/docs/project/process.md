@@ -1,3 +1,33 @@
+## 2026-09-15 - v1.8.5 chrome: white icon tiles, no Asana stripe, one radius
+
+**Komenda/Akcja:** User: brudne szare ikony viz, gruby pasek Asana, mieszane radiusy header, tlo sidebara. Ship 1.8.5 (184 juz na footerze).
+
+**Log/Status:**
+- `.dam-viz-icon-btn` / `.dam-nav-circles--tiles`: bg `--dam-surface`, hairline `--dam-border`, ink `--dam-text`, radius `--dam-radius-btn` 6px. Koniec 2px `#5c5868`.
+- `li.dam-dash-panel__item`: usunieto `border-left: 3px solid #9b97ab`. Biala powierzchnia + 1px.
+- Header `#damDbStatus` `#damRootStatus` ADMIN PL badges: `border-radius: var(--dam-radius-btn)`.
+- `#damSidebar`: `background-color: var(--dam-bg)`, bez gradientu-plyty.
+- CMD hide zostaje: task `wscript.exe` + `sync-pamiec-podreczna-hidden.vbs` (`sh.Run …, 0`) + `CREATE_NO_WINDOW`.
+- PNG: `qa-dk-1.8.5-dashboard-chrome.png` 1585x947; `qa-dk-1.8.5-dashboard-tiles-asana.png`.
+
+**Efekt/Fix:** Kafelki ikon biale; Asana bez paska; jeden radius 6px; sidebar = papier strony.
+
+**Zrodla:** dam-dashboard.css, dam-brand.css, dam-primitives.css, dam-tokens.css.
+
+## 2026-09-15 - v1.8.4 white tiles + hidden PAMIEC console
+
+**Komenda/Akcja:** Kafelki DK `#FFFFFF` (luka jak fiolet `#F7F2F7`/`#FFFFFF`); canvas whisper `#F6F7F6`. Ukryc `cmd.exe` sync PAMIEC-PODRECZNA. Ship 1.8.4 (HEAD byl 1.8.3).
+
+**Log/Status:**
+- Tokeny: `--dam-surface`/`elevated`/`input` `#FFFFFF`; `--dam-bg`/`muted`/`sidebar` `#F6F7F6`. Nie sage `#F4F7F5`, nie krem `#FDF8EC`.
+- CDP Settings/Dashboard: body `rgb(246,247,246)`, widgets `rgb(255,255,255)`. Fiolet compare: `#F7F2F7` / `#FFFFFF`.
+- Task `DAM-PAMIEC-PODRECZNA-sync` prze-rejestrowany: `wscript.exe` + `sync-pamiec-podreczna-hidden.vbs` (`sh.Run …, 0`) + `pythonw` + `CREATE_NO_WINDOW` na SSH. Sync zostaje.
+- PNG: `bin/agents/shared/qa-evidence/qa-dk-1.8.4-settings-p1.png` 1585x947; `settings-p2-wyglad.png`; `settings-p3-picker.png`; `dashboard.png`.
+
+**Efekt/Fix:** Biale kafelki na tintowanym papierze; okno CMD sync nie startuje z `.cmd`.
+
+**Zrodla:** dam-tokens.css, dam-theme.js DK_SHOP_PAPER, DAM-PAMIEC-PODRECZNA-sync.xml, sync-pamiec-podreczna.py CREATE_NO_WINDOW.
+
 ## 2026-09-15 - v1.8.2 dotted-integer version math
 
 **Komenda/Akcja:** Wersja DAM to plaska liczba z kropkami (179→180→181→182), nie semver. Footer 1.7.12 = 182 = 1.8.2. Ship 1.8.0 byl dwa kroki za.

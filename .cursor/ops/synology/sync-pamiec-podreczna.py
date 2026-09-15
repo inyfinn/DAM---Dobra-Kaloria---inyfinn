@@ -24,6 +24,8 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
+
 DEFAULT_SRC = Path(
     r"D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy"
     r"\DAM---Dobra-Kaloria---inyfinn\bin\PAMIEC-PODRECZNA"
@@ -61,7 +63,7 @@ def ssh_run(ssh_host: str, remote: str, stdin: bytes | None = None) -> subproces
         ssh_host,
         remote,
     ]
-    return subprocess.run(cmd, input=stdin, capture_output=True)
+    return subprocess.run(cmd, input=stdin, capture_output=True, creationflags=CREATE_NO_WINDOW)
 
 
 def ssh_ok(proc: subprocess.CompletedProcess[bytes], what: str) -> None:
@@ -251,6 +253,7 @@ def pull_from_remote(src: Path, ssh_host: str, dest: str, log_path: Path) -> int
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        creationflags=CREATE_NO_WINDOW,
     )
     assert proc.stdin is not None
     proc.stdin.write("\n".join(to_get).encode("utf-8"))
@@ -293,6 +296,7 @@ def stream_tar(src: Path, rels: list[str], ssh_host: str, dest: str) -> None:
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        creationflags=CREATE_NO_WINDOW,
     )
     assert proc.stdin is not None
     with tarfile.open(fileobj=proc.stdin, mode="w|", format=tarfile.PAX_FORMAT) as tar:

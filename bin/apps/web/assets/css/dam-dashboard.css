@@ -1295,10 +1295,10 @@
   box-sizing: border-box;
   transform: none;
   zoom: 1;
-  border-radius: 10px !important;
-  border: 2px solid color-mix(in srgb, var(--dam-text-muted, #5c5868) 55%, var(--dam-border, #e4e2ea)) !important;
+  border-radius: var(--dam-radius-btn, 6px) !important;
+  border: 1px solid var(--dam-border) !important;
   background: var(--dam-surface, #fff) !important;
-  color: #5c5868 !important;
+  color: var(--dam-text) !important;
   box-shadow: none !important;
   padding: 0 !important;
 }
@@ -1312,9 +1312,9 @@
 .dam-widget--viz-latest .dam-nav-circles--tiles .dam-viz-icon-btn.dam-win-btn:hover:not(:disabled):not(.is-disabled),
 .dam-widget--branding-latest .dam-nav-circles--tiles .dam-viz-icon-btn.dam-win-btn:hover:not(:disabled):not(.is-disabled),
 .dam-widget--media-latest .dam-nav-circles--tiles .dam-viz-icon-btn.dam-win-btn:hover:not(:disabled):not(.is-disabled) {
-  background: rgba(92, 88, 104, 0.1) !important;
-  color: #3d3a48 !important;
-  border-color: #c8c4d2 !important;
+  background: color-mix(in srgb, var(--dam-primary) 10%, var(--dam-surface)) !important;
+  color: var(--dam-primary) !important;
+  border-color: var(--dam-border) !important;
   box-shadow: none !important;
 }
 
@@ -2247,10 +2247,9 @@ html[data-theme="dark"] .dam-widget-skel__line::after {
   gap: 4px;
   padding: 12px 14px;
   margin-bottom: 8px;
-  border-radius: var(--dam-control-radius);
-  background: var(--dam-surface-muted);
+  border-radius: var(--dam-radius-btn, 6px);
+  background: var(--dam-surface);
   border: 1px solid var(--dam-border);
-  border-left: 3px solid #9b97ab;
 }
 
 .dam-dash-panel__pill {
@@ -2258,9 +2257,9 @@ html[data-theme="dark"] .dam-widget-skel__line::after {
   max-width: 100%;
   margin-right: 6px;
   padding: 2px 8px;
-  border-radius: 999px;
-  background: #eef0f5;
-  color: #5c5868;
+  border-radius: var(--dam-radius-btn, 6px);
+  background: var(--dam-surface-sunken);
+  color: var(--dam-text-muted);
   font-size: 11px;
   font-weight: 500;
   line-height: 1.35;
@@ -2279,7 +2278,6 @@ html[data-theme="dark"] .dam-widget-skel__line::after {
 }
 
 .dam-dash-panel__item--empty {
-  border-left-color: var(--dam-border);
   color: var(--dam-text-muted);
   font-size: var(--dam-fs-sm);
   text-align: center;

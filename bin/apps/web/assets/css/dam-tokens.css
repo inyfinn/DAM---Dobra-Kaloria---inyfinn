@@ -5,16 +5,17 @@
  */
 :root {
   color-scheme: light;
-  /* Early paint — shop cream page #FDF8EC (not hospital white) */
-  background-color: var(--dam-surface-muted, #FDF8EC);
+  /* Early paint — DK canvas whisper (fiolet-gap). Tiles stay #FFFFFF. */
+  background-color: var(--dam-bg, #F6F7F6);
 
-  /* Marka — logo SVG + shop CTA neighbor (#008244 / #007936), not forest #005A29 */
+  /* Marka — logo SVG #008244; shop .btn-primary is #007936, hover #00642E (theme-d2c8261578.css). */
   --dam-brand-green: #008244;
-  --dam-primary: #008244;
-  --primary-color: var(--dam-primary, #008244);
+  --dam-primary: #007936;
+  --dam-primary-hover: #00642E;
+  --primary-color: var(--dam-primary, #007936);
   --dam-dark: #060F0C;
   --dam-input-bg: #FFFFFF;
-  --dam-chrome: #E8DFD4;
+  --dam-chrome: #E4E6E4;
   --dam-chrome-ink: color-mix(in srgb, var(--dam-primary) 38%, var(--dam-text));
 
   /* Statusy */
@@ -26,17 +27,17 @@
   --info-color: #5B8DEF;
 
   /* Fallback accent when a token miss occurs (never violet) */
-  --dam-fallback-accent: #008244;
+  --dam-fallback-accent: #007936;
 
-  /* Surface ladder (light) — cream canvas, white tiles.
-     Fiolet / other schemes overwrite paper in dam-theme.js. */
-  --dam-surface-sunken: #F8F4F1;
+  /* Surface ladder (light) — fiolet architecture: tinted canvas, white tiles.
+     Canvas #F6F7F6 (not sage #F4F7F5, not cream #FDF8EC). */
+  --dam-surface-sunken: #F2F3F2;
   --dam-surface: #FFFFFF;
-  --dam-surface-muted: #FDF8EC;
+  --dam-surface-muted: #F6F7F6;
   --dam-surface-elevated: #FFFFFF;
   --dam-surface-raised: #FFFFFF;
-  --dam-border: #E8DFD4;
-  --dam-bg: var(--dam-surface-muted);
+  --dam-border: #E4E6E4;
+  --dam-bg: #F6F7F6;
 
   /* Mapowanie na Geex vars (nakladka, nie przepisujemy komponentow) */
   --white-color: var(--dam-surface);
@@ -62,8 +63,8 @@
   --dam-font: "Jost", sans-serif;
   /* Geex overlay: style.css paints body, headings and p with --poppins (Poppins TRAP). */
   --poppins: var(--dam-font);
-  --dam-text: #1A1A1A;
-  --dam-text-muted: #6B635C;
+  --dam-text: #222222;
+  --dam-text-muted: #6B6B6B;
   --dam-muted: var(--dam-text-muted);
 
   /* Skala tekstu */
@@ -83,7 +84,7 @@
   /* Kontrole toolbar — F2 target touch 44 (Parent); audit CSS-declared bylo 38 */
   --dam-control-h: 44px;
   --dam-control-fs: 12px;
-  --dam-control-radius: 8px;
+  --dam-control-radius: 6px;
 
   /* Sidebar nav — compact scale (−15%, 2026-09-03); v-compact −20% vertical rhythm only */
   --dam-sidebar-nav-scale: 0.85;
@@ -102,18 +103,18 @@
   --dam-sidebar-nav-logout-mt: calc(50px * var(--dam-sidebar-nav-v-compact));
 
   /* Outline / ghost CTAs (icon-btn, win-btn outline, modal geex secondary) — 50% alpha */
-  --dam-btn-outline-border: color-mix(in srgb, var(--dam-primary, #008244) 50%, transparent);
+  --dam-btn-outline-border: var(--dam-primary, #007936);
 
-  /* Sidebar — same cream paper as page; JS overwrites per scheme */
-  --dam-sidebar-bg: #FDF8EC;
-  --dam-sidebar-bg-end: #FDF8EC;
+  /* Sidebar — same white paper as shop page; JS overwrites per scheme */
+  --dam-sidebar-bg: #F6F7F6;
+  --dam-sidebar-bg-end: #F6F7F6;
   --dam-sidebar-grad: linear-gradient(165deg, var(--dam-sidebar-bg) 0%, var(--dam-sidebar-bg-end) 100%);
 
-  /* Ksztalty — Geex DNA: card24 / btn18 / control sm8 / panel md12 */
+  /* Ksztalty — shop .btn is .4rem (~6px), not Geex pill 18 */
   --dam-radius-lg: 24px;
   --dam-radius-md: 12px;
   --dam-radius-sm: 8px;
-  --dam-radius-btn: 18px;
+  --dam-radius-btn: 6px;
 
   /* CTA spacing (Geex .geex-btn padding 15×25 — audit §5) */
   --dam-space-btn-y: 15px;
@@ -122,7 +123,7 @@
   --dam-space-btn-sm-y: 8px;
   --dam-space-btn-sm-x: 14px;
   --dam-control-h-sm: 36px;
-  --dam-radius-btn-compact: 8px;
+  --dam-radius-btn-compact: 6px;
 
   /* Panel rhythm — filter / card / toolbar (v2 canonical, 2026-09-07) */
   --dam-panel-pad-x: 24px;
@@ -148,8 +149,8 @@
   --dam-space-badge-pill-y: 2px;
   --dam-space-badge-pill-x: 8px;
 
-  /* Cien — warm paper, not mint-forest */
-  --dam-shadow-rgb: 40 32 24;
+  /* Cien — shop white paper, neutral */
+  --dam-shadow-rgb: 34 34 34;
   --dam-shadow-alpha: 0.08;
   --dam-shadow: 0 10px 30px rgb(var(--dam-shadow-rgb) / var(--dam-shadow-alpha));
 
@@ -184,7 +185,8 @@ html[data-theme="dark"] {
   --dam-sidebar-bg: #060F0C;
   --dam-sidebar-bg-end: color-mix(in srgb, var(--dam-primary) 22%, #060F0C);
   --dam-sidebar-grad: linear-gradient(165deg, var(--dam-sidebar-bg) 0%, var(--dam-sidebar-bg-end) 100%);
-  --dam-primary: #008244;
+  --dam-primary: #007936;
+  --dam-primary-hover: #00642E;
   --dam-shadow-rgb: 10 26 21;
 
   /* Geex overlay w dark — pelne mapowanie status/surface (F2)
