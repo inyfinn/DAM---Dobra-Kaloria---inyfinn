@@ -18,11 +18,90 @@ function Remove-TreeForce([string]$Path) {
 function Invoke-Robo([string]$src, [string]$dst, [string[]]$xd, [string[]]$xf) {
   if (-not (Test-Path -LiteralPath $src)) { return }
   New-Item -ItemType Directory -Force -Path $dst | Out-Null
-  $rcArgs = @($src, $dst, "/E", "/NFL", "/NDL", "/NJH", "/NJS", "/nc", "/ns", "/np")
+  $rcArgs = @($src, $dst, "/E", "/NFL", "/NDL", "/NJH", "/NJS", "/nc", "/ns", "/np", "/XJ", "/XJD")
   if ($xd -and $xd.Count -gt 0) { $rcArgs += "/XD"; $rcArgs += $xd }
   if ($xf -and $xf.Count -gt 0) { $rcArgs += "/XF"; $rcArgs += $xf }
   & robocopy @rcArgs | Out-Null
   if ($LASTEXITCODE -ge 8) { throw "robocopy failed ($LASTEXITCODE): $src" }
+}
+
+function Test-ThumbMagic([byte[]]$bytes) {
+  if ($null -eq $bytes -or $bytes.Length -lt 12) { return $false }
+  if ($bytes[0] -eq 0xFF -and $bytes[1] -eq 0xD8) { return $true } # JPEG
+  $brand = [Text.Encoding]::ASCII.GetString($bytes, 4, [Math]::Min(8, $bytes.Length - 4))
+  return ($brand -like 'ftyp*')
+}
+
+function Copy-PamiecMaterialized([string]$src, [string]$dst) {
+  <#
+    Dropbox FeRp reparse (0x9000601a) na D:\ — robocopy zostawia placeholdery;
+    Inno potem wypluwa "Plik zrodlowy jest uszkodzony". Czytamy bajty (hydrate)
+    i zapisujemy zwykle pliki Archive w staging.
+  #>
+  if (-not (Test-Path -LiteralPath $src)) { throw "Brak PAMIEC zrodla: $src" }
+  New-Item -ItemType Directory -Force -Path $dst | Out-Null
+  $srcFull = (Resolve-Path -LiteralPath $src).Path.TrimEnd('\')
+  $copied = 0
+  $skipped = 0
+  Get-ChildItem -LiteralPath $src -Recurse -File -ErrorAction Stop | ForEach-Object {
+    $name = $_.Name
+    if ($name -like '*.tmp' -or $name -like '*.lock') { $skipped++; return }
+    $rel = $_.FullName.Substring($srcFull.Length).TrimStart('\')
+    if ($rel -match '(^|\\)(__pycache__|_probe)(\\|$)') { $skipped++; return }
+    $out = Join-Path $dst $rel
+    $outDir = Split-Path -Parent $out
+    if (-not (Test-Path -LiteralPath $outDir)) {
+      New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+    }
+    try {
+      $bytes = [IO.File]::ReadAllBytes($_.FullName)
+    } catch {
+      Write-Warning "Pomijam (odczyt): $rel — $($_.Exception.Message)"
+      $skipped++
+      return
+    }
+    if ($bytes.Length -lt 32 -or -not (Test-ThumbMagic $bytes)) {
+      Write-Warning "Pomijam (magia/rozmiar): $rel ($($bytes.Length) B)"
+      $skipped++
+      return
+    }
+    [IO.File]::WriteAllBytes($out, $bytes)
+    $copied++
+    if (($copied % 1000) -eq 0) { Write-Host "  materialized $copied..." }
+  }
+  Write-Host "PAMIEC materialized: copied=$copied skipped=$skipped"
+  if ($copied -lt 1000) {
+    throw "Za malo zmaterializowanych thumbs ($copied). Dropbox offline albo cache pusty."
+  }
+}
+
+function Assert-StagedThumbsHealthy([string]$thumbsDir) {
+  $reparse = 0
+  $bad = 0
+  $ok = 0
+  Get-ChildItem -LiteralPath $thumbsDir -File -Recurse -ErrorAction Stop | ForEach-Object {
+    if (($_.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+      $reparse++
+      return
+    }
+    try {
+      $fs = [IO.File]::Open($_.FullName, 'Open', 'Read', 'Read')
+      $buf = New-Object byte[] 12
+      [void]$fs.Read($buf, 0, 12)
+      $fs.Close()
+      if (Test-ThumbMagic $buf) { $ok++ } else { $bad++ }
+    } catch { $bad++ }
+  }
+  Write-Host "Staged thumbs health: ok=$ok reparse=$reparse bad=$bad"
+  if ($reparse -gt 0) {
+    throw "Staging PAMIEC nadal ma $reparse plikow ReparsePoint (Dropbox). Nie wolno pakowac."
+  }
+  if ($bad -gt 0) {
+    throw "Staging PAMIEC ma $bad plikow bez magii AVIF/JPEG."
+  }
+  if ($ok -lt 1000) {
+    throw "Staging PAMIEC ma tylko $ok zdrowych thumbs."
+  }
 }
 
 $GitRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
@@ -290,13 +369,14 @@ $thumbCount = (Get-ChildItem -LiteralPath $thumbsSrc -File -Recurse -ErrorAction
 if ($thumbCount -lt 1000) {
   throw "PAMIEC-PODRECZNA\thumbs ma tylko $thumbCount plikow (<1000). Uzupelnij cache przed buildem."
 }
-Write-Host "Staging PAMIEC-PODRECZNA ($thumbCount thumbs)..."
-Invoke-Robo $pamiecSrc $pamiecDst @("__pycache__", "_probe") @("*.tmp", "*.lock")
+Write-Host "Staging PAMIEC-PODRECZNA ($thumbCount thumbs) — materialize Dropbox reparse..."
+Copy-PamiecMaterialized $pamiecSrc $pamiecDst
 $thumbDstCount = (Get-ChildItem -LiteralPath (Join-Path $pamiecDst "thumbs") -File -Recurse -ErrorAction SilentlyContinue | Measure-Object).Count
 if ($thumbDstCount -lt 1000) {
-  throw "Staging PAMIEC niekompletny ($thumbDstCount). Robocopy fail?"
+  throw "Staging PAMIEC niekompletny ($thumbDstCount)."
 }
-Write-Host "Shipped PAMIEC-PODRECZNA thumbs=$thumbDstCount"
+Assert-StagedThumbsHealthy (Join-Path $pamiecDst "thumbs")
+Write-Host "Shipped PAMIEC-PODRECZNA thumbs=$thumbDstCount (no reparse)"
 
 $readmeSrc = Join-Path $BinRoot "installer\README.txt"
 if (Test-Path $readmeSrc) { Copy-Item $readmeSrc (Join-Path $stageRoot "README.txt") -Force }

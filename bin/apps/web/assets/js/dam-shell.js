@@ -3306,7 +3306,7 @@
   function ensureCacheBadgeScript() {
     if (document.querySelector('script[data-dam-cache-badge]')) return;
     var s = document.createElement("script");
-    s.src = "./assets/js/dam-cache-badge.js?v=1.9.6";
+    s.src = "./assets/js/dam-cache-badge.js?v=1.9.7";
     s.setAttribute("data-dam-cache-badge", "1");
     s.defer = true;
     (document.body || document.documentElement).appendChild(s);

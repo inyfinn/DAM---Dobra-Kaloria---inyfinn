@@ -1,6 +1,6 @@
 ; DAM Windows installer - pelny kreator (licencja, sciezka, aktualizacja)
 #ifndef MyAppVersion
-  #define MyAppVersion "1.9.6"
+  #define MyAppVersion "1.9.7"
 #endif
 #ifndef StageDir
   #define StageDir "..\dist\staging\DAM-install"
@@ -206,9 +206,20 @@ begin
   Result := UserInstallDir;
 end;
 
+function PathNeedsAdmin(const Path: String): Boolean;
+var
+  U: String;
+begin
+  U := UpperCase(AddBackslash(Path));
+  Result :=
+    (Pos('\PROGRAM FILES\', U) > 0) or
+    (Pos('\PROGRAM FILES (X86)\', U) > 0) or
+    (Pos('\PROGRAMFILES\', U) > 0);
+end;
+
 procedure InitializeWizard;
 begin
-  { Nie nadpisuj wyboru uzytkownika — Program Files jest OK. }
+  { Domyslnie LocalAppData; Program Files tylko z admin (NextButtonClick). }
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
@@ -221,11 +232,26 @@ begin
       MsgBox(
         'Ta sciezka jest zabroniona (Windows / ProgramData / Temp).' + #13#10 +
         'Wybierz np.:' + #13#10 +
-        UserInstallDir + #13#10 +
-        'albo' + #13#10 +
-        ProgramFilesInstallDir + ' (wymaga uprawnien administratora w trakcie instalacji).',
+        UserInstallDir,
         mbError, MB_OK);
       Result := False;
+      Exit;
+    end;
+    { PrivilegesRequired=lowest nie zawsze podnosi UAC mid-wizard → Error 5. }
+    if PathNeedsAdmin(WizardDirValue) and (not IsAdminInstallMode) then
+    begin
+      if MsgBox(
+        'Folder Program Files wymaga uprawnien administratora.' + #13#10#13#10 +
+        'Tak = zainstaluj w folderze uzytkownika (bez UAC):' + #13#10 +
+        UserInstallDir + #13#10#13#10 +
+        'Nie = przerwanie. Uruchom DAM-Setup.exe jako administrator, jesli chcesz Program Files.',
+        mbConfirmation, MB_YESNO) = IDYES then
+      begin
+        WizardForm.DirEdit.Text := UserInstallDir;
+        Result := True;
+      end
+      else
+        Result := False;
     end;
   end;
 end;
@@ -299,6 +325,12 @@ function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
   KillDamProcesses;
   Result := '';
+  if PathNeedsAdmin(WizardDirValue) and (not IsAdminInstallMode) then
+  begin
+    Result :=
+      'Program Files wymaga administratora. Wybierz ' + UserInstallDir +
+      ' albo uruchom DAM-Setup.exe jako administrator.';
+  end;
 end;
 
 function InitializeUninstall: Boolean;
