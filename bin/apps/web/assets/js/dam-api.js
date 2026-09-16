@@ -846,7 +846,7 @@
       if (!data || !data.ok) {
         var err = (data && data.error) || "register_failed";
         if (err === "email_taken") throw new Error("Konto z tym emailem juz istnieje.");
-        if (err === "password_too_short") throw new Error("Haslo min. 8 znakow.");
+        if (err === "password_too_short") throw new Error("Haslo min. 4 znaki.");
         if (err === "invalid_email") throw new Error("Podaj poprawny email.");
         if (err === "admin_required") {
           throw new Error((data && data.hint) || "Nowe konta zaklada tylko administrator.");

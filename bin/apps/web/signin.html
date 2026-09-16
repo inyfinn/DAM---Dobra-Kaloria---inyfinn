@@ -222,7 +222,7 @@
 
   <script src="./assets/js/main.js?v=5.0.196"></script>
   <script src="./assets/js/dam-runtime.js?v=1.8.9"></script>
-  <script src="./assets/js/dam-api.js?v=1.9.2"></script>
+  <script src="./assets/js/dam-api.js?v=1.9.3"></script>
   <script>
     (function () {
       var mode = "login";
@@ -249,8 +249,8 @@
         nameWrap.hidden = m !== "register";
         nameWrap.classList.toggle("dam-auth-hidden", m !== "register");
         pass.autocomplete = m === "register" ? "new-password" : "current-password";
-        pass.minLength = m === "register" ? 8 : 4;
-        pass.setAttribute("minlength", m === "register" ? "8" : "4");
+        pass.minLength = 4;
+        pass.setAttribute("minlength", "4");
         submitBtn.textContent = m === "register" ? "Utwórz konto" : "Zaloguj";
         if (registrationOpen) {
           footer.innerHTML = m === "register"

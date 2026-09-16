@@ -190,12 +190,12 @@ def users_count() -> int:
 
 
 def set_user_password(email: str, new_password: str) -> dict:
-    """Ustaw haslo konta (skrypty go-live / admin ops). Min. 8 znakow."""
+    """Ustaw haslo konta (skrypty go-live / admin ops). Min. 4 znaki."""
     init_db()
     email_n = (email or "").strip().lower()
     if not email_n or "@" not in email_n:
         return {"ok": False, "error": "invalid_email"}
-    if not new_password or len(new_password) < 8:
+    if not new_password or len(new_password) < 4:
         return {"ok": False, "error": "password_too_short"}
     with _LOCK:
         conn = _connect()
@@ -244,7 +244,7 @@ def register_user(email: str, password: str, name: str = "", role: str = "user")
     email_n = (email or "").strip().lower()
     if not email_n or "@" not in email_n:
         return {"ok": False, "error": "invalid_email"}
-    if not password or len(password) < 8:
+    if not password or len(password) < 4:
         return {"ok": False, "error": "password_too_short"}
     display = (name or email_n.split("@")[0]).strip()
     role_n = role if role in ("admin", "power_user", "user") else "user"
