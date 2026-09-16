@@ -1,6 +1,6 @@
 ; DAM Windows installer - pelny kreator (licencja, sciezka, aktualizacja)
 #ifndef MyAppVersion
-  #define MyAppVersion "1.9.8"
+  #define MyAppVersion "1.9.9"
 #endif
 #ifndef StageDir
   #define StageDir "..\dist\staging\DAM-install"
@@ -41,7 +41,7 @@ SetupIconFile={#StageDir}\bin\apps\desktop\dam_app.ico
 UninstallDisplayIcon={app}\bin\apps\desktop\dam_app.ico
 WizardStyle=classic
 Compression=lzma2/ultra64
-SolidCompression=yes
+SolidCompression=no
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 LicenseFile={#GitRoot}\bin\installer\LICENSE.txt
@@ -72,7 +72,7 @@ Name: "polish"; MessagesFile: "compiler:Languages\Polish.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "Utworz skrot na pulpicie"; GroupDescription: "Skroty:"; Flags: checkedonce
-Name: "cachesync"; Description: "Po instalacji odswiez pamiec podreczna z Synology (opcjonalne; paczka juz ma cache)"; GroupDescription: "Pamiec podreczna:"; Flags: unchecked
+Name: "cachesync"; Description: "Jesli brak dysku M: — pobierz pamiec podreczna z Synology po instalacji"; GroupDescription: "Pamiec podreczna:"; Flags: unchecked
 
 ; Aktualizacja = czysty klad od nowa. Bez tego stare moduly JS/HTML i pliki
 ; usuniete w nowej wersji zostaja na dysku i wracaja do gry przy niezbumpowanym ?v=.
@@ -129,7 +129,8 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilen
 Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Instalowanie Visual C++ Runtime..."; Flags: waituntilterminated; Check: VCRedistNeeded
 Filename: "{tmp}\MicrosoftEdgeWebview2Setup.exe"; Parameters: "/silent /install"; StatusMsg: "Instalowanie WebView2 Runtime (wymagane przez pywebview)..."; Flags: waituntilterminated; Check: WebView2Needed
 Filename: "powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\bin\installer\trust-inyfinn-publisher.ps1"""; StatusMsg: "Rejestracja wydawcy Inyfinn..."; Flags: runhidden waituntilterminated
-Filename: "powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\bin\scripts\ops\sync-pamiec-podreczna-from-nas.ps1"" -Quiet"; StatusMsg: "Odswiezanie pamieci podrecznej z Synology..."; Flags: runhidden waituntilterminated; Tasks: cachesync
+Filename: "powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\bin\scripts\ops\seed-pamiec-from-canon.ps1"" -Dest ""{app}\bin\PAMIEC-PODRECZNA"" -Quiet"; StatusMsg: "Kopiowanie pamieci podrecznej z dysku M: (poza instalatorem)..."; Flags: runhidden waituntilterminated
+Filename: "powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\bin\scripts\ops\sync-pamiec-podreczna-from-nas.ps1"" -Quiet"; StatusMsg: "Pobieranie pamieci podrecznej z Synology..."; Flags: runhidden waituntilterminated; Tasks: cachesync
 Filename: "{app}\{#MyAppExeName}"; Description: "Uruchom DAM po zakonczeniu instalacji (startuje mostek)"; Flags: nowait postinstall skipifsilent
 
 [Registry]
