@@ -4,32 +4,6 @@
   "updated_at": "2026-09-16T09:41:00+02:00",
   "instructions": [
     {
-      "id": "ops.ship_github_release",
-      "must": [
-        "Gdy user prosi o commit, push, build albo instalator (zbitka albo parafraza), wykonaj caly lancuch: bump wersji, commit, push origin/main, lokalny DAM-Setup.exe, nowy GitHub Release z tym exe jako Latest.",
-        "W odpowiedzi podaj URL https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v{VERSION}.",
-        "Lokalny build zostaje (bin/instalator/DAM-Setup.exe). GitHub Release go nie zastepuje i odwrotnie."
-      ],
-      "body_pl": "HARD 2026-09-16: commit+push+build = lokalny instalator I nowy GitHub Release. Sam push albo sam exe na dysku = niedokonczony ship. Lekcja v1.0.74 Latest przy kodzie 1.8.6 na main.",
-      "category": "ops",
-      "must_not": [
-        "Oglaszac done po samym git push origin main bez gh release create.",
-        "Oglaszac done po samym lokalnym DAM-Setup.exe bez wrzucenia go jako nowy release.",
-        "Wysylac instalator na inny remote / inne repo niz inyfinn/DAM---Dobra-Kaloria---inyfinn."
-      ],
-      "priority": "critical",
-      "title_pl": "Ship = lokalny instalator + GitHub Release",
-      "related_kv": [
-        "program-instructions"
-      ],
-      "updated_at": "2026-09-16",
-      "related_code": [
-        "scripts/ops/build-installer.ps1",
-        "installer/DAM-Setup.iss",
-        ".cursor/rules/dam-ship-github-release.mdc"
-      ]
-    },
-    {
       "id": "preview.cache.offline_browse",
       "must": [
         "PAMIEC-PODRECZNA/thumbs + indeksy w instalacji pozwalaja przegladac produkty i miniatury bez polaczenia z udzialem plikow (Marketing / Synology).",
@@ -1997,6 +1971,32 @@
         "apps/desktop/index_supervisor.py",
         "apps/web/scripts/watch-file-index.py",
         "apps/web/assets/js/dam-cache-sync.js"
+      ]
+    },
+    {
+      "id": "ops.ship_github_release",
+      "must": [
+        "Gdy user prosi o commit, push, build albo instalator (zbitka albo parafraza), wykonaj caly lancuch: bump wersji, commit, push origin/main, lokalny DAM-Setup.exe, nowy GitHub Release z tym exe jako Latest.",
+        "W odpowiedzi podaj URL https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v{VERSION}.",
+        "Lokalny build zostaje (bin/instalator/DAM-Setup.exe). GitHub Release go nie zastepuje i odwrotnie."
+      ],
+      "body_pl": "HARD 2026-09-16: commit+push+build = lokalny instalator I nowy GitHub Release. Sam push albo sam exe na dysku = niedokonczony ship. Lekcja v1.0.74 Latest przy kodzie 1.8.6 na main.",
+      "category": "ops",
+      "must_not": [
+        "Oglaszac done po samym git push origin main bez gh release create.",
+        "Oglaszac done po samym lokalnym DAM-Setup.exe bez wrzucenia go jako nowy release.",
+        "Wysylac instalator na inny remote / inne repo niz inyfinn/DAM---Dobra-Kaloria---inyfinn."
+      ],
+      "priority": "critical",
+      "title_pl": "Ship = lokalny instalator + GitHub Release",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-09-16",
+      "related_code": [
+        "scripts/ops/build-installer.ps1",
+        "installer/DAM-Setup.iss",
+        ".cursor/rules/dam-ship-github-release.mdc"
       ]
     }
   ],

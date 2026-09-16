@@ -499,40 +499,6 @@ def _reveal_worker(target: str, mode: str, args: list) -> None:
     if mode == "select":
         try:
             if _select_file_in_explorer(target):
-                # #region agent log
-                try:
-                    with open(
-                        Path(__file__).resolve().parents[2] / "debug-a78fa0.log",
-                        "a",
-                        encoding="utf-8",
-                    ) as _f:
-                        _f.write(
-                            json.dumps(
-                                {
-                                    "sessionId": "a78fa0",
-                                    "hypothesisId": "SELECT",
-                                    "location": "local_bridge.py:_reveal_worker",
-                                    "message": "SHOpenFolderAndSelectItems ok",
-                                    "data": {
-                                        "basename": os.path.basename(target),
-                                        "path_tail": target[-90:],
-                                        "has_front_s": bool(
-                                            re.search(r"FRONT[-_ ]?S\b", os.path.basename(target), re.I)
-                                        ),
-                                        "has_front_l": bool(
-                                            re.search(r"FRONT[-_ ]?L\b", os.path.basename(target), re.I)
-                                        ),
-                                    },
-                                    "timestamp": int(time.time() * 1000),
-                                    "runId": "select-s-fix",
-                                },
-                                ensure_ascii=False,
-                            )
-                            + "\n"
-                        )
-                except Exception:
-                    pass
-                # #endregion
                 try:
                     _focus_new_explorer_window(set())
                 except Exception:
@@ -575,62 +541,8 @@ def reveal_in_explorer(target: str) -> dict:
         else normalize_path(target)
     )
     if not os.path.exists(target):
-        # #region agent log
-        try:
-            with open(
-                Path(__file__).resolve().parents[2] / "debug-a78fa0.log",
-                "a",
-                encoding="utf-8",
-            ) as _f:
-                _f.write(
-                    json.dumps(
-                        {
-                            "sessionId": "a78fa0",
-                            "hypothesisId": "B",
-                            "location": "local_bridge.py:reveal_in_explorer",
-                            "message": "path_not_found",
-                            "data": {"path_tail": target[-80:], "exists": False},
-                            "timestamp": int(time.time() * 1000),
-                            "runId": "pre-fix",
-                        },
-                        ensure_ascii=False,
-                    )
-                    + "\n"
-                )
-        except Exception:
-            pass
-        # #endregion
         return {"ok": False, "error": "path_not_found", "path": target}
     if not _is_under_marketing(Path(target)):
-        # #region agent log
-        try:
-            with open(
-                Path(__file__).resolve().parents[2] / "debug-a78fa0.log",
-                "a",
-                encoding="utf-8",
-            ) as _f:
-                _f.write(
-                    json.dumps(
-                        {
-                            "sessionId": "a78fa0",
-                            "hypothesisId": "B",
-                            "location": "local_bridge.py:reveal_in_explorer",
-                            "message": "path_outside_marketing",
-                            "data": {
-                                "path_tail": target[-80:],
-                                "drive": target[:3],
-                                "is_documents": "Dokumenty" in target or "Documents" in target,
-                            },
-                            "timestamp": int(time.time() * 1000),
-                            "runId": "pre-fix",
-                        },
-                        ensure_ascii=False,
-                    )
-                    + "\n"
-                )
-        except Exception:
-            pass
-        # #endregion
         return {"ok": False, "error": "path_outside_marketing", "path": target}
 
     # Bez shell=True (unikaj injection przez cudzyslowy w sciezce).
@@ -652,40 +564,6 @@ def reveal_in_explorer(target: str) -> dict:
         mode = "open"
 
     try:
-        # #region agent log
-        try:
-            with open(
-                Path(__file__).resolve().parents[2] / "debug-a78fa0.log",
-                "a",
-                encoding="utf-8",
-            ) as _f:
-                _f.write(
-                    json.dumps(
-                        {
-                            "sessionId": "a78fa0",
-                            "hypothesisId": "E",
-                            "location": "local_bridge.py:reveal_in_explorer",
-                            "message": "launching explorer",
-                            "data": {
-                                "mode": mode,
-                                "path_tail": target[-90:],
-                                "drive": target[:3],
-                                "is_dir": os.path.isdir(target),
-                                "is_file": os.path.isfile(target),
-                                "args_len": len(args),
-                                "select_split": mode == "select" and len(args) == 3,
-                                "creationflags": int(_no_win),
-                            },
-                            "timestamp": int(time.time() * 1000),
-                            "runId": "post-fix",
-                        },
-                        ensure_ascii=False,
-                    )
-                    + "\n"
-                )
-        except Exception:
-            pass
-        # #endregion
         # Watek daemon: karta w istniejacym oknie + fokus (fallback: nowe
         # okno + fokus). Nie blokuje odpowiedzi HTTP (X: NFS bywa wolny).
         threading.Thread(
@@ -1662,12 +1540,20 @@ def _run_index_rebuild() -> None:
         with INDEX_REBUILD_LOG_FILE.open("a", encoding="utf-8", errors="replace") as log_f:
             log_f.write(f"\n==== rebuild start {utc_now()} pid={os.getpid()} ====\n")
             log_f.flush()
+            try:
+                import index_supervisor as _idx_sup
+
+                _rebuild_env = _idx_sup.index_builder_env()
+            except Exception:
+                _rebuild_env = os.environ.copy()
+                _rebuild_env["DAM_INDEX_LIVE_FILE"] = str(DESKTOP_DATA_DIR / "index-live.json")
             proc = subprocess.Popen(
                 [sys.executable, "-u", str(BUILD_INDEX)],
                 creationflags=_no_win,
                 stdin=subprocess.DEVNULL,
                 stdout=log_f,
                 stderr=subprocess.STDOUT,
+                env=_rebuild_env,
             )
             try:
                 lock_handle.update(child_pid=proc.pid)
@@ -3270,31 +3156,103 @@ def _db_kv_set_payload(
 
 _JSON_FILE_CACHE: dict[str, tuple[float, object]] = {}
 _EXPLORER_SLIM_CACHE: dict = {"mtime": None, "raw": None, "gz": None}
+_VIZ_SLIM_CACHE: dict = {"mtime": None, "raw": None, "gz": None}
 
+# First-paint allowlists. Denylist leaked search_blob / tag_groups / authors (~120 KB)
+# and extras_for_index injected checklist_paths (~470 KB) — that is why fields=explorer
+# shipped ~985 KB instead of a catalog slice.
+_EXPLORER_PRODUCT_KEEP = (
+    "id",
+    "display_name",
+    "name",
+    "brand",
+    "root_key",
+    "path",
+    "category",
+    "subcategory_slug",
+    "subcategory_label",
+    "tags",
+    "indexes",
+    "index_bases",
+    "revision_count",
+    "in_archive",
+    "archive_only",
+)
 _EXPLORER_REV_KEEP = (
     "folder",
     "path",
-    "rel",
     "index",
     "index_base",
-    "index_rev",
     "date",
     "langs",
-    "langs_source",
-    "langs_manual",
     "carrier",
     "is_latest",
-    "wizki_count",
     "in_archive",
     "archive_wrapper",
-    "carrier_guessed",
 )
+_EXPLORER_FALSEY_OMIT = frozenset({"in_archive", "archive_only", "is_latest"})
+_VIZ_LATEST_KEEP = (
+    "product_id",
+    "product_name",
+    "category",
+    "brand",
+    "subcategory_slug",
+    "subcategory_label",
+    "linked_products",
+    "alias_langs",
+    "carrier",
+    "carrier_label",
+    "carrier_guessed",
+    "is_mix",
+    "index",
+    "index_base",
+    "revision_folder",
+    "revision_path",
+    "langs",
+    "langs_manual",
+    "lang",
+    "lang_label",
+    "lang_unknown",
+    "file",
+    "path",
+    "mtime",
+    "tags",
+    "in_archive",
+    "carrier_previous",
+)
+_VIZ_FALSEY_OMIT = frozenset(
+    {"carrier_guessed", "is_mix", "langs_manual", "lang_unknown", "in_archive"}
+)
+
+
+def _project_row(
+    src: dict,
+    keys: tuple[str, ...],
+    *,
+    falsey_omit: frozenset[str] | None = None,
+) -> dict:
+    """Copy allowlisted keys; drop empties and default-false flags."""
+    skip_false = falsey_omit or frozenset()
+    out: dict = {}
+    for key in keys:
+        if key not in src:
+            continue
+        val = src[key]
+        if val is None or val == "" or val == [] or val == {}:
+            continue
+        if key in skip_false and val is False:
+            continue
+        out[key] = val
+    return out
 
 
 def _invalidate_explorer_slim_cache() -> None:
     _EXPLORER_SLIM_CACHE["mtime"] = None
     _EXPLORER_SLIM_CACHE["raw"] = None
     _EXPLORER_SLIM_CACHE["gz"] = None
+    _VIZ_SLIM_CACHE["mtime"] = None
+    _VIZ_SLIM_CACHE["raw"] = None
+    _VIZ_SLIM_CACHE["gz"] = None
 
 
 def _drop_json_cache(path: Path) -> None:
@@ -3307,31 +3265,25 @@ def _drop_json_cache(path: Path) -> None:
 
 
 def _file_index_explorer_slim(data: dict) -> dict:
-    """First-paint explorer catalog: drop files_by_role, wizki lists, viz_latest."""
+    """First-paint explorer catalog: allowlisted product + revision keys only.
+
+    Checklist flags/paths are computed on GET /file-index/product (openProduct
+    hydrates). Injecting extras_for_index here doubled the payload (~985 KB).
+    """
     products = []
     for prod in data.get("products") or []:
         if not isinstance(prod, dict):
             continue
         slim_revs = []
-        extras_mod = None
-        try:
-            import dam_path_resolve as extras_mod  # type: ignore
-        except Exception:
-            extras_mod = None
         for rev in prod.get("revisions") or []:
             if not isinstance(rev, dict):
                 continue
-            slim_row = {k: rev[k] for k in _EXPLORER_REV_KEEP if k in rev}
-            if extras_mod is not None:
-                try:
-                    extra = extras_mod.extras_for_index(str(rev.get("index") or ""))
-                    flags, paths = extras_mod.revision_checklist(rev, extras=extra)
-                    slim_row["checklist"] = flags
-                    slim_row["checklist_paths"] = paths
-                except Exception:
-                    pass
-            slim_revs.append(slim_row)
-        row = {k: prod[k] for k in prod if k not in ("revisions", "related_materials")}
+            slim_revs.append(
+                _project_row(rev, _EXPLORER_REV_KEEP, falsey_omit=_EXPLORER_FALSEY_OMIT)
+            )
+        row = _project_row(
+            prod, _EXPLORER_PRODUCT_KEEP, falsey_omit=_EXPLORER_FALSEY_OMIT
+        )
         row["revisions"] = slim_revs
         row["files_slim"] = True
         products.append(row)
@@ -3349,6 +3301,23 @@ def _file_index_explorer_slim(data: dict) -> dict:
         "lang_labels": data.get("lang_labels"),
         "tag_groups": data.get("tag_groups"),
         "products": products,
+    }
+
+
+def _file_index_viz_latest_slim(data: dict) -> dict:
+    """fields=viz_latest: drop empty thumb_url/rel and default-false flags."""
+    rows = []
+    for row in data.get("viz_latest") or []:
+        if not isinstance(row, dict):
+            continue
+        rows.append(_project_row(row, _VIZ_LATEST_KEEP, falsey_omit=_VIZ_FALSEY_OMIT))
+    return {
+        "ok": True,
+        "fields": "viz_latest",
+        "generated_at": data.get("generated_at"),
+        "product_count": data.get("product_count"),
+        "viz_count": data.get("viz_count") or len(rows),
+        "viz_latest": rows,
     }
 
 
@@ -3373,18 +3342,32 @@ def _file_index_product_by_id(data: dict, pid: str) -> dict | None:
     return None
 
 
+def _dumps_slim(payload: dict) -> bytes:
+    return json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+
+
 def _explorer_slim_bytes(data: dict, mtime: float) -> tuple[bytes, bytes | None]:
     if (
         _EXPLORER_SLIM_CACHE["mtime"] == mtime
         and _EXPLORER_SLIM_CACHE["raw"] is not None
     ):
         return _EXPLORER_SLIM_CACHE["raw"], _EXPLORER_SLIM_CACHE["gz"]
-    payload = _file_index_explorer_slim(data)
-    raw = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    raw = _dumps_slim(_file_index_explorer_slim(data))
     gz = gzip.compress(raw, compresslevel=6) if len(raw) > 4096 else None
     _EXPLORER_SLIM_CACHE["mtime"] = mtime
     _EXPLORER_SLIM_CACHE["raw"] = raw
     _EXPLORER_SLIM_CACHE["gz"] = gz
+    return raw, gz
+
+
+def _viz_slim_bytes(data: dict, mtime: float) -> tuple[bytes, bytes | None]:
+    if _VIZ_SLIM_CACHE["mtime"] == mtime and _VIZ_SLIM_CACHE["raw"] is not None:
+        return _VIZ_SLIM_CACHE["raw"], _VIZ_SLIM_CACHE["gz"]
+    raw = _dumps_slim(_file_index_viz_latest_slim(data))
+    gz = gzip.compress(raw, compresslevel=6) if len(raw) > 4096 else None
+    _VIZ_SLIM_CACHE["mtime"] = mtime
+    _VIZ_SLIM_CACHE["raw"] = raw
+    _VIZ_SLIM_CACHE["gz"] = gz
     return raw, gz
 
 
@@ -6493,6 +6476,7 @@ def open_image_resizer(input_path: str = "", output_path: str = "", product_id: 
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
+            creationflags=_no_win,
         )
     except OSError as exc:
         return {"ok": False, "error": f"launch_failed:{exc}", "exe": str(exe)}
@@ -7901,16 +7885,20 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 if fields == "viz_latest":
                     data = _load_json(INDEX_FILE, {})
-                    self._json(
-                        200,
-                        {
-                            "ok": True,
-                            "generated_at": data.get("generated_at"),
-                            "product_count": data.get("product_count"),
-                            "viz_count": data.get("viz_count"),
-                            "viz_latest": data.get("viz_latest") or [],
-                        },
-                    )
+                    st = INDEX_FILE.stat()
+                    raw, gz = _viz_slim_bytes(data, st.st_mtime)
+                    accept = (self.headers.get("Accept-Encoding") or "").lower()
+                    body = gz if (gz and "gzip" in accept) else raw
+                    self.send_response(200)
+                    self._cors()
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    if body is gz:
+                        self.send_header("Content-Encoding", "gzip")
+                    self.send_header("Content-Length", str(len(body)))
+                    self.send_header("X-Dam-Index-Mtime", str(int(st.st_mtime)))
+                    self.send_header("X-Dam-Index-Fields", "viz_latest")
+                    self.end_headers()
+                    self.wfile.write(body)
                     return
                 if fields == "explorer":
                     data = _load_json(INDEX_FILE, {})
@@ -8777,31 +8765,6 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(500, {"ok": False, "error": "branding_routes_post", "detail": str(exc)})
                 return
         if parsed.path == "/reveal":
-            # #region agent log
-            try:
-                _user = self._session_user() or {}
-                _dbg = {
-                    "sessionId": "a78fa0",
-                    "hypothesisId": "A",
-                    "location": "local_bridge.py:/reveal",
-                    "message": "reveal request",
-                    "data": {
-                        "has_bearer": bool(self._bearer()),
-                        "path_len": len((data.get("path") or "").strip()),
-                        "user_email": str(_user.get("email") or "")[:80],
-                    },
-                    "timestamp": int(time.time() * 1000),
-                    "runId": "post-fix",
-                }
-                with open(
-                    Path(__file__).resolve().parents[2] / "debug-a78fa0.log",
-                    "a",
-                    encoding="utf-8",
-                ) as _f:
-                    _f.write(json.dumps(_dbg, ensure_ascii=False) + "\n")
-            except Exception:
-                pass
-            # #endregion
             # Lokalny most 127.0.0.1: otwarcie folderu w Marketing (jail) bez Bearer.
             path = (data.get("path") or "").strip()
             if not path:

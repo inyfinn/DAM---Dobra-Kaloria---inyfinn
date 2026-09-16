@@ -1,5 +1,5 @@
 ﻿#Requires -Version 5.1
-# GIT_ROOT shows only: DAM.exe, DAM-Setup.exe, bin/, .git*
+# GIT_ROOT shows only: DAM.exe, URUCHOM-DAM.bat, bin/, .cursor/, .git*
 $ErrorActionPreference = "Stop"
 $GitRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 Set-Location $GitRoot
@@ -36,4 +36,4 @@ if (Test-Path "installer") {
 }
 
 Write-Host "OK cleanup-git-root"
-Write-Host "Root should show: DAM.exe, DAM-Setup.exe, bin\, .git*"
+Write-Host "Root should show: DAM.exe, URUCHOM-DAM.bat, bin\, .cursor\, .git*"

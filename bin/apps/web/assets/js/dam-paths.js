@@ -847,71 +847,13 @@
         return { ok: false, error: "bridge_offline", path: local, folder: hint };
       }
       var headers = bridgeAuthHeaders();
-      // #region agent log
-      fetch("http://127.0.0.1:7922/ingest/8b6cf650-a21b-4d56-ad4a-ad3ea44edb8c", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a78fa0" },
-        body: JSON.stringify({
-          sessionId: "a78fa0",
-          hypothesisId: "A",
-          location: "dam-paths.js:revealInExplorer",
-          message: "reveal fetch about to fire",
-          data: {
-            hasToken: !!(localStorage.getItem("dam_token")),
-            sentAuth: !!headers.Authorization,
-            pathLen: (local || "").length,
-            looksFile: looksLikeFile(local),
-            basename: basename(local),
-            hasFrontS: /FRONT[-_ ]?S\b/i.test(basename(local) || ""),
-            hasFrontL: /FRONT[-_ ]?L\b/i.test(basename(local) || ""),
-          },
-          timestamp: Date.now(),
-          runId: "select-s-fix",
-        }),
-      }).catch(function () {});
-      // #endregion
       return fetch(bridgeBase() + "/reveal", {
         method: "POST",
         headers: headers,
         body: JSON.stringify({ path: local })
       }).then(function (r) {
-        // #region agent log
-        fetch("http://127.0.0.1:7922/ingest/8b6cf650-a21b-4d56-ad4a-ad3ea44edb8c", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a78fa0" },
-          body: JSON.stringify({
-            sessionId: "a78fa0",
-            hypothesisId: "A",
-            location: "dam-paths.js:revealInExplorer:response",
-            message: "reveal HTTP status",
-            data: { status: r.status, sentAuth: !!headers.Authorization },
-            timestamp: Date.now(),
-            runId: "select-s-fix",
-          }),
-        }).catch(function () {});
-        // #endregion
         return r.json();
       }).then(function (res) {
-        // #region agent log
-        fetch("http://127.0.0.1:7922/ingest/8b6cf650-a21b-4d56-ad4a-ad3ea44edb8c", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a78fa0" },
-          body: JSON.stringify({
-            sessionId: "a78fa0",
-            hypothesisId: "B",
-            location: "dam-paths.js:revealInExplorer:body",
-            message: "reveal JSON body",
-            data: {
-              ok: !!(res && res.ok),
-              error: (res && res.error) || null,
-              command: (res && res.command) || null,
-              pathTail: res && res.path ? String(res.path).slice(-90) : null,
-            },
-            timestamp: Date.now(),
-            runId: "select-s-fix",
-          }),
-        }).catch(function () {});
-        // #endregion
         if (res && res.ok) {
           showToast(
             res.command === "select" ? "Zaznaczono plik w Eksploratorze" : "Otwarto folder w Eksploratorze",
@@ -953,45 +895,11 @@
         return { ok: false, error: "bridge_offline", path: folder };
       }
       var headers = bridgeAuthHeaders();
-      // #region agent log
-      fetch("http://127.0.0.1:7922/ingest/8b6cf650-a21b-4d56-ad4a-ad3ea44edb8c", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a78fa0" },
-        body: JSON.stringify({
-          sessionId: "a78fa0",
-          hypothesisId: "A",
-          location: "dam-paths.js:openFolderInExplorer",
-          message: "open folder reveal fetch",
-          data: {
-            hasToken: !!(localStorage.getItem("dam_token")),
-            sentAuth: !!headers.Authorization,
-            pathLen: (folder || "").length,
-          },
-          timestamp: Date.now(),
-          runId: "post-fix",
-        }),
-      }).catch(function () {});
-      // #endregion
       return fetch(bridgeBase() + "/reveal", {
         method: "POST",
         headers: headers,
         body: JSON.stringify({ path: folder })
       }).then(function (r) {
-        // #region agent log
-        fetch("http://127.0.0.1:7922/ingest/8b6cf650-a21b-4d56-ad4a-ad3ea44edb8c", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "a78fa0" },
-          body: JSON.stringify({
-            sessionId: "a78fa0",
-            hypothesisId: "A",
-            location: "dam-paths.js:openFolderInExplorer:response",
-            message: "open folder HTTP status",
-            data: { status: r.status, sentAuth: !!headers.Authorization },
-            timestamp: Date.now(),
-            runId: "post-fix",
-          }),
-        }).catch(function () {});
-        // #endregion
         return r.json();
       }).then(function (res) {
         if (res && res.ok) {

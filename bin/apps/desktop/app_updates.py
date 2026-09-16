@@ -688,7 +688,8 @@ def _launch_installer(path: Path) -> dict[str, Any]:
     args = [str(path), "/VERYSILENT", "/NORESTART"]
     try:
         if sys.platform == "win32":
-            subprocess.Popen(args)
+            flags = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+            subprocess.Popen(args, creationflags=flags)
         else:
             subprocess.Popen([str(path)])
         return {"ok": True, "path": str(path), "launched": True}

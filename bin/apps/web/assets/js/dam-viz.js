@@ -137,9 +137,20 @@
         return r.text();
       })
       .then(function (text) {
-        /* Worker parse hung the Explorer return path. ~0.5MB JSON.parse on this turn. */
+        /* Live viz_latest is ~0.5 MB. Yield so first paint can land. */
         if (typeof text !== "string") throw new Error("viz_latest_not_text");
         if (text.length > 2500000) throw new Error("viz_latest_too_large");
+        if (text.length > 400000) {
+          return new Promise(function (resolve, reject) {
+            setTimeout(function () {
+              try {
+                resolve(JSON.parse(text));
+              } catch (eParse) {
+                reject(eParse);
+              }
+            }, 0);
+          });
+        }
         return JSON.parse(text);
       })
       .then(function (data) {
@@ -238,7 +249,7 @@
     encodeURIComponent(
       '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200">' +
         '<rect fill="#f4f4f6" width="320" height="200"/>' +
-        '<text x="160" y="108" text-anchor="middle" fill="#AB54DB" font-family="sans-serif" font-size="14">Brak miniatury</text>' +
+        '<text x="160" y="108" text-anchor="middle" fill="var(--dam-primary)" font-family="sans-serif" font-size="14">Brak miniatury</text>' +
       "</svg>"
     );
 
@@ -5353,7 +5364,31 @@
       return;
     }
 
-    grid.innerHTML = groups.map(renderGroup).join("");
+    var VIZ_PAINT_PAGE = 36;
+    if (!render._vizPaintLimit) render._vizPaintLimit = VIZ_PAINT_PAGE;
+    var paintSig = groups.length + ":" + filtered.length;
+    if (render._vizPaintSig !== paintSig) {
+      render._vizPaintSig = paintSig;
+      render._vizPaintLimit = VIZ_PAINT_PAGE;
+    }
+    var paintGroups = groups.slice(0, render._vizPaintLimit);
+    var moreVizHtml = "";
+    if (groups.length > paintGroups.length) {
+      moreVizHtml =
+        '<div class="dam-viz-more-wrap">' +
+        '<button type="button" class="geex-btn geex-btn--primary-transparent dam-viz-show-more">' +
+        "Pokaż więcej (" +
+        (groups.length - paintGroups.length) +
+        ")</button></div>";
+    }
+    grid.innerHTML = paintGroups.map(renderGroup).join("") + moreVizHtml;
+    var vizMoreBtn = grid.querySelector(".dam-viz-show-more");
+    if (vizMoreBtn) {
+      vizMoreBtn.addEventListener("click", function () {
+        render._vizPaintLimit = (render._vizPaintLimit || VIZ_PAINT_PAGE) + VIZ_PAINT_PAGE;
+        render();
+      });
+    }
     if (
       !global.DAM_DISABLE_THUMB_WARM &&
       global.DamPreviewTruth &&

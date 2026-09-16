@@ -585,61 +585,141 @@
     return String((row && row.key) || "row_" + idx);
   }
 
-  function buildFmcgRowTr(row, idx, PF, admin) {
+  var FMCG_GROUP_ORDER = ["prepress", "print", "pack", "logistics", "other"];
+
+  var FMCG_GROUP_BY_KEY = {
+    prepress: "prepress",
+    proof: "prepress",
+    print_doy: "print",
+    foil: "print",
+    label: "print",
+    carton_unit: "pack",
+    carton_bulk: "pack",
+    tape: "pack",
+    pack_labor: "pack",
+    warehouse: "pack",
+    pallet: "logistics",
+    palletize: "logistics",
+    trip: "logistics",
+    freight: "logistics",
+    gs1: "logistics",
+    lab: "logistics",
+  };
+
+  function fmcgGroupId(row, idx) {
+    if (row && row.adhoc) return "other";
+    var key = fmcgRowKey(row, idx);
+    if (key.indexOf("adhoc_") === 0) return "other";
+    if (FMCG_GROUP_BY_KEY[key]) return FMCG_GROUP_BY_KEY[key];
+    var dep = String((row && row.department) || "").toLowerCase();
+    if (dep === "dtp") return "prepress";
+    if (dep === "zakupy" || dep === "produkcja") return "print";
+    if (dep === "magazyn") return "pack";
+    if (dep === "logistyka" || dep === "regulacje" || dep === "qa") {
+      return "logistics";
+    }
+    return "other";
+  }
+
+  function fmcgGroupTitle(id) {
+    var keys = {
+      prepress: ["project.fmcg_group_prepress", "Prepress"],
+      print: ["project.fmcg_group_print", "Druk i surowiec"],
+      pack: ["project.fmcg_group_pack", "Konfekcja"],
+      logistics: ["project.fmcg_group_logistics", "Logistyka"],
+      other: ["project.fmcg_group_other", "Pozostałe"],
+    };
+    var pair = keys[id] || keys.other;
+    return catalogLabel(pair[0], pair[1]);
+  }
+
+  function fmcgStepHint() {
+    return catalogLabel(
+      "project.fmcg_step_hint",
+      "Strzałki: 1, Ctrl: 0,01, Shift: 10, Ctrl+Shift: 100"
+    );
+  }
+
+  function fmcgAmountInputHtml(row, rk, extraClass, extraId) {
+    var hint = fmcgStepHint();
+    return (
+      '<input type="number" step="1" min="0" inputmode="decimal" class="form-control form-control-sm dam-catalog-fmcg__amount-input text-end' +
+      (extraClass ? " " + extraClass : "") +
+      '" data-row-key="' +
+      esc(rk) +
+      '"' +
+      (extraId ? ' id="' + extraId + '"' : "") +
+      ' value="' +
+      esc(String(row.amount != null ? row.amount : "")) +
+      '" aria-label="' +
+      esc(row.label) +
+      '" aria-describedby="damCatalogFmcgStepHint" aria-description="' +
+      esc(hint) +
+      '" title="' +
+      esc(hint) +
+      '" />'
+    );
+  }
+
+  function buildFmcgRowHtml(row, idx, PF, admin) {
     var meta = PF && typeof PF.directRowMeta === "function" ? PF.directRowMeta(row) : "";
     var rk = fmcgRowKey(row, idx);
     var amountCell = admin
-      ? '<input type="number" step="0.01" min="0" class="form-control form-control-sm dam-catalog-fmcg__amount-input text-end" data-row-key="' +
-        esc(rk) +
-        '" value="' +
-        esc(String(row.amount != null ? row.amount : "")) +
-        '" aria-label="' +
-        esc(row.label) +
-        '" />'
-      : esc(PF ? PF.formatPLN(row.amount) : String(row.amount));
+      ? fmcgAmountInputHtml(row, rk, "", "")
+      : '<span class="dam-catalog-fmcg__amount-text">' +
+        esc(PF ? PF.formatPLN(row.amount) : String(row.amount)) +
+        "</span>";
     return (
-      "<tr data-row-key=\"" +
+      '<div class="dam-catalog-fmcg__row" data-row-key="' +
       esc(rk) +
-      "\"><td>" +
+      '">' +
+      '<div class="dam-catalog-fmcg__row-text">' +
+      '<span class="dam-catalog-fmcg__row-label">' +
       esc(row.label) +
+      "</span>" +
       (meta ? '<div class="dam-catalog-fmcg__meta">' + esc(meta) + "</div>" : "") +
-      '</td><td class="text-end dam-catalog-fmcg__amount-cell">' +
+      "</div>" +
+      '<div class="dam-catalog-fmcg__row-amount">' +
       amountCell +
-      "</td></tr>"
+      "</div></div>"
     );
   }
 
-  function buildFmcgRowsHtml(direct, PF, admin) {
-    return (direct || [])
-      .map(function (row, idx) {
-        return buildFmcgRowTr(row, idx, PF, admin);
-      })
-      .join("");
-  }
-
-  function buildFmcgTwoColumnHtml(direct, PF, admin) {
+  function buildFmcgBentoHtml(direct, PF, admin, sumHtml) {
     var rows = direct || [];
-    if (!rows.length) return "";
-    var mid = Math.ceil(rows.length / 2);
-    var left = rows.slice(0, mid);
-    var right = rows.slice(mid);
-    function colHtml(slice, offset) {
+    if (!rows.length) {
       return (
-        '<div class="dam-catalog-fmcg__col"><div class="dam-cost-table-wrap"><table class="table table-sm dam-cost-table dam-catalog-fmcg__table"><tbody>' +
-        slice
-          .map(function (row, i) {
-            return buildFmcgRowTr(row, offset + i, PF, admin);
-          })
-          .join("") +
-        "</tbody></table></div></div>"
+        '<p class="dam-catalog-fmcg__empty">' +
+        esc(catalogLabel("project.fmcg_empty", "Brak pozycji — dodaj w trybie ADMIN.")) +
+        "</p>" +
+        (sumHtml || "")
       );
     }
-    return (
-      '<div class="dam-catalog-fmcg__columns">' +
-      colHtml(left, 0) +
-      (right.length ? colHtml(right, mid) : "") +
-      "</div>"
-    );
+    var buckets = {};
+    rows.forEach(function (row, idx) {
+      var gid = fmcgGroupId(row, idx);
+      if (!buckets[gid]) buckets[gid] = [];
+      buckets[gid].push({ row: row, idx: idx });
+    });
+    var groups = FMCG_GROUP_ORDER.map(function (gid) {
+      var items = buckets[gid];
+      if (!items || !items.length) return "";
+      return (
+        '<article class="dam-catalog-fmcg__tile" data-fmcg-group="' +
+        esc(gid) +
+        '">' +
+        '<h6 class="dam-catalog-fmcg__tile-title">' +
+        esc(fmcgGroupTitle(gid)) +
+        "</h6>" +
+        items
+          .map(function (item) {
+            return buildFmcgRowHtml(item.row, item.idx, PF, admin);
+          })
+          .join("") +
+        "</article>"
+      );
+    }).join("");
+    return groups + (sumHtml || "");
   }
 
   function readDirectFromDom(host) {
@@ -650,16 +730,17 @@
       byKey[fmcgRowKey(row, idx)] = row;
     });
     var rows = [];
-    host.querySelectorAll(".dam-catalog-fmcg__table tbody tr[data-row-key]").forEach(function (tr) {
-      var key = tr.getAttribute("data-row-key");
+    host.querySelectorAll(".dam-catalog-fmcg__row[data-row-key]").forEach(function (el) {
+      var key = el.getAttribute("data-row-key");
       var src = byKey[key] || {};
-      var inp = tr.querySelector(".dam-catalog-fmcg__amount-input");
+      var inp = el.querySelector(".dam-catalog-fmcg__amount-input");
+      var labEl = el.querySelector(".dam-catalog-fmcg__row-label");
       var amount = inp ? Number(inp.value) : Number(src.amount) || 0;
       rows.push({
         key: src.key || key,
         label:
           src.label ||
-          (tr.querySelector("td") ? String(tr.querySelector("td").textContent || "").trim() : "") ||
+          (labEl ? String(labEl.textContent || "").trim() : "") ||
           key,
         department: src.department,
         unit: src.unit,
@@ -672,6 +753,61 @@
       });
     });
     return rows;
+  }
+
+  function fmcgModifierStep(ev) {
+    var ctrl = !!(ev && (ev.ctrlKey || ev.metaKey));
+    var shift = !!(ev && ev.shiftKey);
+    if (ctrl && shift) return 100;
+    if (shift) return 10;
+    if (ctrl) return 0.01;
+    return 1;
+  }
+
+  function fmcgRoundMoney(v) {
+    return Math.round(v * 100) / 100;
+  }
+
+  function fmcgApplyAmountDelta(inp, direction, ev) {
+    if (!inp) return;
+    var cur = Number(inp.value);
+    if (!isFinite(cur)) cur = 0;
+    var next = fmcgRoundMoney(cur + direction * fmcgModifierStep(ev));
+    if (next < 0) next = 0;
+    inp.value = String(next);
+    inp.dispatchEvent(new Event("input", { bubbles: true }));
+    inp.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function isFmcgAmountInput(el) {
+    if (!el || el.tagName !== "INPUT") return false;
+    if (el.id === "damCatalogFmcgAdhocAmount") return true;
+    return !!(el.classList && el.classList.contains("dam-catalog-fmcg__amount-input"));
+  }
+
+  function bindFmcgAmountSteppers() {
+    if (window.__damFmcgStepDelegated) return;
+    window.__damFmcgStepDelegated = true;
+    document.addEventListener(
+      "keydown",
+      function (ev) {
+        if (!isFmcgAmountInput(ev.target)) return;
+        if (ev.key !== "ArrowUp" && ev.key !== "ArrowDown") return;
+        ev.preventDefault();
+        fmcgApplyAmountDelta(ev.target, ev.key === "ArrowUp" ? 1 : -1, ev);
+      },
+      true
+    );
+    document.addEventListener(
+      "wheel",
+      function (ev) {
+        if (!isFmcgAmountInput(ev.target)) return;
+        if (document.activeElement !== ev.target) return;
+        ev.preventDefault();
+        fmcgApplyAmountDelta(ev.target, ev.deltaY < 0 ? 1 : -1, ev);
+      },
+      { passive: false, capture: true }
+    );
   }
 
   function bindCatalogFmcgEvents(p, financeProject) {
@@ -761,6 +897,7 @@
         sumEl.textContent = PF ? PF.formatPLN(sum) : String(sum);
       });
     });
+    bindFmcgAmountSteppers();
   }
 
   if (!window.__damProjectAdminListen) {
@@ -974,9 +1111,9 @@
 
     var fmcgHtml = "";
     var admin = isFinanceAdmin();
+    var stepHint = fmcgStepHint();
     if (financeProject) {
       var directLines = financeProject.direct || [];
-      var rows = buildFmcgRowsHtml(directLines, PF, admin);
       var adminTools = admin
         ? '<div class="dam-catalog-fmcg__admin">' +
           '<div class="dam-catalog-fmcg__adhoc">' +
@@ -989,8 +1126,10 @@
           '<label class="visually-hidden" for="damCatalogFmcgAdhocAmount">' +
           esc(catalogLabel("project.fmcg_adhoc_amount", "Kwota PLN")) +
           "</label>" +
-          '<input type="number" step="0.01" min="0" id="damCatalogFmcgAdhocAmount" class="form-control form-control-sm dam-catalog-fmcg__adhoc-amount" placeholder="0,00" />' +
-          '<button type="button" class="geex-btn geex-btn--sm geex-btn--primary-transparent" id="damCatalogFmcgAdd">' +
+          '<input type="number" step="1" min="0" id="damCatalogFmcgAdhocAmount" class="form-control form-control-sm dam-catalog-fmcg__adhoc-amount dam-catalog-fmcg__amount-input" placeholder="0,00" aria-describedby="damCatalogFmcgStepHint" title="' +
+          esc(stepHint) +
+          '" />' +
+          '<button type="button" class="geex-btn geex-btn--sm geex-btn--primary" id="damCatalogFmcgAdd">' +
           esc(catalogLabel("project.fmcg_add_line", "Dodaj pozycję")) +
           "</button>" +
           "</div>" +
@@ -1001,15 +1140,15 @@
           esc(catalogLabel("project.fmcg_admin_hint", "Wymaga ADMIN i mostu lokalnego (8766).")) +
           "</p></div>"
         : "";
-      var fmcgBody =
-        directLines.length >= 2
-          ? buildFmcgTwoColumnHtml(directLines, PF, admin)
-          : '<div class="dam-cost-table-wrap dam-catalog-fmcg__table-wrap"><table class="table table-sm dam-cost-table dam-catalog-fmcg__table"><tbody>' +
-            (rows ||
-              '<tr><td colspan="2" class="dam-cost-empty">' +
-                esc(catalogLabel("project.fmcg_empty", "Brak pozycji — dodaj w trybie ADMIN.")) +
-                "</td></tr>") +
-            "</tbody></table></div>";
+      var sumHtml =
+        '<div class="dam-catalog-fmcg__tile dam-catalog-fmcg__tile--sum">' +
+        '<span class="dam-catalog-fmcg__sum-label">' +
+        esc(catalogLabel("project.fmcg_sum", "Suma opakowań")) +
+        "</span>" +
+        '<strong id="damCatalogFmcgSum" class="dam-catalog-fmcg__sum-value">' +
+        esc(PF ? PF.formatPLN(financeProject.direct_total) : "") +
+        "</strong></div>";
+      var fmcgBody = buildFmcgBentoHtml(directLines, PF, admin, sumHtml);
       fmcgHtml =
         '<section class="dam-catalog-fmcg geex-card dam-cost-panel dam-catalog-fmcg--panel">' +
         '<div class="dam-catalog-fmcg__inner">' +
@@ -1019,19 +1158,16 @@
         "</h5>" +
         testBadge +
         "</div>" +
-        '<p class="dam-cost-card__sub">' +
+        '<p class="dam-cost-card__sub dam-catalog-fmcg__lede">' +
         esc(catalogLabel("project.fmcg_sub", "Ten sam łańcuch co w Kalkulatorze kosztów.")) +
         "</p>" +
         fmcgBody +
-        '<div class="dam-cost-table-wrap dam-catalog-fmcg__sum-wrap"><table class="table table-sm dam-cost-table dam-catalog-fmcg__table"><tbody>' +
-        '<tr class="dam-cost-sum"><td><strong>' +
-        esc(catalogLabel("project.fmcg_sum", "Suma opakowań")) +
-        '</strong></td><td class="text-end"><strong id="damCatalogFmcgSum">' +
-        esc(PF ? PF.formatPLN(financeProject.direct_total) : "") +
-        "</strong></td></tr></tbody></table></div>" +
+        '<p id="damCatalogFmcgStepHint" class="dam-catalog-fmcg__step-hint">' +
+        esc(stepHint) +
+        "</p>" +
         adminTools +
         '<div class="dam-catalog-fmcg__links">' +
-        '<a class="geex-btn geex-btn--sm geex-btn--primary-transparent" href="' +
+        '<a class="geex-btn geex-btn--sm geex-btn--secondary" href="' +
         esc(links.invoices) +
         '"><i class="uil uil-invoice" aria-hidden="true"></i> ' +
         esc(catalogLabel("project.link_invoices", "Faktury tego produktu")) +
@@ -1044,7 +1180,7 @@
     } else {
       fmcgHtml =
         '<div class="dam-catalog-fmcg__links">' +
-        '<a class="geex-btn geex-btn--sm geex-btn--primary-transparent" href="' +
+        '<a class="geex-btn geex-btn--sm geex-btn--secondary" href="' +
         esc(links.invoices) +
         '">' +
         esc(catalogLabel("project.link_invoices", "Faktury tego produktu")) +
@@ -1581,5 +1717,246 @@
     }
   }
 
-  document.addEventListener("DOMContentLoaded", boot);
+  function indexReportPickName(it) {
+    if (!it) return "";
+    if (typeof it === "string") return it;
+    return String(it.name || it.label || it.id || it.path || "").trim();
+  }
+
+  function indexReportMetrics(data) {
+    data = data || {};
+    var counts = data.counts && typeof data.counts === "object" ? data.counts : {};
+    var added = Number(
+      counts.new != null ? counts.new : counts.added != null ? counts.added : data.added || 0
+    );
+    var changed = Number(
+      counts.updated != null
+        ? counts.updated
+        : counts.changed != null
+          ? counts.changed
+          : data.changed || 0
+    );
+    var scanned = Number(
+      counts.elements_scanned != null
+        ? counts.elements_scanned
+        : counts.scanned != null
+          ? counts.scanned
+          : data.scanned || data.product_count_after || data.product_count_before || 0
+    );
+    var unchanged = Number(
+      counts.unchanged != null
+        ? counts.unchanged
+        : data.unchanged != null
+          ? data.unchanged
+          : Math.max(0, scanned - added - changed)
+    );
+    var files = Number(
+      counts.files_scanned != null
+        ? counts.files_scanned
+        : counts.files != null
+          ? counts.files
+          : data.files_after || data.files_before || 0
+    );
+    var branding = Number(
+      counts.branding_materials != null
+        ? counts.branding_materials
+        : counts.branding != null
+          ? counts.branding
+          : data.branding_scanned || 0
+    );
+    if (!scanned && !added && !changed && data.items && data.items.length) {
+      scanned = data.items.length;
+    }
+    return {
+      added: added,
+      changed: changed,
+      unchanged: unchanged,
+      scanned: scanned,
+      files: files,
+      branding: branding,
+    };
+  }
+
+  function indexReportItemLists(data) {
+    data = data || {};
+    var news = [];
+    var updated = [];
+    var hasNamed =
+      Object.prototype.hasOwnProperty.call(data, "new_items") ||
+      Object.prototype.hasOwnProperty.call(data, "updated_items");
+    if (hasNamed) {
+      (data.new_items || []).forEach(function (it) {
+        var n = indexReportPickName(it);
+        if (n) news.push(n);
+      });
+      (data.updated_items || []).forEach(function (it) {
+        var n = indexReportPickName(it);
+        if (n) updated.push(n);
+      });
+      return { news: news, updated: updated };
+    }
+    (data.items || []).forEach(function (it) {
+      var n = indexReportPickName(it);
+      if (!n) return;
+      if (it && (it.kind === "changed" || it.kind === "updated")) updated.push(n);
+      else news.push(n);
+    });
+    return { news: news, updated: updated };
+  }
+
+  function indexReportLoadData(rep) {
+    if (rep && typeof rep === "object") return rep;
+    try {
+      var raw = localStorage.getItem("dam_index_last_report");
+      if (raw) return JSON.parse(raw);
+    } catch (eR) { /* ignore */ }
+    return {};
+  }
+
+  window.__damPaintIndexReport = paintIndexReportCard;
+
+  function ensureIndexReportHost() {
+    var el = document.getElementById("damIndexReport");
+    if (el) return el;
+    el = document.createElement("aside");
+    el.id = "damIndexReport";
+    el.hidden = true;
+    el.setAttribute("role", "dialog");
+    el.setAttribute("aria-labelledby", "damIndexReportTitle");
+    document.body.appendChild(el);
+    return el;
+  }
+
+  function paintIndexReportCard(rep) {
+    var el = ensureIndexReportHost();
+    if (!el) return;
+    var data = indexReportLoadData(rep);
+    var m = indexReportMetrics(data);
+    var lists = indexReportItemLists(data);
+    var rows = [
+      ["index.report_metric_new", "Nowe", m.added],
+      ["index.report_metric_updated", "Zaktualizowane", m.changed],
+      ["index.report_metric_unchanged", "Bez zmian", m.unchanged],
+      ["index.report_metric_scanned", "Przeskanowane elementy", m.scanned],
+      ["index.report_metric_files", "Pliki", m.files],
+      ["index.report_metric_branding", "Materiały branding", m.branding],
+    ];
+    var table =
+      '<table class="dam-index-report__table"><tbody>' +
+      rows
+        .map(function (row) {
+          return (
+            "<tr><th scope=\"row\">" +
+            esc(catalogLabel(row[0], row[1])) +
+            '</th><td class="dam-index-report__num">' +
+            esc(String(row[2])) +
+            "</td></tr>"
+          );
+        })
+        .join("") +
+      "</tbody></table>";
+    var zero =
+      m.added === 0
+        ? '<p class="dam-index-report__zero">' +
+          esc(
+            catalogLabel(
+              "index.report_none_new",
+              "Brak nowych elementów w tym przebiegu."
+            )
+          ) +
+          "</p>"
+        : "";
+    var compareNote = "";
+    if (data.comparison_ok === true) {
+      compareNote =
+        '<p class="dam-index-report__compare">' +
+        esc(catalogLabel("index.report_compare_ok", "Porównanie ze snapshotem: OK")) +
+        "</p>";
+    } else if (data.comparison_ok === false) {
+      compareNote =
+        '<p class="dam-index-report__compare dam-index-report__compare--fail">' +
+        esc(
+          catalogLabel(
+            "index.report_compare_fail",
+            "Porównanie ze snapshotem nie powiodło się."
+          )
+        ) +
+        "</p>";
+    }
+    var warnList = Array.isArray(data.warnings) ? data.warnings : [];
+    var warnHtml = "";
+    if (warnList.length) {
+      warnHtml =
+        '<ul class="dam-index-report__warnings">' +
+        warnList
+          .map(function (w) {
+            return w ? "<li>" + esc(String(w)) + "</li>" : "";
+          })
+          .join("") +
+        "</ul>";
+    }
+    function itemBlock(titleKey, titleFb, names) {
+      if (!names.length) return "";
+      return (
+        '<details class="dam-index-report__details">' +
+        "<summary>" +
+        esc(catalogLabel(titleKey, titleFb)) +
+        " (" +
+        names.length +
+        ")</summary>" +
+        "<ul>" +
+        names
+          .map(function (n) {
+            return "<li>" + esc(n) + "</li>";
+          })
+          .join("") +
+        "</ul></details>"
+      );
+    }
+    el.classList.add("dam-index-report--docked");
+    el.innerHTML =
+      '<div class="dam-index-report__card">' +
+      '<h2 id="damIndexReportTitle">' +
+      esc(catalogLabel("index.report_title", "Raport indeksowania")) +
+      "</h2>" +
+      table +
+      compareNote +
+      warnHtml +
+      zero +
+      itemBlock("index.report_show_new", "Pokaż nowe", lists.news) +
+      itemBlock("index.report_show_updated", "Pokaż zaktualizowane", lists.updated) +
+      '<div class="dam-index-report__actions">' +
+      '<button type="button" class="geex-btn geex-btn--sm geex-btn--secondary" id="damIndexReportClose">' +
+      esc(catalogLabel("index.close", "Zamknij")) +
+      "</button></div></div>";
+    el.hidden = false;
+    var closer = el.querySelector("#damIndexReportClose");
+    if (closer) {
+      closer.addEventListener("click", function () {
+        el.hidden = true;
+      });
+    }
+  }
+
+  function hookIndexReportFromCatalog() {
+    var api = window.DamCacheSync;
+    if (!api || typeof api.openReport !== "function") {
+      setTimeout(hookIndexReportFromCatalog, 250);
+      return;
+    }
+    if (api.__damCatalogReportHook) return;
+    api.__damCatalogReportHook = true;
+    var orig = api.openReport.bind(api);
+    api.openReport = function (rep) {
+      orig(rep);
+      paintIndexReportCard(rep);
+    };
+    var el = document.getElementById("damIndexReport");
+    if (el && !el.hidden) paintIndexReportCard(null);
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    hookIndexReportFromCatalog();
+    boot();
+  });
 })();

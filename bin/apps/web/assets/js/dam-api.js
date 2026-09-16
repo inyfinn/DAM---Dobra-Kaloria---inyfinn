@@ -220,7 +220,7 @@
   function loadChecklistExtras() {
     if (_extrasMap) return Promise.resolve(_extrasMap);
     if (_extrasPromise) return _extrasPromise;
-    var url = "http://127.0.0.1:8766/checklist-extras";
+    var url = bridgeAuthUrl().replace(/\/$/, "") + "/checklist-extras";
     _extrasPromise = fetch(url, { headers: { Accept: "application/json" } })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (data) {

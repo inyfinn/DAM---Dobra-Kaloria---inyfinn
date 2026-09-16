@@ -1281,7 +1281,7 @@
       if ((box.getAttribute("data-int-load-gen") || "0") !== String(loadGen)) return;
       if (box.querySelector(".dam-skeleton") || !box.querySelector(".dam-int-card, .dam-int-auth-warn")) {
         showLoadError(
-          "Timeout ładowania integracji. Most :8766 może nie odpowiadać lub skrypt zawisł."
+          "Timeout ładowania integracji. Lokalna usługa DAM może nie odpowiadać — uruchom aplikację i spróbuj ponownie."
         );
       }
     }, 14000);
@@ -1332,7 +1332,7 @@
         if ((box.getAttribute("data-int-load-gen") || "0") !== String(loadGen)) return;
         clearFailSafe();
         if (!all) {
-          showLoadError("Timeout ładowania integracji. Most :8766 może nie odpowiadać.");
+          showLoadError("Timeout ładowania integracji. Lokalna usługa DAM może nie odpowiadać — uruchom aplikację i spróbuj ponownie.");
           return;
         }
         var res = all[0] || { httpOk: false, data: null };

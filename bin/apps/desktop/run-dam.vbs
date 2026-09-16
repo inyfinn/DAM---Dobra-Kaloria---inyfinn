@@ -47,7 +47,8 @@ If pythonw = "" Then
   WScript.Quit 1
 End If
 
-sh.Run """" & pythonw & """ """ & launchPy & """", 1, False
+' WindowStyle 0 = ukryte — NIGDY 1 (normalne okno / flash CMD przy starcie).
+sh.Run """" & pythonw & """ """ & launchPy & """", 0, False
 If Err.Number <> 0 Then
   WriteLog "Blad uruchomienia: " & Err.Description & " (" & Err.Number & ")" & vbCrLf & _
            "Cmd: " & pythonw & " " & launchPy

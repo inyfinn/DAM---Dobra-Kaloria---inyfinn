@@ -86,7 +86,7 @@ $ev = [ordered]@{
   local_bridge_lines = $bridgeLines
   local_bridge_ok_size = ($bridgeLines -ge 8900)
   ports = [ordered]@{ ui_8765 = $port8765; bridge_8766 = $port8766 }
-  setup = Get-FileFact "DAM-Setup.exe"
+  setup = Get-FileFact "bin\instalator\DAM-Setup.exe"
   screenshots = $shots
   agents = $agents
   facts_not_verdict = "Parent must Read screenshots and confirm version 6.0.0. This file is not a PASS."

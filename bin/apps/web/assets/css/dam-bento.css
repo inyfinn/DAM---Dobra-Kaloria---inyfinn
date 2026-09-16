@@ -378,6 +378,118 @@
 }
 
 /* ------------------------------------------------------------------ */
+/* Phone dashboard — 1-col stack; hide resize (beats #damBentoResizeCss) */
+/* Dashboard mounts with stackOnNarrow:false, so injected --bento-w spans
+   stay on at 360 px and squeeze h3.dam-widget__title to ~20 px. */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 767px) {
+  /* Parent stays 2-col (minmax + clamp 260) even when 1100px 1fr should win;
+     first track collapses to 0 px and widgets shrink to ~40 px. */
+  .dam-dash-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .dam-dash-main,
+  .dam-dash-side,
+  .dam-dash-asana-bleed {
+    display: flex;
+    flex-direction: column;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    flex: 1 1 auto;
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+
+  .dam-dash-grid,
+  .dam-dash-grid.dam-bento-resize,
+  .dam-dash-grid.dam-bento-resize.is-bento-active {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-auto-rows: auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden;
+  }
+
+  .dam-dash-grid.dam-bento-resize.is-bento-active > [data-bento-id],
+  .dam-dash-grid.dam-bento-resize.is-bento-active > .dam-widget[data-bento-id],
+  .dam-dash-grid.dam-bento-resize.is-bento-active > .dam-bento-resize-item[data-bento-id],
+  .dam-dash-grid .dam-widget,
+  .dam-dash-grid .dam-widget--sm,
+  .dam-dash-grid .dam-widget--md,
+  .dam-dash-grid .dam-widget--lg,
+  .dam-dash-grid .dam-widget--strip,
+  .dam-dash-grid .dam-widget--md.dam-widget--viz-latest,
+  .dam-dash-grid .dam-widget--md.dam-widget--branding-latest,
+  .dam-dash-grid .dam-widget--md.dam-widget--media-latest {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    overflow: visible;
+  }
+
+  .dam-dash-grid .dam-widget__head {
+    flex-wrap: wrap;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .dam-dash-grid .dam-widget__title,
+  .dam-dash-grid h3.dam-widget__title {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  html body .dam-dash-grid .dam-bento-handle,
+  html body .dam-dash-grid .dam-bento-handle--e,
+  html body .dam-dash-grid .dam-bento-handle--s,
+  html body .dam-dash-grid .dam-bento-handle--se,
+  html body .dam-dash-grid .dam-bento-move-handle,
+  html body.dam-bento-layout-edit .dam-dash-grid .dam-bento-handle,
+  html body.dam-bento-layout-edit .dam-dash-grid.dam-bento-resize.is-bento-active .dam-bento-handle,
+  html body.dam-bento-layout-edit .dam-dash-grid.dam-bento-resize.is-bento-active .dam-bento-move-handle {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    opacity: 0 !important;
+  }
+
+  .dam-dash-grid button.dam-asana-home__tab,
+  .dam-dash-grid .dam-viz-icon-btn,
+  .dam-dash-grid .dam-win-btn,
+  .dam-dash-grid .dam-ql-chip,
+  .dam-dash-grid .dam-widget__layout-btn,
+  .dam-projects-show-more,
+  .dam-viz-show-more {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .dam-projects-more-wrap,
+  .dam-viz-more-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 8px 0 16px;
+    width: 100%;
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* Hub page chrome shells (filters/toolbar only — not asset cards)     */
 /* ------------------------------------------------------------------ */
 

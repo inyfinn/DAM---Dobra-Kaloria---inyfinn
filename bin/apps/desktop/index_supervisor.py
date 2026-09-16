@@ -6,6 +6,7 @@ Uses O_EXCL supervisor lock so duplicates become no-ops.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -38,10 +39,15 @@ WEB_INDEX = INDEX_FILE
 BRANDING_HEAD = WEB_ROOT / "data" / "branding-grid-head.json"
 LIVE_FILE = DATA_DIR / "index-live.json"
 SNAPSHOT_FILE = DATA_DIR / "index-run-snapshot.json"
+COMPARE_SNAPSHOT_FILE = DATA_DIR / "index-compare-snapshot.json"
+COMPARE_SNAPSHOT_PREV = DATA_DIR / "index-compare-snapshot.json.prev"
 REPORT_FILE = DATA_DIR / "index-last-report.json"
+REBUILD_LOG_FILE = DATA_DIR / "index-rebuild.log"
 MAX_LOG_BYTES = 2_000_000
 MAX_NEW_ITEMS = 300
 REPORT_ITEM_CAP = 150
+REPORT_LIST_CAP = 50
+COMPARE_SCHEMA_VERSION = 2
 _LIVE_KEYS = ("current_path", "current_label", "products_done", "products_total")
 _CAT_RE = re.compile(r"\[([A-Za-z]{1,8})\]\s+(.+?):\s+products so far\s+(\d+)")
 _ARCH_RE = re.compile(r"\[archive\][^\n:]*:\s+(.+)$")
@@ -51,6 +57,14 @@ HOURLY_SEC_DEFAULT = float(os.environ.get("DAM_INDEX_HOURLY_SEC", "3600") or "36
 FIRST_DELAY_SEC_DEFAULT = float(os.environ.get("DAM_INDEX_FIRST_DELAY_SEC", "20") or "20")
 
 CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+
+
+def index_builder_env(base: dict[str, str] | None = None) -> dict[str, str]:
+    """Every spawn of build-file-index / watch-file-index must set this."""
+    env = dict(base if base is not None else os.environ)
+    env["DAM_INDEX_LIVE_FILE"] = str(LIVE_FILE)
+    return env
+
 
 _state_lock = threading.Lock()
 _owner: "IndexSupervisor | None" = None
@@ -329,6 +343,23 @@ def _hydrate_report_counts(data: dict[str, Any]) -> dict[str, Any]:
     unchanged = int(data.get("unchanged") or max(0, scanned - added - changed))
     data["unchanged"] = unchanged
     data["empty"] = scanned <= 0 and len(items) == 0
+    if not isinstance(data.get("counts"), dict):
+        data["counts"] = {
+            "new": int(data.get("added") or 0),
+            "updated": int(data.get("changed") or 0),
+            "unchanged": unchanged,
+            "removed": int(data.get("removed") or 0),
+            "elements_scanned": scanned,
+            "files_scanned": int(data.get("files_after") or data.get("files_before") or 0),
+            "branding_materials": int(data.get("branding_scanned") or 0),
+        }
+    for key in ("new_items", "updated_items", "removed_items", "warnings"):
+        if not isinstance(data.get(key), list):
+            data[key] = []
+    if "comparison_ok" not in data:
+        data["comparison_ok"] = bool(data.get("ok")) and not bool(data.get("cancelled"))
+    if "mode" not in data:
+        data["mode"] = "full"
     return data
 
 
@@ -355,6 +386,68 @@ def read_report() -> dict[str, Any]:
         return _hydrate_report_counts({"ok": False, "items": []})
 
 
+def _norm_key(path: str) -> str:
+    raw = str(path or "").replace("\\", "/").strip()
+    if len(raw) >= 2 and raw[1] == ":":
+        raw = raw[0].upper() + raw[1:]
+    if raw.endswith("/") and len(raw) > 3:
+        raw = raw.rstrip("/")
+    return raw
+
+
+def _content_sig(entry: dict[str, Any]) -> str:
+    """mtime+size; reuse an existing hash when the indexer already stored one."""
+    digest = entry.get("hash") or entry.get("sha256") or entry.get("digest")
+    if digest:
+        return f"h:{digest}"
+    try:
+        size = int(entry.get("size") or 0)
+    except (TypeError, ValueError):
+        size = 0
+    mtime = str(entry.get("mtime") or entry.get("mtime_ms") or "")
+    return f"s:{size}:m:{mtime}"
+
+
+def _iter_index_file_entries(idx: dict[str, Any]):
+    for prod in idx.get("products") or []:
+        if not isinstance(prod, dict):
+            continue
+        for rev in prod.get("revisions") or []:
+            if not isinstance(rev, dict):
+                continue
+            for lst in (rev.get("files_by_role") or {}).values():
+                for ent in lst or []:
+                    if isinstance(ent, dict) and ent.get("path"):
+                        yield ent
+            for ent in rev.get("wizki") or []:
+                if isinstance(ent, dict) and ent.get("path"):
+                    yield ent
+
+
+def _file_snapshot_map(idx: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Unique files from file-index.json. Key = normalized path (not product id)."""
+    out: dict[str, dict[str, Any]] = {}
+    for ent in _iter_index_file_entries(idx):
+        key = _norm_key(str(ent.get("path") or ""))
+        if not key:
+            continue
+        name = str(ent.get("name") or Path(key).name)
+        try:
+            size = int(ent.get("size") or 0)
+        except (TypeError, ValueError):
+            size = 0
+        out[key] = {
+            "key": key,
+            "name": name,
+            "path": key,
+            "kind": "file",
+            "size": size,
+            "mtime": str(ent.get("mtime") or ""),
+            "sig": _content_sig(ent),
+        }
+    return out
+
+
 def _index_snapshot_map(idx: dict[str, Any]) -> dict[str, dict[str, Any]]:
     out: dict[str, dict[str, Any]] = {}
     for prod in idx.get("products") or []:
@@ -364,13 +457,17 @@ def _index_snapshot_map(idx: dict[str, Any]) -> dict[str, dict[str, Any]]:
         if not pid:
             continue
         indexes = prod.get("indexes") or []
-        files_n = 0
+        seen: set[str] = set()
         for rev in prod.get("revisions") or []:
             if not isinstance(rev, dict):
                 continue
-            files_n += int(rev.get("wizki_count") or 0)
             for lst in (rev.get("files_by_role") or {}).values():
-                files_n += len(lst or [])
+                for ent in lst or []:
+                    if isinstance(ent, dict) and ent.get("path"):
+                        seen.add(_norm_key(str(ent["path"])))
+            for ent in rev.get("wizki") or []:
+                if isinstance(ent, dict) and ent.get("path"):
+                    seen.add(_norm_key(str(ent["path"])))
         out[pid] = {
             "id": pid,
             "name": prod.get("display_name") or prod.get("name") or pid,
@@ -378,9 +475,23 @@ def _index_snapshot_map(idx: dict[str, Any]) -> dict[str, dict[str, Any]]:
             "category": prod.get("category") or "",
             "revision_count": int(prod.get("revision_count") or len(prod.get("revisions") or [])),
             "indexes": [str(x) for x in indexes],
-            "files": files_n,
+            "files": len(seen),
         }
     return out
+
+
+def _attach_product_sigs(
+    prod_map: dict[str, dict[str, Any]], file_map: dict[str, dict[str, Any]]
+) -> None:
+    for prod in prod_map.values():
+        ppath = _norm_key(str(prod.get("path") or ""))
+        bits = [
+            f"{k}:{file_map[k].get('sig')}"
+            for k in file_map
+            if ppath and (k == ppath or k.startswith(ppath + "/"))
+        ]
+        blob = "|".join(sorted(bits)) if bits else f"files:{prod.get('files')}"
+        prod["sig"] = hashlib.sha256(blob.encode("utf-8", errors="replace")).hexdigest()[:16]
 
 
 def _branding_snapshot_map() -> dict[str, dict[str, Any]]:
@@ -402,18 +513,31 @@ def _branding_snapshot_map() -> dict[str, dict[str, Any]]:
         if not aid:
             continue
         tags = asset.get("tags") or []
-        out[aid] = {
+        tag_list = [str(t) for t in tags] if isinstance(tags, list) else []
+        name = asset.get("name") or aid
+        path = asset.get("path") or ""
+        role = asset.get("asset_role") or ""
+        entry = {
             "id": aid,
-            "name": asset.get("name") or aid,
-            "path": asset.get("path") or "",
-            "category": asset.get("asset_role") or asset.get("source") or "",
-            "role": asset.get("asset_role") or "",
-            "tags": [str(t) for t in tags] if isinstance(tags, list) else [],
+            "name": name,
+            "path": path,
+            "category": role or asset.get("source") or "",
+            "role": role,
+            "tags": tag_list,
+            "size": asset.get("size") or 0,
+            "mtime": asset.get("mtime") or asset.get("mtime_ms") or "",
+            "hash": asset.get("hash") or asset.get("digest") or "",
         }
+        entry["sig"] = _content_sig(entry) if (entry["size"] or entry["mtime"] or entry["hash"]) else (
+            f"n:{name}|p:{_norm_key(str(path))}|r:{role}|t:{','.join(tag_list)}"
+        )
+        out[aid] = entry
     return out
 
 
 def _entry_changed(old: dict[str, Any], cur: dict[str, Any], *, source: str) -> bool:
+    if old.get("sig") and cur.get("sig"):
+        return str(old.get("sig")) != str(cur.get("sig"))
     if source == "branding":
         return (
             str(old.get("name") or "") != str(cur.get("name") or "")
@@ -425,6 +549,8 @@ def _entry_changed(old: dict[str, Any], cur: dict[str, Any], *, source: str) -> 
         int(old.get("revision_count") or 0) != int(cur.get("revision_count") or 0)
         or list(old.get("indexes") or []) != list(cur.get("indexes") or [])
         or int(old.get("files") or 0) != int(cur.get("files") or 0)
+        or str(old.get("path") or "") != str(cur.get("path") or "")
+        or str(old.get("name") or "") != str(cur.get("name") or "")
     )
 
 
@@ -451,21 +577,90 @@ def _diff_maps(
             changed += 1
         if not kind:
             continue
-        items.append(
-            {
-                "id": pid,
-                "kind": kind,
-                "name": cur.get("name") or pid,
-                "label": cur.get("name") or pid,
-                "path": cur.get("path") or "",
-                "category": cur.get("category") or "",
-                "source": source,
-            }
-        )
-        if len(items) >= cap:
-            break
+        if len(items) < cap:
+            items.append(
+                {
+                    "id": pid,
+                    "kind": kind,
+                    "name": cur.get("name") or pid,
+                    "label": cur.get("name") or pid,
+                    "path": cur.get("path") or "",
+                    "category": cur.get("category") or "",
+                    "source": source,
+                }
+            )
+    for pid, old in old_map.items():
+        if pid in now_map or not isinstance(old, dict):
+            continue
+        if len(items) < cap:
+            items.append(
+                {
+                    "id": pid,
+                    "kind": "removed",
+                    "name": old.get("name") or pid,
+                    "label": old.get("name") or pid,
+                    "path": old.get("path") or "",
+                    "category": old.get("category") or "",
+                    "source": source,
+                }
+            )
     unchanged = max(0, len(now_map) - added - changed)
     return items, added, changed, unchanged
+
+
+def _list_item(key: str, entry: dict[str, Any], *, kind: str) -> dict[str, Any]:
+    return {
+        "key": key,
+        "name": str(entry.get("name") or Path(str(entry.get("path") or key)).name or key),
+        "path": str(entry.get("path") or key),
+        "kind": kind,
+    }
+
+
+def _diff_signature_maps(
+    old_map: dict[str, Any],
+    now_map: dict[str, Any],
+    *,
+    item_kind: str,
+    cap: int = REPORT_LIST_CAP,
+) -> dict[str, Any]:
+    """NEW / UPDATED / UNCHANGED / REMOVED by stable key + content signature."""
+    new_n = updated_n = 0
+    new_items: list[dict[str, Any]] = []
+    updated_items: list[dict[str, Any]] = []
+    removed_items: list[dict[str, Any]] = []
+    for key, cur in now_map.items():
+        if not isinstance(cur, dict):
+            continue
+        old = old_map.get(key) if isinstance(old_map.get(key), dict) else None
+        if old is None:
+            new_n += 1
+            if len(new_items) < cap:
+                new_items.append(_list_item(key, cur, kind=item_kind))
+        elif str(old.get("sig") or _content_sig(old)) != str(cur.get("sig") or _content_sig(cur)):
+            updated_n += 1
+            if len(updated_items) < cap:
+                updated_items.append(_list_item(key, cur, kind=item_kind))
+    removed_n = 0
+    for key, old in old_map.items():
+        if key in now_map or not isinstance(old, dict):
+            continue
+        removed_n += 1
+        if len(removed_items) < cap:
+            removed_items.append(_list_item(key, old, kind=item_kind))
+    unchanged_n = max(0, len(now_map) - new_n - updated_n)
+    return {
+        "new": new_n,
+        "updated": updated_n,
+        "unchanged": unchanged_n,
+        "removed": removed_n,
+        "new_items": new_items,
+        "updated_items": updated_items,
+        "removed_items": removed_items,
+        "new_items_truncated": new_n > cap,
+        "updated_items_truncated": updated_n > cap,
+        "removed_items_truncated": removed_n > cap,
+    }
 
 
 def _load_web_index() -> dict[str, Any]:
@@ -478,16 +673,142 @@ def _load_web_index() -> dict[str, Any]:
         return {}
 
 
+def _load_json_dict(path: Path) -> dict[str, Any] | None:
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _validate_compare_snapshot(body: dict[str, Any] | None) -> tuple[bool, str]:
+    """Reject half-written / empty maps so we never invent all-new or all-unchanged."""
+    if not isinstance(body, dict) or not body:
+        return False, "snapshot_missing"
+    files = body.get("files")
+    products = body.get("products")
+    if not isinstance(files, dict):
+        if isinstance(products, dict) and products:
+            return False, "snapshot_legacy_no_files"
+        return False, "snapshot_missing_files"
+    n = len(files)
+    stated = body.get("file_count")
+    try:
+        stated_n = int(stated) if stated is not None else n
+    except (TypeError, ValueError):
+        return False, "snapshot_file_count_invalid"
+    if stated_n != n:
+        return False, "snapshot_file_count_mismatch"
+    prod_n = len(products) if isinstance(products, dict) else 0
+    if n == 0 and prod_n > 0:
+        return False, "snapshot_files_empty_but_products_present"
+    schema = body.get("schema_version")
+    if schema is not None:
+        try:
+            if int(schema) < 2:
+                return False, "snapshot_schema_too_old"
+        except (TypeError, ValueError):
+            return False, "snapshot_schema_invalid"
+    return True, ""
+
+
+def _read_compare_baseline() -> tuple[dict[str, Any] | None, str]:
+    """Prefer this-run snapshot; fall back to last-good compare file, then .prev."""
+    last_reason = "snapshot_missing"
+    for path, label in (
+        (SNAPSHOT_FILE, "run_snapshot"),
+        (COMPARE_SNAPSHOT_FILE, "compare_snapshot"),
+        (COMPARE_SNAPSHOT_PREV, "compare_snapshot_prev"),
+    ):
+        if not path.is_file():
+            continue
+        body = _load_json_dict(path)
+        if body is None:
+            last_reason = f"{label}_corrupt"
+            continue
+        ok, reason = _validate_compare_snapshot(body)
+        if ok:
+            return body, label
+        last_reason = reason
+    return None, last_reason
+
+
+def _persist_compare_snapshot(
+    *,
+    files: dict[str, Any],
+    products: dict[str, Any],
+    branding: dict[str, Any],
+) -> None:
+    payload = {
+        "schema_version": COMPARE_SCHEMA_VERSION,
+        "written_at": _utc(),
+        "files": files,
+        "file_count": len(files),
+        "products": products,
+        "product_count": len(products),
+        "branding": branding,
+        "branding_count": len(branding),
+    }
+    if COMPARE_SNAPSHOT_FILE.is_file():
+        try:
+            existing = COMPARE_SNAPSHOT_FILE.read_bytes()
+            if existing:
+                prev_tmp = COMPARE_SNAPSHOT_PREV.with_name(
+                    COMPARE_SNAPSHOT_PREV.name + f".{os.getpid()}.tmp"
+                )
+                prev_tmp.write_bytes(existing)
+                os.replace(prev_tmp, COMPARE_SNAPSHOT_PREV)
+        except OSError:
+            try:
+                if "prev_tmp" in locals() and prev_tmp.is_file():
+                    prev_tmp.unlink()
+            except OSError:
+                pass
+    _write_json_atomic(COMPARE_SNAPSHOT_FILE, payload)
+
+
+def _append_run_log_line(payload: dict[str, Any]) -> None:
+    _rotate_log_if_needed(REBUILD_LOG_FILE)
+    try:
+        REBUILD_LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+        line = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+        with REBUILD_LOG_FILE.open("a", encoding="utf-8", errors="replace") as fh:
+            fh.write(line + "\n")
+        _rotate_log_if_needed(REBUILD_LOG_FILE)
+    except OSError:
+        pass
+
+
+def _duration_ms(started_at: str, started_mono: float | None, finished_at: str) -> int:
+    if started_mono:
+        return max(0, int((time.time() - float(started_mono)) * 1000))
+    try:
+        from datetime import datetime
+
+        a = datetime.fromisoformat(str(started_at).replace("Z", "+00:00"))
+        b = datetime.fromisoformat(str(finished_at).replace("Z", "+00:00"))
+        return max(0, int((b - a).total_seconds() * 1000))
+    except Exception:
+        return 0
+
+
 def begin_run_snapshot() -> dict[str, Any]:
     idx = _load_web_index()
     prev = _index_snapshot_map(idx)
+    files = _file_snapshot_map(idx)
+    _attach_product_sigs(prev, files)
     nprod = len(prev)
-    nfiles = sum(int(v.get("files") or 0) for v in prev.values())
+    nfiles = len(files)
     branding = _branding_snapshot_map()
     snap = {
+        "schema_version": COMPARE_SCHEMA_VERSION,
         "started_at": _utc(),
+        "started_mono": time.time(),
         "products": prev,
         "product_count": nprod,
+        "files": files,
         "file_count": nfiles,
         "branding": branding,
         "branding_count": len(branding),
@@ -521,46 +842,124 @@ def begin_run_snapshot() -> dict[str, Any]:
 
 
 def complete_run_report(*, ok: bool = True, cancelled: bool = False, rc: int | None = None) -> dict[str, Any]:
-    prev_body: dict[str, Any] = {}
-    try:
-        if SNAPSHOT_FILE.is_file():
-            loaded = json.loads(SNAPSHOT_FILE.read_text(encoding="utf-8"))
-            if isinstance(loaded, dict):
-                prev_body = loaded
-    except (OSError, json.JSONDecodeError):
-        prev_body = {}
+    """Write index-last-report.json.
+
+    Contract (additive; keep legacy flat keys the current UI already reads):
+      counts: {new, updated, unchanged, removed, elements_scanned, files_scanned, branding_materials}
+        new/updated/unchanged/removed = unique product files (path key, sig = hash or mtime+size)
+        elements_scanned = logical products in file-index
+        files_scanned = unique files in file-index
+        branding_materials = branding-grid-head assets
+      new_items / updated_items / removed_items: up to 50 x {key, name, path, kind}
+      *_items_truncated: true when the matching counts.* exceeds 50
+      started_at, finished_at, duration_ms, mode (full|incremental), comparison_ok, warnings[]
+    Legacy: added/changed/unchanged/scanned/items/product_*/branding_*/files_before/files_after
+    comparison_ok is true only when a valid previous snapshot existed and was compared.
+    Zero changes + comparison_ok means verified match, not a failed compare.
+    """
+    warnings: list[str] = []
+    prev_body, baseline_src = _read_compare_baseline()
+    prev_ok, prev_reason = _validate_compare_snapshot(prev_body)
+    if not prev_ok:
+        warnings.append(f"nie udało się porównać: {prev_reason}")
+        prev_body = prev_body if isinstance(prev_body, dict) else {}
+
     old_map = prev_body.get("products") if isinstance(prev_body.get("products"), dict) else {}
     old_brand = prev_body.get("branding") if isinstance(prev_body.get("branding"), dict) else {}
-    # Always load current indexes (even on rc != 0). Skipping the load zeroed
-    # product_count_after and produced a blank "Nic nowego" report.
+    old_files = prev_body.get("files") if isinstance(prev_body.get("files"), dict) else {}
+
     idx = _load_web_index()
     now_map = _index_snapshot_map(idx)
+    now_files = _file_snapshot_map(idx)
+    _attach_product_sigs(now_map, now_files)
     now_brand = _branding_snapshot_map()
-    brand_cap = min(MAX_NEW_ITEMS, 80)
-    brand_items, b_added, b_changed, b_unchanged = _diff_maps(
-        old_brand, now_brand, source="branding", cap=brand_cap
-    )
-    prod_items, p_added, p_changed, p_unchanged = _diff_maps(
-        old_map, now_map, source="product", cap=max(0, MAX_NEW_ITEMS - len(brand_items))
-    )
-    items = brand_items + prod_items
-    files_after = sum(int(v.get("files") or 0) for v in now_map.values())
-    files_before = int(prev_body.get("file_count") or 0)
+
+    if prev_ok:
+        brand_cap = min(MAX_NEW_ITEMS, 80)
+        brand_items, b_added, b_changed, b_unchanged = _diff_maps(
+            old_brand, now_brand, source="branding", cap=brand_cap
+        )
+        prod_items, p_added, p_changed, p_unchanged = _diff_maps(
+            old_map, now_map, source="product", cap=max(0, MAX_NEW_ITEMS - len(brand_items))
+        )
+        items = brand_items + prod_items
+        file_diff = _diff_signature_maps(old_files, now_files, item_kind="file", cap=REPORT_LIST_CAP)
+        brand_diff = _diff_signature_maps(old_brand, now_brand, item_kind="branding", cap=REPORT_LIST_CAP)
+    else:
+        # Invalid baseline must not become "all new" or "all unchanged" as a verified result.
+        brand_items, prod_items, items = [], [], []
+        b_added = b_changed = 0
+        b_unchanged = len(now_brand)
+        p_added = p_changed = 0
+        p_unchanged = len(now_map)
+        file_diff = {
+            "new": 0,
+            "updated": 0,
+            "unchanged": 0,
+            "removed": 0,
+            "new_items": [],
+            "updated_items": [],
+            "removed_items": [],
+            "new_items_truncated": False,
+            "updated_items_truncated": False,
+            "removed_items_truncated": False,
+        }
+        brand_diff = {"removed": 0}
+
+    files_after = len(now_files)
+    files_before = len(old_files) if old_files else int(prev_body.get("file_count") or 0)
     scanned = len(now_map)
     added = p_added + b_added
     changed = p_changed + b_changed
     unchanged = p_unchanged
+    p_removed = sum(1 for k in old_map if k not in now_map)
+    b_removed = int(brand_diff["removed"])
+
+    rebuild_ok = (rc is None or int(rc) == 0) and not cancelled
+    comparison_ok = bool(prev_ok) and bool(now_files or now_map) and rebuild_ok
+    if not rebuild_ok and rc is not None and int(rc) != 0 and not cancelled:
+        warnings.append(f"nie udało się porównać: rebuild rc={rc} (indeks nie został przebudowany)")
+        comparison_ok = False
+    if cancelled:
+        warnings.append("run cancelled")
+        comparison_ok = False
+    if prev_ok and not now_files and scanned > 0:
+        warnings.append("nie udało się porównać: bieżący file-index nie ma plików")
+        comparison_ok = False
+    if comparison_ok:
+        warnings = [w for w in warnings if not w.startswith("nie udało się porównać")]
+
+    finished_at = _utc()
+    started_at = str(prev_body.get("started_at") or "")
+    duration_ms = _duration_ms(started_at, prev_body.get("started_mono"), finished_at)
+    mode = "full"
+
+    counts = {
+        "new": int(file_diff["new"]),
+        "updated": int(file_diff["updated"]),
+        "unchanged": int(file_diff["unchanged"]),
+        "removed": int(file_diff["removed"]),
+        "elements_scanned": scanned,
+        "files_scanned": files_after,
+        "branding_materials": len(now_brand),
+    }
     report = {
         "ok": bool(ok) and not cancelled,
         "cancelled": bool(cancelled),
         "rc": rc,
-        "finished_at": _utc(),
-        "generated_at": _utc(),
-        "started_at": prev_body.get("started_at") or "",
+        "finished_at": finished_at,
+        "generated_at": finished_at,
+        "started_at": started_at,
+        "duration_ms": duration_ms,
+        "mode": mode,
+        "comparison_ok": comparison_ok,
+        "comparison_source": baseline_src if prev_ok else prev_reason,
+        "warnings": warnings,
         "items": items,
         "added": added,
         "changed": changed,
         "unchanged": unchanged,
+        "removed": counts["removed"],
         "scanned": scanned,
         "empty": scanned <= 0 and len(items) == 0,
         "product_count_before": int(prev_body.get("product_count") or len(old_map)),
@@ -570,12 +969,52 @@ def complete_run_report(*, ok: bool = True, cancelled: bool = False, rc: int | N
         "branding_added": b_added,
         "branding_changed": b_changed,
         "branding_unchanged": b_unchanged,
+        "branding_removed": b_removed,
         "branding_scanned": len(now_brand),
         "product_added": p_added,
         "product_changed": p_changed,
         "product_unchanged": p_unchanged,
+        "product_removed": p_removed,
+        "counts": counts,
+        "new_items": file_diff["new_items"],
+        "updated_items": file_diff["updated_items"],
+        "removed_items": file_diff["removed_items"],
+        "new_items_truncated": bool(file_diff["new_items_truncated"]),
+        "updated_items_truncated": bool(file_diff["updated_items_truncated"]),
+        "removed_items_truncated": bool(file_diff["removed_items_truncated"]),
     }
     _write_json_atomic(REPORT_FILE, report)
+    if now_files or now_map:
+        try:
+            _persist_compare_snapshot(files=now_files, products=now_map, branding=now_brand)
+            snap_keep = _load_json_dict(SNAPSHOT_FILE) or {}
+            snap_keep.update(
+                {
+                    "schema_version": COMPARE_SCHEMA_VERSION,
+                    "files": now_files,
+                    "file_count": len(now_files),
+                    "products": now_map,
+                    "product_count": len(now_map),
+                    "branding": now_brand,
+                    "branding_count": len(now_brand),
+                }
+            )
+            _write_json_atomic(SNAPSHOT_FILE, snap_keep)
+        except OSError as exc:
+            warnings.append(f"compare_snapshot_write_failed: {exc}")
+            report["warnings"] = warnings
+            _write_json_atomic(REPORT_FILE, report)
+    _append_run_log_line(
+        {
+            "ts": finished_at,
+            "event": "index_run",
+            "mode": mode,
+            "duration_ms": duration_ms,
+            "rc": rc,
+            "comparison_ok": comparison_ok,
+            "counts": counts,
+        }
+    )
     live = read_live()
     live["running"] = False
     live["current_item"] = ""
@@ -593,6 +1032,8 @@ def complete_run_report(*, ok: bool = True, cancelled: bool = False, rc: int | N
     ctrl["last_run_changed"] = report["changed"]
     ctrl["last_run_unchanged"] = unchanged
     ctrl["last_run_scanned"] = scanned
+    ctrl["last_run_removed"] = counts["removed"]
+    ctrl["last_run_comparison_ok"] = comparison_ok
     write_control(ctrl)
     return report
 
@@ -618,6 +1059,7 @@ def merge_branding_into_report() -> dict[str, Any]:
     report["branding_added"] = b_added
     report["branding_changed"] = b_changed
     report["branding_unchanged"] = b_unchanged
+    report["branding_removed"] = sum(1 for k in old_brand if k not in now_brand)
     report["branding_scanned"] = len(now_brand)
     report["added"] = p_added + b_added
     report["changed"] = p_changed + b_changed
@@ -625,6 +1067,9 @@ def merge_branding_into_report() -> dict[str, Any]:
     report["scanned"] = scanned
     report["empty"] = scanned <= 0 and len(items) == 0
     report["branding_merged_at"] = _utc()
+    counts = report.get("counts") if isinstance(report.get("counts"), dict) else {}
+    counts["branding_materials"] = len(now_brand)
+    report["counts"] = counts
     _write_json_atomic(REPORT_FILE, report)
     ctrl = read_control()
     ctrl["last_run_new"] = items
@@ -1069,6 +1514,7 @@ class IndexSupervisor:
             cmd.extend(["--root", r])
         flags = CREATE_NO_WINDOW if sys.platform == "win32" else 0
         try:
+            spawn_env = index_builder_env()
             proc = subprocess.Popen(
                 cmd,
                 cwd=str(WEB_ROOT.parent.parent),
@@ -1076,6 +1522,7 @@ class IndexSupervisor:
                 stdin=subprocess.DEVNULL,
                 stdout=log_f,
                 stderr=subprocess.STDOUT,
+                env=spawn_env,
             )
         except Exception as exc:  # noqa: BLE001
             try:

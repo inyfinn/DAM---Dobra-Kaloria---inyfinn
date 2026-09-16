@@ -987,7 +987,7 @@
         if (hint) {
           hint.hidden = false;
           hint.textContent =
-            "Nie udało się wczytać listy. Most :8766 musi działać (zaloguj się).";
+            "Nie udało się wczytać listy. Uruchom aplikację DAM i zaloguj się, potem odśwież.";
         }
         return;
       }

@@ -1,9 +1,12 @@
 """Branding asset + assoc HTTP helpers for local_bridge (portable module)."""
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import sqlite3
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 from urllib.parse import parse_qs
@@ -17,6 +20,143 @@ _QUEUE_ITEM_LIMIT = 200
 # Distinct asset candidates (asset_id + max_score only). ~10k rows is cheap;
 # previewability is decided via in-memory fat dict, not per-row disk I/O.
 _QUEUE_CANDIDATE_LIMIT = 12000
+
+_WWW_SCAN_ROOTS = (
+    Path(r"M:\- POLSKA\06 - STRONY WWW - INTERNET\01 - Strona Dobra Kaloria"),
+    Path(r"D:\Marketing\- POLSKA\06 - STRONY WWW - INTERNET\01 - Strona Dobra Kaloria"),
+)
+_WWW_SCAN_EXTS = frozenset(
+    {".png", ".jpg", ".jpeg", ".webp", ".gif", ".tif", ".tiff", ".svg", ".mp4", ".webm", ".pdf"}
+)
+_WWW_SCAN_SKIP_DIRS = frozenset(
+    {".git", "node_modules", "__pycache__", ".ds_store", "thumbs.db", "cache"}
+)
+_WWW_SCAN_MAX_FILES = 400
+_MTIME_ID_LIMIT = 200
+
+
+def _path_candidates(path: str) -> list[str]:
+    p = (path or "").replace("\\", "/").strip()
+    if not p:
+        return []
+    out: list[str] = []
+    seen: set[str] = set()
+
+    def add(val: str) -> None:
+        key = val.replace("\\", "/").lower()
+        if not val or key in seen:
+            return
+        seen.add(key)
+        out.append(val)
+
+    add(p)
+    repls = (
+        ("X:/Marketing/", "D:/Marketing/"),
+        ("X:/Marketing/", "M:/"),
+        ("D:/Marketing/", "M:/"),
+        ("M:/", "D:/Marketing/"),
+        ("X:/Marketing/", "D:/Marketing/"),
+    )
+    for a, b in repls:
+        if p.lower().startswith(a.lower()):
+            add(b + p[len(a) :])
+    low = p.lower()
+    marker = "/01 - logo/"
+    idx = low.find(marker)
+    if idx >= 0:
+        after = p[idx + len(marker) :]
+        head = p[: idx + len(marker)]
+        if after.lower().startswith(("png/", "svg/", "jpg/", "jpeg/", "11x/")):
+            for lang in ("PL", "EN"):
+                add(head + lang + "/" + after)
+    return out
+
+
+def _stat_mtime(path: str) -> tuple[int, str]:
+    for cand in _path_candidates(path):
+        try:
+            st = Path(cand).stat()
+        except OSError:
+            continue
+        ms = int(st.st_mtime * 1000)
+        iso = datetime.fromtimestamp(st.st_mtime, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        return ms, iso
+    return 0, ""
+
+
+def _media_type_for_name(name: str) -> str:
+    ext = Path(name).suffix.lower()
+    if ext in {".mp4", ".webm", ".mov", ".m4v"}:
+        return "video"
+    if ext in {".svg", ".ai", ".eps"}:
+        return "vector"
+    if ext in {".pdf"}:
+        return "document"
+    return "image"
+
+
+def _live_www_scan(days: int) -> list[dict[str, Any]]:
+    days = max(1, min(int(days or 28), 90))
+    cutoff = time.time() - days * 86400
+    found: list[tuple[float, Path]] = []
+    seen: set[str] = set()
+    for root in _WWW_SCAN_ROOTS:
+        try:
+            if not root.is_dir():
+                continue
+        except OSError:
+            continue
+        try:
+            for dirpath, dirnames, filenames in os.walk(root):
+                dirnames[:] = [d for d in dirnames if d.lower() not in _WWW_SCAN_SKIP_DIRS]
+                for fname in filenames:
+                    ext = Path(fname).suffix.lower()
+                    if ext not in _WWW_SCAN_EXTS:
+                        continue
+                    fp = Path(dirpath) / fname
+                    key = str(fp).replace("\\", "/").lower()
+                    if key in seen:
+                        continue
+                    try:
+                        st = fp.stat()
+                    except OSError:
+                        continue
+                    if st.st_mtime < cutoff or st.st_size > 80 * 1024 * 1024:
+                        continue
+                    rel = str(fp).replace("\\", "/")
+                    low = rel.lower()
+                    marker = "/- polska/"
+                    idx = low.find(marker)
+                    rel_key = low[idx:] if idx >= 0 else key
+                    if rel_key in seen:
+                        continue
+                    seen.add(key)
+                    seen.add(rel_key)
+                    found.append((st.st_mtime, fp))
+        except OSError:
+            continue
+    found.sort(key=lambda row: -row[0])
+    assets: list[dict[str, Any]] = []
+    for mt, fp in found[:_WWW_SCAN_MAX_FILES]:
+        path = str(fp).replace("\\", "/")
+        digest = hashlib.md5(path.encode("utf-8", errors="replace")).hexdigest()[:12]
+        iso = datetime.fromtimestamp(mt, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        assets.append(
+            {
+                "id": "live-www-" + digest,
+                "path": path,
+                "name": fp.name,
+                "mtime_ms": int(mt * 1000),
+                "mtime": iso,
+                "media_type": _media_type_for_name(fp.name),
+                "source": "www",
+                "asset_role": "web",
+                "tags": [],
+                "appearance_tags": [],
+                "brand": "DK",
+            }
+        )
+    return assets
 
 
 def configure(**kwargs: Any) -> None:
@@ -194,6 +334,56 @@ def fetch_assoc_queue_link_rows(
     return [dict(r) for r in cur.fetchall()]
 
 
+_HEAD_ASSET_KEEP = (
+    "id",
+    "path",
+    "name",
+    "tags",
+    "appearance_tags",
+    "asset_role",
+    "media_type",
+    "linked_product_ids",
+    "is_archive",
+    "source",
+    "brand",
+)
+_HEAD_FALSEY_OMIT = frozenset({"is_archive"})
+
+
+def _slim_branding_head(data: dict[str, Any]) -> dict[str, Any]:
+    """Serve-time compact of branding-grid-head (already a 800-row slice, not the 23 MB grid)."""
+    assets: list[dict[str, Any]] = []
+    for row in data.get("assets") or []:
+        if not isinstance(row, dict):
+            continue
+        slim: dict[str, Any] = {}
+        for key in _HEAD_ASSET_KEEP:
+            if key not in row:
+                continue
+            val = row[key]
+            if val is None or val == "" or val == [] or val == {}:
+                continue
+            if key in _HEAD_FALSEY_OMIT and val is False:
+                continue
+            slim[key] = val
+        if slim.get("id"):
+            assets.append(slim)
+    out = {
+        "ok": True,
+        "version": data.get("version"),
+        "generated_at": data.get("generated_at"),
+        "generation_id": data.get("generation_id"),
+        "count": data.get("count"),
+        "head_count": data.get("head_count") or len(assets),
+        "slim": True,
+        "partial": True,
+        "assets": assets,
+    }
+    if data.get("links_from_sqlite"):
+        out["links_from_sqlite"] = True
+    return out
+
+
 def handle_get(handler: Any, parsed: Any) -> bool:
     """Return True if request handled."""
     path = parsed.path
@@ -213,7 +403,7 @@ def handle_get(handler: Any, parsed: Any) -> bool:
         if not isinstance(data, dict):
             handler._json(404, {"ok": False, "error": "branding_grid_head_missing"})
             return True
-        handler._json(200, {"ok": True, **data})
+        handler._json(200, _slim_branding_head(data))
         return True
 
     if path == "/branding/asset":
@@ -236,6 +426,55 @@ def handle_get(handler: Any, parsed: Any) -> bool:
             return True
         assets = [by_id[i] for i in ids if i in by_id]
         handler._json(200, {"ok": True, "assets": assets, "missing": [i for i in ids if i not in by_id]})
+        return True
+
+    if path == "/branding/mtimes":
+        ids = []
+        if qs.get("id"):
+            ids = [qs["id"][0]]
+        elif qs.get("ids"):
+            raw = qs["ids"][0]
+            ids = [x.strip() for x in raw.split(",") if x.strip()]
+        if not ids:
+            handler._json(400, {"ok": False, "error": "id_required"})
+            return True
+        ids = ids[:_MTIME_ID_LIMIT]
+        by_id = _assets_by_id()
+        out: list[dict[str, Any]] = []
+        missing: list[str] = []
+        for aid in ids:
+            a = by_id.get(aid)
+            if not a:
+                missing.append(aid)
+                continue
+            ms, iso = _stat_mtime(str(a.get("path") or ""))
+            row = {
+                "id": aid,
+                "path": a.get("path") or "",
+                "name": a.get("name") or "",
+            }
+            if ms:
+                row["mtime_ms"] = ms
+                row["mtime"] = iso
+            out.append(row)
+        handler._json(200, {"ok": True, "assets": out, "missing": missing})
+        return True
+
+    if path == "/branding/live-www-scan":
+        try:
+            days = int((qs.get("days") or ["28"])[0])
+        except (TypeError, ValueError):
+            days = 28
+        assets = _live_www_scan(days)
+        handler._json(
+            200,
+            {
+                "ok": True,
+                "assets": assets,
+                "count": len(assets),
+                "days": max(1, min(days, 90)),
+            },
+        )
         return True
 
     if path == "/assoc/queue":

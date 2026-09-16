@@ -36,6 +36,14 @@ try:
 except ImportError:
     path_resolve = None  # type: ignore
 
+
+def _no_window_flags() -> int:
+    """Ukryj konsolę ssh/pdftoppm — bez CREATE_NO_WINDOW Windows pokazuje CMD."""
+    if sys.platform != "win32":
+        return 0
+    return int(getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000))
+
+
 DESKTOP_DIR = Path(__file__).resolve().parent
 REPO_ROOT = DESKTOP_DIR.parent.parent
 DEFAULT_CACHE_ROOT = REPO_ROOT / "PAMIEC-PODRECZNA"
@@ -251,6 +259,7 @@ def raster_pdf_first_page_jpeg(src: str, *, max_side: int = 2400) -> Optional[by
                 capture_output=True,
                 timeout=90,
                 check=False,
+                creationflags=_no_window_flags(),
             )
             if proc.returncode != 0:
                 return None
@@ -1045,7 +1054,12 @@ def _ssh_run(host: str, remote: str, stdin: bytes | None = None) -> subprocess.C
         host,
         remote,
     ]
-    return subprocess.run(cmd, input=stdin, capture_output=True)
+    return subprocess.run(
+        cmd,
+        input=stdin,
+        capture_output=True,
+        creationflags=_no_window_flags(),
+    )
 
 
 def ssh_reachable() -> bool:
@@ -1135,6 +1149,7 @@ def _pull_ssh_rels(rels: list[str]) -> int:
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        creationflags=_no_window_flags(),
     )
     assert proc.stdin is not None
     proc.stdin.write("\n".join(rels).encode("utf-8"))
@@ -1169,6 +1184,7 @@ def _pull_ssh_full() -> int:
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        creationflags=_no_window_flags(),
     )
     extracted = 0
     assert proc.stdout is not None
@@ -2069,4 +2085,3 @@ def start_publish_after_index() -> dict:
             pass
 
     threading.Thread(target=_worker, daemon=True, name="dam-cache-publish").start()
-    return {"ok": True, "started": True}

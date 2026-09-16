@@ -1574,10 +1574,13 @@
 
   function showExplorerIndexError(detail) {
     var msg = detail || "Nie załadowano indeksu.";
+    if (typeof console !== "undefined" && console.warn) {
+      console.warn("[DamExplorer] index load failed:", msg);
+    }
     var html =
       '<div class="dam-explorer-empty"><p style="color:var(--dam-danger, #FF5653)">' +
       esc(msg) +
-      "</p><p>Mostek: <code>http://127.0.0.1:8766/file-index?fields=explorer</code></p>" +
+      "</p><p>Lokalna usługa DAM nie odpowiada. Upewnij się, że aplikacja działa (skrót na pulpicie), potem spróbuj ponownie.</p>" +
       '<p><button type="button" class="geex-btn geex-btn--primary" data-dam-explorer-retry="1">Spróbuj ponownie</button></p></div>';
     var folder = document.getElementById("damFolderList");
     if (folder && explorerFolderEmpty()) folder.innerHTML = html;
@@ -3193,23 +3196,6 @@
 
   var _lifecycleQueue = Promise.resolve();
 
-  function _dbgLifeLog(location, message, data, hypothesisId) {
-    // #region agent log
-    fetch("http://127.0.0.1:7922/ingest/8b6cf650-a21b-4d56-ad4a-ad3ea44edb8c", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "3ca09b" },
-      body: JSON.stringify({
-        sessionId: "3ca09b",
-        hypothesisId: hypothesisId || "D",
-        location: location,
-        message: message,
-        data: data || {},
-        timestamp: Date.now()
-      })
-    }).catch(function () {});
-    // #endregion
-  }
-
   function lifecyclePendingTarget(btn) {
     if (!btn || !btn.closest) return null;
     return {
@@ -3263,7 +3249,6 @@
 
   function applyLifecycleStatusNow(opts) {
     opts = opts || {};
-    var t0 = Date.now();
     if (!canWriteLifecycleStatus()) {
       showToast("Brak uprawnień do zmiany statusów F/X/D (admin, power_user lub Graficy).", "error");
       return Promise.resolve({ ok: false });
@@ -3282,11 +3267,6 @@
       });
     }
     setLifecyclePending(lifecyclePendingTarget(opts.uiBtn));
-    _dbgLifeLog("dam-explorer.js:applyLifecycleStatusNow", "lifecycle start", {
-      scope: opts.scope || "variant",
-      status: opts.status || "clear",
-      hasUiBtn: !!opts.uiBtn
-    }, "D");
     var resolvedPath = resolveLifecycleDiskPath({
       scope: opts.scope || "variant",
       path: opts.path || "",
@@ -3313,8 +3293,6 @@
       body: JSON.stringify(body)
     })
       .then(function (res) {
-        var tBridge = Date.now() - t0;
-        _dbgLifeLog("dam-explorer.js:applyLifecycleStatusNow", "bridge POST done", { ms: tBridge, ok: !!(res.data && res.data.ok) }, "A");
         if (!res.data || !res.data.ok) {
           var err = (res.data && res.data.error) || "lifecycle-status";
           var hint = (res.data && res.data.hint) || "";
@@ -3387,7 +3365,6 @@
         var keepProductId = body.product_id || opts.productId || (state.product && state.product.id) || "";
         /* Po FS rename: przebuduj indeks z dysku, potem odśwież UI */
         showToast("Odświeżam listę plików…", "info");
-        var tRebuildStart = Date.now();
         return fetch(bridgeUrl() + "/index/rebuild", {
           method: "POST",
           headers: authHeaders(),
@@ -3402,19 +3379,15 @@
             return waitForIndexRebuild(45000);
           })
           .then(function () {
-            _dbgLifeLog("dam-explorer.js:applyLifecycleStatusNow", "index rebuild done", { ms: Date.now() - tRebuildStart }, "B");
-            var tRefreshStart = Date.now();
             return refreshIndex({
               silent: true,
               reopenProductId: keepProductId,
               lifecyclePathHint: res.data.final_product_path || res.data.final_variant_path || body.path || ""
             }).then(function () {
-              _dbgLifeLog("dam-explorer.js:applyLifecycleStatusNow", "refreshIndex done", { ms: Date.now() - tRefreshStart }, "C");
               return null;
             });
           })
           .then(function () {
-            _dbgLifeLog("dam-explorer.js:applyLifecycleStatusNow", "lifecycle complete", { msTotal: Date.now() - t0 }, "E");
             showToast("Pomyślnie zaktualizowano", "success");
             return res.data;
           })
@@ -8913,3 +8886,4 @@
     init();
   }
 })();
+                                        

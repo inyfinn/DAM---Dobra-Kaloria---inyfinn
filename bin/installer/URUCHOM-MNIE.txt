@@ -3,7 +3,7 @@
 ================================================================================
 
 NOWY KOMPUTER:
-  >>> DAM-Setup.exe  (obok folderu bin, w glownym folderze DAM)
+  >>> bin\instalator\DAM-Setup.exe
 
 CODZIENNIE:
   >>> Skrot na pulpicie:  DAM - Dobra Kaloria

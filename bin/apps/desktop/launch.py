@@ -398,36 +398,6 @@ class DamJsApi:
             return {"ok": False, "error": str(exc)}
 
         start_dir = self._start_dir(directory)
-        # #region agent log
-        try:
-            import json as _json
-            import time as _time
-            from pathlib import Path as _Path
-
-            _log = _Path(__file__).resolve().parents[2] / "debug-a78fa0.log"
-            with open(_log, "a", encoding="utf-8") as _f:
-                _f.write(
-                    _json.dumps(
-                        {
-                            "sessionId": "a78fa0",
-                            "hypothesisId": "D",
-                            "location": "launch.py:pick_folder",
-                            "message": "folder dialog start",
-                            "data": {
-                                "requested": (directory or "")[:120],
-                                "start_dir": (start_dir or "")[:120],
-                                "start_empty": not bool(start_dir),
-                            },
-                            "timestamp": int(_time.time() * 1000),
-                            "runId": "pre-fix",
-                        },
-                        ensure_ascii=False,
-                    )
-                    + "\n"
-                )
-        except Exception:
-            pass
-        # #endregion
         windows = list(getattr(webview, "windows", []) or [])
         if not windows:
             return {"ok": False, "error": "no_window"}
@@ -451,36 +421,6 @@ class DamJsApi:
         path = str(path or "").strip()
         if not path or not os.path.isdir(path):
             return {"ok": False, "cancelled": True}
-        # #region agent log
-        try:
-            import json as _json
-            import time as _time
-            from pathlib import Path as _Path
-
-            _log = _Path(__file__).resolve().parents[2] / "debug-a78fa0.log"
-            with open(_log, "a", encoding="utf-8") as _f:
-                _f.write(
-                    _json.dumps(
-                        {
-                            "sessionId": "a78fa0",
-                            "hypothesisId": "D",
-                            "location": "launch.py:pick_folder:result",
-                            "message": "folder dialog result",
-                            "data": {
-                                "picked_tail": path[-90:],
-                                "is_documents": ("Dokumenty" in path) or ("Documents" in path),
-                                "is_marketing": "Marketing" in path,
-                            },
-                            "timestamp": int(_time.time() * 1000),
-                            "runId": "pre-fix",
-                        },
-                        ensure_ascii=False,
-                    )
-                    + "\n"
-                )
-        except Exception:
-            pass
-        # #endregion
         return {
             "ok": True,
             "path": path.replace("/", "\\"),

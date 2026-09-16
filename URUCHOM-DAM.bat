@@ -1,10 +1,16 @@
 @echo off
-REM DAM - Dobra Kaloria - uruchomienie (dwuklik)
+REM Ciche uruchomienie bez wiszacego okna CMD.
+REM Oficjalna sciezka: DAM.exe (skrot instalatora). Ten bat tylko przekazuje dalej.
 cd /d "%~dp0"
-if not exist "DAM.exe" (
-  echo Brak DAM.exe w folderze:
-  echo %~dp0
-  pause
-  exit /b 1
+if exist "DAM.exe" (
+  start "" "%~dp0DAM.exe"
+  exit /b 0
 )
-start "" "%~dp0DAM.exe"
+if exist "bin\apps\desktop\run-dam.vbs" (
+  wscript //nologo "%~dp0bin\apps\desktop\run-dam.vbs"
+  exit /b 0
+)
+echo Brak DAM.exe ani run-dam.vbs w:
+echo %~dp0
+pause
+exit /b 1

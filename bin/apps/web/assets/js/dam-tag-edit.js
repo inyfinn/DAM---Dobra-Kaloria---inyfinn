@@ -1059,12 +1059,6 @@
     return Promise.resolve({ ok: true });
   }
 
-  // #region agent log
-  function __damTagDbg() {
-    /* noop — debug ingest wylaczony (martwy port 7922 potrafil wisiec UI). */
-  }
-  // #endregion
-
   var _tagPickerOpening = false;
 
   function panicTagReset() {
@@ -1082,12 +1076,6 @@
   }
 
   function openTagPicker(anchorEl, ctx) {
-    // #region agent log
-    __damTagDbg("dam-tag-edit.js:openTagPicker", "entry", {
-      opening: _tagPickerOpening,
-      kind: (ctx && ctx.kind) || "",
-    }, "H2");
-    // #endregion
     /* Soft unstick only: never dispatch dam:panic-reset here (re-enters handlers / UI freeze). */
     if (_tagPickerOpening) {
       if (document.getElementById("damTagEditPopover")) {
@@ -1115,13 +1103,6 @@
   function openTagPickerNow(anchorEl, ctx) {
     ctx = ctx || {};
     var kind = ctx.kind || (anchorEl && anchorEl.getAttribute("data-tag-kind")) || "carrier";
-    // #region agent log
-    __damTagDbg("dam-tag-edit.js:openTagPickerNow", "start", {
-      kind: kind,
-      warmProducts: (global._DAM_FILE_INDEX && global._DAM_FILE_INDEX.products || []).length,
-      fromSearchIndex: !!(global._DAM_FILE_INDEX && global._DAM_FILE_INDEX._fromSearchIndex),
-    }, "H1");
-    // #endregion
     if (kind === "carrier" || kind === "lang") {
       ctx = Object.assign(
         {
