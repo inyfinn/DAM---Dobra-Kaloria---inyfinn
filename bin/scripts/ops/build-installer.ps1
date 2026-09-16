@@ -367,25 +367,46 @@ if (-not (Test-Path -LiteralPath $authJpg) -or ((Get-Item -LiteralPath $authJpg)
 }
 Write-Host "Auth hero OK: $authJpg ($((Get-Item $authJpg).Length) B)"
 
+function Resolve-PamiecSource([string]$binRoot) {
+  # Kanon = M: (Synology/mapowanie) — prawdziwe AVIF, bez Dropbox FeRp.
+  # D:\Marketing\... to lustro Dropbox i NIE wolno z niego pakowac cache.
+  $candidates = @(
+    "M:\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\PAMIEC-PODRECZNA",
+    (Join-Path $binRoot "PAMIEC-PODRECZNA")
+  )
+  foreach ($c in $candidates) {
+    $th = Join-Path $c "thumbs"
+    if (-not (Test-Path -LiteralPath $th)) { continue }
+    $sample = Get-ChildItem -LiteralPath $th -File -ErrorAction SilentlyContinue | Select-Object -First 1
+    $reparse = $false
+    if ($sample) {
+      $reparse = (($sample.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0)
+    }
+    $n = (Get-ChildItem -LiteralPath $th -File -Recurse -ErrorAction SilentlyContinue | Measure-Object).Count
+    Write-Host "PAMIEC candidate: $c thumbs=$n reparse_sample=$reparse"
+    if ($n -lt 1000) { continue }
+    if ($c -like 'D:\*' -or $c -like 'D:/*') {
+      Write-Warning "Pomijam D: (Dropbox) mimo $n thumbs — kanon jest na M:."
+      continue
+    }
+    return $c
+  }
+  throw "Brak zdrowego PAMIEC-PODRECZNA (preferuj M:\- POLSKA\...\bin\PAMIEC-PODRECZNA)."
+}
+
 # Cala pamiec podreczna (AVIF) w instalatorze — first paint bez NAS.
-$pamiecSrc = Join-Path $BinRoot "PAMIEC-PODRECZNA"
+$pamiecSrc = Resolve-PamiecSource $BinRoot
 $pamiecDst = Join-Path $binDst "PAMIEC-PODRECZNA"
 $thumbsSrc = Join-Path $pamiecSrc "thumbs"
-if (-not (Test-Path -LiteralPath $thumbsSrc)) {
-  throw "Brak bin\PAMIEC-PODRECZNA\thumbs — Setup NIE moze wyjechac bez cache."
-}
 $thumbCount = (Get-ChildItem -LiteralPath $thumbsSrc -File -Recurse -ErrorAction SilentlyContinue | Measure-Object).Count
-if ($thumbCount -lt 1000) {
-  throw "PAMIEC-PODRECZNA\thumbs ma tylko $thumbCount plikow (<1000). Uzupelnij cache przed buildem."
-}
-Write-Host "Staging PAMIEC-PODRECZNA ($thumbCount thumbs) — materialize Dropbox reparse..."
+Write-Host "Staging PAMIEC-PODRECZNA z KANONU: $pamiecSrc ($thumbCount thumbs)"
 Copy-PamiecMaterialized $pamiecSrc $pamiecDst
 $thumbDstCount = (Get-ChildItem -LiteralPath (Join-Path $pamiecDst "thumbs") -File -Recurse -ErrorAction SilentlyContinue | Measure-Object).Count
 if ($thumbDstCount -lt 1000) {
   throw "Staging PAMIEC niekompletny ($thumbDstCount)."
 }
 Assert-StagedThumbsHealthy (Join-Path $pamiecDst "thumbs")
-Write-Host "Shipped PAMIEC-PODRECZNA thumbs=$thumbDstCount (no reparse)"
+Write-Host "Shipped PAMIEC-PODRECZNA thumbs=$thumbDstCount from=$pamiecSrc"
 
 $readmeSrc = Join-Path $BinRoot "installer\README.txt"
 if (Test-Path $readmeSrc) { Copy-Item $readmeSrc (Join-Path $stageRoot "README.txt") -Force }
