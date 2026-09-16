@@ -4,7 +4,7 @@ To **nie** jest podpis sterownika (WHQL / kernel). DAM to aplikacja uzytkownika.
 
 SmartScreen „Nieznany wydawca” = `DAM-Setup.exe` bez **zaufanego** Authenticode (cert od CA w lancuchu Windows).
 
-## Co robi kazdy build (1.8.7+)
+## Co robi kazdy build (1.8.8+)
 
 `build-installer.ps1` **zawsze** podpisuje `DAM.exe` i `DAM-Setup.exe` (`sign-dam-binaries.ps1`):
 
@@ -13,6 +13,8 @@ SmartScreen „Nieznany wydawca” = `DAM-Setup.exe` bez **zaufanego** Authentic
 3. Publiczny `.cer` (bez klucza) ląduje w `bin/installer/inyfinn-dam-codesign.cer`. Instalator wpina go do **TrustedPublisher** tego uzytkownika.
 
 Self-signed **nie** uczy SmartScreen. Plik z internetu (strefa MOTW) nadal moze pokazac ostrzezenie, ale we Wlasciwosciach pliku jest wydawca **Inyfinn**, nie pusto.
+
+Folder `bin/instalator` na D: bywa **Dropbox reparse**. Overlay Authenticode na koncu PE bywa obcinany (certRVA poza EOF → „nie jest prawidlowa aplikacja Win32”). Build podpisuje kopie w `%LOCALAPPDATA%\DAM-sign` i z niej robi GitHub Release.
 
 ## Cert CA (zeby zniknelo „Nieznany wydawca” z internetu)
 

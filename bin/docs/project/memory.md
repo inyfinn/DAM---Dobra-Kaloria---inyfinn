@@ -27,7 +27,7 @@ Lustro: `bin/memory.md`. Gdy user prosi o commit/push/build/instalator = lokalny
 - Po 1.8.9 → 1.9.0. Po 1.9.9 → 2.0.0. Nigdy `x.y.10`.
 - Zakaz `+0.0.1` / `1.7.10` / `1.8.10`. Nadpisuje `dam-version-bump.mdc` i global `version-bump-every-change`.
 - Sync: `version.json`, `dam-version.js` `DAM_APP_VERSION`, `runtime_config.py` `APP_VERSION`, `DAM-Setup.iss` `MyAppVersion`, HTML `?v=`.
-- **Aktualny ship: 1.8.2.** Footer: `DAM v1.8.2`.
+- **Aktualny ship: 1.8.8.** Footer: `DAM v1.8.8`. 1.8.7 = Authenticode Inyfinn; 1.8.8 = podpis poza Dropbox reparse.
 
 Lustro operacyjne: `bin/memory.md` (ten sam wpis).
 

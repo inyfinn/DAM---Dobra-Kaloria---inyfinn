@@ -133,9 +133,60 @@ function Test-SignaturePresent([string]$Exe) {
   return [bool]$sig.SignerCertificate
 }
 
+function Get-PeSecurityDirectory([string]$Path) {
+  $fs = [IO.File]::Open($Path, "Open", "Read", "ReadWrite")
+  try {
+    $hdr = New-Object byte[] 1024
+    [void]$fs.Read($hdr, 0, 1024)
+    if ($hdr[0] -ne 0x4D -or $hdr[1] -ne 0x5A) { return @{ Offset = -1; Rva = 0; Size = 0 } }
+    $e = [BitConverter]::ToInt32($hdr, 0x3C)
+    $magic = [BitConverter]::ToUInt16($hdr, $e + 24)
+    $ddStart = if ($magic -eq 0x20B) { $e + 24 + 112 } else { $e + 24 + 96 }
+    $secOff = $ddStart + 32
+    return @{
+      Offset = $secOff
+      Rva = [BitConverter]::ToUInt32($hdr, $secOff)
+      Size = [BitConverter]::ToUInt32($hdr, $secOff + 4)
+      FileLength = $fs.Length
+    }
+  } finally { $fs.Close() }
+}
+
+function Clear-InvalidSecurityDirectory([string]$Path) {
+  $info = Get-PeSecurityDirectory $Path
+  if ($info.Offset -lt 0) { return }
+  if ($info.Rva -eq 0 -and $info.Size -eq 0) { return }
+  $end = [uint64]$info.Rva + [uint64]$info.Size
+  if ($info.Rva -gt 0 -and $end -le [uint64]$info.FileLength) { return }
+  Write-Host ("STRIP invalid Authenticode dir RVA={0} size={1} fileLen={2}" -f $info.Rva, $info.Size, $info.FileLength)
+  $fs = [IO.File]::Open($Path, "Open", "ReadWrite", "None")
+  try {
+    $fs.Position = $info.Offset
+    $fs.Write(([byte[]](0, 0, 0, 0, 0, 0, 0, 0)), 0, 8)
+    $fs.Flush()
+  } finally { $fs.Close() }
+}
+
+function Copy-ToLocalSignStaging([string]$Exe) {
+  $item = Get-Item -LiteralPath $Exe
+  $isReparse = [bool]($item.Attributes -band [IO.FileAttributes]::ReparsePoint)
+  $info = Get-PeSecurityDirectory $Exe
+  $end = [uint64]$info.Rva + [uint64]$info.Size
+  $invalidCert = ($info.Rva -gt 0) -and ($end -gt [uint64]$info.FileLength)
+  if (-not $isReparse -and -not $invalidCert) { return $Exe }
+  $stageDir = Join-Path $env:LOCALAPPDATA "DAM-sign"
+  New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
+  $stage = Join-Path $stageDir $item.Name
+  Write-Host ("stage off reparse/cloud: {0} -> {1}" -f $Exe, $stage)
+  [IO.File]::Copy($Exe, $stage, $true)
+  return $stage
+}
+
 function Invoke-SignOne([string]$Exe, $Cert, [string]$Tool) {
   $ts = $env:DAM_CODE_SIGN_TIMESTAMP
   if (-not $ts) { $ts = $TsDefault }
+  $work = Copy-ToLocalSignStaging $Exe
+  Clear-InvalidSecurityDirectory $work
   if ($Tool) {
     $args = @("sign", "/fd", "SHA256", "/td", "SHA256", "/tr", $ts, "/v")
     if ($env:DAM_CODE_SIGN_PFX) {
@@ -144,20 +195,26 @@ function Invoke-SignOne([string]$Exe, $Cert, [string]$Tool) {
     } else {
       $args += @("/sha1", $Cert.Thumbprint)
     }
-    $args += $Exe
+    $args += $work
     & $Tool @args
-    if ($LASTEXITCODE -ne 0) { throw "signtool exit $LASTEXITCODE for $Exe" }
+    if ($LASTEXITCODE -ne 0) { throw "signtool exit $LASTEXITCODE for $work" }
   } else {
-    $r = Set-AuthenticodeSignature -FilePath $Exe -Certificate $Cert -HashAlgorithm SHA256 -TimestampServer $ts
-    if ($r.Status -eq "NotSigned" -or $r.Status -eq "HashMismatch") {
-      throw "Set-AuthenticodeSignature status=$($r.Status) for $Exe"
+    $r = Set-AuthenticodeSignature -LiteralPath $work -Certificate $Cert -HashAlgorithm SHA256 -TimestampServer $ts
+    if ($r.Status -eq "NotSigned" -or $r.Status -eq "HashMismatch" -or -not $r.SignerCertificate) {
+      throw "Set-AuthenticodeSignature status=$($r.Status) msg=$($r.StatusMessage) for $work"
     }
   }
-  if (-not (Test-SignaturePresent $Exe)) {
-    throw "Brak podpisu po sign: $Exe"
+  if (-not (Test-SignaturePresent $work)) {
+    throw "Brak podpisu po sign: $work"
   }
-  $st = Get-AuthenticodeSignature -LiteralPath $Exe
-  Write-Host ("  signed {0}  Status={1}  Subject={2}" -f $Exe, $st.Status, $st.SignerCertificate.Subject)
+  if ($work -ne $Exe) {
+    [IO.File]::Copy($work, $Exe, $true)
+  }
+  $st = Get-AuthenticodeSignature -LiteralPath $work
+  Write-Host ("  signed {0}  Status={1}  Subject={2}" -f $work, $st.Status, $st.SignerCertificate.Subject)
+  if (-not (Test-SignaturePresent $Exe)) {
+    Write-Warning "Repo/cloud copy lost Authenticode after copy-back. Canonical signed file: $work"
+  }
 }
 
 if (-not $Path -or $Path.Count -eq 0) {

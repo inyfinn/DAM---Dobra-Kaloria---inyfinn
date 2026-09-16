@@ -1,3 +1,17 @@
+## 2026-09-16 - v1.8.8 sign off Dropbox + Release v1.8.7
+
+**Komenda/Akcja:** User: dalej SmartScreen; zwalcz; commit push build.
+
+**Log/Status:**
+1. 1.8.7 commit `b3f5852` + push origin/main. ISCC OK, ale Dropbox reparse (`0x9000601A`) obcial overlay Authenticode — PE certRVA=94179328 przy pliku 90903556 B, Set-AuthenticodeSignature: „nie jest prawidlowa aplikacja Win32”.
+2. Strip invalid Security directory, podpis na `%LOCALAPPDATA%\DAM-sign\DAM-Setup.exe` (CN=Inyfinn, thumb 045C24D8…), timestamp DigiCert, 90911544 B.
+3. `gh release create v1.8.7` --target main --latest. URL: https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v1.8.7
+4. 1.8.8: sign-dam-binaries stage+strip; build-installer przywraca podpis z LocalAppData.
+
+**Efekt/Fix:** Latest = v1.8.7 signed; nastepny ship 1.8.8 nie gubi podpisu na D:.
+
+**Zrodla:** CODE-SIGNING.md; sign-dam-binaries.ps1.
+
 ## 2026-09-16 - v1.8.7 Authenticode Inyfinn (SmartScreen)
 
 **Komenda/Akcja:** User: SmartScreen „Nieznany wydawca” na DAM-Setup.exe. Zwalcz. Commit push build.

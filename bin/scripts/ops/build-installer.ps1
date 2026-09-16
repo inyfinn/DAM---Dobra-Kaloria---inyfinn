@@ -335,8 +335,22 @@ $setupExe = Join-Path $releaseDir "DAM-Setup.exe"
 if (-not (Test-Path $setupExe)) { throw "Brak $setupExe" }
 & $signScript -Path @($setupExe)
 if ($LASTEXITCODE -ne 0) { throw "Podpis DAM-Setup.exe nieudany (exit $LASTEXITCODE)." }
-$sizeMb = [math]::Round((Get-Item $setupExe).Length / 1MB, 1)
+$stageExe = Join-Path $env:LOCALAPPDATA "DAM-sign\DAM-Setup.exe"
 $setupSig = Get-AuthenticodeSignature -LiteralPath $setupExe
+if ((-not $setupSig.SignerCertificate) -and (Test-Path -LiteralPath $stageExe)) {
+  $stageSig = Get-AuthenticodeSignature -LiteralPath $stageExe
+  if ($stageSig.SignerCertificate) {
+    Write-Warning "Dropbox/reparse obcial podpis w $setupExe — przywracam z $stageExe"
+    [IO.File]::Copy($stageExe, $setupExe, $true)
+    $setupSig = Get-AuthenticodeSignature -LiteralPath $setupExe
+    if (-not $setupSig.SignerCertificate) {
+      $setupExe = $stageExe
+      $setupSig = $stageSig
+      Write-Warning "Repo nadal bez podpisu. Artefakt do GitHub Release: $stageExe"
+    }
+  }
+}
+$sizeMb = [math]::Round((Get-Item -LiteralPath $setupExe).Length / 1MB, 1)
 Write-Host ""
 Write-Host "GOTOWE - kliknij:"
 Write-Host ('  {0}  ({1} MB)' -f $setupExe, $sizeMb)

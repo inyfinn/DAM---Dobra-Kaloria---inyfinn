@@ -4,7 +4,7 @@
 <head>
   <script src="./assets/js/dam-panic-reload.js?v=5.0.196"></script>
   <script>(function(){try{var r=document.documentElement,p=localStorage.getItem('dam_theme_pref')||localStorage.getItem('theme')||'light',t=p;if(p==='system'){t=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';}if(t!=='dark'&&t!=='light')t='light';r.setAttribute('data-theme',t);r.style.colorScheme=t;r.classList.toggle('dark',t==='dark');if(p==='system'||p==='dark'||p==='light')r.setAttribute('data-dam-theme-pref',p);}catch(e){}})();</script>
-  <script src="./assets/js/dam-theme.js?v=1.8.7"></script>
+  <script src="./assets/js/dam-theme.js?v=1.8.8"></script>
   <style id="dam-shell-boot-critical">
 html.dam-booting{background:#F6F7F6}html.dam-booting[data-theme="dark"]{background:#060F0C}
 html.dam-booting body,body.is-booting{opacity:0!important;pointer-events:auto;animation:none!important}
@@ -12,7 +12,7 @@ html.dam-booted body,html.dam-boot-failed body{animation:none!important;opacity:
 html.dam-booted .dam-explorer-shell .dam-tag-groups,html.dam-booted .dam-explorer-shell .dam-explorer-toolbar{opacity:1!important;visibility:visible!important}
 html.dam-booting .geex-header,html.dam-booting .geex-sidebar{pointer-events:auto!important}
   </style>
-  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=1.8.7">
+  <link rel="stylesheet" href="./assets/css/dam-shell-boot.css?v=1.8.8">
   <script>
   /* Failsafe ALWAYS clears opacity:0 - even if dam-booting already removed without body cleanup. */
   (function(){var r=document.documentElement;if(!r.classList.contains("dam-booting"))r.classList.add("dam-booting");
@@ -42,11 +42,11 @@ html.dam-booting .geex-header,html.dam-booting .geex-sidebar{pointer-events:auto
 		if (localStorage.layout) document.documentElement.setAttribute("data-nav", localStorage.navbar);
 		if (localStorage.layout) document.documentElement.setAttribute("dir", localStorage.layout);
     </script>	
-<link rel="stylesheet" href="./assets/css/dam-tokens.css?v=1.8.7">
-<link rel="stylesheet" href="./assets/css/dam-primitives.css?v=1.8.7">
+<link rel="stylesheet" href="./assets/css/dam-tokens.css?v=1.8.8">
+<link rel="stylesheet" href="./assets/css/dam-primitives.css?v=1.8.8">
 <link rel="stylesheet" href="./assets/css/dam-app.css?v=1.0.87">
 <link rel="stylesheet" href="./assets/css/dam-tutorial.css?v=1.0.79">
-<link rel="stylesheet" href="./assets/css/dam-brand.css?v=1.8.7">
+<link rel="stylesheet" href="./assets/css/dam-brand.css?v=1.8.8">
 <link rel="stylesheet" href="./assets/css/dam-bento.css?v=5.0.197-mfix">
 </head>
 
@@ -354,7 +354,7 @@ html.dam-booting .geex-header,html.dam-booting .geex-sidebar{pointer-events:auto
 	<script src="./assets/js/dam-api.js?v=6.0.0"></script>
 	<script src="./assets/js/dam-i18n.js?v=5.0.196"></script>
 	<script src="./assets/js/dam-runtime.js?v=5.0.196"></script>
-	<script src="./assets/js/dam-version.js?v=1.8.7"></script>
+	<script src="./assets/js/dam-version.js?v=1.8.8"></script>
 	<script src="./assets/js/dam-shell.js?v=1.0.81"></script>
 	<script src="./assets/js/dam-search.js?v=5.0.196"></script>
 	<script src="./assets/js/dam-index-poller.js?v=1.0.79"></script>
