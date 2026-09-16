@@ -1,6 +1,6 @@
-; DAM Windows installer - pelny kreator (licencja, sciezka, aktualizacja)
+﻿; DAM Windows installer - pelny kreator (licencja, sciezka, aktualizacja)
 #ifndef MyAppVersion
-  #define MyAppVersion "1.9.9"
+  #define MyAppVersion "2.0.0"
 #endif
 #ifndef StageDir
   #define StageDir "..\dist\staging\DAM-install"
@@ -72,7 +72,6 @@ Name: "polish"; MessagesFile: "compiler:Languages\Polish.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "Utworz skrot na pulpicie"; GroupDescription: "Skroty:"; Flags: checkedonce
-Name: "cachesync"; Description: "Jesli brak dysku M: — pobierz pamiec podreczna z Synology po instalacji"; GroupDescription: "Pamiec podreczna:"; Flags: unchecked
 
 ; Aktualizacja = czysty klad od nowa. Bez tego stare moduly JS/HTML i pliki
 ; usuniete w nowej wersji zostaja na dysku i wracaja do gry przy niezbumpowanym ?v=.
@@ -128,9 +127,9 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilen
 [Run]
 Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Instalowanie Visual C++ Runtime..."; Flags: waituntilterminated; Check: VCRedistNeeded
 Filename: "{tmp}\MicrosoftEdgeWebview2Setup.exe"; Parameters: "/silent /install"; StatusMsg: "Instalowanie WebView2 Runtime (wymagane przez pywebview)..."; Flags: waituntilterminated; Check: WebView2Needed
-Filename: "powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\bin\installer\trust-inyfinn-publisher.ps1"""; StatusMsg: "Rejestracja wydawcy Inyfinn..."; Flags: runhidden waituntilterminated
-Filename: "powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\bin\scripts\ops\seed-pamiec-from-canon.ps1"" -Dest ""{app}\bin\PAMIEC-PODRECZNA"" -Quiet"; StatusMsg: "Kopiowanie pamieci podrecznej z dysku M: (poza instalatorem)..."; Flags: runhidden waituntilterminated
-Filename: "powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\bin\scripts\ops\sync-pamiec-podreczna-from-nas.ps1"" -Quiet"; StatusMsg: "Pobieranie pamieci podrecznej z Synology..."; Flags: runhidden waituntilterminated; Tasks: cachesync
+; Bez powershell -ExecutionPolicy Bypass: antywirusy (Bitdefender Boxter) blokuja ten wzorzec.
+; PAMIEC-PODRECZNA pobiera mostek przy starcie (dam_thumb_cache.ensure_boot_sync).
+Filename: "{sys}\certutil.exe"; Parameters: "-user -f -addstore TrustedPublisher ""{app}\bin\installer\inyfinn-dam-codesign.cer"""; StatusMsg: "Rejestracja wydawcy Inyfinn..."; Flags: runhidden waituntilterminated skipifdoesntexist
 Filename: "{app}\{#MyAppExeName}"; Description: "Uruchom DAM po zakonczeniu instalacji (startuje mostek)"; Flags: nowait postinstall skipifsilent
 
 [Registry]
@@ -295,7 +294,8 @@ function KillDamProcesses: Boolean;
 var
   ResultCode: Integer;
 begin
-  Exec('powershell.exe', '-NoProfile -ExecutionPolicy Bypass -Command "Get-CimInstance Win32_Process | Where-Object { $_.Name -in @(''DAM.exe'',''pythonw.exe'',''python.exe'',''dam-appw.exe'') -and $_.CommandLine -match ''DAM|launch\.py|local_bridge|dam-app|Dobra.Kaloria'' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /T /IM DAM.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec('powershell.exe', '-NoProfile -NonInteractive -Command "Get-CimInstance Win32_Process | Where-Object { $_.Name -in @(''DAM.exe'',''pythonw.exe'',''python.exe'',''dam-appw.exe'') -and (($_.Name -eq ''DAM.exe'') -or ($_.CommandLine -match ''\\bin\\apps\\desktop\\(launch|local_bridge)\.py|dam-appw|Dobra.Kaloria'')) } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   Sleep(1500);
   Result := True;
 end;
@@ -306,7 +306,8 @@ var
 begin
   Result := True;
   KillDamProcesses;
-  if IsUpgradeInstall then
+  { Auto-update (app_updates.py) odpala /VERYSILENT — MsgBox zablokowalby aktualizacje. }
+  if (not WizardSilent) and IsUpgradeInstall then
   begin
     Prev := GetPrevVersion;
     if Prev <> '' then
@@ -413,6 +414,8 @@ begin
     'Kliknij przycisk, aby otworzyc folder w Eksploratorze i skasowac resztki recznie.' + #13#10#13#10 + List;
   ForceDirectories(LocalDam);
   SaveStringToFile(LocalDam + '\ODINSTALOWANIE-RESZTKI.txt', Note, False);
+  if UninstallSilent then
+    Exit;
 
   Form := CreateCustomForm(ScaleX(440), ScaleY(120 + (Shown * 44) + 56), False, True);
   try

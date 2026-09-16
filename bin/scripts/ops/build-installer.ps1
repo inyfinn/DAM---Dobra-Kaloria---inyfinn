@@ -25,93 +25,6 @@ function Invoke-Robo([string]$src, [string]$dst, [string[]]$xd, [string[]]$xf) {
   if ($LASTEXITCODE -ge 8) { throw "robocopy failed ($LASTEXITCODE): $src" }
 }
 
-function Test-ThumbMagic([byte[]]$bytes) {
-  if ($null -eq $bytes -or $bytes.Length -lt 12) { return $false }
-  if ($bytes[0] -eq 0xFF -and $bytes[1] -eq 0xD8) { return $true } # JPEG
-  $brand = [Text.Encoding]::ASCII.GetString($bytes, 4, [Math]::Min(8, $bytes.Length - 4))
-  return ($brand -like 'ftyp*')
-}
-
-function Copy-PamiecMaterialized([string]$src, [string]$dst) {
-  <#
-    Dropbox FeRp reparse (0x9000601a) na D:\ — robocopy zostawia placeholdery;
-    Inno potem wypluwa "Plik zrodlowy jest uszkodzony". Czytamy bajty (hydrate)
-    i zapisujemy zwykle pliki Archive w staging.
-  #>
-  if (-not (Test-Path -LiteralPath $src)) { throw "Brak PAMIEC zrodla: $src" }
-  New-Item -ItemType Directory -Force -Path $dst | Out-Null
-  $srcFull = (Resolve-Path -LiteralPath $src).Path.TrimEnd('\')
-  $copied = 0
-  $skipped = 0
-  Get-ChildItem -LiteralPath $src -Recurse -File -ErrorAction Stop | ForEach-Object {
-    $name = $_.Name
-    if ($name -like '*.tmp' -or $name -like '*.lock') { $skipped++; return }
-    $rel = $_.FullName.Substring($srcFull.Length).TrimStart('\')
-    if ($rel -match '(^|\\)(__pycache__|_probe)(\\|$)') { $skipped++; return }
-    $out = Join-Path $dst $rel
-    $outDir = Split-Path -Parent $out
-    if (-not (Test-Path -LiteralPath $outDir)) {
-      New-Item -ItemType Directory -Force -Path $outDir | Out-Null
-    }
-    try {
-      $bytes = [IO.File]::ReadAllBytes($_.FullName)
-    } catch {
-      Write-Warning "Pomijam (odczyt): $rel — $($_.Exception.Message)"
-      $skipped++
-      return
-    }
-    $ext = [IO.Path]::GetExtension($name).ToLowerInvariant()
-    $isThumb = $ext -in @('.avif', '.jpg', '.jpeg', '.png', '.webp')
-    if ($isThumb) {
-      if ($bytes.Length -lt 32 -or -not (Test-ThumbMagic $bytes)) {
-        Write-Warning "Pomijam (magia/rozmiar): $rel ($($bytes.Length) B)"
-        $skipped++
-        return
-      }
-    } elseif ($bytes.Length -eq 0) {
-      $skipped++
-      return
-    }
-    [IO.File]::WriteAllBytes($out, $bytes)
-    $copied++
-    if (($copied % 1000) -eq 0) { Write-Host "  materialized $copied..." }
-  }
-  Write-Host "PAMIEC materialized: copied=$copied skipped=$skipped"
-  if ($copied -lt 1000) {
-    throw "Za malo zmaterializowanych thumbs ($copied). Dropbox offline albo cache pusty."
-  }
-}
-
-function Assert-StagedThumbsHealthy([string]$thumbsDir) {
-  $reparse = 0
-  $bad = 0
-  $ok = 0
-  Get-ChildItem -LiteralPath $thumbsDir -File -Recurse -ErrorAction Stop | ForEach-Object {
-    if (($_.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
-      $reparse++
-      return
-    }
-    try {
-      $fs = [IO.File]::Open($_.FullName, 'Open', 'Read', 'Read')
-      $buf = New-Object byte[] 12
-      [void]$fs.Read($buf, 0, 12)
-      $fs.Close()
-      if (Test-ThumbMagic $buf) { $ok++ } else { $bad++ }
-    } catch { $bad++ }
-  }
-  Write-Host "Staged thumbs health: ok=$ok reparse=$reparse bad=$bad"
-  if ($reparse -gt 0) {
-    # Dropbox na D:\ potrafi natychmiast oznaczyc nowe pliki jako FeRp — stąd stage w LocalAppData.
-    throw "Staging PAMIEC nadal ma $reparse plikow ReparsePoint. Upewnij sie, ze STAGE_ROOT jest poza Dropbox."
-  }
-  if ($bad -gt 0) {
-    throw "Staging PAMIEC ma $bad plikow bez magii AVIF/JPEG."
-  }
-  if ($ok -lt 1000) {
-    throw "Staging PAMIEC ma tylko $ok zdrowych thumbs."
-  }
-}
-
 $GitRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $BinRoot = Join-Path $GitRoot "bin"
 
@@ -367,18 +280,11 @@ if (-not (Test-Path -LiteralPath $authJpg) -or ((Get-Item -LiteralPath $authJpg)
 }
 Write-Host "Auth hero OK: $authJpg ($((Get-Item $authJpg).Length) B)"
 
-# PAMIEC NIE wchodzi do Setup.exe — solid Inno + 12k AVIF = "Plik zrodlowy uszkodzony"
-# i Pomin plik nie dziala. Seed po instalacji z M: (seed-pamiec-from-canon.ps1) albo NAS.
+# PAMIEC-PODRECZNA nie jedzie w Setup.exe. Mostek pobiera ja z Synology przy starcie
+# (dam_thumb_cache.ensure_boot_sync). Instalator nie kopiuje cache z dyskow sieciowych.
 $pamiecDst = Join-Path $binDst "PAMIEC-PODRECZNA"
-$thumbsDst = Join-Path $pamiecDst "thumbs"
-New-Item -ItemType Directory -Force -Path $thumbsDst | Out-Null
-Set-Content -Path (Join-Path $pamiecDst "README-INSTALL.txt") -Encoding UTF8 -Value @"
-PAMIEC-PODRECZNA nie jest pakowana w DAM-Setup.exe (Inno solid + AVIF = uszkodzone pliki).
-Po instalacji Setup kopiuje cache z kanonu:
-  M:\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\PAMIEC-PODRECZNA
-Albo zaznacz zadanie sync z Synology.
-"@
-Write-Host "PAMIEC: pusty szkielet w Setup (seed z M: po instalacji)."
+New-Item -ItemType Directory -Force -Path (Join-Path $pamiecDst "thumbs") | Out-Null
+Write-Host "PAMIEC: pusty szkielet w Setup (mostek pobiera cache z Synology)."
 
 $readmeSrc = Join-Path $BinRoot "installer\README.txt"
 if (Test-Path $readmeSrc) { Copy-Item $readmeSrc (Join-Path $stageRoot "README.txt") -Force }
@@ -396,7 +302,13 @@ if (-not (Test-Path $wv2Bootstrap)) {
   Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile $wv2Bootstrap -UseBasicParsing
 }
 
-$releaseDir = Join-Path $BinRoot "instalator"
+# ISCC + podpis POZA Synology Drive (D: = cloud-drive reparse obcinal 90 MB exe
+# -> "Plik zrodlowy jest uszkodzony"). Do repo idzie kopia sprawdzona SHA256.
+$releaseDir = Join-Path $env:LOCALAPPDATA "DAM-build\out"
+$repoReleaseDir = Join-Path $BinRoot "instalator"
+New-Item -ItemType Directory -Force -Path $repoReleaseDir | Out-Null
+$oldOut = Join-Path $releaseDir "DAM-Setup.exe"
+if (Test-Path -LiteralPath $oldOut) { [IO.File]::Delete($oldOut) }
 New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
 $iss = Join-Path $BinRoot "installer\DAM-Setup.iss"
 $signScript = Join-Path $PSScriptRoot "sign-dam-binaries.ps1"
@@ -444,21 +356,18 @@ $setupExe = Join-Path $releaseDir "DAM-Setup.exe"
 if (-not (Test-Path $setupExe)) { throw "Brak $setupExe" }
 & $signScript -Path @($setupExe)
 if ($LASTEXITCODE -ne 0) { throw "Podpis DAM-Setup.exe nieudany (exit $LASTEXITCODE)." }
-$stageExe = Join-Path $env:LOCALAPPDATA "DAM-sign\DAM-Setup.exe"
 $setupSig = Get-AuthenticodeSignature -LiteralPath $setupExe
-if ((-not $setupSig.SignerCertificate) -and (Test-Path -LiteralPath $stageExe)) {
-  $stageSig = Get-AuthenticodeSignature -LiteralPath $stageExe
-  if ($stageSig.SignerCertificate) {
-    Write-Warning "Dropbox/reparse obcial podpis w $setupExe — przywracam z $stageExe"
-    [IO.File]::Copy($stageExe, $setupExe, $true)
-    $setupSig = Get-AuthenticodeSignature -LiteralPath $setupExe
-    if (-not $setupSig.SignerCertificate) {
-      $setupExe = $stageExe
-      $setupSig = $stageSig
-      Write-Warning "Repo nadal bez podpisu. Artefakt do GitHub Release: $stageExe"
-    }
-  }
+$outHash = (Get-FileHash -LiteralPath $setupExe -Algorithm SHA256).Hash
+$repoExe = Join-Path $repoReleaseDir "DAM-Setup.exe"
+try {
+  [IO.File]::Copy($setupExe, $repoExe, $true)
+  $repoHash = (Get-FileHash -LiteralPath $repoExe -Algorithm SHA256).Hash
+  if ($repoHash -ne $outHash) { Write-Warning "Kopia w repo rozni sie od artefaktu (sync chmury). Uzywaj: $setupExe" }
+  else { Write-Host "Kopia repo OK: $repoExe" }
+} catch {
+  Write-Warning "Nie skopiowano do repo: $($_.Exception.Message)"
 }
+Write-Host "SHA256 $outHash"
 $sizeMb = [math]::Round((Get-Item -LiteralPath $setupExe).Length / 1MB, 1)
 Write-Host ""
 Write-Host "GOTOWE - kliknij:"

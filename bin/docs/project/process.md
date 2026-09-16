@@ -1,3 +1,19 @@
+## 2026-09-16 - v2.0.0 instalator: koniec PowerShell Bypass, build poza Synology Drive
+
+**Komenda/Akcja:** User: agent od 12:00 nie rozwiazal instalatora (1.9.0-1.9.9). Bitdefender: Heur.BZC.PZQ.Boxter w `D:\--- INYFINN - PROJEKTY\.SynologyWorkingDirectory\Temp`. Pull, napraw, commit, push, build, Release.
+
+**Log/Status:**
+- D: to **Synology Drive** (`cloud-drive-*.exe`, atrybut ReparsePoint), nie Dropbox. Teoria "Dropbox FeRp" z 1.9.7/1.9.8 byla bledna.
+- ISCC pisal 90 MB `DAM-Setup.exe` do `bin\instalator` na D:, potem podpis modyfikowal plik w miejscu. Sync chmury obcinal plik (certRVA za koncem pliku) → "Plik zrodlowy jest uszkodzony" przy ostatnich plikach paczki (PAMIEC). 1.9.9 obszedl to wyrzuceniem PAMIEC, nie naprawil przyczyny.
+- Alarm AV o 21:41:13 = chwila `git pull` (wtedy przyszedl `sync-pamiec-podreczna-hidden.vbs`: WScript.Shell → ukryty powershell -ExecutionPolicy Bypass = wzorzec Boxter). Kopia w repo nietknieta; kwarantanna dotyczyla temp Synology.
+- Fix: ISCC + podpis w `%LOCALAPPDATA%\DAM-build\out`, kopia do repo z weryfikacja SHA256. [Run] bez powershell (certutil -user -addstore TrustedPublisher). Usuniete: seed z M:, zadanie cachesync, `seed-pamiec-from-canon.ps1`, `sync-pamiec-podreczna-from-nas.ps1`, hidden VBS + .cmd. Task XML → `pythonw.exe sync-pamiec-podreczna.py`.
+- PAMIEC po instalacji pobiera most (`dam_thumb_cache.ensure_boot_sync`, `local_bridge.py`).
+- `/VERYSILENT` (auto-update z `app_updates.py`) nie pokazuje juz MsgBox "Wykryto wersje"; cichy uninstall nie pokazuje okna resztek.
+- Praca i build w czystym klonie `C:\dev\DAM---Dobra-Kaloria---inyfinn` (poza sync), nie na D:.
+
+**Efekt/Fix:** v2.0.0 (licznik 200).
+
+**Zrodla:** DAM-Setup.iss, build-installer.ps1, .cursor/ops/synology/*.
 ## 2026-09-16 - v1.8.8 sign off Dropbox + Release v1.8.7
 
 **Komenda/Akcja:** User: dalej SmartScreen; zwalcz; commit push build.
