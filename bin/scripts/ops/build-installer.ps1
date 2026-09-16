@@ -287,13 +287,14 @@ if (-not (Test-Path $wv2Bootstrap)) {
   Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile $wv2Bootstrap -UseBasicParsing
 }
 
-$releaseDir = $GitRoot
+$releaseDir = Join-Path $BinRoot "instalator"
+New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
 $iss = Join-Path $BinRoot "installer\DAM-Setup.iss"
 $signScript = Join-Path $PSScriptRoot "sign-dam-binaries.ps1"
 $stageExe = Join-Path $stageRoot "DAM.exe"
-if (Test-Path -LiteralPath $signScript) {
-  & $signScript -Path @($stageExe) -SkipWhenMissing
-}
+if (-not (Test-Path -LiteralPath $signScript)) { throw "Brak $signScript" }
+& $signScript -Path @($stageExe)
+if ($LASTEXITCODE -ne 0) { throw "Podpis DAM.exe nieudany (exit $LASTEXITCODE)." }
 
 $isccArgs = @(
   "/DMyAppVersion=$Version",
@@ -324,7 +325,7 @@ if ($signToolExe -and ($env:DAM_CODE_SIGN_PFX -or $env:DAM_CODE_SIGN_THUMBPRINT)
   $isccArgs += "/Sdamsigntool=$signCmd"
   Write-Host "ISCC SignTool=damsigntool (Authenticode)"
 } else {
-  Write-Warning "ISCC bez SignTool — DAM-Setup.exe wyjdzie NIEPODPISANY (SmartScreen: nieznany wydawca). bin/installer/CODE-SIGNING.md"
+  Write-Host "ISCC bez SignTool (brak SDK albo PFX CA). DAM-Setup.exe podpisze PowerShell po kompilacji."
 }
 
 & $Iscc @isccArgs $iss
@@ -332,17 +333,22 @@ if ($LASTEXITCODE -ne 0) { throw "ISCC failed: $LASTEXITCODE" }
 
 $setupExe = Join-Path $releaseDir "DAM-Setup.exe"
 if (-not (Test-Path $setupExe)) { throw "Brak $setupExe" }
-if (Test-Path -LiteralPath $signScript) {
-  & $signScript -Path @($setupExe) -SkipWhenMissing
-}
+& $signScript -Path @($setupExe)
+if ($LASTEXITCODE -ne 0) { throw "Podpis DAM-Setup.exe nieudany (exit $LASTEXITCODE)." }
 $sizeMb = [math]::Round((Get-Item $setupExe).Length / 1MB, 1)
 $setupSig = Get-AuthenticodeSignature -LiteralPath $setupExe
 Write-Host ""
 Write-Host "GOTOWE - kliknij:"
 Write-Host ('  {0}  ({1} MB)' -f $setupExe, $sizeMb)
 Write-Host ('  Authenticode: {0}' -f $setupSig.Status)
+if ($setupSig.SignerCertificate) {
+  Write-Host ('  Wydawca: {0}' -f $setupSig.SignerCertificate.Subject)
+}
+if (-not $setupSig.SignerCertificate) {
+  throw "DAM-Setup.exe nadal bez podpisu Authenticode."
+}
 if ($setupSig.Status -ne "Valid") {
-  Write-Warning "Setup nie jest podpisany. Windows i SmartScreen beda straszyc nieznanym zrodlem, dopoki nie ustawisz DAM_CODE_SIGN_PFX (CODE-SIGNING.md)."
+  Write-Warning "Status=$($setupSig.Status). Self-signed: SmartScreen przy pliku z GitHuba moze zostac, dopoki nie bedzie certu OV/EV (DAM_CODE_SIGN_PFX). CODE-SIGNING.md"
 }
 Write-Host ""
 

@@ -1,45 +1,45 @@
-# Podpis instalatora DAM (Windows + Apple)
+# Podpis instalatora DAM (Windows)
 
-To **nie** jest podpis sterownika (WHQL / kernel). DAM to zwykła aplikacja użytkownika. Windows krzyczy „aplikacja z nieznanego źródła / nieznany wydawca”, bo `DAM-Setup.exe` i `DAM.exe` **nie mają Authenticode**.
+To **nie** jest podpis sterownika (WHQL / kernel). DAM to aplikacja uzytkownika.
 
-## Windows (SmartScreen / „nieznany wydawca”)
+SmartScreen „Nieznany wydawca” = `DAM-Setup.exe` bez **zaufanego** Authenticode (cert od CA w lancuchu Windows).
 
-1. Kup **Code Signing** (OV minimum, **EV** szybciej uczy SmartScreen): DigiCert, Sectigo, SSL.com — na firmę Inyfinn (dane z KRS).
-2. Zainstaluj **Windows SDK** (SignTool). Ten PC dziś **nie ma** `signtool.exe`.
-3. Nie commituj `.pfx`. Ustaw na maszynie build:
+## Co robi kazdy build (1.8.7+)
+
+`build-installer.ps1` **zawsze** podpisuje `DAM.exe` i `DAM-Setup.exe` (`sign-dam-binaries.ps1`):
+
+1. Gdy jest `DAM_CODE_SIGN_PFX` albo `DAM_CODE_SIGN_THUMBPRINT` (cert **OV/EV** z Certum/DigiCert/SSL.com) - uzywa jego. To jedyny sposob, zeby zielona plansza SmartScreen zniknela u osob pobierajacych z GitHuba.
+2. Inaczej: cert `CN=Inyfinn, O=Inyfinn` w magazynie CurrentUser (FriendlyName **Inyfinn DAM code signing**). Nie uzywa certu Photo Resizer.
+3. Publiczny `.cer` (bez klucza) ląduje w `bin/installer/inyfinn-dam-codesign.cer`. Instalator wpina go do **TrustedPublisher** tego uzytkownika.
+
+Self-signed **nie** uczy SmartScreen. Plik z internetu (strefa MOTW) nadal moze pokazac ostrzezenie, ale we Wlasciwosciach pliku jest wydawca **Inyfinn**, nie pusto.
+
+## Cert CA (zeby zniknelo „Nieznany wydawca” z internetu)
+
+1. Kup **Code Signing** na Inyfinn (OV minimum, **EV** szybciej). Certum / DigiCert / SSL.com. Dane z KRS.
+2. Nie commituj `.pfx`. Na maszynie build:
 
 ```text
 DAM_CODE_SIGN_PFX=C:\secrets\inyfinn-codesign.pfx
 DAM_CODE_SIGN_PASSWORD=...
 ```
 
-albo cert w magazynie Windows:
+albo odcisk z magazynu:
 
 ```text
 DAM_CODE_SIGN_THUMBPRINT=<odcisk>
 ```
 
-4. `build-installer.ps1` woła `sign-dam-binaries.ps1` na `DAM.exe` (staging) i `DAM-Setup.exe`.
-5. Po pierwszym publicznym podpisie SmartScreen i tak może straszyć **kilka dni / tysięcy pobrań**, aż zbierze reputację. EV skraca ten okres. Sam Publisher w Inno (`Inyfinn`) bez podpisu **nic** nie zmienia.
+3. Po pierwszym publicznym podpisie CA SmartScreen i tak bywa przez dni/pobrania (reputacja). EV skraca.
 
-Sprawdzenie:
+## Sprawdzenie
 
 ```powershell
-Get-AuthenticodeSignature -LiteralPath .\DAM-Setup.exe | Format-List Status, SignerCertificate
+Get-AuthenticodeSignature -LiteralPath .\bin\instalator\DAM-Setup.exe | Format-List Status, SignerCertificate
 ```
 
-`Status` musi być `Valid`, a Subject certu = Twoja firma, nie GUID z Windows Hello.
+Musi byc `SignerCertificate.Subject` z `Inyfinn`. `Valid` przy self-signed wymaga zaufania lokalnego; przy certcie CA bywa `Valid` od razu.
 
-## Apple (Gatekeeper / „unidentified developer”)
+## Apple
 
-Repo buduje `GOOS=windows`. **Nie ma** `DAM.app` / notarization.
-
-- Otwarcie `DAM-Setup.exe` na Macu zawsze wpadnie w Gatekeeper (to Windowsowy installer).
-- Żeby Mac widział „znane źródło”: osobny build `.app`, **Developer ID Application**, `codesign`, **notarytool**, `stapler`. To nowy produkt, nie łatka ISS.
-
-Jeśli warning jest na **Windowsie** przy pliku z iCloud/Safari: dodatkowo Strefa internetu (`Zone.Identifier`). Podpis Authenticode i tak jest obowiązkowy.
-
-## Czego ten commit robi
-
-- Skrypt podpisu + hak w `build-installer.ps1`.
-- Bez certu build **nie pada** (ostrzeżenie). Warning Windows **nie zniknie**, dopóki nie podasz PFX/EV.
+Repo buduje Windows. `DAM-Setup.exe` na Macu wpadnie w Gatekeeper. Osobny `.app` + Developer ID + notarytool.

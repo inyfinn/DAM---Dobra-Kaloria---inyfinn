@@ -4,6 +4,10 @@ Data startu: **2026-07-16**. Ostatnia synchronizacja docs: **2026-08-03**.
 Workspace: **GIT_ROOT** = katalog z `DAM.exe` + `.git` (primary **D:** …`DAM---Dobra-Kaloria---inyfinn`); kod = **`...\bin`** (CONTENT_ROOT).  
 Wykonawca: Composer 2.5 / Monday.
 
+## Ship = commit + push + lokalny instalator + GitHub Release (HARD, 2026-09-16)
+
+Lustro: `bin/memory.md`. Gdy user prosi o commit/push/build/instalator = lokalny `DAM-Setup.exe` **oraz** `gh release create --latest`. Sam push nie wystarczy.
+
 ## Wersja DAM = plaska liczba z kropkami (2026-09-15) - HARD
 
 **NIE semver.** Kropki sa tylko do wyswietlania. Strip dots → +1 jak zwyklej liczbie → wstaw kropki jako `M.m.p` (kazda cyfra 0-9).

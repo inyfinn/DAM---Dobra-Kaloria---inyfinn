@@ -36,6 +36,8 @@ Podbij **licznik +1** (np. 182 → 183 = 1.8.3) i zsynchronizuj:
 - `#damSidebarVersion` (przez `DamVersion.setSidebarLabel`)
 - `?v=` na dotkniętych assetach w HTML
 
+Gdy user każe **commit + push + build / instalator**: po bumpie i lokalnym `DAM-Setup.exe` **zawsze** `gh release create v{VERSION} --latest` z tym exe. Sam push albo sam plik na dysku = niedokończony ship. Szczegóły: `dam-ship-github-release.mdc`.
+
 ## Baseline commitów — SUPERSEDED
 
 Stara formuła `n = git rev-list --count main` → `1.0.{n-100}` jest **nieważna**. Właściciel liczy 179, 180, 181, 182… Opis trzymaj w `version.json` → `note` i `bin/memory.md`.

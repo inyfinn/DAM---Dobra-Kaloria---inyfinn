@@ -1,0 +1,22 @@
+---
+description: HARD — commit + push + build = lokalny instalator ORAZ nowy GitHub Release z DAM-Setup.exe.
+alwaysApply: true
+---
+
+# DAM ship = GitHub Release (HARD, 2026-09-16)
+
+Gdy user prosi o **commit**, **push**, **build**, **instalator** (dowolna zbitka / parafraza: „commit push i build”, „zrób instalator”, „wyślij release”):
+
+To **zawsze** znaczy **cały łańcuch**, nie sam git i nie sam lokalny exe.
+
+1. Bump wersji (dotted integer, `dam-version-bump.mdc`).
+2. Commit na `main` (gdy kazał commit).
+3. `git push origin main` (gdy kazał push).
+4. Lokalny build: `bin/scripts/ops/build-installer.ps1` → `bin/instalator/DAM-Setup.exe`.
+5. **Nowy GitHub Release** na `inyfinn/DAM---Dobra-Kaloria---inyfinn`:
+   `gh release create v{VERSION} bin/instalator/DAM-Setup.exe --title "DAM {VERSION}" --target HEAD --latest`
+6. W odpowiedzi podaj URL: `https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v{VERSION}`
+
+**FAIL:** ogłosić done po samym pushu albo po samym `DAM-Setup.exe` na dysku. Strona Releases to nie log gita. `v1.0.74` zostawał Latest właśnie dlatego.
+
+Nie force-push. Nie kasować starych tagów/release. Repo: ten sam `origin`, nie inny remote.

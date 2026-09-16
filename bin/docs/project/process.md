@@ -1,3 +1,43 @@
+## 2026-09-16 - v1.8.7 Authenticode Inyfinn (SmartScreen)
+
+**Komenda/Akcja:** User: SmartScreen „Nieznany wydawca” na DAM-Setup.exe. Zwalcz. Commit push build.
+
+**Log/Status:**
+- Przyczyna: exe niepodpisany. Na PC brak certu CA (OV/EV). Jest tylko self-signed Photo Resizer (zly Subject).
+- Nowy cert CurrentUser `CN=Inyfinn, O=Inyfinn, C=PL` (nie Photo Resizer). `sign-dam-binaries.ps1` zawsze podpisuje. Publiczny `.cer` + `trust-inyfinn-publisher.ps1` w instalatorze.
+- Self-signed: Wlasciwosci pliku = Inyfinn. SmartScreen z GitHuba moze zostac az do certu CA + `DAM_CODE_SIGN_PFX`.
+
+**Efekt/Fix:** Kazdy build ma Authenticode Inyfinn. Ship 1.8.7 + GitHub Release.
+
+**Zrodla:** CODE-SIGNING.md, sign-dam-binaries.ps1.
+
+## 2026-09-16 - HARD: commit+push+build zawsze = GitHub Release
+
+**Komenda/Akcja:** User: ZAWSZE jak prosi o push commit i build, chodzi o build lokalny ORAZ wyslanie instalatora jako nowy release.
+
+**Log/Status:**
+- Wpis HARD w `bin/memory.md` (gora pliku).
+- Regula alwaysApply `.cursor/rules/dam-ship-github-release.mdc`.
+- `program-instructions.json` id `ops.ship_github_release` (v24).
+- Skill `dam-dobrakaloria` DoD + zakaz.
+- `dam-version-bump.mdc` dopisek ship.
+
+**Efekt/Fix:** Kolejny brief „commit push build” nie moze skonczyc sie bez `gh release create --latest`.
+
+**Zrodla:** User 2026-09-16; lekcja Latest=1.0.74 przy main=1.8.6.
+
+## 2026-09-16 - GitHub Release v1.8.6 (Latest)
+
+**Komenda/Akcja:** User: releases na GitHubie stoi na 1.0.74; commity 1.8.6 ginie. Gdzie commit?
+
+**Log/Status:**
+- Push byl na `origin/main` (`791cb31`). Strona Releases to tag + asset, nie log gita. `v1.0.74` zostal Latest, bo nikt nie zrobil `gh release create` po 1.8.x.
+- `gh release create v1.8.6` `--target 791cb31` `--latest` + `bin/instalator/DAM-Setup.exe` (64 427 012 B).
+
+**Efekt/Fix:** https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v1.8.6 jest Latest.
+
+**Zrodla:** gh release; memory.md (ship = push + GitHub Release).
+
 ## 2026-09-15 - v1.8.6 whisper papers per colorify accent
 
 **Komenda/Akcja:** User: zielone nie jeden szary; Jadeit `#F4F7F5` → `#EBF2ED` (10% akcentu na papierze). Cieple nie jedno `#FAF5F6`. Sliderow nie ruszac. Juz doskonale — tylko leciutko.
