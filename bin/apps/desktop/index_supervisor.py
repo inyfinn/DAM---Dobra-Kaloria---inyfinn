@@ -1487,10 +1487,9 @@ class IndexSupervisor:
         except Exception:
             watcher_py = sys.executable
             exe = Path(sys.executable)
-            if exe.name.lower() == "pythonw.exe":
-                sibling = exe.with_name("python.exe")
-                if sibling.is_file():
-                    watcher_py = str(sibling)
+            pyw = exe.with_name("pythonw.exe")
+            if pyw.is_file():
+                watcher_py = str(pyw)
         cmd = [
             watcher_py,
             str(WATCH_SCRIPT),
@@ -1513,16 +1512,22 @@ class IndexSupervisor:
         for r in self.roots:
             cmd.extend(["--root", r])
         flags = CREATE_NO_WINDOW if sys.platform == "win32" else 0
+        spawn_kw: dict = {"creationflags": flags}
+        if sys.platform == "win32":
+            si = subprocess.STARTUPINFO()
+            si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            si.wShowWindow = 0
+            spawn_kw["startupinfo"] = si
         try:
             spawn_env = index_builder_env()
             proc = subprocess.Popen(
                 cmd,
                 cwd=str(WEB_ROOT.parent.parent),
-                creationflags=flags,
                 stdin=subprocess.DEVNULL,
                 stdout=log_f,
                 stderr=subprocess.STDOUT,
                 env=spawn_env,
+                **spawn_kw,
             )
         except Exception as exc:  # noqa: BLE001
             try:

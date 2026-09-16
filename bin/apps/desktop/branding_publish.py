@@ -19,19 +19,29 @@ DEFAULT_DEBOUNCE_SEC = 2.0
 DEFAULT_LOCK_TTL_SEC = 7200.0
 
 
+def _hidden_win32_kwargs() -> dict:
+    """CREATE_NO_WINDOW + SW_HIDE — sam flag czasem mignie konsola python.exe."""
+    if sys.platform != "win32":
+        return {}
+    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+    si = subprocess.STARTUPINFO()
+    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    si.wShowWindow = 0
+    return {"creationflags": flags, "startupinfo": si}
+
+
 def _python_can_import(exe: Path, module: str, *, timeout: float = 12.0) -> bool:
-    """True if ``exe -c 'import module'`` exits 0 (CREATE_NO_WINDOW on Win)."""
+    """True if ``exe -c 'import module'`` exits 0 (hidden on Win)."""
     if not exe.is_file():
         return False
-    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
     try:
         rc = subprocess.call(
             [str(exe), "-c", f"import {module}"],
-            creationflags=flags,
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             timeout=timeout,
+            **_hidden_win32_kwargs(),
         )
         return rc == 0
     except (OSError, subprocess.TimeoutExpired):
@@ -41,19 +51,19 @@ def _python_can_import(exe: Path, module: str, *, timeout: float = 12.0) -> bool
 def resolve_script_python(*, require_ijson: bool = False) -> str:
     """Interpreter for index/branding subprocesses.
 
-    Bridge often runs as ``pythonw.exe`` (no console). Grid builder needs ``ijson``
-    in the same runtime site-packages. Prefer sibling ``python.exe`` (same Lib),
-    then current executable. Never silently fall back to a different Python that
-    lacks the module when ``require_ijson`` is set — raise instead.
+    Always prefer ``pythonw.exe`` (no console). Same Lib as python.exe in the
+    bundled runtime, so ijson is available. Never spawn console python.exe just
+    to get ijson — that flashes CMD on every index/branding tick.
     """
     exe = Path(sys.executable).resolve()
+    pyw = exe.with_name("pythonw.exe")
+    pyc = exe.with_name("python.exe")
     candidates: list[Path] = []
-    if exe.name.lower() == "pythonw.exe":
-        sibling = exe.with_name("python.exe")
-        if sibling.is_file():
-            candidates.append(sibling)
+    if pyw.is_file():
+        candidates.append(pyw)
     candidates.append(exe)
-    # Dedupe while preserving order
+    if pyc.is_file():
+        candidates.append(pyc)
     seen: set[str] = set()
     ordered: list[Path] = []
     for c in candidates:
@@ -66,8 +76,22 @@ def resolve_script_python(*, require_ijson: bool = False) -> str:
     if not require_ijson:
         return str(ordered[0] if ordered else exe)
 
+    try:
+        import ijson  # noqa: F401
+        has_ijson = True
+    except ImportError:
+        has_ijson = False
+    if has_ijson:
+        for c in ordered:
+            if c.name.lower() == "pythonw.exe":
+                return str(c)
+        return str(ordered[0] if ordered else exe)
+
     for c in ordered:
         if _python_can_import(c, "ijson"):
+            w = c.with_name("pythonw.exe")
+            if w.is_file():
+                return str(w)
             return str(c)
     raise RuntimeError(
         "ijson_missing: install ijson into bin/runtime/win/python/Lib/site-packages "

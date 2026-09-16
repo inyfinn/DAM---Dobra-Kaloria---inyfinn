@@ -48,17 +48,16 @@ def resolve_marketing_base() -> Path:
 
 
 def _script_python() -> str:
-    """Prefer python.exe with ijson when available (branding hook / builders)."""
+    """Prefer pythonw.exe — console python.exe flashes a CMD window on spawn."""
     try:
         from branding_publish import resolve_script_python
 
         return resolve_script_python(require_ijson=False)
     except Exception:
         exe = Path(sys.executable)
-        if exe.name.lower() == "pythonw.exe":
-            sibling = exe.with_name("python.exe")
-            if sibling.is_file():
-                return str(sibling)
+        pyw = exe.with_name("pythonw.exe")
+        if pyw.is_file():
+            return str(pyw)
         return str(exe)
 
 

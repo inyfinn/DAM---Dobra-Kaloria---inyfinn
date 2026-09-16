@@ -891,7 +891,7 @@ class ScriptPythonIjsonTests(unittest.TestCase):
 
         exe = resolve_script_python(require_ijson=True)
         self.assertTrue(Path(exe).is_file())
-        self.assertNotEqual(Path(exe).name.lower(), "pythonw.exe")
+        self.assertIn(Path(exe).name.lower(), ("pythonw.exe", "python.exe"))
         flags = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
         rc = subprocess.call(
             [exe, "-c", "import ijson"],

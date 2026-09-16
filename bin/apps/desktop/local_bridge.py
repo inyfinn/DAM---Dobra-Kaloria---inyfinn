@@ -1787,7 +1787,7 @@ def _run_branding_rebuild() -> None:
         _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
         from branding_publish import resolve_script_python
 
-        # Prefer python.exe (+ bundled ijson) over pythonw for builders.
+        # pythonw + same site-packages (ijson); python.exe flashes CMD.
         try:
             script_py = resolve_script_python(require_ijson=True)
         except RuntimeError as ijson_exc:

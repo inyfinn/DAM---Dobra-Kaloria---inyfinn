@@ -44,6 +44,20 @@ _MUTEX_HANDLE = None  # musi zyc do konca procesu (GC CloseHandle zwalnia mutex)
 CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
 
 
+def _hidden_ps_kwargs() -> dict:
+    if sys.platform != "win32":
+        return {}
+    si = subprocess.STARTUPINFO()
+    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    si.wShowWindow = 0
+    return {"creationflags": CREATE_NO_WINDOW, "startupinfo": si}
+
+
+def _powershell_exe() -> str:
+    root = os.environ.get("SystemRoot", r"C:\Windows")
+    return str(Path(root) / "System32" / "WindowsPowerShell" / "v1.0" / "powershell.exe")
+
+
 def _silent_python() -> str:
     """Preferuj pythonw.exe - brak okna konsoli przy starcie/relaunch."""
     exe = Path(sys.executable)
@@ -132,11 +146,11 @@ def _kill_listeners_on_dam_ports() -> int:
             "}"
         )
         proc = subprocess.run(
-            ["powershell", "-NoProfile", "-Command", ps],
+            [_powershell_exe(), "-NoProfile", "-WindowStyle", "Hidden", "-Command", ps],
             capture_output=True,
             text=True,
             timeout=20,
-            creationflags=subprocess.CREATE_NO_WINDOW,
+            **_hidden_ps_kwargs(),
         )
         lines = [ln.strip() for ln in (proc.stdout or "").splitlines() if ln.strip().isdigit()]
         return len(set(lines))
@@ -183,11 +197,11 @@ def _kill_stale_dam_processes() -> int:
             "}"
         )
         proc = subprocess.run(
-            ["powershell", "-NoProfile", "-Command", ps],
+            [_powershell_exe(), "-NoProfile", "-WindowStyle", "Hidden", "-Command", ps],
             capture_output=True,
             text=True,
             timeout=20,
-            creationflags=subprocess.CREATE_NO_WINDOW,
+            **_hidden_ps_kwargs(),
         )
         lines = [ln.strip() for ln in (proc.stdout or "").splitlines() if ln.strip().isdigit()]
         killed = len(lines)
