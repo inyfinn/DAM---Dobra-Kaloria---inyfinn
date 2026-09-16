@@ -18,6 +18,12 @@
     if (window.DamRuntime && typeof window.DamRuntime.bridgeUrl === "function") {
       return window.DamRuntime.bridgeUrl();
     }
+    if (window.DamRuntime && window.DamRuntime.bridge) {
+      return String(window.DamRuntime.bridge).replace(/\/+$/, "");
+    }
+    if (window.DamBridgeUrl && typeof window.DamBridgeUrl.resolve === "function") {
+      return window.DamBridgeUrl.resolve();
+    }
     return "http://127.0.0.1:8766";
   }
 

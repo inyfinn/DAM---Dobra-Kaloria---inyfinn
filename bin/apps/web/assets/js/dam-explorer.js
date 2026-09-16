@@ -14,6 +14,9 @@
     if (window.DamPaths && typeof window.DamPaths.bridgeUrl === "function") {
       return window.DamPaths.bridgeUrl();
     }
+    if (window.DamBridgeUrl && typeof window.DamBridgeUrl.resolve === "function") {
+      return window.DamBridgeUrl.resolve();
+    }
     return "http://127.0.0.1:8766";
   }
 

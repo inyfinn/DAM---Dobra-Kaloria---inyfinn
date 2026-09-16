@@ -1667,3 +1667,51 @@ i.uil.uil-folder.dam-folder-item__icon {
     width: 100%;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Baner aktualizacji — w flow treści, nie fixed nad headerem          */
+/* ------------------------------------------------------------------ */
+.dam-app-update-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--dam-space-3, 12px);
+  width: 100%;
+  margin: 0 0 var(--dam-space-4, 16px);
+  padding: var(--dam-space-3, 12px) var(--dam-space-4, 16px);
+  font: 600 14px/1.4 var(--dam-font-body, Jost, system-ui, sans-serif);
+  text-align: center;
+  color: var(--dam-surface);
+  background: var(--dam-primary);
+  border-radius: var(--dam-radius-md, 10px);
+  box-shadow: var(--dam-shadow-sm, 0 2px 12px rgba(0, 0, 0, 0.12));
+}
+
+.dam-app-update-banner[hidden] {
+  display: none !important;
+}
+
+.dam-app-update-banner__msg {
+  flex: 1 1 12rem;
+}
+
+.dam-app-update-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dam-space-2, 8px);
+  align-items: center;
+  justify-content: center;
+}
+
+.dam-app-update-banner__btn {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 0;
+  background: var(--dam-surface);
+  color: var(--dam-primary);
+}
+
+.dam-app-update-banner__btn--ghost {
+  background: color-mix(in srgb, var(--dam-surface) 88%, transparent);
+}

@@ -1,6 +1,45 @@
+(function (w) {
+  "use strict";
+  function inferBridgeUrl() {
+    try {
+      if (w.__DAM_BRIDGE__) return String(w.__DAM_BRIDGE__).replace(/\/+$/, "");
+      if (w.__DAM_API_BASE__) {
+        var base = String(w.__DAM_API_BASE__).replace(/\/api\/?$/i, "").replace(/\/+$/, "");
+        if (base) return base;
+      }
+      if (typeof location !== "undefined" && location.hostname && location.protocol !== "file:") {
+        var port = location.port ? parseInt(location.port, 10) : NaN;
+        if (!port || isNaN(port)) {
+          port = location.protocol === "https:" ? 443 : 80;
+        }
+        var bridgePort = port === 8765 ? 8766 : port === 8766 ? 8766 : port + 1;
+        return location.protocol + "//" + location.hostname + ":" + bridgePort;
+      }
+    } catch (_inferBridge) {
+      /* ignore */
+    }
+    return "http://127.0.0.1:8766";
+  }
+  function inferUiOrigin() {
+    try {
+      if (typeof location !== "undefined" && location.origin && location.protocol !== "file:") {
+        return String(location.origin).replace(/\/+$/, "");
+      }
+    } catch (_inferUi) {
+      /* ignore */
+    }
+    return "http://127.0.0.1:8765";
+  }
+  w.DamBridgeUrl = w.DamBridgeUrl || { resolve: inferBridgeUrl, uiOrigin: inferUiOrigin };
+})(typeof window !== "undefined" ? window : globalThis);
+
 (function () {
   "use strict";
-  var API = window.DAM_API_BASE || "http://127.0.0.1:8000/api";
+  var API =
+    window.DAM_API_BASE ||
+    (window.DamBridgeUrl && window.DamBridgeUrl.resolve
+      ? window.DamBridgeUrl.resolve().replace(/\/$/, "") + "/api"
+      : "http://127.0.0.1:8000/api");
   var API_TIMEOUT_MS = 2500;
   var INDEX_URL = "data/file-index.json";
 
@@ -509,6 +548,12 @@
   function bridgeAuthUrl() {
     if (window.DamRuntime && typeof window.DamRuntime.bridgeUrl === "function") {
       return window.DamRuntime.bridgeUrl();
+    }
+    if (window.DamPaths && typeof window.DamPaths.bridgeUrl === "function") {
+      return window.DamPaths.bridgeUrl();
+    }
+    if (window.DamBridgeUrl && typeof window.DamBridgeUrl.resolve === "function") {
+      return window.DamBridgeUrl.resolve();
     }
     return "http://127.0.0.1:8766";
   }

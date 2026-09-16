@@ -51,12 +51,39 @@ def _strip_v(raw: str) -> str:
     return re.sub(r"^[vV]", "", str(raw or "").strip())
 
 
+_CANONICAL_PRODUCT_VER = re.compile(r"^\d\.\d\.\d$")
+
+
+def is_canonical_product_version(raw: str) -> bool:
+    """DAM display: jedna cyfra na slot (1.8.8). Nie semver 6.0.12 / 1.0.74."""
+    return bool(_CANONICAL_PRODUCT_VER.match(_strip_v(raw)))
+
+
+def version_to_int(raw: str) -> int:
+    v = _strip_v(raw)
+    if not is_canonical_product_version(v):
+        return -1
+    return int(v.replace(".", ""), 10)
+
+
 def parse_version(raw: str) -> tuple[int, ...]:
     parts = re.findall(r"\d+", _strip_v(raw))
     return tuple(int(p) for p in parts) if parts else (0,)
 
 
 def _cmp_version(a_raw: str, b_raw: str) -> int:
+    ai = version_to_int(a_raw)
+    bi = version_to_int(b_raw)
+    if ai >= 0 and bi >= 0:
+        if ai > bi:
+            return 1
+        if ai < bi:
+            return -1
+        return 0
+    if ai < 0 and bi >= 0:
+        return -1
+    if bi < 0 and ai >= 0:
+        return 1
     a = parse_version(a_raw)
     b = parse_version(b_raw)
     n = max(len(a), len(b))
@@ -70,14 +97,18 @@ def _cmp_version(a_raw: str, b_raw: str) -> int:
 
 
 def is_newer(latest: str, current: str) -> bool:
-    """True tylko gdy latest jest sciśle nowszy od current (prefiks v obcięty)."""
+    """True tylko gdy latest jest sciśle nowszy od current (kanoniczny licznik kropkowy)."""
+    if not is_canonical_product_version(latest):
+        return False
     return _cmp_version(latest, current) > 0
 
 
 def is_stale_older(remote: str, current: str) -> bool:
-    """True gdy remote jest starszy (np. leftover Release 1.0.74 przy produkcie 1.7.9)."""
+    """True gdy remote jest starszy lub legacy tag (6.0.12, 1.0.74 przy 1.8.x)."""
     if not remote or not current:
         return False
+    if not is_canonical_product_version(remote) and is_canonical_product_version(current):
+        return True
     return _cmp_version(remote, current) < 0
 
 
@@ -476,6 +507,9 @@ def _select_release(
     pre: list[tuple[dict[str, Any], dict[str, str]]] = []
     for rel in releases:
         if not isinstance(rel, dict) or rel.get("draft"):
+            continue
+        tag = _strip_v(str(rel.get("tag_name") or rel.get("name") or ""))
+        if not is_canonical_product_version(tag):
             continue
         asset = _pick_setup_asset(rel, asset_name)
         if not asset:

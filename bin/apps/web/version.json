@@ -1,9 +1,9 @@
 {
-  "version": "1.8.8",
+  "version": "1.8.9",
   "name": "DAM - Dobra Kaloria - Inyfinn",
   "codename": "integracja-produkcja",
   "released_at": "2026-09-16",
-  "note": "Dotted integer, not semver: 179=1.7.9, 180=1.8.0, 181=1.8.1, 182=1.8.2, 183=1.8.3, 184=1.8.4, 185=1.8.5, 186=1.8.6, 187=1.8.7, 188=1.8.8. Never 1.7.10 / 1.8.10. Sync: version.json, dam-version.js, runtime_config.py, DAM-Setup.iss.",
+  "note": "Dotted integer, not semver: 179=1.7.9, 180=1.8.0, 181=1.8.1, 182=1.8.2, 183=1.8.3, 184=1.8.4, 185=1.8.5, 186=1.8.6, 187=1.8.7, 188=1.8.8, 189=1.8.9. Never 1.7.10 / 1.8.10. Sync: version.json, dam-version.js, runtime_config.py, DAM-Setup.iss.",
   "updates": {
     "github_repo": "inyfinn/DAM---Dobra-Kaloria---inyfinn",
     "asset_name": "DAM-Setup.exe"

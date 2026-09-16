@@ -4,7 +4,7 @@
   var index = null;
   var tokens = null;
   var campaigns = null;
-  var CB = "liveidx20260810a";
+  var CB = "liveidx20260914b";
   /** B3: lokalny poster gdy bridge/ffmpeg nie odda klatki (data-URI SVG). */
   var VIDEO_POSTER_FALLBACK =
     "data:image/svg+xml," +
@@ -17,6 +17,8 @@
         'font-family="Segoe UI,Arial,sans-serif" font-size="22">Wideo</text></svg>'
     );
   var TAG_COUNTS_KEY = "dam_branding_show_tag_counts";
+  var BRANDING_SORT_KEY = "dam_branding_sort_mode";
+  var BRANDING_SORT_DEFAULT = "newest";
 
   /** PI branding.grid_excludes_product_visualizations + viz.assoc_no_visualization_loop defense-in-depth. */
   function isBrandingGridEligible(a) {
@@ -31,6 +33,7 @@
     }
     var path = String(a.path || "").replace(/\\/g, "/").toLowerCase();
     if (path && (/\/4\s*-\s*wizki\b/.test(path) || /\/4\s*-\s*visuals\b/.test(path))) return false;
+    if (path && /\/ewa 11\.09\.2026\//.test(path)) return false;
     return true;
   }
 
@@ -297,6 +300,7 @@
     if (fat.mtime) target.mtime = fat.mtime;
     if (!target.path && fat.path) target.path = fat.path;
     if (!target.name && fat.name) target.name = fat.name;
+    target.__damMtimeDiskFresh = true;
   }
 
   function brandingAssetLooksLikeTuba(a) {
@@ -306,7 +310,8 @@
 
   var brandingMtimeHydratePromise = null;
 
-  function collectBrandingMtimeNeed(data, maxIds) {
+  function collectBrandingMtimeNeed(data, maxIds, opts) {
+    opts = opts || {};
     var assets = (data && data.assets) || [];
     var byId = Object.create(null);
     var tubaIds = [];
@@ -317,7 +322,8 @@
       a = assets[i];
       if (!a || !a.id) continue;
       byId[String(a.id)] = a;
-      if (brandingAssetMtimeMs(a)) continue;
+      if (!opts.forceDisk && !opts.force && brandingAssetMtimeMs(a) && a.__damMtimeDiskFresh) continue;
+      if (!opts.forceDisk && !opts.force && brandingAssetMtimeMs(a)) continue;
       if (brandingAssetLooksLikeTuba(a)) tubaIds.push(String(a.id));
       else need.push(String(a.id));
     }
@@ -328,9 +334,10 @@
 
   function fetchBrandingMtimeChunk(ids) {
     if (!ids || !ids.length) return Promise.resolve([]);
+    var base = bridgeUrl().replace(/\/$/, "");
     var url =
-      bridgeUrl().replace(/\/$/, "") +
-      "/branding/asset?ids=" +
+      base +
+      "/branding/mtimes?ids=" +
       encodeURIComponent(ids.join(","));
     return fetch(url, { cache: "no-store", headers: damBridgeAuthHeaders() })
       .then(function (r) {
@@ -338,12 +345,26 @@
         return r.json();
       })
       .then(function (j) {
-        var list = (j && j.assets) || [];
-        if (j && j.asset) list = list.concat([j.asset]);
-        return list;
+        return (j && j.assets) || [];
       })
       .catch(function () {
-        return [];
+        var legacy =
+          base +
+          "/branding/asset?ids=" +
+          encodeURIComponent(ids.join(","));
+        return fetch(legacy, { cache: "no-store", headers: damBridgeAuthHeaders() })
+          .then(function (r) {
+            if (!r.ok) throw new Error("http-" + r.status);
+            return r.json();
+          })
+          .then(function (j) {
+            var list = (j && j.assets) || [];
+            if (j && j.asset) list = list.concat([j.asset]);
+            return list;
+          })
+          .catch(function () {
+            return [];
+          });
       });
   }
 
@@ -353,14 +374,14 @@
       return Promise.resolve(data);
     }
     if (data.__damMtimesEnriched && !opts.force) return Promise.resolve(data);
-    var pack = collectBrandingMtimeNeed(data, opts.maxIds || 0);
+    var pack = collectBrandingMtimeNeed(data, opts.maxIds || 0, opts);
     var need = pack.ids;
     if (!need.length) {
       data.__damMtimesEnriched = true;
       return Promise.resolve(data);
     }
-    var CHUNK = 40;
-    var PARALLEL = 3;
+    var CHUNK = 120;
+    var PARALLEL = 2;
     var chunks = [];
     var i;
     for (i = 0; i < need.length; i += CHUNK) {
@@ -400,6 +421,7 @@
     brandingMtimeHydratePromise = enrichBrandingMtimes(index, {
       maxIds: opts.maxIds || 0,
       force: !!opts.force,
+      forceDisk: !!opts.forceDisk,
       onProgress: function (done, total) {
         if (!statusEl || total < 2) return;
         statusEl.textContent = "Daty plików: " + done + "/" + total + "…";
@@ -419,10 +441,61 @@
   }
 
   function scheduleBrandingMtimeHydrate(opts) {
-    ensureBrandingMtimesReady(opts).then(function () {
+    opts = opts || {};
+    ensureBrandingMtimesReady(Object.assign({ forceDisk: true }, opts)).then(function () {
       clearBrandingComputeCache();
       scheduleBrandingRender({ tags: true, section: true });
     });
+  }
+
+  function wwwRelPathKey(path) {
+    var p = String(path || "").replace(/\\/g, "/").toLowerCase();
+    var i = p.indexOf("/- polska/");
+    return i >= 0 ? p.slice(i) : p;
+  }
+
+  async function mergeLiveWwwScanAssets() {
+    if (!index || !Array.isArray(index.assets)) return 0;
+    try {
+      var r = await fetch(bridgeUrl().replace(/\/$/, "") + "/branding/live-www-scan?days=28", {
+        cache: "no-store",
+        headers: damBridgeAuthHeaders(),
+      });
+      if (!r.ok) return 0;
+      var j = await r.json();
+      var live = (j && j.assets) || [];
+      if (!live.length) return 0;
+      var byPath = Object.create(null);
+      index.assets.forEach(function (a) {
+        if (!a || !a.path) return;
+        byPath[String(a.path).replace(/\\/g, "/").toLowerCase()] = a;
+        byPath[wwwRelPathKey(a.path)] = a;
+      });
+      var added = 0;
+      live.forEach(function (a) {
+        if (!a || !a.path) return;
+        var key = String(a.path).replace(/\\/g, "/").toLowerCase();
+        var rel = wwwRelPathKey(a.path);
+        var existing = byPath[key] || byPath[rel];
+        if (existing) {
+          mergeBrandingMtime(existing, a);
+          return;
+        }
+        a.__damLiveAsset = true;
+        a.__damMtimeDiskFresh = true;
+        index.assets.unshift(a);
+        byPath[key] = a;
+        byPath[rel] = a;
+        added += 1;
+      });
+      if (added) {
+        index.__damLiveMerged = (index.__damLiveMerged || 0) + added;
+        clearBrandingComputeCache();
+      }
+      return added;
+    } catch (eLive) {
+      return 0;
+    }
   }
 
   function needsMtimeHydration() {
@@ -486,7 +559,7 @@
     discoveryWhen = "";
     applyDatePreset("");
     var sortEl = document.getElementById("damBrandingSort");
-    if (sortEl) sortEl.value = "priority";
+    if (sortEl) sortEl.value = readStoredSortMode();
     clearTagFilters();
     renderActiveSection();
   }
@@ -910,9 +983,41 @@
     return 0;
   }
 
+  function readStoredSortMode() {
+    try {
+      var v = localStorage.getItem(BRANDING_SORT_KEY);
+      if (
+        v === "newest" ||
+        v === "oldest" ||
+        v === "introduced" ||
+        v === "created" ||
+        v === "name" ||
+        v === "priority"
+      ) {
+        return v;
+      }
+    } catch (eSort) {
+      /* ignore */
+    }
+    return BRANDING_SORT_DEFAULT;
+  }
+
+  function persistSortMode(mode) {
+    try {
+      localStorage.setItem(BRANDING_SORT_KEY, mode || BRANDING_SORT_DEFAULT);
+    } catch (eSave) {
+      /* ignore */
+    }
+  }
+
+  function applyStoredBrandingSort() {
+    var el = document.getElementById("damBrandingSort");
+    if (el) el.value = readStoredSortMode();
+  }
+
   function currentSortMode() {
     var el = document.getElementById("damBrandingSort");
-    return el && el.value ? el.value : "priority";
+    return el && el.value ? el.value : readStoredSortMode();
   }
 
   function assetCreatedMs(a) {
@@ -954,8 +1059,8 @@
     var ma = assetMtimeMs(a);
     var mb = assetMtimeMs(b);
     if (mode === "newest") {
-      ma = brandingAssetMtimeMs(a) || ma;
-      mb = brandingAssetMtimeMs(b) || mb;
+      ma = brandingAssetMtimeMs(a);
+      mb = brandingAssetMtimeMs(b);
       if (mb !== ma) return mb - ma;
     } else if (mode === "created") {
       var ca = assetCreatedMs(a);
@@ -1026,6 +1131,7 @@
     var mode = currentSortMode();
     if (mode === "introduced") return assetIntroducedMs(a);
     if (mode === "created") return assetCreatedMs(a);
+    if (mode === "newest" || mode === "oldest") return brandingAssetMtimeMs(a);
     return brandingAssetMtimeMs(a) || assetMtimeMs(a);
   }
 
@@ -1568,7 +1674,7 @@
   }
 
   var GENERIC_FOLDER_RE =
-    /^(close|final|gif|gifs|export|surowe|raw|temp|old|nowe|nowy|assets?|jpg|png|psd|webp|mp4|mov|wideo|video|final_bez|bez\s*plansz)$/i;
+    /^(close|final|gif|gifs|export|surowe|raw|temp|old|nowe|nowy|assets?|jpg|jpeg|png|svg|svgs|ai|eps|pdf|pdfs|tif|tiff|psd|webp|mp4|mov|wideo|video|final_bez|bez\s*plansz)$/i;
 
   var TECHNICAL_FOLDER_RE =
     /^(listonic|admetrics|dv360|eska|footage|do\s*edycji|giff|mp4|mov|psd|jpg|png|export|surowe|raw|temp|assets?|final|close|gif|gifs)$/i;
@@ -1713,9 +1819,81 @@
     return label || fileStem(name);
   }
 
+  function brandingSeriesDir(path) {
+    var parts = String(path || "")
+      .replace(/\\/g, "/")
+      .split("/")
+      .filter(Boolean);
+    if (!parts.length) return "";
+    parts.pop();
+    var techRe = /^(11x|gotowe)$/i;
+    var langRe = /^(pl|en|de|cz|sk|hu|hr|uk|ru)$/i;
+    var logoSlotRe = /^\d{1,3}\s*[-–—.]\s*(logo|brand|znak|sygnet)/i;
+    var guard = 0;
+    while (parts.length > 1 && guard < 8) {
+      var last = parts[parts.length - 1];
+      if (logoSlotRe.test(last)) break;
+      var parent = parts.length >= 2 ? parts[parts.length - 2] : "";
+      var langUnderLogo = langRe.test(last) && logoSlotRe.test(parent);
+      if (isGenericFolderName(last) || isTechnicalFolderName(last) || techRe.test(last) || langUnderLogo) {
+        parts.pop();
+        guard += 1;
+        continue;
+      }
+      break;
+    }
+    return parts.join("/");
+  }
+
+  function isProductVizLike(a) {
+    if (!a) return false;
+    var role = String(a.asset_role || "").toLowerCase();
+    if (role === "packshot") return true;
+    var src = String(a.source || "").toLowerCase();
+    if (src === "wizki" || src === "visuals" || src === "visualization") return true;
+    var p = String(a.path || "").replace(/\\/g, "/").toLowerCase();
+    if (/\/4\s*-\s*(wizki|visuals)\b/.test(p)) return true;
+    if (/\/- eksport\//.test(p) && /\/4\s*-/.test(p)) return true;
+    return false;
+  }
+
+  function isLogoFolderAsset(a) {
+    if (!a) return false;
+    var p = String(a.path || "").replace(/\\/g, "/");
+    if (/\/01\s*-\s*logo\b/i.test(p)) return true;
+    var tags = a.appearance_tags || [];
+    var i;
+    for (i = 0; i < tags.length; i++) {
+      if (String(tags[i] || "").toLowerCase() === "logo") return true;
+    }
+    return false;
+  }
+
+  function isPrevCopyName(name) {
+    return /kopia-prev|[-_\s]prev(?:\.[a-z0-9]+)?$/i.test(String(name || ""));
+  }
+
   function marketingGroupKey(a) {
     var dir = pathDirname(a.path);
     var folderName = pathBasename(dir);
+    if (/^gotowe$/i.test(folderName)) {
+      var parts = String(a.path || "")
+        .replace(/\\/g, "/")
+        .split("/")
+        .filter(Boolean);
+      parts.pop();
+      if (parts.length && /^gotowe$/i.test(parts[parts.length - 1])) {
+        parts.pop();
+      }
+      var bucket = parts.length ? parts[parts.length - 1] : folderName;
+      var stem = fileStem(a.name || "")
+        .replace(/^\d{4}[-_.]\d{2}[-_.]\d{2}[-_.]?/i, "")
+        .replace(/^\d{8}_/i, "");
+      var series = (stem.split(/[-_]/)[0] || stem).replace(/\s+/g, "-").toLowerCase().slice(0, 36);
+      return "series:" + bucket.toLowerCase() + ":" + series;
+    }
+    var seriesDir = brandingSeriesDir(a.path);
+    if (seriesDir) return "dir:" + seriesDir.toLowerCase();
     if (isGenericFolderName(folderName)) {
       return "file:" + fileStem(a.name).toLowerCase();
     }
@@ -1770,6 +1948,10 @@
   function marketingGroupLabel(assets) {
     var primary = pickPrimaryMarketing(assets) || assets[0];
     if (!primary) return "Materiał";
+    if ((assets || []).length > 1 && (assets || []).every(isLogoFolderAsset)) {
+      var logoTitle = groupDisplayLabel(assets);
+      if (logoTitle) return logoTitle;
+    }
     var campTitle = humanizeCampaignLabel(primary.campaign_id || primary.campaign_name);
     if (campTitle) return campTitle;
     /* Najpierw nazwa pliku — foldery (01- CHŁODZONE) to tylko kubełki sortujące. */
@@ -1838,21 +2020,38 @@
 
   function thumbPathForAsset(asset, assets) {
     if (!asset) return "";
+    if (isLogoFolderAsset(asset) || (assets || []).some(isLogoFolderAsset)) {
+      if (asset.path && !isProductVizLike({ path: asset.path, asset_role: asset.asset_role, source: asset.source })) {
+        return asset.path;
+      }
+    }
     var pdfPath = siblingPdfPath(asset, assets);
-    if (pdfPath) return pdfPath;
+    if (pdfPath && !isProductVizLike({ path: pdfPath })) return pdfPath;
     return asset.path || "";
   }
 
   function pickThumbAsset(assets) {
     if (!assets || !assets.length) return null;
-    var pdfs = assets.filter(function (a) {
-      return a && /\.pdf$/i.test(a.name || a.path || "");
+    var pool = assets.filter(function (a) {
+      return a && !isProductVizLike(a);
     });
-    if (pdfs.length) return pdfs[0];
-    var primary = pickPrimaryMarketing(assets);
+    if (!pool.length) pool = assets;
+    var logoish = pool.some(isLogoFolderAsset);
+    if (!logoish) {
+      var pdfs = pool.filter(function (a) {
+        return a && /\.pdf$/i.test(a.name || a.path || "");
+      });
+      if (pdfs.length) return pdfs[0];
+    }
+    var rasters = pool.filter(function (a) {
+      return a && /\.(png|jpe?g|webp|gif)$/i.test(a.name || a.path || "");
+    });
+    var use = rasters.length ? rasters : pool;
+    var primary = pickPrimaryMarketing(use);
     if (primary) {
-      var derived = siblingPdfPath(primary, assets);
-      if (derived) {
+      if (logoish) return primary;
+      var derived = siblingPdfPath(primary, pool);
+      if (derived && !isProductVizLike({ path: derived })) {
         return { path: derived, name: derived.split(/[/\\]/).pop(), media_type: "document" };
       }
     }
@@ -1860,18 +2059,50 @@
   }
 
   function pickPrimaryMarketing(assets) {
-    return assets
+    assets = (assets || []).filter(Boolean);
+    if (!assets.length) return null;
+    var clean = assets.filter(function (a) {
+      return !isProductVizLike(a);
+    });
+    if (!clean.length) clean = assets;
+    var mode = currentSortMode();
+    if (mode === "newest" || mode === "oldest") {
+      return clean
+        .slice()
+        .sort(function (a, b) {
+          var ma = brandingAssetMtimeMs(a);
+          var mb = brandingAssetMtimeMs(b);
+          if (mode === "oldest") {
+            if (ma !== mb) return ma - mb;
+          } else if (mb !== ma) {
+            return mb - ma;
+          }
+          var pa = isPrevCopyName(a.name) ? 1 : 0;
+          var pb = isPrevCopyName(b.name) ? 1 : 0;
+          if (pa !== pb) return pa - pb;
+          var ra = /\.(png|jpe?g|webp|gif)$/i.test(a.name || "") ? 0 : 1;
+          var rb = /\.(png|jpe?g|webp|gif)$/i.test(b.name || "") ? 0 : 1;
+          if (ra !== rb) return ra - rb;
+          return String(a.name || "").localeCompare(String(b.name || ""), "pl");
+        })[0];
+    }
+    return clean
       .slice()
       .sort(function (a, b) {
         var score = function (x) {
           var s = 0;
+          var blob = String((x.path || "") + " " + (x.name || ""));
+          if (brandingAssetLooksLikeTuba(x)) s += 80;
+          if (/5\s*z[lł]|5zl|5-zl/i.test(blob)) s -= 40;
           if (/\.(png|jpe?g|webp|gif)$/i.test(x.name || "")) s += 40;
           else if (/\.(tif|tiff|psd|psb|bmp)$/i.test(x.name || "")) s += 24;
-          else if (/\.pdf$/i.test(x.name || "")) s += 36;
+          else if (/\.pdf$/i.test(x.name || "")) s += isLogoFolderAsset(x) ? 4 : 36;
           if (x.media_type === "video") s += 8;
           if (/desktop/i.test(x.name || "")) s += 8;
           if (/\.psd$/i.test(x.name || "")) s += 4;
           if (/\.(ai|eps)$/i.test(x.name || "")) s -= 4;
+          if (isPrevCopyName(x.name)) s -= 6;
+          if (isProductVizLike(x)) s -= 80;
           return s;
         };
         return score(b) - score(a);
@@ -1892,6 +2123,12 @@
     });
     return order.map(function (key) {
       var bucket = byKey[key] || [];
+      if (bucket.some(isLogoFolderAsset)) {
+        var logosOnly = bucket.filter(function (a) {
+          return !isProductVizLike(a);
+        });
+        if (logosOnly.length) bucket = logosOnly;
+      }
       var sorted = bucket.slice().sort(function (a, b) {
         return String(a.name || "").localeCompare(String(b.name || ""), "pl");
       });
@@ -3784,13 +4021,21 @@
     return best;
   }
 
+  function refreshGroupPrimary(entry) {
+    if (!entry || entry.type !== "group") return entry;
+    var assets = entry.assets || [];
+    if (assets.length < 2) return entry;
+    entry.primary = pickPrimaryMarketing(assets) || entry.primary || assets[0];
+    return entry;
+  }
+
   function sortGroupedEntriesForDisplay(entries) {
     entries = entries || [];
     var mode = currentSortMode();
     if (mode !== "newest" && mode !== "oldest" && mode !== "introduced" && mode !== "created") {
       return entries;
     }
-    return entries.slice().sort(function (a, b) {
+    return entries.slice().map(refreshGroupPrimary).sort(function (a, b) {
       var sa = groupEntrySortMs(a);
       var sb = groupEntrySortMs(b);
       if (mode === "oldest") {
@@ -4163,10 +4408,10 @@
   }
 
   function thumbStackHtml(assets, primary) {
-    var p = primary || assets[0];
+    var p = primary || pickPrimaryMarketing(assets) || assets[0];
     var thumbPrimary = pickThumbAsset(assets) || p;
     var second = assets.find(function (a) {
-      return a.id !== p.id && /\.(png|jpe?g|webp)$/i.test(a.name || "");
+      return a && p && a.id !== p.id && /\.(png|jpe?g|webp)$/i.test(a.name || "") && !isProductVizLike(a);
     });
     var html = '<div class="dam-branding-thumb-stack">';
     if (second) {
@@ -4316,7 +4561,7 @@
     var isKv = gridOpts.groupMode === "keyvisuale";
     var isProject = gridOpts.groupMode === "project";
     var assets = entry.assets || [];
-    var primary = entry.primary || assets[0];
+    var primary = pickPrimaryMarketing(assets) || entry.primary || assets[0];
     if (!primary) return "";
     var hint = folderHint(primary.path);
     var tileCls =
@@ -5058,6 +5303,9 @@
     if (variantRef.id === primary.id) return true;
     var va = (assetsById && assetsById[variantRef.id]) || variantRef;
     if (!primary.path || !va.path) return false;
+    var sa = brandingSeriesDir(primary.path).toLowerCase();
+    var sb = brandingSeriesDir(va.path).toLowerCase();
+    if (sa && sb) return sa === sb;
     return assetDirKey(primary.path) === assetDirKey(va.path);
   }
 
@@ -5733,6 +5981,9 @@
             datePresetActive = "";
             syncDatePresetButtons();
           }
+          if (id === "damBrandingSort") {
+            persistSortMode(el.value);
+          }
           clearBrandingComputeCache();
           var after = function () {
             scheduleBrandingRender({ tags: true, section: true });
@@ -5796,6 +6047,11 @@
       });
     }
     decorateClearFilterButtons(document);
+    if (window.DamI18n && typeof window.DamI18n.whenReady === "function") {
+      window.DamI18n.whenReady(function () {
+        decorateClearFilterButtons(document);
+      });
+    }
     var clearTags = document.getElementById("damBrandingClearTags");
     if (clearTags) {
       clearTags.addEventListener("click", clearAllBrandingFilters);
@@ -6245,6 +6501,7 @@
       bindTabs();
       hidePackshotsTab();
       bindFilters();
+      applyStoredBrandingSort();
       bindCategoryHintUi();
       bindBrandingCardZoomControl();
       bindBrandingPageSizeControl();
@@ -6256,6 +6513,12 @@
       var searchPromise = null;
       performance.mark("dam-branding-boot-start");
       await Promise.all([loadIndex(), loadAssociations(), loadTokens()]);
+      setBootStatus("Skan strony WWW…");
+      await mergeLiveWwwScanAssets();
+      if (needsMtimeHydration()) {
+        setBootStatus("Daty plików…");
+        await ensureBrandingMtimesReady({ force: true, forceDisk: true, maxIds: 800 });
+      }
       clearBootSkeletonBusy();
       performance.mark("dam-branding-index-ready");
       var rebuild = document.getElementById("damBrandingRebuild");

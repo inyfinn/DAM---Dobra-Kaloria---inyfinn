@@ -8,24 +8,28 @@
   var RELOAD_KEY = "dam_version_reload_ts";
   var DISMISS_KEY = "dam_update_banner_dismissed";
 
-  function parseVer(v) {
-    var p = String(v || "0").replace(/^v/i, "").split(/[.\-]/);
-    var out = [];
-    for (var i = 0; i < p.length; i++) {
-      var n = parseInt(p[i], 10);
-      out.push(isNaN(n) ? 0 : n);
-    }
-    return out;
+  var CANONICAL_VER = /^\d\.\d\.\d$/;
+
+  function isCanonicalVer(v) {
+    return CANONICAL_VER.test(String(v || "").replace(/^v/i, "").trim());
+  }
+
+  function versionInt(v) {
+    var s = String(v || "").replace(/^v/i, "").trim();
+    if (!isCanonicalVer(s)) return -1;
+    return parseInt(s.replace(/\./g, ""), 10) || 0;
   }
 
   function cmpVer(a, b) {
-    var x = parseVer(a);
-    var y = parseVer(b);
-    var n = Math.max(x.length, y.length);
-    for (var i = 0; i < n; i++) {
-      var d = (x[i] || 0) - (y[i] || 0);
-      if (d) return d > 0 ? 1 : -1;
+    var ai = versionInt(a);
+    var bi = versionInt(b);
+    if (ai >= 0 && bi >= 0) {
+      if (ai > bi) return 1;
+      if (ai < bi) return -1;
+      return 0;
     }
+    if (ai < 0 && bi >= 0) return -1;
+    if (bi < 0 && ai >= 0) return 1;
     return 0;
   }
 
@@ -100,7 +104,33 @@
     if (global.DamRuntime && typeof global.DamRuntime.bridgeUrl === "function") {
       return String(global.DamRuntime.bridgeUrl()).replace(/\/$/, "");
     }
+    if (global.DamPaths && typeof global.DamPaths.bridgeUrl === "function") {
+      return String(global.DamPaths.bridgeUrl()).replace(/\/$/, "");
+    }
+    if (global.DamBridgeUrl && typeof global.DamBridgeUrl.resolve === "function") {
+      return global.DamBridgeUrl.resolve();
+    }
     return "http://127.0.0.1:8766";
+  }
+
+  function releasesPageUrl() {
+    return "https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases";
+  }
+
+  function authHeaders() {
+    var headers = { "Content-Type": "application/json", Accept: "application/json" };
+    try {
+      if (global.DamApi && typeof global.DamApi.authHeaders === "function") {
+        var ah = global.DamApi.authHeaders();
+        if (ah && ah.Authorization) headers.Authorization = ah.Authorization;
+      } else {
+        var t = localStorage.getItem("dam_token") || "";
+        if (t) headers.Authorization = "Bearer " + t;
+      }
+    } catch (_e) {
+      /* ignore */
+    }
+    return headers;
   }
 
   function ensureBanner() {
@@ -108,16 +138,16 @@
     if (el) return el;
     el = document.createElement("div");
     el.id = "damAppUpdateBanner";
+    el.className = "dam-app-update-banner";
     el.setAttribute("role", "status");
     el.setAttribute("aria-live", "polite");
     el.hidden = true;
-    el.style.cssText =
-      "position:fixed;left:0;right:0;top:0;z-index:99999;padding:10px 16px;" +
-      "font:600 14px/1.4 Jost,system-ui,sans-serif;text-align:center;" +
-      "background:var(--dam-primary);color:var(--dam-surface);" +
-      "box-shadow:0 2px 12px rgba(0,0,0,.2);display:flex;gap:12px;" +
-      "align-items:center;justify-content:center;flex-wrap:wrap;";
-    document.body.appendChild(el);
+    var main = document.querySelector(".geex-main-content") || document.body;
+    if (main.firstChild) {
+      main.insertBefore(el, main.firstChild);
+    } else {
+      main.appendChild(el);
+    }
     return el;
   }
 
@@ -127,17 +157,60 @@
       el.hidden = true;
       el.innerHTML = "";
     }
+    document.body.classList.remove("dam-update-banner-open");
   }
 
   function showBanner(html, opts) {
     var el = ensureBanner();
     el.innerHTML = html;
     el.hidden = false;
+    if (!opts || !opts.autoHideMs) {
+      document.body.classList.add("dam-update-banner-open");
+    }
     if (opts && opts.autoHideMs) {
       setTimeout(function () {
         el.hidden = true;
+        document.body.classList.remove("dam-update-banner-open");
       }, opts.autoHideMs);
     }
+  }
+
+  function applyUpdateFlow(data) {
+    var payload = {
+      action: data && data.installer_ready ? "install" : "download",
+      download_url: data && data.download_url ? data.download_url : "",
+    };
+    showBanner("<span>" + tr("update.applying", "Pobieranie aktualizacji…") + "</span>");
+    return fetch(bridgeUrl() + "/app-update/apply", {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify(payload),
+    })
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (res) {
+        if (res && res.launched) {
+          showBanner("<span>" + tr("update.installer_started", "Instalator uruchomiony.") + "</span>", {
+            autoHideMs: 6000,
+          });
+          return res;
+        }
+        if (res && res.status === "downloading") {
+          showBanner("<span>" + tr("update.downloading", "Pobieranie w toku…") + "</span>");
+          return res;
+        }
+        showBanner("<span>" + tr("update.check_failed", "Nie udało się sprawdzić aktualizacji") + "</span>", {
+          autoHideMs: 7000,
+        });
+        return res;
+      })
+      .catch(function () {
+        showBanner("<span>" + tr("update.check_failed", "Nie udało się sprawdzić aktualizacji") + "</span>", {
+          autoHideMs: 7000,
+        });
+        return null;
+      });
   }
 
   function setVersionPill(text) {
@@ -208,20 +281,31 @@
     );
     var dismiss = tr("update.dismiss", "Ukryj na dziś");
     var html =
-      "<span>" + msg + "</span>" +
-      "<button type=\"button\" id=\"damAppUpdateOpenCheck\" class=\"geex-btn geex-btn--sm\" " +
-      "style=\"background:var(--dam-surface);color:var(--dam-primary);border:0;min-height:44px;padding:8px 14px;\">" +
-      tr("update.check_now", "Sprawdź aktualizację") + "</button>" +
-      "<button type=\"button\" id=\"damAppUpdateDismiss\" class=\"geex-btn geex-btn--sm\" " +
-      "style=\"background:var(--dam-surface);color:var(--dam-primary);border:0;min-height:44px;padding:8px 14px;\">" +
-      dismiss + "</button>";
+      "<span class=\"dam-app-update-banner__msg\">" + msg + "</span>" +
+      "<div class=\"dam-app-update-banner__actions\">" +
+      "<button type=\"button\" id=\"damAppUpdateApply\" class=\"geex-btn geex-btn--sm dam-app-update-banner__btn\">" +
+      tr("update.apply_now", "Aktualizuj") + "</button>" +
+      "<button type=\"button\" id=\"damAppUpdateManual\" class=\"geex-btn geex-btn--sm dam-app-update-banner__btn dam-app-update-banner__btn--ghost\">" +
+      tr("update.download_manual", "Pobierz ręcznie") + "</button>" +
+      "<button type=\"button\" id=\"damAppUpdateDismiss\" class=\"geex-btn geex-btn--sm dam-app-update-banner__btn dam-app-update-banner__btn--ghost\">" +
+      dismiss + "</button></div>";
     showBanner(html);
     var btn = document.getElementById("damAppUpdateDismiss");
     if (btn) btn.addEventListener("click", dismissToday);
-    var openBtn = document.getElementById("damAppUpdateOpenCheck");
-    if (openBtn) {
-      openBtn.addEventListener("click", function () {
-        checkFromMenu();
+    var applyBtn = document.getElementById("damAppUpdateApply");
+    if (applyBtn) {
+      applyBtn.addEventListener("click", function () {
+        applyUpdateFlow(data);
+      });
+    }
+    var manualBtn = document.getElementById("damAppUpdateManual");
+    if (manualBtn) {
+      manualBtn.addEventListener("click", function () {
+        try {
+          window.open(releasesPageUrl(), "_blank", "noopener,noreferrer");
+        } catch (_open) {
+          location.href = releasesPageUrl();
+        }
       });
     }
     return data;

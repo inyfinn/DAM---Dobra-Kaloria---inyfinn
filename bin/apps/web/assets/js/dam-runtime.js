@@ -4,9 +4,26 @@
 (function () {
   "use strict";
 
+  function inferBridge() {
+    if (window.DamBridgeUrl && typeof window.DamBridgeUrl.resolve === "function") {
+      return window.DamBridgeUrl.resolve();
+    }
+    return "http://127.0.0.1:8766";
+  }
+
+  function inferUi() {
+    if (window.DamBridgeUrl && typeof window.DamBridgeUrl.uiOrigin === "function") {
+      return window.DamBridgeUrl.uiOrigin();
+    }
+    if (typeof location !== "undefined" && location.origin && location.protocol !== "file:") {
+      return String(location.origin).replace(/\/+$/, "");
+    }
+    return "http://127.0.0.1:8765";
+  }
+
   var fallback = {
-    bridge: "http://127.0.0.1:8766",
-    ui_origin: "http://127.0.0.1:8765",
+    bridge: inferBridge(),
+    ui_origin: inferUi(),
     ready: false,
     services_ok: false,
   };
