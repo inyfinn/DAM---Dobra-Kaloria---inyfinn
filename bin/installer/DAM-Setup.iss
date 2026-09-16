@@ -1,6 +1,6 @@
 ; DAM Windows installer - pelny kreator (licencja, sciezka, aktualizacja)
 #ifndef MyAppVersion
-  #define MyAppVersion "1.9.5"
+  #define MyAppVersion "1.9.6"
 #endif
 #ifndef StageDir
   #define StageDir "..\dist\staging\DAM-install"
@@ -315,55 +315,117 @@ begin
     ShellExec('', 'explorer.exe', '"' + Dir + '"', '', SW_SHOWNORMAL, ewNoWait, RC);
 end;
 
+procedure LeftoverOpenClick(Sender: TObject);
+begin
+  OpenExplorerDir(TNewButton(Sender).Hint);
+end;
+
 procedure ShowLeftoverCleanup;
 var
-  Dirs: array of String;
-  Labels: array of String;
-  AppDir, LocalProg, LocalDam, Roam, Note, List: String;
-  I, Shown: Integer;
+  SrcDirs, SrcLabels, OpenDirs, OpenLabels: array of String;
+  AppDir, LocalProg, LocalDam, Roam, Note, List, DirKey: String;
+  I, J, Shown, Y: Integer;
+  Dup: Boolean;
+  Form: TSetupForm;
+  Lbl: TNewStaticText;
+  Btn, CloseBtn: TNewButton;
 begin
   AppDir := ExpandConstant('{app}');
   LocalProg := ExpandConstant('{localappdata}\Programs\DAM');
   LocalDam := ExpandConstant('{localappdata}\DAM');
   Roam := ExpandConstant('{userappdata}\DAM');
-  SetArrayLength(Dirs, 4);
-  SetArrayLength(Labels, 4);
-  Dirs[0] := AppDir;
-  Labels[0] := 'Folder instalacji';
-  Dirs[1] := LocalProg;
-  Labels[1] := 'AppData Local Programs\DAM';
-  Dirs[2] := LocalDam;
-  Labels[2] := 'AppData Local\DAM';
-  Dirs[3] := Roam;
-  Labels[3] := 'AppData Roaming\DAM';
+  SetArrayLength(SrcDirs, 4);
+  SetArrayLength(SrcLabels, 4);
+  SrcDirs[0] := AppDir;
+  SrcLabels[0] := 'Folder instalacji';
+  SrcDirs[1] := LocalProg;
+  SrcLabels[1] := 'Programs\DAM';
+  SrcDirs[2] := LocalDam;
+  SrcLabels[2] := 'Local\DAM';
+  SrcDirs[3] := Roam;
+  SrcLabels[3] := 'Roaming\DAM';
+
+  SetArrayLength(OpenDirs, 0);
+  SetArrayLength(OpenLabels, 0);
   Shown := 0;
   List := '';
-  for I := 0 to GetArrayLength(Dirs) - 1 do
+  for I := 0 to GetArrayLength(SrcDirs) - 1 do
   begin
-    if DirExists(Dirs[I]) then
+    if not DirExists(SrcDirs[I]) then
+      Continue;
+    Dup := False;
+    DirKey := LowerCase(RemoveBackslashUnlessRoot(SrcDirs[I]));
+    for J := 0 to Shown - 1 do
     begin
-      Shown := Shown + 1;
-      List := List + Labels[I] + ': ' + Dirs[I] + #13#10;
+      if LowerCase(RemoveBackslashUnlessRoot(OpenDirs[J])) = DirKey then
+      begin
+        Dup := True;
+        Break;
+      end;
     end;
+    if Dup then
+      Continue;
+    SetArrayLength(OpenDirs, Shown + 1);
+    SetArrayLength(OpenLabels, Shown + 1);
+    OpenDirs[Shown] := SrcDirs[I];
+    OpenLabels[Shown] := SrcLabels[I];
+    List := List + SrcLabels[I] + ': ' + SrcDirs[I] + #13#10;
+    Shown := Shown + 1;
   end;
   if Shown = 0 then
     Exit;
+
   Note :=
     'Niektore pliki DAM nie daly sie usunac (proces, uprawnienia albo instalacja w folderze gita).' + #13#10 +
-    'Otworz folder i skasuj resztki recznie.' + #13#10#13#10 + List;
+    'Kliknij przycisk, aby otworzyc folder w Eksploratorze i skasowac resztki recznie.' + #13#10#13#10 + List;
   ForceDirectories(LocalDam);
   SaveStringToFile(LocalDam + '\ODINSTALOWANIE-RESZTKI.txt', Note, False);
-  MsgBox(Note, mbInformation, MB_OK);
-  for I := 0 to GetArrayLength(Dirs) - 1 do
-  begin
-    if DirExists(Dirs[I]) then
+
+  Form := CreateCustomForm(ScaleX(440), ScaleY(120 + (Shown * 44) + 56), False, True);
+  try
+    Form.Caption := 'Dezinstalator';
+
+    Lbl := TNewStaticText.Create(Form);
+    Lbl.Parent := Form;
+    Lbl.Left := ScaleX(16);
+    Lbl.Top := ScaleY(16);
+    Lbl.Width := Form.ClientWidth - ScaleX(32);
+    Lbl.AutoSize := False;
+    Lbl.Height := ScaleY(72);
+    Lbl.WordWrap := True;
+    Lbl.Caption :=
+      'Niektore pliki DAM nie daly sie usunac (proces, uprawnienia albo instalacja w folderze gita).' + #13#10 +
+      'Kliknij przycisk, aby otworzyc folder w Eksploratorze.';
+
+    Y := ScaleY(96);
+    for I := 0 to Shown - 1 do
     begin
-      if MsgBox(
-        Labels[I] + #13#10 + Dirs[I] + #13#10#13#10 +
-        'Otworzyc ten folder w Eksploratorze?',
-        mbConfirmation, MB_YESNO) = IDYES then
-        OpenExplorerDir(Dirs[I]);
+      Btn := TNewButton.Create(Form);
+      Btn.Parent := Form;
+      Btn.Left := ScaleX(16);
+      Btn.Top := Y;
+      Btn.Width := Form.ClientWidth - ScaleX(32);
+      Btn.Height := ScaleY(36);
+      Btn.Caption := 'Otworz: ' + OpenLabels[I];
+      Btn.Hint := OpenDirs[I];
+      Btn.ShowHint := False;
+      Btn.OnClick := @LeftoverOpenClick;
+      Y := Y + ScaleY(44);
     end;
+
+    CloseBtn := TNewButton.Create(Form);
+    CloseBtn.Parent := Form;
+    CloseBtn.Width := ScaleX(120);
+    CloseBtn.Height := ScaleY(32);
+    CloseBtn.Left := (Form.ClientWidth - CloseBtn.Width) div 2;
+    CloseBtn.Top := Form.ClientHeight - ScaleY(48);
+    CloseBtn.Caption := 'Zamknij';
+    CloseBtn.ModalResult := mrOk;
+    Form.ActiveControl := CloseBtn;
+
+    Form.ShowModal;
+  finally
+    Form.Free;
   end;
 end;
 

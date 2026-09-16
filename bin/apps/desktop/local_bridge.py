@@ -7427,8 +7427,13 @@ class Handler(BaseHTTPRequestHandler):
 
     def _cors(self):
         self.send_header("Access-Control-Allow-Origin", CORS_ORIGIN)
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        # JS fetch() needs Expose-Headers to read thumb cache probes (8765→8766).
+        self.send_header(
+            "Access-Control-Expose-Headers",
+            "X-Dam-Thumb-Hit, X-DAM-Thumb-Source, X-Dam-Thumb-Digest",
+        )
         self.send_header("Vary", "Origin")
 
     def _json(self, code: int, payload: dict | list):

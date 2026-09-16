@@ -13327,4 +13327,47 @@ html[data-theme="dark"] .dam-welcome-hint {
     min-width: var(--dam-control-h);
   }
 }
- 
+
+/* Thumb cache hover chip — only when X-Dam-Thumb-Hit=1 (dam-cache-badge.js) */
+.dam-cache-host {
+  position: relative;
+}
+
+.dam-cache-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--dam-space-badge-pill-y, 2px) var(--dam-space-badge-pill-x, 8px);
+  border-radius: var(--_dam-badge-radius, 14px);
+  border: 1px solid var(--dam-border, rgba(0, 0, 0, 0.12));
+  background: color-mix(in srgb, var(--dam-surface-elevated, #fff) 92%, var(--dam-primary, #005a29));
+  color: var(--dam-text, #464255);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  text-transform: none;
+  opacity: 0;
+  transform: translateY(-2px);
+  pointer-events: none;
+  transition:
+    opacity var(--dam-anim-hover, 0.22s) ease,
+    transform var(--dam-anim-hover, 0.22s) ease;
+}
+
+.dam-cache-host:hover > .dam-cache-badge.dam-cache-badge--hit,
+.dam-viz-thumb:hover > .dam-cache-badge.dam-cache-badge--hit,
+.dam-branding-thumb-stack:hover > .dam-cache-badge.dam-cache-badge--hit {
+  opacity: 1;
+  transform: none;
+}
+
+html[data-theme="dark"] .dam-cache-badge {
+  border-color: var(--dam-border);
+  background: color-mix(in srgb, var(--dam-surface-elevated) 88%, var(--dam-primary, #005a29));
+  color: var(--dam-text);
+}

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * DAM - Shell navigation + auth guard + messages popup
  * Rewrites Geex sidebar/header Demo menu to DAM items
  * Requires: dam-api.js, dam-i18n.js loaded before this script
@@ -3303,6 +3303,15 @@
     document.body.appendChild(s);
   }
 
+  function ensureCacheBadgeScript() {
+    if (document.querySelector('script[data-dam-cache-badge]')) return;
+    var s = document.createElement("script");
+    s.src = "./assets/js/dam-cache-badge.js?v=1.9.6";
+    s.setAttribute("data-dam-cache-badge", "1");
+    s.defer = true;
+    (document.body || document.documentElement).appendChild(s);
+  }
+
   // Run after DOM ready
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
@@ -3311,8 +3320,10 @@
   }
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", ensureStickyChromeScript);
+    document.addEventListener("DOMContentLoaded", ensureCacheBadgeScript);
   } else {
     ensureStickyChromeScript();
+    ensureCacheBadgeScript();
   }
 
   // Public API
