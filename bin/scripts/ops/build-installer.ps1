@@ -60,8 +60,15 @@ function Copy-PamiecMaterialized([string]$src, [string]$dst) {
       $skipped++
       return
     }
-    if ($bytes.Length -lt 32 -or -not (Test-ThumbMagic $bytes)) {
-      Write-Warning "Pomijam (magia/rozmiar): $rel ($($bytes.Length) B)"
+    $ext = [IO.Path]::GetExtension($name).ToLowerInvariant()
+    $isThumb = $ext -in @('.avif', '.jpg', '.jpeg', '.png', '.webp')
+    if ($isThumb) {
+      if ($bytes.Length -lt 32 -or -not (Test-ThumbMagic $bytes)) {
+        Write-Warning "Pomijam (magia/rozmiar): $rel ($($bytes.Length) B)"
+        $skipped++
+        return
+      }
+    } elseif ($bytes.Length -eq 0) {
       $skipped++
       return
     }
@@ -94,7 +101,8 @@ function Assert-StagedThumbsHealthy([string]$thumbsDir) {
   }
   Write-Host "Staged thumbs health: ok=$ok reparse=$reparse bad=$bad"
   if ($reparse -gt 0) {
-    throw "Staging PAMIEC nadal ma $reparse plikow ReparsePoint (Dropbox). Nie wolno pakowac."
+    # Dropbox na D:\ potrafi natychmiast oznaczyc nowe pliki jako FeRp — stąd stage w LocalAppData.
+    throw "Staging PAMIEC nadal ma $reparse plikow ReparsePoint. Upewnij sie, ze STAGE_ROOT jest poza Dropbox."
   }
   if ($bad -gt 0) {
     throw "Staging PAMIEC ma $bad plikow bez magii AVIF/JPEG."
@@ -191,7 +199,8 @@ if ($SkipExeBuild -and (Test-Path (Join-Path $GitRoot "DAM.exe"))) {
   & (Join-Path $BinRoot "scripts\ops\build-dam-root-exe.ps1")
 }
 
-$stageRoot = Join-Path $BinRoot "dist\staging\DAM-install"
+$stageRoot = Join-Path $env:LOCALAPPDATA "DAM-build\staging\DAM-install"
+Write-Host "STAGE_ROOT=$stageRoot (poza Dropbox — bez FeRp reparse)"
 Remove-TreeForce $stageRoot
 New-Item -ItemType Directory -Force -Path $stageRoot | Out-Null
 $damSrc = Join-Path $GitRoot "DAM.exe"
