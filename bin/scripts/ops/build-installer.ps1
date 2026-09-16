@@ -242,7 +242,8 @@ if (Test-Path -LiteralPath $pgEx) {
 }
 $pgCands = @(
   (Join-Path $env:LOCALAPPDATA "Programs\DAM\bin\apps\desktop\data\pg-config.json"),
-  (Join-Path $BinRoot "apps\desktop\data\pg-config.json")
+  (Join-Path $BinRoot "apps\desktop\data\pg-config.json"),
+  (Join-Path $BinRoot "apps\desktop\data\pg-config.json.off")
 )
 $pgSrc = $pgCands | Where-Object { Test-PgConfigSecret $_ } | Select-Object -First 1
 if (-not $pgSrc) {

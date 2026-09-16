@@ -30,8 +30,10 @@ USERS = [
     ("beata.scibik@kubara.pl", "Beata Scibik", "user"),
     ("dagmara.bartnik@kubara.pl", "Dagmara Bartnik", "user"),
     ("ewa.prazmowska@kubara.pl", "Ewa Prazmowska", "user"),
+    ("ewa.prazmowska-bekiersz@kubara.pl", "Ewa Prazmowska-Bekiersz", "user"),
     ("justyna.zroslak@kubara.pl", "Justyna Zroslak", "user"),
     ("karolina.kubara@kubara.pl", "Karolina Kubara", "power_user"),
+    ("kinga.urbanska@kubara.pl", "Kinga Urbanska", "user"),
     ("krzysztof.wieczorek@kubara.pl", "Krzysztof Wieczorek", "admin"),
     ("maciej.labus@kubara.pl", "Maciej Labus", "user"),
     ("magazyn.detal@kubara.pl", "Magazyn Detal", "user"),
@@ -39,9 +41,11 @@ USERS = [
     ("marek.milek@kubara.pl", "Marek Milek", "user"),
     ("marek.paluszewski@kubara.pl", "Marek Paluszewski", "user"),
     ("marta.zasepa@kubara.pl", "Marta Zasepa", "user"),
+    ("michal.kubara@kubara.pl", "Michal Kubara", "user"),
     ("ryszard.domagala@kubara.pl", "Ryszard Domagala", "user"),
     ("sylwia.zarychta@kubara.pl", "Sylwia Zarychta", "user"),
     ("szymon.ryngwelski@kubara.pl", "Szymon Ryngwelski", "user"),
+    ("test@kubara.pl", "test", "user"),
 ]
 
 MIN_PASSWORD_LEN = 8
@@ -120,5 +124,3 @@ def main() -> int:
     return 0
 
 
-if __name__ == "__main__":
-    raise SystemExit(main())

@@ -7710,9 +7710,20 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, background_jobs_status())
             return
         if parsed.path == "/auth/registration-open":
-            # Self-service: email + haslo (bez imienia/nazwiska).
             n = users_count()
-            self._json(200, {"ok": True, "open": True, "users": n})
+            me = resolve_session(self._bearer())
+            is_admin = bool(
+                me.get("ok") and str((me.get("user") or {}).get("role") or "").lower() == "admin"
+            )
+            self._json(
+                200,
+                {
+                    "ok": True,
+                    "open": n == 0 or is_admin,
+                    "users": n,
+                    "bootstrap": n == 0,
+                },
+            )
             return
         if parsed.path == "/auth/identity":
             try:
@@ -8915,31 +8926,45 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200 if res.get("ok") else 401, res)
             return
         if parsed.path == "/auth/register":
-            # Tylko zalogowany admin moze zakladac konta (panel ustawien / zarzadzanie kontami).
+            # Pierwsze konto (bootstrap) albo zalogowany admin. Bez sesji + istniejace
+            # konta = 403 — UI mylilo to z "brak bazy".
+            n = users_count()
             admin = self._session_user()
-            is_admin = bool(admin and (admin.get("role") or "") == "admin")
-            if not is_admin:
+            is_admin = bool(admin and str(admin.get("role") or "").lower() == "admin")
+            bootstrap = n == 0
+            if not is_admin and not bootstrap:
                 self._json(
                     403,
                     {
                         "ok": False,
                         "error": "admin_required",
-                        "hint": "Nowe konta zaklada tylko administrator.",
+                        "hint": "Nowe konta zaklada tylko administrator (albo pierwsze konto na pustej bazie).",
                     },
                 )
                 return
             requested_role = (data.get("role") or "user").strip().lower()
             if requested_role not in ("admin", "power_user", "user"):
                 requested_role = "user"
-            self._json(
-                200,
-                register_user(
+            if bootstrap:
+                requested_role = "admin"
+            try:
+                res = register_user(
                     data.get("email") or "",
                     data.get("password") or "",
                     data.get("name") or "",
                     requested_role,
-                ),
-            )
+                )
+            except Exception as exc:  # noqa: BLE001
+                self._json(
+                    503,
+                    {
+                        "ok": False,
+                        "error": "database_unavailable",
+                        "hint": str(exc)[:240],
+                    },
+                )
+                return
+            self._json(200 if res.get("ok") else 400, res)
             return
         if parsed.path == "/auth/login":
             self._json(

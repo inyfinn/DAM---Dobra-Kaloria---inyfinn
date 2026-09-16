@@ -12,13 +12,13 @@
 
 
 
-  global.DAM_APP_VERSION = "1.9.1";
+  global.DAM_APP_VERSION = "1.9.2";
 
 
 
   function formatVersion(v) {
 
-    return String(v || "1.9.1").replace(/^v/i, "");
+    return String(v || "1.9.2").replace(/^v/i, "");
 
   }
 
@@ -124,7 +124,7 @@
 
     if (!raw || raw === "0.0.0") {
 
-      raw = global.DAM_APP_VERSION || "1.9.1";
+      raw = global.DAM_APP_VERSION || "1.9.2";
 
     }
 

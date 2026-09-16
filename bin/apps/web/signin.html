@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="pl" dir="ltr">
 <head>
   <script src="./assets/js/dam-panic-reload.js?v=5.0.196"></script>
@@ -222,7 +222,7 @@
 
   <script src="./assets/js/main.js?v=5.0.196"></script>
   <script src="./assets/js/dam-runtime.js?v=1.8.9"></script>
-  <script src="./assets/js/dam-api.js?v=1.8.9"></script>
+  <script src="./assets/js/dam-api.js?v=1.9.2"></script>
   <script>
     (function () {
       var mode = "login";
@@ -282,7 +282,11 @@
         var base = (window.DamRuntime && typeof DamRuntime.bridgeUrl === "function")
           ? DamRuntime.bridgeUrl()
           : "http://127.0.0.1:8766";
-        fetch(String(base).replace(/\/$/, "") + "/auth/registration-open", { cache: "no-store" })
+        var t = "";
+        try { t = localStorage.getItem("dam_token") || ""; } catch (_t) { t = ""; }
+        var hdr = { cache: "no-store" };
+        if (t) hdr.headers = { Authorization: "Bearer " + t };
+        fetch(String(base).replace(/\/$/, "") + "/auth/registration-open", hdr)
           .then(function (r) { return r.json(); })
           .then(function (data) {
             if (data && data.ok && data.open === true) {

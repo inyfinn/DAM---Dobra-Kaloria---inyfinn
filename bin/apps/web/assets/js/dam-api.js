@@ -828,20 +828,35 @@
           await window.DamRuntime.ensureServices({ skipEnsure: false });
         }
       } catch (eEnsure) { /* ignore */ }
+      var t = token();
+      var headers = { "Content-Type": "application/json", Accept: "application/json" };
+      if (t) headers.Authorization = "Bearer " + t;
+      var sid = localStorage.getItem("dam_session_id") || "";
+      var did = deviceId();
+      var mid = machineId();
+      if (sid) headers["X-Dam-Session-Id"] = sid;
+      if (did) headers["X-Dam-Device-Id"] = did;
+      if (mid) headers["X-Dam-Machine-Id"] = mid;
       var r = await fetch(bridgeAuthUrl() + "/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: headers,
         body: JSON.stringify({ email: email, password: password, name: name || "" }),
       });
       var data = await r.json().catch(function () { return null; });
       if (!data || !data.ok) {
         var err = (data && data.error) || "register_failed";
         if (err === "email_taken") throw new Error("Konto z tym emailem juz istnieje.");
-        if (err === "password_too_short") throw new Error("Haslo min. 4 znaki.");
+        if (err === "password_too_short") throw new Error("Haslo min. 8 znakow.");
         if (err === "invalid_email") throw new Error("Podaj poprawny email.");
-        throw new Error("Nie udalo sie utworzyc konta.");
+        if (err === "admin_required") {
+          throw new Error((data && data.hint) || "Nowe konta zaklada tylko administrator.");
+        }
+        if (err === "database_unavailable") {
+          throw new Error("Brak polaczenia z baza. Sprawdz most DAM i siec do Synology.");
+        }
+        throw new Error((data && data.hint) || "Nie udalo sie utworzyc konta.");
       }
-      // Po rejestracji od razu zaloguj na tym urzadzeniu
+      if (t) return data;
       return this.login(email, password);
     },
     logout: async function () {

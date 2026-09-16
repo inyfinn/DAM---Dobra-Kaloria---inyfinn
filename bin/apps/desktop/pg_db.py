@@ -183,9 +183,12 @@ def _pg_config_candidates() -> list[Path]:
     out.extend(
         [
             DESKTOP_DIR / "pg-config.json",
+            DESKTOP_DIR / "data" / "pg-config.json",
+            DESKTOP_DIR / "data" / "pg-config.json.off",
             DESKTOP_DIR / "data" / "pg-config.bundled.json",
             install_desktop / "data" / "pg-config.json",
             install_desktop / "pg-config.json",
+            install_desktop / "data" / "pg-config.json.off",
             install_desktop / "data" / "pg-config.bundled.json",
         ]
     )
