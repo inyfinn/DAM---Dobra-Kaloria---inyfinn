@@ -304,21 +304,12 @@ begin
     ShellExec('', 'explorer.exe', '"' + Dir + '"', '', SW_SHOWNORMAL, ewNoWait, RC);
 end;
 
-procedure LeftoverFolderClick(Sender: TObject);
-begin
-  OpenExplorerDir(TNewButton(Sender).Hint);
-end;
-
 procedure ShowLeftoverCleanup;
 var
-  Form: TSetupForm;
-  Info: TNewStaticText;
-  Btn: TNewButton;
-  CloseBtn: TNewButton;
   Dirs: array of String;
   Labels: array of String;
-  AppDir, LocalProg, LocalDam, Roam, Note: String;
-  I, TopY, Shown: Integer;
+  AppDir, LocalProg, LocalDam, Roam, Note, List: String;
+  I, Shown: Integer;
 begin
   AppDir := ExpandConstant('{app}');
   LocalProg := ExpandConstant('{localappdata}\Programs\DAM');
@@ -335,57 +326,34 @@ begin
   Dirs[3] := Roam;
   Labels[3] := 'AppData Roaming\DAM';
   Shown := 0;
+  List := '';
   for I := 0 to GetArrayLength(Dirs) - 1 do
+  begin
     if DirExists(Dirs[I]) then
+    begin
       Shown := Shown + 1;
+      List := List + Labels[I] + ': ' + Dirs[I] + #13#10;
+    end;
+  end;
   if Shown = 0 then
     Exit;
   Note :=
     'Niektore pliki DAM nie daly sie usunac (proces, uprawnienia albo instalacja w folderze gita).' + #13#10 +
-    'Otworz folder i skasuj resztki recznie.';
+    'Otworz folder i skasuj resztki recznie.' + #13#10#13#10 + List;
   ForceDirectories(LocalDam);
-  SaveStringToFile(LocalDam + '\ODINSTALOWANIE-RESZTKI.txt',
-    Note + #13#10 + AppDir + #13#10 + LocalProg + #13#10 + LocalDam + #13#10 + Roam + #13#10, False);
-  Form := CreateCustomForm();
-  Form.Caption := 'DAM — posprzataj resztki';
-  Form.ClientWidth := ScaleX(460);
-  Form.ClientHeight := ScaleY(80 + Shown * 36 + 48);
-  Form.Position := poScreenCenter;
-  Info := TNewStaticText.Create(Form);
-  Info.Parent := Form;
-  Info.Left := ScaleX(16);
-  Info.Top := ScaleY(12);
-  Info.Width := Form.ClientWidth - ScaleX(32);
-  Info.Height := ScaleY(56);
-  Info.WordWrap := True;
-  Info.Caption := Note;
-  TopY := 76;
+  SaveStringToFile(LocalDam + '\ODINSTALOWANIE-RESZTKI.txt', Note, False);
+  MsgBox(Note, mbInformation, MB_OK);
   for I := 0 to GetArrayLength(Dirs) - 1 do
   begin
-    if not DirExists(Dirs[I]) then
-      Continue;
-    Btn := TNewButton.Create(Form);
-    Btn.Parent := Form;
-    Btn.Caption := Labels[I];
-    Btn.Hint := Dirs[I];
-    Btn.ShowHint := True;
-    Btn.Left := ScaleX(16);
-    Btn.Top := ScaleY(TopY);
-    Btn.Width := Form.ClientWidth - ScaleX(32);
-    Btn.Height := ScaleY(28);
-    Btn.OnClick := @LeftoverFolderClick;
-    TopY := TopY + 36;
+    if DirExists(Dirs[I]) then
+    begin
+      if MsgBox(
+        Labels[I] + #13#10 + Dirs[I] + #13#10#13#10 +
+        'Otworzyc ten folder w Eksploratorze?',
+        mbConfirmation, MB_YESNO) = IDYES then
+        OpenExplorerDir(Dirs[I]);
+    end;
   end;
-  CloseBtn := TNewButton.Create(Form);
-  CloseBtn.Parent := Form;
-  CloseBtn.Caption := 'Zamknij';
-  CloseBtn.Left := Form.ClientWidth - ScaleX(108);
-  CloseBtn.Top := ScaleY(TopY + 8);
-  CloseBtn.Width := ScaleX(92);
-  CloseBtn.Height := ScaleY(28);
-  CloseBtn.ModalResult := mrOk;
-  Form.ShowModal;
-  Form.Free;
 end;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
