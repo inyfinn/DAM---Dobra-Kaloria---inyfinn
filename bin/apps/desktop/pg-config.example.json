@@ -1,5 +1,5 @@
 {
-  "_readme": "Kolejnosc: DDNS (WAN), aktualny IP WAN, LAN. DDNS zostaje primary bo IP od ISP sie zmienia. LAN tylko w domu. Kopiuj do data/pg-config.json albo dam-connection.env.",
+  "_readme": "Kolejnosc hostow: DDNS (WAN), IP WAN, LAN. sslmode=require = TLS do Synology (self-signed OK). verify-full wymaga data/dam_pg_root.crt. Env: DAM_PG_SSLMODE.",
   "hosts": [
     "inyfinn.synology.me",
     "212.87.249.132",
@@ -9,5 +9,6 @@
   "port": 5433,
   "dbname": "dam_eta",
   "user": "dam_eta",
-  "password": "REPLACE_ME"
+  "password": "REPLACE_ME",
+  "sslmode": "require"
 }

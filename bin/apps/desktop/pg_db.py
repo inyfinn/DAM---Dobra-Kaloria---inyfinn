@@ -145,6 +145,28 @@ def _load_config() -> dict[str, Any]:
     cfg["dbname"] = os.environ.get("DAM_PG_DBNAME", cfg.get("dbname", "dam_eta"))
     cfg["user"] = os.environ.get("DAM_PG_USER", cfg.get("user", "dam_eta"))
     cfg["password"] = os.environ.get("DAM_PG_PASSWORD", cfg.get("password", ""))
+    # TLS do Synology (self-signed server.crt). require = szyfr bez weryfikacji CA.
+    # verify-full tylko gdy dam_pg_root.crt jest w data/.
+    allowed_ssl = {
+        "disable",
+        "allow",
+        "prefer",
+        "require",
+        "verify-ca",
+        "verify-full",
+    }
+    sslmode = str(
+        os.environ.get("DAM_PG_SSLMODE", cfg.get("sslmode", "require")) or "require"
+    ).strip().lower()
+    if sslmode not in allowed_ssl:
+        sslmode = "require"
+    cfg["sslmode"] = sslmode
+    root_crt = cfg.get("sslrootcert") or ""
+    if not root_crt:
+        cand = DESKTOP_DIR / "data" / "dam_pg_root.crt"
+        if cand.is_file():
+            root_crt = str(cand)
+    cfg["sslrootcert"] = str(root_crt or "")
     cfg["hosts"] = _hosts_from_cfg(cfg)
     if (not cfg.get("hosts") and not cfg.get("host")) or not cfg.get("password"):
         raise PgNotConfigured("Baza Synology nie jest skonfigurowana.")
@@ -255,7 +277,7 @@ def _primary_host(cfg: dict[str, Any]) -> str:
 
 
 def connect():
-    """Polaczenie psycopg2 do JEDNEGO hosta, krotki timeout. RealDictCursor."""
+    """Polaczenie psycopg2 do JEDNEGO hosta, krotki timeout, TLS (sslmode)."""
     global _LAST_HOST
     if psycopg2 is None:
         raise RuntimeError("psycopg2-binary nie jest zainstalowany (patrz apps/desktop/requirements.txt)")
@@ -263,20 +285,28 @@ def connect():
     host = _primary_host(cfg)
     if not host:
         raise PgNotConfigured("Brak hosta Postgres w konfiguracji.")
+    kwargs: dict[str, Any] = {
+        "host": host,
+        "port": cfg["port"],
+        "dbname": cfg["dbname"],
+        "user": cfg["user"],
+        "password": cfg["password"],
+        "connect_timeout": _CONNECT_TIMEOUT_S,
+        "cursor_factory": psycopg2.extras.RealDictCursor,
+        "sslmode": cfg.get("sslmode") or "require",
+    }
+    root = (cfg.get("sslrootcert") or "").strip()
+    if root and Path(root).is_file() and kwargs["sslmode"] in ("verify-ca", "verify-full"):
+        kwargs["sslrootcert"] = root
     try:
-        conn = psycopg2.connect(
-            host=host,
-            port=cfg["port"],
-            dbname=cfg["dbname"],
-            user=cfg["user"],
-            password=cfg["password"],
-            connect_timeout=_CONNECT_TIMEOUT_S,
-            cursor_factory=psycopg2.extras.RealDictCursor,
-        )
+        conn = psycopg2.connect(**kwargs)
         _LAST_HOST = host
         return conn
     except Exception as exc:  # noqa: BLE001
-        msg = f"Postgres niedostepny {host}:{cfg['port']} -> {exc}"
+        msg = (
+            f"Postgres niedostepny {host}:{cfg['port']} "
+            f"sslmode={kwargs.get('sslmode')} -> {exc}"
+        )
         raise psycopg2.OperationalError(msg) if psycopg2 else RuntimeError(msg)
 
 
@@ -424,9 +454,12 @@ def ping() -> dict[str, Any]:
         "error": snap.get("error"),
     }
     try:
-        out["hosts"] = [_primary_host(_load_config())]
+        cfg = _load_config()
+        out["hosts"] = [_primary_host(cfg)]
+        out["sslmode"] = cfg.get("sslmode") or "require"
     except Exception:
         out["hosts"] = []
+        out["sslmode"] = None
     return out
 
 
