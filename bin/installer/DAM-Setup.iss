@@ -1,6 +1,6 @@
 ; DAM Windows installer - pelny kreator (licencja, sciezka, aktualizacja)
 #ifndef MyAppVersion
-  #define MyAppVersion "1.9.4"
+  #define MyAppVersion "1.9.5"
 #endif
 #ifndef StageDir
   #define StageDir "..\dist\staging\DAM-install"
@@ -32,7 +32,9 @@ DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=no
 DisableDirPage=no
 DisableReadyPage=no
+; Start as user; when user picks Program Files, Inno asks to elevate mid-wizard.
 PrivilegesRequired=lowest
+PrivilegesRequiredOverridesAllowed=dialog
 OutputDir={#ReleaseDir}
 OutputBaseFilename=DAM-Setup
 SetupIconFile={#StageDir}\bin\apps\desktop\dam_app.ico
@@ -44,9 +46,11 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 LicenseFile={#GitRoot}\bin\installer\LICENSE.txt
 InfoAfterFile={#StageDir}\README.txt
-UsePreviousAppDir=no
+UsePreviousAppDir=yes
 UsePreviousGroup=yes
 AlwaysShowDirOnReadyPage=yes
+AllowUNCPath=no
+ExtraDiskSpaceRequired=120000000
 CloseApplications=force
 CloseApplicationsFilter=*.exe
 RestartApplications=no
@@ -68,6 +72,7 @@ Name: "polish"; MessagesFile: "compiler:Languages\Polish.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "Utworz skrot na pulpicie"; GroupDescription: "Skroty:"; Flags: checkedonce
+Name: "cachesync"; Description: "Po instalacji odswiez pamiec podreczna z Synology (opcjonalne; paczka juz ma cache)"; GroupDescription: "Pamiec podreczna:"; Flags: unchecked
 
 ; Aktualizacja = czysty klad od nowa. Bez tego stare moduly JS/HTML i pliki
 ; usuniete w nowej wersji zostaja na dysku i wracaja do gry przy niezbumpowanym ?v=.
@@ -124,6 +129,7 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilen
 Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Instalowanie Visual C++ Runtime..."; Flags: waituntilterminated; Check: VCRedistNeeded
 Filename: "{tmp}\MicrosoftEdgeWebview2Setup.exe"; Parameters: "/silent /install"; StatusMsg: "Instalowanie WebView2 Runtime (wymagane przez pywebview)..."; Flags: waituntilterminated; Check: WebView2Needed
 Filename: "powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\bin\installer\trust-inyfinn-publisher.ps1"""; StatusMsg: "Rejestracja wydawcy Inyfinn..."; Flags: runhidden waituntilterminated
+Filename: "powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\bin\scripts\ops\sync-pamiec-podreczna-from-nas.ps1"" -Quiet"; StatusMsg: "Odswiezanie pamieci podrecznej z Synology..."; Flags: runhidden waituntilterminated; Tasks: cachesync
 Filename: "{app}\{#MyAppExeName}"; Description: "Uruchom DAM po zakonczeniu instalacji (startuje mostek)"; Flags: nowait postinstall skipifsilent
 
 [Registry]
@@ -135,10 +141,9 @@ function IsProtectedInstallPath(const Path: String): Boolean;
 var
   U: String;
 begin
+  { Tylko Windows i ProgramData — Program Files JEST dozwolone (UAC mid-wizard). }
   U := Uppercase(Path);
   Result :=
-    (Pos('\PROGRAM FILES\', '\' + U + '\') > 0) or
-    (Pos('\PROGRAM FILES (X86)\', '\' + U + '\') > 0) or
     (Pos('\WINDOWS\', '\' + U + '\') > 0) or
     (Pos('\PROGRAMDATA\', '\' + U + '\') > 0);
 end;
@@ -146,6 +151,11 @@ end;
 function UserInstallDir: String;
 begin
   Result := ExpandConstant('{localappdata}\Programs\DAM');
+end;
+
+function ProgramFilesInstallDir: String;
+begin
+  Result := ExpandConstant('{autopf}\DAM');
 end;
 
 function IsBadInstallPath(const Path: String): Boolean;
@@ -192,13 +202,13 @@ begin
     Result := SrcDir;
     Exit;
   end;
+  { Domyslnie folder uzytkownika; Program Files wybierasz w kreatorze (UAC w trakcie). }
   Result := UserInstallDir;
 end;
 
 procedure InitializeWizard;
 begin
-  if IsProtectedInstallPath(WizardForm.DirEdit.Text) then
-    WizardForm.DirEdit.Text := UserInstallDir;
+  { Nie nadpisuj wyboru uzytkownika — Program Files jest OK. }
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
@@ -206,14 +216,15 @@ begin
   Result := True;
   if CurPageID = wpSelectDir then
   begin
-    if IsProtectedInstallPath(WizardDirValue) then
+    if IsBadInstallPath(WizardDirValue) then
     begin
       MsgBox(
-        'DAM instaluje sie bez uprawnien administratora, w folderze uzytkownika:' + #13#10 +
-        UserInstallDir + #13#10#13#10 +
-        'Program Files na dysku C wymaga uprawnien, ktorych ten instalator nie uzywa.',
+        'Ta sciezka jest zabroniona (Windows / ProgramData / Temp).' + #13#10 +
+        'Wybierz np.:' + #13#10 +
+        UserInstallDir + #13#10 +
+        'albo' + #13#10 +
+        ProgramFilesInstallDir + ' (wymaga uprawnien administratora w trakcie instalacji).',
         mbError, MB_OK);
-      WizardForm.DirEdit.Text := UserInstallDir;
       Result := False;
     end;
   end;

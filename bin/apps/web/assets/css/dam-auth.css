@@ -1,6 +1,7 @@
 /**
  * DAM auth hero — overrides Geex style.css authentication panel (TRAP: do not edit style.css).
- * Contract: signin.html links this sheet + <picture> with kubara-building.avif/jpg in .geex-content__authentication__img.
+ * Contract: signin.html links this sheet + <img> kubara-building.jpg in .geex-content__authentication__img.
+ * Nie uzywaj <source type=avif> bez pliku .avif — WebView2 wtedy pokazuje broken image zamiast JPG.
  */
 
 /* Full-bleed photo panel — cancel Geex centering + side padding */

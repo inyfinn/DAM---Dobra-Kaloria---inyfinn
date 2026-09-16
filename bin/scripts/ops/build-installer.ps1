@@ -272,6 +272,32 @@ if (-not (Test-Path -LiteralPath (Join-Path $webDataDst "branding-index.json")))
   Set-Content -Path (Join-Path $webDataDst "branding-index.json") -Value '{"version":1,"assets":[],"note":"slim-only-installer-use-branding-grid-head"}' -Encoding UTF8
 }
 
+# Obrazy logowania + ikony — bez tego WebView pokazuje broken image.
+$authJpg = Join-Path $binDst "apps\web\assets\img\auth\kubara-building.jpg"
+if (-not (Test-Path -LiteralPath $authJpg) -or ((Get-Item -LiteralPath $authJpg).Length -lt 10000)) {
+  throw "Brak kubara-building.jpg w staging — Setup NIE moze wyjechac bez zdjecia logowania."
+}
+Write-Host "Auth hero OK: $authJpg ($((Get-Item $authJpg).Length) B)"
+
+# Cala pamiec podreczna (AVIF) w instalatorze — first paint bez NAS.
+$pamiecSrc = Join-Path $BinRoot "PAMIEC-PODRECZNA"
+$pamiecDst = Join-Path $binDst "PAMIEC-PODRECZNA"
+$thumbsSrc = Join-Path $pamiecSrc "thumbs"
+if (-not (Test-Path -LiteralPath $thumbsSrc)) {
+  throw "Brak bin\PAMIEC-PODRECZNA\thumbs — Setup NIE moze wyjechac bez cache."
+}
+$thumbCount = (Get-ChildItem -LiteralPath $thumbsSrc -File -Recurse -ErrorAction SilentlyContinue | Measure-Object).Count
+if ($thumbCount -lt 1000) {
+  throw "PAMIEC-PODRECZNA\thumbs ma tylko $thumbCount plikow (<1000). Uzupelnij cache przed buildem."
+}
+Write-Host "Staging PAMIEC-PODRECZNA ($thumbCount thumbs)..."
+Invoke-Robo $pamiecSrc $pamiecDst @("__pycache__", "_probe") @("*.tmp", "*.lock")
+$thumbDstCount = (Get-ChildItem -LiteralPath (Join-Path $pamiecDst "thumbs") -File -Recurse -ErrorAction SilentlyContinue | Measure-Object).Count
+if ($thumbDstCount -lt 1000) {
+  throw "Staging PAMIEC niekompletny ($thumbDstCount). Robocopy fail?"
+}
+Write-Host "Shipped PAMIEC-PODRECZNA thumbs=$thumbDstCount"
+
 $readmeSrc = Join-Path $BinRoot "installer\README.txt"
 if (Test-Path $readmeSrc) { Copy-Item $readmeSrc (Join-Path $stageRoot "README.txt") -Force }
 

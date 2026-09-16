@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=5.0.196">
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=1.0.83">
   <link rel="stylesheet" href="./assets/css/dam-brand.css?v=6.0.8">
-  <link rel="stylesheet" href="./assets/css/dam-auth.css?v=5.0.206">
+  <link rel="stylesheet" href="./assets/css/dam-auth.css?v=1.9.5">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
   <script>
     if (localStorage.theme) { document.documentElement.setAttribute("data-theme", localStorage.theme); document.documentElement.classList.toggle("dark", localStorage.theme==="dark"); }
@@ -212,17 +212,17 @@
         </div>
       </div>
       <div class="geex-content__authentication__img">
-        <picture>
-          <source type="image/avif" srcset="./assets/img/auth/kubara-building.avif">
-          <img src="./assets/img/auth/kubara-building.jpg" alt="Budynek siedziby Kubara w Konstancinie-Jeziornie">
-        </picture>
+          <img src="./assets/img/auth/kubara-building.jpg"
+               alt="Budynek siedziby Kubara w Konstancinie-Jeziornie"
+               width="1200" height="1600"
+               decoding="async">
       </div>
     </div>
   </main>
 
   <script src="./assets/js/main.js?v=5.0.196"></script>
   <script src="./assets/js/dam-runtime.js?v=1.8.9"></script>
-  <script src="./assets/js/dam-api.js?v=1.9.4"></script>
+  <script src="./assets/js/dam-api.js?v=1.9.5"></script>
   <script>
     (function () {
       var mode = "login";
