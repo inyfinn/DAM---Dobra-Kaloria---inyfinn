@@ -138,6 +138,7 @@ bin/PAMIEC-PODRECZNA/**/*.webp
 
 # Cursor / local agent noise
 .cursor/
+!.cursor/environment.json
 bin/.cursor/
 ui-complete/
 bin/ui-complete/

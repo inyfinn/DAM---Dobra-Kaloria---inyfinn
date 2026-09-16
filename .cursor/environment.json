@@ -1,0 +1,5 @@
+{
+  "name": "Synology MCP — Cloud SSH",
+  "install": "pip install --user -r bin/apps/desktop/requirements.txt\ncommand -v composer >/dev/null 2>&1 && composer install --no-interaction --working-dir=bin/apps/api || true\ncommand -v npm >/dev/null 2>&1 && npm install --prefix bin/apps/api || true\nbash bin/scripts/ops/clone-synology-mcp.sh /tmp/synology-mcp || true\nbash /tmp/synology-mcp/scripts/cloud-agent-ssh-setup.sh 2>/dev/null || bash bin/scripts/ops/setup-cloud-ssh-syno.sh || true",
+  "start": "bash /tmp/synology-mcp/scripts/cloud-agent-ssh-setup.sh --verify-only 2>/dev/null || bash bin/scripts/ops/setup-cloud-ssh-syno.sh --verify-only || true"
+}
