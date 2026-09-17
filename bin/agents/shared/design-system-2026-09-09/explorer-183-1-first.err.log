@@ -1,0 +1,9 @@
+﻿[52724:75784:0909/123013.918:ERROR:components\device_event_log\device_event_log_impl.cc:211] [12:30:13.919] USB: usb_service_win.cc:108 SetupDiGetDeviceProperty({{A45C254E-DF1C-4EFD-8020-67D146A850E0}, 6}) failed: Nie mo┼╝na odnale┼║─ç elementu. (0x490)
+[52724:21860:0909/123014.366:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: PHONE_REGISTRATION_ERROR
+[52724:21860:0909/123014.367:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: PHONE_REGISTRATION_ERROR
+[52724:21860:0909/123014.391:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: PHONE_REGISTRATION_ERROR
+[52724:21860:0909/123014.400:ERROR:google_apis\gcm\engine\mcs_client.cc:702]   Error code: 401  Error message: Authentication Failed: wrong_secret
+[52724:21860:0909/123014.400:ERROR:google_apis\gcm\engine\mcs_client.cc:704] Failed to log in to GCM, resetting connection.
+Created TensorFlow Lite XNNPACK delegate for CPU.
+162417 bytes written to file C:\Users\KRZYSZ~1.WIE\AppData\Local\Temp\dam-ex-cli-work-183\explorer-183-1-first.png
+

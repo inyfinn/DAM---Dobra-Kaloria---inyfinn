@@ -1,0 +1,8 @@
+﻿[50084:68932:0909/123124.625:ERROR:components\device_event_log\device_event_log_impl.cc:211] [12:31:24.626] USB: usb_service_win.cc:108 SetupDiGetDeviceProperty({{A45C254E-DF1C-4EFD-8020-67D146A850E0}, 6}) failed: Nie mo┼╝na odnale┼║─ç elementu. (0x490)
+[50084:47676:0909/123125.704:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: PHONE_REGISTRATION_ERROR
+[50084:47676:0909/123125.704:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: PHONE_REGISTRATION_ERROR
+[50084:47676:0909/123125.736:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: PHONE_REGISTRATION_ERROR
+[50084:47676:0909/123125.953:ERROR:google_apis\gcm\engine\mcs_client.cc:702]   Error code: 401  Error message: Authentication Failed: wrong_secret
+[50084:47676:0909/123125.953:ERROR:google_apis\gcm\engine\mcs_client.cc:704] Failed to log in to GCM, resetting connection.
+162488 bytes written to file C:\Users\KRZYSZ~1.WIE\AppData\Local\Temp\dam-ex-cli-work-183\explorer-183-3-fresh.png
+

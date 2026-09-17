@@ -1,0 +1,29 @@
+{
+  "when": "2026-09-15",
+  "app": "http://127.0.0.1:8765",
+  "before_from_audit": {
+    "widget_title_w_360": 20,
+    "handle_se": [14, 14],
+    "handle_e_s": [10, 10],
+    "control_fs_token": "12px",
+    "costs_search_fs": 14,
+    "index_docH_390": 129916
+  },
+  "after": {
+    "widget_title_w_360": { "newest_viz_3": 208, "newest_products_f": 208, "branding_latest": 208, "asana_home": 212 },
+    "widget_title_w_390": { "newest_viz_3": 238, "asana_home": 242 },
+    "handles_360": { "display": "none", "w": 0, "h": 0 },
+    "control_fs_token_360": "16px",
+    "text_input": { "id": "damProjectsSearch", "fs": 16, "w": 264, "h": 46 },
+    "search_costs": { "id": "damCostBaseSearch", "fs": 16, "w": 194, "h": 46 },
+    "number_input": { "key": "bg_brightness", "fs": 16, "w": 56, "h": 44 },
+    "index_docH_390": 6960,
+    "project_cards_painted": 8,
+    "show_more": true
+  },
+  "payloads": {
+    "file-index-explorer": 984984,
+    "viz_latest": 516659,
+    "branding-grid-head": 361055
+  }
+}

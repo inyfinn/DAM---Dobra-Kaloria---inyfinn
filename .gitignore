@@ -66,6 +66,13 @@ apps/desktop/machine-config.json
 apps/web/data/dam-runtime.json
 apps/web/data/dam-identity.json
 
+# Synology Drive traktuje kazdy zapis heartbeatu (co ~15s) w danych runtime jako
+# konflikt edycji, gdy dwie maszyny pracuja rownolegle, i tworzy kopie zamiast
+# nadpisywac. Bez tej reguly narosloby to znow do setek plikow (2026-09-17: 884
+# usuniete recznie). Docelowo katalogi data/ powinny byc wykluczone z sync Synology.
+**/*_Conflict.json
+**/*_Conflict_*.json
+
 # Postgres na Synology (ADR-009) - haslo/host per-maszyna, nigdy w Git
 bin/apps/desktop/data/pg-config.json
 bin/apps/desktop/data/pg-config.json.off
@@ -190,6 +197,26 @@ apps/desktop/data/index-watcher.log
 apps/desktop/data/index-watcher-status.json
 bin/apps/desktop/data/index-supervisor.lock.json
 apps/desktop/data/index-supervisor.lock.json
+# Runtime stan indeksu/cache pisany przez local_bridge.py, index_supervisor.py,
+# dam_thumb_cache.py - regenerowany przy kazdym starcie, nie jest zrodlem prawdy.
+bin/apps/desktop/data/background-jobs.json
+bin/apps/desktop/data/cache-publish-queue.json
+bin/apps/desktop/data/cache-sync-status.json
+bin/apps/desktop/data/index-compare-snapshot.json
+bin/apps/desktop/data/index-compare-snapshot.json.prev
+bin/apps/desktop/data/index-control.json
+bin/apps/desktop/data/index-last-report.json
+bin/apps/desktop/data/index-live.json
+bin/apps/desktop/data/index-run-snapshot.json
+bin/apps/desktop/data/index-rebuild.log*
+bin/apps/desktop/data/worker-serve*.log
+# Zapisy atomowe (write-tmp-then-rename) i rotowane logi - niedokonczone/stare kopie
+bin/apps/desktop/data/*.tmp
+bin/apps/desktop/data/*.log.[0-9]*
+bin/apps/web/data/*.tmp
+# Log lokalnej instalacji/deinstalacji Inno Setup (generowany przy kazdym tescie instalatora)
+unins*.dat
+unins*.exe
 apps/desktop/data/index-fullrebuild-followup*.log
 apps/desktop/data/db-prefer.json
 apps/desktop/data/user-*.json

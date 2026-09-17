@@ -1,0 +1,5 @@
+﻿Created TensorFlow Lite XNNPACK delegate for CPU.
+[40596:44736:0909/124710.817:ERROR:components\device_event_log\device_event_log_impl.cc:211] [12:47:10.817] USB: usb_service_win.cc:108 SetupDiGetDeviceProperty({{A45C254E-DF1C-4EFD-8020-67D146A850E0}, 6}) failed: Nie mo┼╝na odnale┼║─ç elementu. (0x490)
+[40596:33160:0909/124710.983:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT
+164527 bytes written to file C:\Users\KRZYSZ~1.WIE\AppData\Local\Temp\dam-ex-cli-work-184\explorer-184-3-return.png
+

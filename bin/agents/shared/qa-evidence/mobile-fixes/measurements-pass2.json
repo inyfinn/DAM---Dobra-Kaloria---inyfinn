@@ -1,0 +1,52 @@
+{
+  "dash360": {
+    "href": "http://127.0.0.1:8765/dashboard.html",
+    "tutorial": false,
+    "titleW": 208,
+    "titleTxt": "4 najnowsze wizualizacje"
+  },
+  "projects": {
+    "docH": 6960,
+    "cards": 8,
+    "more": true,
+    "moreTxt": "Pokaż więcej (185)"
+  },
+  "search": {
+    "fs": 16,
+    "w": 264,
+    "h": 46
+  },
+  "costsInputs": [
+    {
+      "id": "damCostBaseSearch",
+      "type": "search",
+      "fs": 16,
+      "w": 236,
+      "h": 46
+    },
+    {
+      "id": "damCostSearch",
+      "type": "search",
+      "fs": 16,
+      "w": 254,
+      "h": 46
+    }
+  ],
+  "perf": [
+    {
+      "name": "explorer",
+      "ms": 96082,
+      "err": "page.evaluate: Target crashed "
+    },
+    {
+      "name": "visualizations",
+      "ms": 6,
+      "err": "page.goto: Page crashed\nCall log:\n  - navigating to \"http://127.0.0.1:8765/visualizations.html\", waiting until \"domcontentloaded\"\n"
+    },
+    {
+      "name": "branding",
+      "ms": 2,
+      "err": "page.goto: Page crashed\nCall log:\n  - navigating to \"http://127.0.0.1:8765/branding.html\", waiting until \"domcontentloaded\"\n"
+    }
+  ]
+}

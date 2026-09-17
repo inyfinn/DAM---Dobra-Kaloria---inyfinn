@@ -1,0 +1,22 @@
+---
+description: DAM design system rhythm — read before layout/colour/spacing edits
+globs: []
+alwaysApply: true
+---
+
+MUST read `D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\design-system\DESIGN_SYSTEM.md` before any layout, colour, type, spacing, component, or page-content change.
+
+# DAM Design System Rhythm
+
+**Skip-kills (hard bans):**
+
+- Do not copy Geex `style.css` sidebar nav sizing as truth — edit `--dam-sidebar-nav-*` in tokens/primitives.
+- Do not edit unlinked `assets/css/sidebar.css` for nav spacing.
+- No raw hex for brand/surface/text — use `--dam-*` tokens.
+- Do not restyle frozen card anatomy in panel sheets — owner is `dam-brand.css` (`.dam-viz-card__body`).
+- Do not treat a zero-byte or undimensioned PNG as vision proof — record actual WxH and Read the image.
+- Do not dodge Polish glyphs or leave one-letter orphans unbound in user-facing copy.
+
+**Token ladder:** `dam-tokens.css` → `dam-primitives.css` / `dam-brand.css` → panel sheets (`dam-viz.css`, `dam-branding.css`). Panel CSS must not win with one-off padding.
+
+**Unbound copy:** Wire new user-facing strings through `dam-i18n.js` or match surrounding panel conventions — no orphan hard-coded PL/EN in one HTML file only.

@@ -1,0 +1,26 @@
+{
+  "page": "http://127.0.0.1:8765/project.html?id=figa-z-makiem-owocowe",
+  "source": "live session (not a fixture)",
+  "named_padding_px": {
+    "geex-main-content": 12,
+    "damProductCatalog": 8
+  },
+  "at_390": {
+    "innerWidth": 390,
+    "content_column": 366,
+    "threshold_92pct": 336.7,
+    "dam-catalog-fmcg__inner": 348,
+    "section.dam-catalog-fmcg": 348,
+    "dam-catalog-kpi-panel": 348,
+    "dam-catalog-kpi": 348
+  },
+  "at_360": {
+    "innerWidth": 360,
+    "content_column": 336,
+    "threshold_92pct": 309.1,
+    "dam-catalog-fmcg__inner": 318,
+    "section.dam-catalog-fmcg": 318,
+    "dam-catalog-kpi-panel": 318,
+    "dam-catalog-kpi": 318
+  }
+}

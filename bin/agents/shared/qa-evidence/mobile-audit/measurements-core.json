@@ -1,0 +1,2473 @@
+[
+  {
+    "tag": "signin-360",
+    "measure": {
+      "href": "http://127.0.0.1:8765/dashboard.html",
+      "vw": 360,
+      "vh": 800,
+      "sw": 360,
+      "overflow": 0,
+      "sidebar": {
+        "w": 0,
+        "left": 0,
+        "transform": "none",
+        "open": false
+      },
+      "header": {
+        "h": 365,
+        "w": 284,
+        "pos": "relative"
+      },
+      "fmcg": [],
+      "squeezed": [],
+      "narrow": [
+        {
+          "sel": "h3#dw-title-asana_home.dam-widget__title",
+          "w": 90,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "Asana - Moje zadania"
+        },
+        {
+          "sel": "h3#dw-title-newest_viz_3.dam-widget__title",
+          "w": 20,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "4 najnowsze wizualizacje"
+        },
+        {
+          "sel": "label.dam-widget__count-field",
+          "w": 56,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "Liczba kafelków: 2, 4, 6, 8 albo 10246810"
+        },
+        {
+          "sel": "h3#dw-title-newest_products_f.dam-widget__title",
+          "w": 20,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "4 najnowsze produkty"
+        },
+        {
+          "sel": "label.dam-widget__count-field",
+          "w": 56,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "Liczba kafelków: 2, 4, 6, 8 albo 10246810"
+        },
+        {
+          "sel": "h3#dw-title-branding_latest.dam-widget__title",
+          "w": 20,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "4 najnowsze materiały branding"
+        },
+        {
+          "sel": "label.dam-widget__count-field",
+          "w": 56,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "Liczba kafelków: 2, 4, 6, 8 albo 10246810"
+        },
+        {
+          "sel": "h3#dw-title-quick_links.dam-widget__title",
+          "w": 98,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "Szybkie skróty"
+        }
+      ],
+      "wordBreak": [],
+      "touch": [
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--e.is-bento-at-min",
+          "w": 10,
+          "h": 152,
+          "txt": "Zmien szerokosc"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--s.is-bento-at-min",
+          "w": 16,
+          "h": 10,
+          "txt": "Zmien wysokosc"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--se.is-bento-at-min",
+          "w": 14,
+          "h": 14,
+          "txt": "Zmien rozmiar"
+        },
+        {
+          "sel": "button.dam-asana-home__tab",
+          "w": 83,
+          "h": 32,
+          "txt": "Zaległe (71)"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--e",
+          "w": 10,
+          "h": 470,
+          "txt": "Zmien szerokosc"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--s.is-bento-at-min",
+          "w": 102,
+          "h": 10,
+          "txt": "Zmien wysokosc"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--se",
+          "w": 14,
+          "h": 14,
+          "txt": "Zmien rozmiar"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--e.is-bento-at-min",
+          "w": 10,
+          "h": 152,
+          "txt": "Zmien szerokosc"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--s.is-bento-at-min",
+          "w": 16,
+          "h": 10,
+          "txt": "Zmien wysokosc"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--se.is-bento-at-min",
+          "w": 14,
+          "h": 14,
+          "txt": "Zmien rozmiar"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--e.is-bento-at-min",
+          "w": 10,
+          "h": 152,
+          "txt": "Zmien szerokosc"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--s.is-bento-at-min",
+          "w": 16,
+          "h": 10,
+          "txt": "Zmien wysokosc"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--se.is-bento-at-min",
+          "w": 14,
+          "h": 14,
+          "txt": "Zmien rozmiar"
+        },
+        {
+          "sel": "button.dam-viz-icon-btn.dam-win-btn",
+          "w": 31,
+          "h": 31,
+          "txt": "Folder Windows"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--brand",
+          "w": 16,
+          "h": 24,
+          "txt": "DK"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--carrier",
+          "w": 16,
+          "h": 24,
+          "txt": "DOYPACK"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--index",
+          "w": 16,
+          "h": 24,
+          "txt": "6900001.00"
+        },
+        {
+          "sel": "button.dam-viz-icon-btn.dam-win-btn",
+          "w": 31,
+          "h": 31,
+          "txt": "Folder Windows"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--brand",
+          "w": 16,
+          "h": 24,
+          "txt": "DK"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--carrier",
+          "w": 16,
+          "h": 24,
+          "txt": "MINI BATON"
+        }
+      ],
+      "tables": [],
+      "iosZoom": [
+        {
+          "id": "damAdminModeSwitch",
+          "type": "checkbox",
+          "fs": 15,
+          "w": 1
+        },
+        {
+          "id": "",
+          "type": "select-one",
+          "fs": 12,
+          "w": 56
+        },
+        {
+          "id": "",
+          "type": "select-one",
+          "fs": 12,
+          "w": 56
+        },
+        {
+          "id": "",
+          "type": "select-one",
+          "fs": 12,
+          "w": 56
+        },
+        {
+          "id": "damNotifyToggle",
+          "type": "checkbox",
+          "fs": 15,
+          "w": 20
+        }
+      ],
+      "fabs": [
+        {
+          "sel": "#damHelpFab",
+          "w": 44,
+          "h": 44,
+          "left": 302,
+          "top": 742
+        }
+      ],
+      "indexReport": null
+    }
+  },
+  {
+    "tag": "index-360",
+    "measure": {
+      "href": "http://127.0.0.1:8765/index.html",
+      "vw": 360,
+      "vh": 800,
+      "sw": 360,
+      "overflow": 0,
+      "sidebar": {
+        "w": 0,
+        "left": 0,
+        "transform": "none",
+        "open": false
+      },
+      "header": {
+        "h": 376,
+        "w": 284,
+        "pos": "relative"
+      },
+      "fmcg": [],
+      "squeezed": [],
+      "narrow": [],
+      "wordBreak": [],
+      "touch": [
+        {
+          "sel": "button#damProjectsRefresh.dam-int-cta",
+          "w": 96,
+          "h": 34,
+          "txt": "Odśwież listę"
+        },
+        {
+          "sel": "button#damIngestBtn.dam-int-cta",
+          "w": 89,
+          "h": 34,
+          "txt": "Skanuj dysk"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-viz-badge--index.dam-branding-id-chip",
+          "w": 103,
+          "h": 23,
+          "txt": "Kopiuj indeks 6300808.00"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--brand",
+          "w": 37,
+          "h": 23,
+          "txt": "DK"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--cat",
+          "w": 47,
+          "h": 23,
+          "txt": "Kulki"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--subcat",
+          "w": 74,
+          "h": 23,
+          "txt": "Owocowe"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--carrier",
+          "w": 77,
+          "h": 23,
+          "txt": "DOYPACK"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--lang",
+          "w": 34,
+          "h": 23,
+          "txt": "PL"
+        },
+        {
+          "sel": "div.dam-check-ok.dam-check-row--interactive",
+          "w": 224,
+          "h": 30,
+          "txt": "Podgląd PDF projektuPrzejdź"
+        },
+        {
+          "sel": "div.dam-check-ok.dam-check-row--interactive",
+          "w": 224,
+          "h": 30,
+          "txt": "Pliki do drukuPrzejdź"
+        },
+        {
+          "sel": "a.dam-int-cta.dam-btn-icon.dam-project-check-btn",
+          "w": 140,
+          "h": 34,
+          "txt": "Sprawdź projekt"
+        },
+        {
+          "sel": "a.dam-int-cta.dam-btn-icon.dam-project-go-btn",
+          "w": 94,
+          "h": 34,
+          "txt": "Przejdź"
+        },
+        {
+          "sel": "button.dam-int-cta.dam-int-cta--icon.dam-btn-icon",
+          "w": 242,
+          "h": 34,
+          "txt": "Folder Windows"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--brand",
+          "w": 37,
+          "h": 23,
+          "txt": "DK"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--cat",
+          "w": 67,
+          "h": 23,
+          "txt": "Roślinne"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--subcat",
+          "w": 79,
+          "h": 23,
+          "txt": "Niemięsne"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--carrier",
+          "w": 63,
+          "h": 23,
+          "txt": "RĘKAW"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--lang",
+          "w": 34,
+          "h": 23,
+          "txt": "PL"
+        },
+        {
+          "sel": "div.dam-check-ok.dam-check-row--interactive",
+          "w": 224,
+          "h": 30,
+          "txt": "Podgląd PDF projektuPrzejdź"
+        },
+        {
+          "sel": "div.dam-check-ok.dam-check-row--interactive",
+          "w": 224,
+          "h": 30,
+          "txt": "Pliki do drukuPrzejdź"
+        }
+      ],
+      "tables": [],
+      "iosZoom": [
+        {
+          "id": "damAdminModeSwitch",
+          "type": "checkbox",
+          "fs": 15,
+          "w": 1
+        },
+        {
+          "id": "damProjectsSearch",
+          "type": "text",
+          "fs": 13,
+          "w": 234
+        },
+        {
+          "id": "damProjectsIncludeArchive",
+          "type": "checkbox",
+          "fs": 15,
+          "w": 1
+        },
+        {
+          "id": "damProjectsSort",
+          "type": "select-one",
+          "fs": 12,
+          "w": 180
+        },
+        {
+          "id": "damRevealLowTags",
+          "type": "checkbox",
+          "fs": 15,
+          "w": 1
+        }
+      ],
+      "fabs": [
+        {
+          "sel": "#damHelpFab",
+          "w": 44,
+          "h": 44,
+          "left": 302,
+          "top": 742
+        }
+      ],
+      "indexReport": null
+    }
+  },
+  {
+    "tag": "dashboard-360",
+    "measure": {
+      "href": "http://127.0.0.1:8765/dashboard.html",
+      "vw": 372,
+      "vh": 825,
+      "sw": 372,
+      "overflow": 0,
+      "sidebar": {
+        "w": 0,
+        "left": 0,
+        "transform": "none",
+        "open": false
+      },
+      "header": {
+        "h": 341,
+        "w": 284,
+        "pos": "relative"
+      },
+      "fmcg": [],
+      "squeezed": [],
+      "narrow": [
+        {
+          "sel": "h3#dw-title-asana_home.dam-widget__title",
+          "w": 90,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "Asana - Moje zadania"
+        },
+        {
+          "sel": "h3#dw-title-newest_viz_3.dam-widget__title",
+          "w": 20,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "4 najnowsze wizualizacje"
+        },
+        {
+          "sel": "label.dam-widget__count-field",
+          "w": 56,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "Liczba kafelków: 2, 4, 6, 8 albo 10246810"
+        },
+        {
+          "sel": "h3#dw-title-newest_products_f.dam-widget__title",
+          "w": 20,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "4 najnowsze produkty"
+        },
+        {
+          "sel": "label.dam-widget__count-field",
+          "w": 56,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "Liczba kafelków: 2, 4, 6, 8 albo 10246810"
+        },
+        {
+          "sel": "h3#dw-title-branding_latest.dam-widget__title",
+          "w": 20,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "4 najnowsze materiały branding"
+        },
+        {
+          "sel": "label.dam-widget__count-field",
+          "w": 56,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "Liczba kafelków: 2, 4, 6, 8 albo 10246810"
+        },
+        {
+          "sel": "h3#dw-title-quick_links.dam-widget__title",
+          "w": 98,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "Szybkie skróty"
+        }
+      ],
+      "wordBreak": [],
+      "touch": [
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--e.is-bento-at-min",
+          "w": 10,
+          "h": 152,
+          "txt": "Zmien szerokosc"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--s.is-bento-at-min",
+          "w": 16,
+          "h": 10,
+          "txt": "Zmien wysokosc"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--se.is-bento-at-min",
+          "w": 14,
+          "h": 14,
+          "txt": "Zmien rozmiar"
+        },
+        {
+          "sel": "button.dam-asana-home__tab",
+          "w": 83,
+          "h": 32,
+          "txt": "Zaległe (71)"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--e",
+          "w": 10,
+          "h": 470,
+          "txt": "Zmien szerokosc"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--s.is-bento-at-min",
+          "w": 102,
+          "h": 10,
+          "txt": "Zmien wysokosc"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--se",
+          "w": 14,
+          "h": 14,
+          "txt": "Zmien rozmiar"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--e.is-bento-at-min",
+          "w": 10,
+          "h": 152,
+          "txt": "Zmien szerokosc"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--s.is-bento-at-min",
+          "w": 16,
+          "h": 10,
+          "txt": "Zmien wysokosc"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--se.is-bento-at-min",
+          "w": 14,
+          "h": 14,
+          "txt": "Zmien rozmiar"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--e.is-bento-at-min",
+          "w": 10,
+          "h": 152,
+          "txt": "Zmien szerokosc"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--s.is-bento-at-min",
+          "w": 16,
+          "h": 10,
+          "txt": "Zmien wysokosc"
+        },
+        {
+          "sel": "button.dam-bento-handle.dam-bento-handle--se.is-bento-at-min",
+          "w": 14,
+          "h": 14,
+          "txt": "Zmien rozmiar"
+        },
+        {
+          "sel": "button.dam-viz-icon-btn.dam-win-btn",
+          "w": 31,
+          "h": 31,
+          "txt": "Folder Windows"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--brand",
+          "w": 16,
+          "h": 24,
+          "txt": "DK"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--carrier",
+          "w": 16,
+          "h": 24,
+          "txt": "DOYPACK"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--index",
+          "w": 16,
+          "h": 24,
+          "txt": "6900001.00"
+        },
+        {
+          "sel": "button.dam-viz-icon-btn.dam-win-btn",
+          "w": 31,
+          "h": 31,
+          "txt": "Folder Windows"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--brand",
+          "w": 16,
+          "h": 24,
+          "txt": "DK"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--carrier",
+          "w": 16,
+          "h": 24,
+          "txt": "MINI BATON"
+        }
+      ],
+      "tables": [],
+      "iosZoom": [
+        {
+          "id": "damAdminModeSwitch",
+          "type": "checkbox",
+          "fs": 15,
+          "w": 1
+        },
+        {
+          "id": "",
+          "type": "select-one",
+          "fs": 12,
+          "w": 56
+        },
+        {
+          "id": "",
+          "type": "select-one",
+          "fs": 12,
+          "w": 56
+        },
+        {
+          "id": "",
+          "type": "select-one",
+          "fs": 12,
+          "w": 56
+        },
+        {
+          "id": "damNotifyToggle",
+          "type": "checkbox",
+          "fs": 15,
+          "w": 20
+        }
+      ],
+      "fabs": [
+        {
+          "sel": "#damHelpFab",
+          "w": 44,
+          "h": 44,
+          "left": 314,
+          "top": 767
+        }
+      ],
+      "indexReport": null
+    }
+  },
+  {
+    "tag": "project-360",
+    "measure": {
+      "href": "http://127.0.0.1:8765/project.html?id=figa-z-makiem-owocowe",
+      "vw": 360,
+      "vh": 800,
+      "sw": 360,
+      "overflow": 0,
+      "sidebar": {
+        "w": 0,
+        "left": 0,
+        "transform": "none",
+        "open": false
+      },
+      "header": {
+        "h": 521,
+        "w": 284,
+        "pos": "relative"
+      },
+      "fmcg": [
+        {
+          "sel": "section.dam-catalog-fmcg",
+          "w": 226,
+          "left": 59,
+          "pct": 63,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Kalkulacja opakowań (FMCG)(TESTOWE)Ten sam łańcuch co w Kalkulatorze k"
+        },
+        {
+          "sel": "div.dam-catalog-fmcg__inner",
+          "w": 202,
+          "left": 71,
+          "pct": 56,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Kalkulacja opakowań (FMCG)(TESTOWE)Ten sam łańcuch co w Kalkulatorze k"
+        },
+        {
+          "sel": "div.dam-catalog-kpi",
+          "w": 178,
+          "left": 83,
+          "pct": 49,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Wymiary140 × 170 × 80 mmWaga netto65 gSzt. w kartonie24Układ w kartoni"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-label",
+          "w": 168,
+          "left": 88,
+          "pct": 47,
+          "wb": "normal",
+          "ow": "break-word",
+          "txt": "Prepress / pliki do druku"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-label",
+          "w": 168,
+          "left": 88,
+          "pct": 47,
+          "wb": "normal",
+          "ow": "break-word",
+          "txt": "Korekty proof i akceptacja"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-label",
+          "w": 168,
+          "left": 88,
+          "pct": 47,
+          "wb": "normal",
+          "ow": "break-word",
+          "txt": "Druk doypack / flexo"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-label",
+          "w": 168,
+          "left": 88,
+          "pct": 47,
+          "wb": "normal",
+          "ow": "break-word",
+          "txt": "Surowiec / folia laminowana"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-label",
+          "w": 168,
+          "left": 88,
+          "pct": 47,
+          "wb": "normal",
+          "ow": "break-word",
+          "txt": "Etykieta samoprzylepna"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-label",
+          "w": 168,
+          "left": 88,
+          "pct": 47,
+          "wb": "normal",
+          "ow": "break-word",
+          "txt": "Kartonik jednostkowy"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-text",
+          "w": 168,
+          "left": 88,
+          "pct": 47,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Prepress / pliki do drukuDTP · 6 h · 85,00 PLN/h"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-text",
+          "w": 168,
+          "left": 88,
+          "pct": 47,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Korekty proof i akceptacjaDTP · 4 h · 85,00 PLN/h"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-text",
+          "w": 168,
+          "left": 88,
+          "pct": 47,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Druk doypack / flexoProdukcja · 12000 szt · 0,38 PLN/szt"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-text",
+          "w": 168,
+          "left": 88,
+          "pct": 47,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Surowiec / folia laminowanaZakupy · 12000 szt · 0,31 PLN/szt"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-text",
+          "w": 168,
+          "left": 88,
+          "pct": 47,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Etykieta samoprzylepnaZakupy · 12000 szt · 0,12 PLN/szt"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-text",
+          "w": 168,
+          "left": 88,
+          "pct": 47,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Kartonik jednostkowyZakupy · 500 szt · 5,80 PLN/szt"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__tile",
+          "w": 202,
+          "left": 71,
+          "pct": 56,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Prepress / DTPPrepress / pliki do drukuDTP · 6 h · 85,00 PLN/h510,00 P"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__tile",
+          "w": 202,
+          "left": 71,
+          "pct": 56,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Druk oraz surowiecDruk doypack / flexoProdukcja · 12000 szt · 0,38 PLN"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__tile",
+          "w": 202,
+          "left": 71,
+          "pct": 56,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Opakowanie jednostkowe oraz zbiorczeKartonik jednostkowyZakupy · 500 s"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__tile",
+          "w": 202,
+          "left": 71,
+          "pct": 56,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Logistyka oraz zgodnośćWyjazd na zadruk (PrintPack Kalisz (ocena: 4/5)"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__tile",
+          "w": 202,
+          "left": 71,
+          "pct": 56,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Suma opakowań31 663,00 PLN"
+        }
+      ],
+      "squeezed": [
+        {
+          "sel": "div.dam-catalog-kpi",
+          "w": 178,
+          "pct": 49
+        }
+      ],
+      "narrow": [],
+      "wordBreak": [],
+      "touch": [
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--brand",
+          "w": 37,
+          "h": 23,
+          "txt": "DK"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--cat",
+          "w": 47,
+          "h": 23,
+          "txt": "Kulki"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--subcat",
+          "w": 74,
+          "h": 23,
+          "txt": "Owocowe"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--carrier",
+          "w": 77,
+          "h": 23,
+          "txt": "DOYPACK"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--lang",
+          "w": 34,
+          "h": 23,
+          "txt": "PL"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--index",
+          "w": 91,
+          "h": 23,
+          "txt": "6300808.00"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--pakowanie",
+          "w": 76,
+          "h": 23,
+          "txt": "2F · 12×2"
+        },
+        {
+          "sel": "div.dam-slot-row.dam-check-ok.dam-slot-row--interactive",
+          "w": 208,
+          "h": 30,
+          "txt": "Podgląd PDF projektuPrzejdź"
+        },
+        {
+          "sel": "div.dam-slot-row.dam-check-ok.dam-slot-row--interactive",
+          "w": 208,
+          "h": 30,
+          "txt": "Pliki do drukuPrzejdź"
+        },
+        {
+          "sel": "button.geex-btn.geex-btn__customizer-close",
+          "w": 40,
+          "h": 44,
+          "txt": "Zamknij"
+        }
+      ],
+      "tables": [],
+      "iosZoom": [
+        {
+          "id": "damAdminModeSwitch",
+          "type": "checkbox",
+          "fs": 15,
+          "w": 1
+        }
+      ],
+      "fabs": [
+        {
+          "sel": "#damHelpFab",
+          "w": 44,
+          "h": 44,
+          "left": 302,
+          "top": 742
+        }
+      ],
+      "indexReport": null
+    }
+  },
+  {
+    "tag": "project-390",
+    "measure": {
+      "href": "http://127.0.0.1:8765/project.html?id=figa-z-makiem-owocowe",
+      "vw": 390,
+      "vh": 844,
+      "sw": 390,
+      "overflow": 0,
+      "sidebar": {
+        "w": 0,
+        "left": 0,
+        "transform": "none",
+        "open": false
+      },
+      "header": {
+        "h": 448,
+        "w": 314,
+        "pos": "relative"
+      },
+      "fmcg": [
+        {
+          "sel": "section.dam-catalog-fmcg",
+          "w": 256,
+          "left": 59,
+          "pct": 66,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Kalkulacja opakowań (FMCG)(TESTOWE)Ten sam łańcuch co w Kalkulatorze k"
+        },
+        {
+          "sel": "div.dam-catalog-fmcg__inner",
+          "w": 232,
+          "left": 71,
+          "pct": 59,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Kalkulacja opakowań (FMCG)(TESTOWE)Ten sam łańcuch co w Kalkulatorze k"
+        },
+        {
+          "sel": "div.dam-catalog-kpi",
+          "w": 208,
+          "left": 83,
+          "pct": 53,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Wymiary140 × 170 × 80 mmWaga netto65 gSzt. w kartonie24Układ w kartoni"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-label",
+          "w": 198,
+          "left": 88,
+          "pct": 51,
+          "wb": "normal",
+          "ow": "break-word",
+          "txt": "Prepress / pliki do druku"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-label",
+          "w": 198,
+          "left": 88,
+          "pct": 51,
+          "wb": "normal",
+          "ow": "break-word",
+          "txt": "Korekty proof i akceptacja"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-label",
+          "w": 198,
+          "left": 88,
+          "pct": 51,
+          "wb": "normal",
+          "ow": "break-word",
+          "txt": "Druk doypack / flexo"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-label",
+          "w": 198,
+          "left": 88,
+          "pct": 51,
+          "wb": "normal",
+          "ow": "break-word",
+          "txt": "Surowiec / folia laminowana"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-label",
+          "w": 198,
+          "left": 88,
+          "pct": 51,
+          "wb": "normal",
+          "ow": "break-word",
+          "txt": "Etykieta samoprzylepna"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-label",
+          "w": 198,
+          "left": 88,
+          "pct": 51,
+          "wb": "normal",
+          "ow": "break-word",
+          "txt": "Kartonik jednostkowy"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-text",
+          "w": 198,
+          "left": 88,
+          "pct": 51,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Prepress / pliki do drukuDTP · 6 h · 85,00 PLN/h"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-text",
+          "w": 198,
+          "left": 88,
+          "pct": 51,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Korekty proof i akceptacjaDTP · 4 h · 85,00 PLN/h"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-text",
+          "w": 198,
+          "left": 88,
+          "pct": 51,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Druk doypack / flexoProdukcja · 12000 szt · 0,38 PLN/szt"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-text",
+          "w": 198,
+          "left": 88,
+          "pct": 51,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Surowiec / folia laminowanaZakupy · 12000 szt · 0,31 PLN/szt"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-text",
+          "w": 198,
+          "left": 88,
+          "pct": 51,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Etykieta samoprzylepnaZakupy · 12000 szt · 0,12 PLN/szt"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-text",
+          "w": 198,
+          "left": 88,
+          "pct": 51,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Kartonik jednostkowyZakupy · 500 szt · 5,80 PLN/szt"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__tile",
+          "w": 232,
+          "left": 71,
+          "pct": 59,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Prepress / DTPPrepress / pliki do drukuDTP · 6 h · 85,00 PLN/h510,00 P"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__tile",
+          "w": 232,
+          "left": 71,
+          "pct": 59,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Druk oraz surowiecDruk doypack / flexoProdukcja · 12000 szt · 0,38 PLN"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__tile",
+          "w": 232,
+          "left": 71,
+          "pct": 59,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Opakowanie jednostkowe oraz zbiorczeKartonik jednostkowyZakupy · 500 s"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__tile",
+          "w": 232,
+          "left": 71,
+          "pct": 59,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Logistyka oraz zgodnośćWyjazd na zadruk (PrintPack Kalisz (ocena: 4/5)"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__tile",
+          "w": 232,
+          "left": 71,
+          "pct": 59,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Suma opakowań31 663,00 PLN"
+        }
+      ],
+      "squeezed": [
+        {
+          "sel": "div.dam-catalog-kpi",
+          "w": 208,
+          "pct": 53
+        }
+      ],
+      "narrow": [],
+      "wordBreak": [],
+      "touch": [
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--brand",
+          "w": 37,
+          "h": 23,
+          "txt": "DK"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--cat",
+          "w": 47,
+          "h": 23,
+          "txt": "Kulki"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--subcat",
+          "w": 74,
+          "h": 23,
+          "txt": "Owocowe"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--carrier",
+          "w": 77,
+          "h": 23,
+          "txt": "DOYPACK"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--lang",
+          "w": 34,
+          "h": 23,
+          "txt": "PL"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--index",
+          "w": 91,
+          "h": 23,
+          "txt": "6300808.00"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--pakowanie",
+          "w": 76,
+          "h": 23,
+          "txt": "2F · 12×2"
+        },
+        {
+          "sel": "div.dam-slot-row.dam-check-ok.dam-slot-row--interactive",
+          "w": 238,
+          "h": 30,
+          "txt": "Plik źródłowy projektu graficznegoPrzejd"
+        },
+        {
+          "sel": "div.dam-slot-row.dam-check-ok.dam-slot-row--interactive",
+          "w": 238,
+          "h": 30,
+          "txt": "Podgląd PDF projektuPrzejdź"
+        },
+        {
+          "sel": "div.dam-slot-row.dam-check-ok.dam-slot-row--interactive",
+          "w": 238,
+          "h": 30,
+          "txt": "Pliki do drukuPrzejdź"
+        },
+        {
+          "sel": "button.geex-btn.geex-btn__customizer-close",
+          "w": 40,
+          "h": 44,
+          "txt": "Zamknij"
+        }
+      ],
+      "tables": [],
+      "iosZoom": [
+        {
+          "id": "damAdminModeSwitch",
+          "type": "checkbox",
+          "fs": 15,
+          "w": 1
+        }
+      ],
+      "fabs": [
+        {
+          "sel": "#damHelpFab",
+          "w": 44,
+          "h": 44,
+          "left": 332,
+          "top": 786
+        }
+      ],
+      "indexReport": null
+    }
+  },
+  {
+    "tag": "project-768",
+    "measure": {
+      "href": "http://127.0.0.1:8765/project.html?id=figa-z-makiem-owocowe",
+      "vw": 768,
+      "vh": 1024,
+      "sw": 768,
+      "overflow": 0,
+      "sidebar": {
+        "w": 0,
+        "left": 0,
+        "transform": "none",
+        "open": false
+      },
+      "header": {
+        "h": 355,
+        "w": 724,
+        "pos": "relative"
+      },
+      "fmcg": [
+        {
+          "sel": "section.dam-catalog-fmcg",
+          "w": 666,
+          "left": 43,
+          "pct": 87,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Kalkulacja opakowań (FMCG)(TESTOWE)Ten sam łańcuch co w Kalkulatorze k"
+        },
+        {
+          "sel": "div.dam-catalog-fmcg__inner",
+          "w": 634,
+          "left": 59,
+          "pct": 83,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Kalkulacja opakowań (FMCG)(TESTOWE)Ten sam łańcuch co w Kalkulatorze k"
+        },
+        {
+          "sel": "div.dam-catalog-kpi",
+          "w": 618,
+          "left": 67,
+          "pct": 80,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Wymiary140 × 170 × 80 mmWaga netto65 gSzt. w kartonie24Układ w kartoni"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-label",
+          "w": 480,
+          "left": 76,
+          "pct": 63,
+          "wb": "normal",
+          "ow": "break-word",
+          "txt": "Prepress / pliki do druku"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-label",
+          "w": 480,
+          "left": 76,
+          "pct": 63,
+          "wb": "normal",
+          "ow": "break-word",
+          "txt": "Korekty proof i akceptacja"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-label",
+          "w": 480,
+          "left": 76,
+          "pct": 63,
+          "wb": "normal",
+          "ow": "break-word",
+          "txt": "Druk doypack / flexo"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-label",
+          "w": 480,
+          "left": 76,
+          "pct": 63,
+          "wb": "normal",
+          "ow": "break-word",
+          "txt": "Surowiec / folia laminowana"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-label",
+          "w": 480,
+          "left": 76,
+          "pct": 63,
+          "wb": "normal",
+          "ow": "break-word",
+          "txt": "Etykieta samoprzylepna"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-label",
+          "w": 480,
+          "left": 76,
+          "pct": 63,
+          "wb": "normal",
+          "ow": "break-word",
+          "txt": "Kartonik jednostkowy"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-text",
+          "w": 480,
+          "left": 76,
+          "pct": 63,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Prepress / pliki do drukuDTP · 6 h · 85,00 PLN/h"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-text",
+          "w": 480,
+          "left": 76,
+          "pct": 63,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Korekty proof i akceptacjaDTP · 4 h · 85,00 PLN/h"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-text",
+          "w": 480,
+          "left": 76,
+          "pct": 63,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Druk doypack / flexoProdukcja · 12000 szt · 0,38 PLN/szt"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-text",
+          "w": 480,
+          "left": 76,
+          "pct": 63,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Surowiec / folia laminowanaZakupy · 12000 szt · 0,31 PLN/szt"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-text",
+          "w": 480,
+          "left": 76,
+          "pct": 63,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Etykieta samoprzylepnaZakupy · 12000 szt · 0,12 PLN/szt"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__row-text",
+          "w": 480,
+          "left": 76,
+          "pct": 63,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Kartonik jednostkowyZakupy · 500 szt · 5,80 PLN/szt"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__tile",
+          "w": 634,
+          "left": 59,
+          "pct": 83,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Prepress / DTPPrepress / pliki do drukuDTP · 6 h · 85,00 PLN/h510,00 P"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__tile",
+          "w": 634,
+          "left": 59,
+          "pct": 83,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Druk oraz surowiecDruk doypack / flexoProdukcja · 12000 szt · 0,38 PLN"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__tile",
+          "w": 634,
+          "left": 59,
+          "pct": 83,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Opakowanie jednostkowe oraz zbiorczeKartonik jednostkowyZakupy · 500 s"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__tile",
+          "w": 634,
+          "left": 59,
+          "pct": 83,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Logistyka oraz zgodnośćWyjazd na zadruk (PrintPack Kalisz (ocena: 4/5)"
+        },
+        {
+          "sel": ".dam-catalog-fmcg__tile",
+          "w": 634,
+          "left": 59,
+          "pct": 83,
+          "wb": "normal",
+          "ow": "normal",
+          "txt": "Suma opakowań31 663,00 PLN"
+        }
+      ],
+      "squeezed": [],
+      "narrow": [],
+      "wordBreak": [],
+      "touch": [
+        {
+          "sel": "a.dam-breadcrumb__link",
+          "w": 35,
+          "h": 26,
+          "txt": "Panel"
+        },
+        {
+          "sel": "a.dam-breadcrumb__link",
+          "w": 50,
+          "h": 26,
+          "txt": "Projekty"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--brand",
+          "w": 37,
+          "h": 23,
+          "txt": "DK"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--cat",
+          "w": 47,
+          "h": 23,
+          "txt": "Kulki"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--subcat",
+          "w": 74,
+          "h": 23,
+          "txt": "Owocowe"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--carrier",
+          "w": 77,
+          "h": 23,
+          "txt": "DOYPACK"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--lang",
+          "w": 34,
+          "h": 23,
+          "txt": "PL"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--index",
+          "w": 91,
+          "h": 23,
+          "txt": "6300808.00"
+        },
+        {
+          "sel": "button.dam-viz-badge.dam-badge-tag.dam-viz-badge--pakowanie",
+          "w": 76,
+          "h": 23,
+          "txt": "2F · 12×2"
+        },
+        {
+          "sel": "button#damRootRefreshBtn.dam-root-status__refresh",
+          "w": 30,
+          "h": 30,
+          "txt": "OdĹ›wieĹĽ pliki z dysku"
+        },
+        {
+          "sel": "button#damDbRefreshBtn.dam-db-status__refresh",
+          "w": 30,
+          "h": 30,
+          "txt": "Odśwież bazę"
+        },
+        {
+          "sel": "div.dam-slot-row.dam-check-ok.dam-slot-row--interactive",
+          "w": 648,
+          "h": 30,
+          "txt": "Plik źródłowy projektu graficznegoPrzejd"
+        },
+        {
+          "sel": "div.dam-slot-row.dam-check-ok.dam-slot-row--interactive",
+          "w": 648,
+          "h": 30,
+          "txt": "Podgląd PDF projektuPrzejdź"
+        },
+        {
+          "sel": "div.dam-slot-row.dam-check-ok.dam-slot-row--interactive",
+          "w": 648,
+          "h": 30,
+          "txt": "Pliki do drukuPrzejdź"
+        },
+        {
+          "sel": "button.geex-btn.geex-btn__customizer-close",
+          "w": 40,
+          "h": 44,
+          "txt": "Zamknij"
+        },
+        {
+          "sel": "button.geex-btn.geex-customizer__btn.geex-customizer__btn--top",
+          "w": 42,
+          "h": 44,
+          "txt": "Top"
+        }
+      ],
+      "tables": [],
+      "iosZoom": [
+        {
+          "id": "damAdminModeSwitch",
+          "type": "checkbox",
+          "fs": 15,
+          "w": 1
+        }
+      ],
+      "fabs": [
+        {
+          "sel": "#damHelpFab",
+          "w": 44,
+          "h": 44,
+          "left": 704,
+          "top": 960
+        }
+      ],
+      "indexReport": null
+    }
+  },
+  {
+    "tag": "costs-360",
+    "measure": {
+      "href": "http://127.0.0.1:8765/costs.html",
+      "vw": 360,
+      "vh": 800,
+      "sw": 360,
+      "overflow": 0,
+      "sidebar": {
+        "w": 0,
+        "left": 0,
+        "transform": "none",
+        "open": false
+      },
+      "header": {
+        "h": 409,
+        "w": 284,
+        "pos": "relative"
+      },
+      "fmcg": [],
+      "squeezed": [],
+      "narrow": [],
+      "wordBreak": [],
+      "touch": [
+        {
+          "sel": "button.dam-cost-bucket.dam-cost-base-kind.is-active",
+          "w": 236,
+          "h": 40,
+          "txt": "Wszystkie"
+        },
+        {
+          "sel": "button.dam-cost-bucket.dam-cost-base-kind",
+          "w": 236,
+          "h": 40,
+          "txt": "Opakowanie"
+        },
+        {
+          "sel": "button.dam-cost-bucket.dam-cost-base-kind",
+          "w": 236,
+          "h": 40,
+          "txt": "Karton"
+        },
+        {
+          "sel": "button.dam-cost-bucket.dam-cost-base-kind",
+          "w": 236,
+          "h": 40,
+          "txt": "Wykrojnik"
+        },
+        {
+          "sel": "button.dam-cost-bucket.dam-cost-base-kind",
+          "w": 236,
+          "h": 40,
+          "txt": "Drukarnia"
+        },
+        {
+          "sel": "button.dam-cost-bucket.dam-cost-base-kind",
+          "w": 236,
+          "h": 40,
+          "txt": "Logistyka / km"
+        },
+        {
+          "sel": "button.dam-cost-bucket.dam-cost-base-kind",
+          "w": 236,
+          "h": 40,
+          "txt": "Badania"
+        },
+        {
+          "sel": "button.dam-cost-bucket.is-active",
+          "w": 254,
+          "h": 40,
+          "txt": "Produkty opakowań"
+        },
+        {
+          "sel": "button.dam-cost-bucket",
+          "w": 254,
+          "h": 40,
+          "txt": "Marketing / e-commerce"
+        },
+        {
+          "sel": "button.dam-cost-bucket",
+          "w": 254,
+          "h": 40,
+          "txt": "Wszystkie"
+        },
+        {
+          "sel": "button.geex-btn.geex-btn__customizer-close",
+          "w": 40,
+          "h": 44,
+          "txt": ""
+        }
+      ],
+      "tables": [
+        {
+          "sel": "table.table.table-sm.dam-cost-table",
+          "w": 236,
+          "ov": -124,
+          "parentOx": "auto"
+        },
+        {
+          "sel": "table.table.table-sm.dam-cost-table",
+          "w": 236,
+          "ov": -124,
+          "parentOx": "auto"
+        },
+        {
+          "sel": "table.table.table-sm.dam-cost-table",
+          "w": 236,
+          "ov": -124,
+          "parentOx": "auto"
+        },
+        {
+          "sel": "table.table.table-sm.dam-cost-table",
+          "w": 236,
+          "ov": -124,
+          "parentOx": "auto"
+        },
+        {
+          "sel": "table.table.table-sm.dam-cost-table",
+          "w": 236,
+          "ov": -124,
+          "parentOx": "auto"
+        }
+      ],
+      "iosZoom": [
+        {
+          "id": "damAdminModeSwitch",
+          "type": "checkbox",
+          "fs": 15,
+          "w": 1
+        },
+        {
+          "id": "damCostBaseSearch",
+          "type": "search",
+          "fs": 14,
+          "w": 236
+        },
+        {
+          "id": "damCostSearch",
+          "type": "search",
+          "fs": 14,
+          "w": 254
+        },
+        {
+          "id": "damCostSelect",
+          "type": "select-one",
+          "fs": 14,
+          "w": 254
+        }
+      ],
+      "fabs": [
+        {
+          "sel": "#damHelpFab",
+          "w": 44,
+          "h": 44,
+          "left": 302,
+          "top": 742
+        }
+      ],
+      "indexReport": null
+    }
+  },
+  {
+    "tag": "invoices-360",
+    "measure": {
+      "href": "http://127.0.0.1:8765/invoices.html",
+      "vw": 360,
+      "vh": 800,
+      "sw": 360,
+      "overflow": 0,
+      "sidebar": {
+        "w": 0,
+        "left": 0,
+        "transform": "none",
+        "open": false
+      },
+      "header": {
+        "h": 355,
+        "w": 284,
+        "pos": "relative"
+      },
+      "fmcg": [],
+      "squeezed": [],
+      "narrow": [],
+      "wordBreak": [],
+      "touch": [
+        {
+          "sel": "button.geex-btn.geex-btn__customizer-close",
+          "w": 40,
+          "h": 44,
+          "txt": ""
+        }
+      ],
+      "tables": [
+        {
+          "sel": "table.table.table-sm.dam-inv-compare__table",
+          "w": 0,
+          "ov": -360,
+          "parentOx": "visible"
+        },
+        {
+          "sel": "table#invTable.table.table-hover",
+          "w": 479,
+          "ov": 119,
+          "parentOx": "auto"
+        }
+      ],
+      "iosZoom": [
+        {
+          "id": "damAdminModeSwitch",
+          "type": "checkbox",
+          "fs": 15,
+          "w": 1
+        }
+      ],
+      "fabs": [
+        {
+          "sel": "#damHelpFab",
+          "w": 44,
+          "h": 44,
+          "left": 302,
+          "top": 742
+        }
+      ],
+      "indexReport": null
+    }
+  },
+  {
+    "tag": "settings-360",
+    "measure": {
+      "href": "http://127.0.0.1:8765/settings.html",
+      "vw": 360,
+      "vh": 800,
+      "sw": 360,
+      "overflow": 0,
+      "sidebar": {
+        "w": 0,
+        "left": 0,
+        "transform": "none",
+        "open": false
+      },
+      "header": {
+        "h": 355,
+        "w": 284,
+        "pos": "relative"
+      },
+      "fmcg": [],
+      "squeezed": [],
+      "narrow": [
+        {
+          "sel": "label.visually-hidden",
+          "w": 1,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "Szukaj w ustawieniach i skrótach panelu"
+        },
+        {
+          "sel": "label.visually-hidden",
+          "w": 1,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "Własny kolor"
+        },
+        {
+          "sel": "h2.dam-widget__title",
+          "w": 107,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "Preferencje"
+        },
+        {
+          "sel": "h2.dam-widget__title",
+          "w": 119,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "Zadania w tle"
+        },
+        {
+          "sel": "h2.dam-widget__title",
+          "w": 96,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "Integracje"
+        }
+      ],
+      "wordBreak": [],
+      "touch": [
+        {
+          "sel": "button.dam-accent-swatch.is-active",
+          "w": 40,
+          "h": 40,
+          "txt": "Domyślny fiolet"
+        },
+        {
+          "sel": "button.dam-accent-swatch",
+          "w": 40,
+          "h": 40,
+          "txt": "Dobra Kaloria"
+        },
+        {
+          "sel": "button.dam-accent-swatch",
+          "w": 40,
+          "h": 40,
+          "txt": "Ocean"
+        },
+        {
+          "sel": "button.dam-accent-swatch",
+          "w": 40,
+          "h": 40,
+          "txt": "Szary"
+        },
+        {
+          "sel": "button.dam-accent-swatch",
+          "w": 40,
+          "h": 40,
+          "txt": "Róż"
+        },
+        {
+          "sel": "button.dam-accent-swatch",
+          "w": 40,
+          "h": 40,
+          "txt": "Bursztyn"
+        },
+        {
+          "sel": "button.dam-accent-swatch",
+          "w": 40,
+          "h": 40,
+          "txt": "Indygo"
+        },
+        {
+          "sel": "button.dam-accent-swatch",
+          "w": 40,
+          "h": 40,
+          "txt": "Turkus"
+        },
+        {
+          "sel": "button.dam-theme-tune__tab.is-active",
+          "w": 50,
+          "h": 36,
+          "txt": "Jasny"
+        },
+        {
+          "sel": "button.dam-theme-tune__tab",
+          "w": 63,
+          "h": 36,
+          "txt": "Ciemny"
+        },
+        {
+          "sel": "button.dam-int-cta",
+          "w": 86,
+          "h": 34,
+          "txt": "Preferencje"
+        },
+        {
+          "sel": "button.dam-int-cta",
+          "w": 123,
+          "h": 34,
+          "txt": "Synchronizuj teraz"
+        },
+        {
+          "sel": "button.dam-int-cta",
+          "w": 65,
+          "h": 34,
+          "txt": "Zaloguj"
+        },
+        {
+          "sel": "button.dam-int-cta",
+          "w": 65,
+          "h": 34,
+          "txt": "Zaloguj"
+        },
+        {
+          "sel": "button.dam-int-soon",
+          "w": 76,
+          "h": 34,
+          "txt": "Wkrótce"
+        },
+        {
+          "sel": "button.dam-int-soon",
+          "w": 76,
+          "h": 34,
+          "txt": "Wkrótce"
+        },
+        {
+          "sel": "button.dam-int-soon",
+          "w": 76,
+          "h": 34,
+          "txt": "Wkrótce"
+        },
+        {
+          "sel": "button.dam-int-soon",
+          "w": 76,
+          "h": 34,
+          "txt": "Wkrótce"
+        },
+        {
+          "sel": "button.dam-int-soon",
+          "w": 76,
+          "h": 34,
+          "txt": "Wkrótce"
+        },
+        {
+          "sel": "button#damClearLocalPrefs.dam-dz__btn",
+          "w": 222,
+          "h": 40,
+          "txt": "Wyczyść lokalne ustawienia"
+        }
+      ],
+      "tables": [
+        {
+          "sel": "table.dam-naming-table",
+          "w": 228,
+          "ov": -132,
+          "parentOx": "auto"
+        }
+      ],
+      "iosZoom": [
+        {
+          "id": "damAdminModeSwitch",
+          "type": "checkbox",
+          "fs": 15,
+          "w": 1
+        },
+        {
+          "id": "damSettingsSearch",
+          "type": "search",
+          "fs": 13,
+          "w": 284
+        },
+        {
+          "id": "settingProfileName",
+          "type": "text",
+          "fs": 13,
+          "w": 144
+        },
+        {
+          "id": "settingProfileTitle",
+          "type": "text",
+          "fs": 13,
+          "w": 144
+        },
+        {
+          "id": "settingProfilePhone",
+          "type": "tel",
+          "fs": 13,
+          "w": 144
+        },
+        {
+          "id": "settingProfileEmail",
+          "type": "email",
+          "fs": 13,
+          "w": 144
+        },
+        {
+          "id": "settingProfileRole",
+          "type": "text",
+          "fs": 13,
+          "w": 144
+        },
+        {
+          "id": "settingAccentColor",
+          "type": "color",
+          "fs": 15,
+          "w": 44
+        },
+        {
+          "id": "settingAccentHex",
+          "type": "text",
+          "fs": 13,
+          "w": 176
+        },
+        {
+          "id": "",
+          "type": "range",
+          "fs": 12,
+          "w": 168
+        },
+        {
+          "id": "",
+          "type": "number",
+          "fs": 13,
+          "w": 56
+        },
+        {
+          "id": "",
+          "type": "range",
+          "fs": 12,
+          "w": 168
+        },
+        {
+          "id": "",
+          "type": "number",
+          "fs": 13,
+          "w": 56
+        },
+        {
+          "id": "",
+          "type": "range",
+          "fs": 12,
+          "w": 168
+        },
+        {
+          "id": "",
+          "type": "number",
+          "fs": 13,
+          "w": 56
+        },
+        {
+          "id": "",
+          "type": "range",
+          "fs": 12,
+          "w": 168
+        },
+        {
+          "id": "",
+          "type": "number",
+          "fs": 13,
+          "w": 56
+        },
+        {
+          "id": "dam-int-asana-client",
+          "type": "text",
+          "fs": 13,
+          "w": 198
+        },
+        {
+          "id": "dam-int-asana-secret",
+          "type": "password",
+          "fs": 13,
+          "w": 198
+        },
+        {
+          "id": "dam-int-asana-workspace",
+          "type": "text",
+          "fs": 13,
+          "w": 198
+        },
+        {
+          "id": "dam-int-microsoft-client",
+          "type": "text",
+          "fs": 13,
+          "w": 198
+        },
+        {
+          "id": "dam-int-microsoft-secret",
+          "type": "password",
+          "fs": 13,
+          "w": 198
+        },
+        {
+          "id": "dam-int-microsoft-tenant",
+          "type": "text",
+          "fs": 13,
+          "w": 198
+        },
+        {
+          "id": "damNotifyName",
+          "type": "text",
+          "fs": 13,
+          "w": 230
+        },
+        {
+          "id": "damNotifyEmail",
+          "type": "email",
+          "fs": 13,
+          "w": 230
+        },
+        {
+          "id": "damElementyConvEnabled",
+          "type": "checkbox",
+          "fs": 15,
+          "w": 13
+        },
+        {
+          "id": "damElementyConvPngTransparency",
+          "type": "checkbox",
+          "fs": 15,
+          "w": 13
+        },
+        {
+          "id": "damElementyConvFmtPng",
+          "type": "checkbox",
+          "fs": 15,
+          "w": 13
+        },
+        {
+          "id": "damElementyConvFmtJpg",
+          "type": "checkbox",
+          "fs": 15,
+          "w": 13
+        },
+        {
+          "id": "damElementyConvQuality",
+          "type": "range",
+          "fs": 13,
+          "w": 230
+        }
+      ],
+      "fabs": [
+        {
+          "sel": "#damHelpFab",
+          "w": 44,
+          "h": 44,
+          "left": 302,
+          "top": 742
+        }
+      ],
+      "indexReport": null
+    }
+  },
+  {
+    "tag": "inbox-360",
+    "measure": {
+      "href": "http://127.0.0.1:8765/inbox.html",
+      "vw": 360,
+      "vh": 800,
+      "sw": 360,
+      "overflow": 0,
+      "sidebar": {
+        "w": 0,
+        "left": 0,
+        "transform": "none",
+        "open": false
+      },
+      "header": {
+        "h": 397,
+        "w": 284,
+        "pos": "relative"
+      },
+      "fmcg": [],
+      "squeezed": [],
+      "narrow": [],
+      "wordBreak": [],
+      "touch": [
+        {
+          "sel": "button.geex-btn.geex-btn__customizer-close",
+          "w": 40,
+          "h": 44,
+          "txt": "Zamknij"
+        }
+      ],
+      "tables": [],
+      "iosZoom": [
+        {
+          "id": "damAdminModeSwitch",
+          "type": "checkbox",
+          "fs": 15,
+          "w": 1
+        },
+        {
+          "id": "inboxSearch",
+          "type": "search",
+          "fs": 13,
+          "w": 284
+        },
+        {
+          "id": "inboxUnreadOnly",
+          "type": "checkbox",
+          "fs": 12,
+          "w": 13
+        }
+      ],
+      "fabs": [
+        {
+          "sel": "#damHelpFab",
+          "w": 44,
+          "h": 44,
+          "left": 302,
+          "top": 742
+        }
+      ],
+      "indexReport": null
+    }
+  },
+  {
+    "tag": "tasks-360",
+    "measure": {
+      "href": "http://127.0.0.1:8765/tasks.html",
+      "vw": 360,
+      "vh": 800,
+      "sw": 360,
+      "overflow": 0,
+      "sidebar": {
+        "w": 0,
+        "left": 0,
+        "transform": "none",
+        "open": false
+      },
+      "header": {
+        "h": 355,
+        "w": 284,
+        "pos": "relative"
+      },
+      "fmcg": [],
+      "squeezed": [],
+      "narrow": [
+        {
+          "sel": "h3.dam-tasks-ai__title",
+          "w": 111,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "Asystent DAM"
+        },
+        {
+          "sel": "h3.dam-tasks-card__title",
+          "w": 105,
+          "ow": "normal",
+          "wb": "normal",
+          "txt": "Moje zadania"
+        }
+      ],
+      "wordBreak": [],
+      "touch": [
+        {
+          "sel": "button.dam-tasks-link",
+          "w": 96,
+          "h": 26,
+          "txt": "+ Utwórz zadanie"
+        },
+        {
+          "sel": "button.dam-tasks-expand",
+          "w": 28,
+          "h": 28,
+          "txt": "Rozwiń subtaski"
+        },
+        {
+          "sel": "button.dam-tasks-check",
+          "w": 18,
+          "h": 18,
+          "txt": "Oznacz jako ukończone"
+        },
+        {
+          "sel": "button.dam-tasks-row__title",
+          "w": 126,
+          "h": 35,
+          "txt": "GC Nuggets 175g CZ SK - 6300XXX"
+        },
+        {
+          "sel": "button.dam-tasks-expand",
+          "w": 28,
+          "h": 28,
+          "txt": "Rozwiń subtaski"
+        },
+        {
+          "sel": "button.dam-tasks-check",
+          "w": 18,
+          "h": 18,
+          "txt": "Oznacz jako ukończone"
+        },
+        {
+          "sel": "button.dam-tasks-expand",
+          "w": 28,
+          "h": 28,
+          "txt": "Rozwiń subtaski"
+        },
+        {
+          "sel": "button.dam-tasks-check",
+          "w": 18,
+          "h": 18,
+          "txt": "Oznacz jako ukończone"
+        },
+        {
+          "sel": "button.dam-tasks-row__title",
+          "w": 126,
+          "h": 35,
+          "txt": "DK TUBA Prezentowa - 6300XXX"
+        },
+        {
+          "sel": "button.dam-tasks-expand",
+          "w": 28,
+          "h": 28,
+          "txt": "Rozwiń subtaski"
+        },
+        {
+          "sel": "button.dam-tasks-check",
+          "w": 18,
+          "h": 18,
+          "txt": "Oznacz jako ukończone"
+        },
+        {
+          "sel": "button.dam-tasks-row__title",
+          "w": 126,
+          "h": 18,
+          "txt": "koncepcje napojów"
+        },
+        {
+          "sel": "button.dam-tasks-expand",
+          "w": 28,
+          "h": 28,
+          "txt": "Rozwiń subtaski"
+        },
+        {
+          "sel": "button.dam-tasks-check",
+          "w": 18,
+          "h": 18,
+          "txt": "Oznacz jako ukończone"
+        },
+        {
+          "sel": "button.dam-tasks-row__title",
+          "w": 126,
+          "h": 18,
+          "txt": "Wydruk"
+        },
+        {
+          "sel": "button.dam-tasks-expand",
+          "w": 28,
+          "h": 28,
+          "txt": "Rozwiń subtaski"
+        },
+        {
+          "sel": "button.dam-tasks-check",
+          "w": 18,
+          "h": 18,
+          "txt": "Oznacz jako ukończone"
+        },
+        {
+          "sel": "button.dam-tasks-check",
+          "w": 18,
+          "h": 18,
+          "txt": "Oznacz jako ukończone"
+        },
+        {
+          "sel": "button.dam-tasks-row__title",
+          "w": 126,
+          "h": 18,
+          "txt": "Wydruk"
+        },
+        {
+          "sel": "button.dam-tasks-check",
+          "w": 18,
+          "h": 18,
+          "txt": "Oznacz jako ukończone"
+        }
+      ],
+      "tables": [],
+      "iosZoom": [
+        {
+          "id": "damAdminModeSwitch",
+          "type": "checkbox",
+          "fs": 15,
+          "w": 1
+        },
+        {
+          "id": "",
+          "type": "select-one",
+          "fs": 13,
+          "w": 110
+        },
+        {
+          "id": "",
+          "type": "search",
+          "fs": 13,
+          "w": 148
+        },
+        {
+          "id": "",
+          "type": "textarea",
+          "fs": 13,
+          "w": 204
+        }
+      ],
+      "fabs": [
+        {
+          "sel": "#damHelpFab",
+          "w": 44,
+          "h": 44,
+          "left": 302,
+          "top": 742
+        }
+      ],
+      "indexReport": null
+    }
+  }
+]

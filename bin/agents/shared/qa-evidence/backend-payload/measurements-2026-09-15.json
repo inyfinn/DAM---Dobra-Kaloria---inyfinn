@@ -1,0 +1,41 @@
+{
+  "measured_at": "2026-09-15",
+  "bridge_restarted": false,
+  "command": "python -c import local_bridge + branding_asset_routes + index_supervisor; len(json.dumps / _dumps_slim) on live file-index.json and branding-grid-head.json",
+  "index_file": "D:/Marketing/- POLSKA/99 - WYMIANA/Krzysztof/--- Moj obszar pracy/DAM---Dobra-Kaloria---inyfinn/bin/apps/web/data/file-index.json",
+  "index_disk_bytes": 9427668,
+  "head_file": "D:/Marketing/- POLSKA/99 - WYMIANA/Krzysztof/--- Moj obszar pracy/DAM---Dobra-Kaloria---inyfinn/bin/apps/web/data/branding-grid-head.json",
+  "head_disk_bytes": 343274,
+  "grid_disk_bytes": 23470174,
+  "before": {
+    "fields_explorer_live_sibling": 984984,
+    "fields_viz_latest_unprojected_dumps": 520273,
+    "branding_grid_head_ok_plus_file_dumps": 362668
+  },
+  "after": {
+    "fields_explorer_dumps_slim": 258645,
+    "fields_viz_latest_dumps_slim": 370760,
+    "branding_head_slim_compact": 313232,
+    "branding_head_slim_handler_json": 329634
+  },
+  "explorer_counts": { "products": 193, "revisions": 521 },
+  "viz_rows": 441,
+  "head_assets": 800,
+  "explorer_remaining_bytes": {
+    "revisions_total": 152673,
+    "revision.path": 64540,
+    "revision.folder": 18762,
+    "product.path": 17274
+  },
+  "synthetic_diff": {
+    "new": 1,
+    "updated": 1,
+    "unchanged": 1,
+    "removed": 1,
+    "new_items": ["new.png"],
+    "updated_items": ["touch.png"],
+    "removed_items": ["gone.png"]
+  },
+  "atomic_prev": { "ok": true, "tmp_left": 0 },
+  "DAM_INDEX_LIVE_FILE": "D:/Marketing/- POLSKA/99 - WYMIANA/Krzysztof/--- Moj obszar pracy/DAM---Dobra-Kaloria---inyfinn/bin/apps/desktop/data/index-live.json"
+}
