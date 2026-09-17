@@ -1,6 +1,6 @@
 ﻿; DAM Windows installer - pelny kreator (licencja, sciezka, aktualizacja)
 #ifndef MyAppVersion
-  #define MyAppVersion "2.0.0"
+  #define MyAppVersion "2.0.2"
 #endif
 #ifndef StageDir
   #define StageDir "..\dist\staging\DAM-install"
@@ -72,6 +72,8 @@ Name: "polish"; MessagesFile: "compiler:Languages\Polish.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "Utworz skrot na pulpicie"; GroupDescription: "Skroty:"; Flags: checkedonce
+; pythonw.exe bezposrednio: brak okna konsoli, brak wscript/powershell (wzorzec Boxter).
+Name: "bridgeautostart"; Description: "Uruchamiaj mostek DAM przy starcie Windows (zalecane: aktualizacje i podglad dzialaja bez otwierania aplikacji)"; GroupDescription: "Mostek:"; Flags: checkedonce
 
 ; Aktualizacja = czysty klad od nowa. Bez tego stare moduly JS/HTML i pliki
 ; usuniete w nowej wersji zostaja na dysku i wracaja do gry przy niezbumpowanym ?v=.
@@ -118,7 +120,6 @@ Source: "{#StageDir}\bin\*"; DestDir: "{app}\bin"; Flags: ignoreversion recurses
 Source: "{#GitRoot}\bin\installer\redist\vc_redist.x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
 Source: "{#GitRoot}\bin\installer\redist\MicrosoftEdgeWebview2Setup.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
 Source: "{#GitRoot}\bin\installer\inyfinn-dam-codesign.cer"; DestDir: "{app}\bin\installer"; Flags: ignoreversion skipifsourcedoesntexist
-Source: "{#GitRoot}\bin\installer\trust-inyfinn-publisher.ps1"; DestDir: "{app}\bin\installer"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\bin\apps\desktop\dam_app.ico"
@@ -135,6 +136,11 @@ Filename: "{app}\{#MyAppExeName}"; Description: "Uruchom DAM po zakonczeniu inst
 [Registry]
 Root: HKCU; Subkey: "Software\Inyfinn\DAM"; ValueType: string; ValueName: "InstallPath"; ValueData: "{app}"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Inyfinn\DAM"; ValueType: string; ValueName: "Version"; ValueData: "{#MyAppVersion}"; Flags: uninsdeletekey
+; Autostart mostka: bundlowany pythonw.exe -> zero okna konsoli, zero script-hosta.
+; HKCU = bez podnoszenia uprawnien. Mostek sam ustapi, jesli port 8766 jest juz zajety.
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "DAM-Bridge"; ValueData: """{app}\bin\runtime\win\python\pythonw.exe"" ""{app}\bin\apps\desktop\local_bridge.py"""; Flags: uninsdeletevalue; Tasks: bridgeautostart
+; Odznaczenie zadania przy aktualizacji musi usunac stary wpis.
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: none; ValueName: "DAM-Bridge"; Flags: deletevalue uninsdeletevalue; Tasks: not bridgeautostart
 
 [Code]
 function IsProtectedInstallPath(const Path: String): Boolean;
@@ -295,7 +301,7 @@ var
   ResultCode: Integer;
 begin
   Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /T /IM DAM.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-  Exec('powershell.exe', '-NoProfile -NonInteractive -Command "Get-CimInstance Win32_Process | Where-Object { $_.Name -in @(''DAM.exe'',''pythonw.exe'',''python.exe'',''dam-appw.exe'') -and (($_.Name -eq ''DAM.exe'') -or ($_.CommandLine -match ''\\bin\\apps\\desktop\\(launch|local_bridge)\.py|dam-appw|Dobra.Kaloria'')) } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec('powershell.exe', '-NoProfile -NonInteractive -Command "Get-CimInstance Win32_Process | Where-Object { $_.Name -in @(''DAM.exe'',''pythonw.exe'',''python.exe'',''dam-appw.exe'') -and (($_.Name -eq ''DAM.exe'') -or ($_.CommandLine -match ''\\bin\\apps\\desktop\\(launch|local_bridge)\.py|dam-appw'')) } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   Sleep(1500);
   Result := True;
 end;

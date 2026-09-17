@@ -36,6 +36,17 @@ bin/DATABASE/dam-local.sqlite
 bin/DATABASE/dam-local.sqlite-*
 !bin/DATABASE/users-seed.sqlite
 !bin/DATABASE/README.md
+# Kopie zapasowe bazy NIE ida do gita. Zrodlo prawdy to Synology
+# (/volume1/docker/dam-eta-postgres/DATABASE) plus godzinowy watcher w
+# local_bridge.py, ktory pisze tutaj lokalnie. Instalator ich nie pakuje,
+# a dam_db.latest_database_dump() czyta katalog, nie git - wiec nic nie traci.
+# Brakujacy dump sciaga przycisk "Pobierz dump" (pull_database_dump_now).
+# Uwaga: regula musi miec przedrostek bin/, bo wzorzec ze ukosnikiem jest
+# kotwiczony do katalogu z .gitignore ("DATABASE/*.sql.gz" NIE lapie bin/).
+bin/DATABASE/*.sql.gz
+bin/DATABASE/*.sql
+bin/DATABASE/*.dump
+bin/DATABASE/*.log
 bin/apps/desktop/data/*.sqlite
 bin/apps/desktop/data/*.sqlite-*
 bin/apps/desktop/data/backup*/
