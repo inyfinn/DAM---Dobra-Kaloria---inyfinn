@@ -37,6 +37,11 @@ try:
 except ImportError:  # pragma: no cover - brak psycopg2-binary w requirements
     psycopg2 = None
 
+try:
+    import pg_seal
+except Exception:  # pragma: no cover - modul musi byc w instalatorze
+    pg_seal = None  # type: ignore[assignment]
+
 DESKTOP_DIR = Path(__file__).resolve().parent
 CONFIG_PATH = DESKTOP_DIR / "data" / "pg-config.json"
 ENV_PATH = DESKTOP_DIR / "dam-connection.env"
@@ -129,17 +134,87 @@ def _hosts_from_cfg(cfg: dict[str, Any]) -> list[str]:
     return _prefer_ddns_first(out)
 
 
+def _is_dev_tree() -> bool:
+    """Repo z .git = maszyna budujaca: jawny pg-config.json (gitignored) jest zrodlem builda."""
+    try:
+        git = DESKTOP_DIR.parent.parent.parent / ".git"
+        return git.is_dir() or git.is_file()
+    except OSError:
+        return False
+
+
+def _plaintext_copies() -> list[Path]:
+    return [
+        CONFIG_PATH,
+        DESKTOP_DIR / "pg-config.json",
+        DESKTOP_DIR / "data" / "pg-config.json.off",
+        DESKTOP_DIR / "data" / "pg-config.bundled.json",
+    ]
+
+
+def _migrate_plaintext_to_dpapi(cfg: dict[str, Any]) -> None:
+    """Instalacja uzytkownika: haslo nie lezy jawnie na dysku. Kasuj dopiero po udanym DPAPI."""
+    if pg_seal is None or _is_dev_tree() or not cfg.get("password"):
+        return
+    if not pg_seal.store_protected(cfg):
+        return
+    for path in _plaintext_copies():
+        try:
+            if path.is_file() and _pg_config_looks_ready(path):
+                path.unlink()
+        except OSError:
+            continue
+
+
+def _read_stored_config() -> dict[str, Any]:
+    """Jawny plik (dev / stara instalacja) albo konfiguracja pod DPAPI (po aktywacji)."""
+    cfg: dict[str, Any] = {}
+    if CONFIG_PATH.is_file():
+        try:
+            loaded = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+            cfg = loaded if isinstance(loaded, dict) else {}
+        except (OSError, ValueError):
+            cfg = {}
+    if cfg.get("password"):
+        _migrate_plaintext_to_dpapi(cfg)
+        return cfg
+    if pg_seal is not None:
+        prot = pg_seal.load_protected()
+        if prot:
+            return prot
+    return cfg
+
+
+def raw_config_mapping() -> dict[str, Any]:
+    """Dla modulow, ktore trzymaja sekrety obok (np. token GitHub aktualizatora)."""
+    try:
+        return dict(_read_stored_config())
+    except Exception:
+        return {}
+
+
+def activation_required() -> bool:
+    """True = instalacja ma zapieczetowana konfiguracje i czeka na kod aktywacyjny."""
+    if pg_seal is None or not pg_seal.sealed_present():
+        return False
+    return not is_configured()
+
+
+def activate(code: str) -> dict[str, Any]:
+    if pg_seal is None:
+        return {"ok": False, "error": "pg_seal_missing"}
+    res = pg_seal.activate(code)
+    if res.get("ok"):
+        reset_config_cache()
+    return res
+
+
 def _load_config() -> dict[str, Any]:
     global _CONFIG_CACHE
     if _CONFIG_CACHE is not None:
         return _CONFIG_CACHE
     _load_dotenv_file(ENV_PATH)
-    cfg: dict[str, Any] = {}
-    if CONFIG_PATH.is_file():
-        try:
-            cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            cfg = {}
+    cfg = _read_stored_config()
     cfg["host"] = os.environ.get("DAM_PG_HOST", cfg.get("host", ""))
     cfg["port"] = int(os.environ.get("DAM_PG_PORT", cfg.get("port", 5433)))
     cfg["dbname"] = os.environ.get("DAM_PG_DBNAME", cfg.get("dbname", "dam_eta"))
@@ -233,6 +308,8 @@ def ensure_pg_config_ready() -> None:
     """First-run: wgraj passworded pg-config z drzewa Setupu. Zero krokow uzytkownika."""
     dest = CONFIG_PATH
     try:
+        if pg_seal is not None and pg_seal.load_protected():
+            return
         dest.parent.mkdir(parents=True, exist_ok=True)
         if dest.is_file() and _pg_config_looks_ready(dest):
             return

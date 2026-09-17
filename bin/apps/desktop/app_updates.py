@@ -14,6 +14,7 @@ import sys
 import threading
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -30,6 +31,8 @@ INSTALLER_DIR = DESKTOP_DIR / "data" / "updates"
 
 DEFAULT_REPO = "inyfinn/DAM---Dobra-Kaloria---inyfinn"
 DEFAULT_ASSET = "DAM-Setup.exe"
+SIG_SUFFIX = ".sig"
+MAX_SIG_BYTES = 8192
 DAILY_CHECK_HOUR = 9
 DAILY_CHECK_MINUTE = 0
 TOKEN_KEYS = ("GITHUB_TOKEN", "GH_TOKEN", "DAM_GITHUB_TOKEN")
@@ -205,9 +208,10 @@ def _resolve_github_token() -> str:
             break
     if not found:
         try:
-            pg_path = DESKTOP_DIR / "data" / "pg-config.json"
-            if pg_path.is_file():
-                found = _token_from_mapping(json.loads(pg_path.read_text(encoding="utf-8")))
+            # Przez pg_db: po aktywacji konfiguracja lezy pod DPAPI, nie w jawnym JSON.
+            import pg_db
+
+            found = _token_from_mapping(pg_db.raw_config_mapping())
         except Exception:
             found = ""
     if not found:
@@ -271,22 +275,76 @@ def installer_path() -> Path:
     return INSTALLER_DIR / DEFAULT_ASSET
 
 
-def installer_ready() -> bool:
-    path = installer_path()
+def sig_path() -> Path:
+    return INSTALLER_DIR / (DEFAULT_ASSET + SIG_SUFFIX)
+
+
+_VERIFY_CACHE: dict[str, Any] = {"key": None, "ok": False, "reason": ""}
+
+
+def verify_downloaded_installer(*, use_cache: bool = True) -> tuple[bool, str]:
+    """Podpis Ed25519 wydania (release_verify). Bez waznego podpisu instalator NIE rusza.
+
+    Cache po (mtime, size) obu plikow - status w UI nie liczy SHA-256 z ~90 MB co sekunde.
+    Start instalatora zawsze woła z use_cache=False (plik mogl zostac podmieniony).
+    """
+    exe, sig = installer_path(), sig_path()
     try:
-        return path.is_file() and path.stat().st_size >= MIN_INSTALLER_BYTES
-    except OSError:
+        if not exe.is_file() or exe.stat().st_size < MIN_INSTALLER_BYTES:
+            return False, "installer_missing"
+        if not sig.is_file():
+            return False, "signature_missing"
+        es, ss = exe.stat(), sig.stat()
+        key = (es.st_mtime_ns, es.st_size, ss.st_mtime_ns, ss.st_size)
+        if use_cache and _VERIFY_CACHE.get("key") == key:
+            return bool(_VERIFY_CACHE["ok"]), str(_VERIFY_CACHE["reason"])
+        import release_verify
+
+        ok, reason = release_verify.verify_installer(
+            exe,
+            sig.read_bytes(),
+            min_version_exclusive=parse_version(current_version()),
+            parse_version=parse_version,
+        )
+        _VERIFY_CACHE.update({"key": key, "ok": ok, "reason": reason})
+        return ok, reason
+    except Exception:  # noqa: BLE001
+        return False, "verify_error"
+
+
+def _discard_download() -> None:
+    for path in (installer_path(), sig_path()):
+        try:
+            path.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
+def installer_ready() -> bool:
+    ok, _reason = verify_downloaded_installer()
+    return ok
+
+
+_GITHUB_HOSTS = ("github.com", "api.github.com", "objects.githubusercontent.com")
+
+
+def _is_github_https(url: str) -> bool:
+    """Host z listy, nie podciag: 'https://evil.example/github.com/x.exe' odpada."""
+    try:
+        parsed = urllib.parse.urlparse(str(url or "").strip())
+    except ValueError:
         return False
+    host = (parsed.hostname or "").lower()
+    return parsed.scheme == "https" and host in _GITHUB_HOSTS
 
 
 def _is_setup_download_url(url: str, asset_name: str = DEFAULT_ASSET) -> bool:
-    u = (url or "").strip().lower()
-    name = (asset_name or DEFAULT_ASSET).lower()
-    if not u.startswith("https://"):
+    u = str(url or "").strip()
+    name = str(asset_name or DEFAULT_ASSET)
+    if not _is_github_https(u):
         return False
-    if "github.com" not in u:
-        return False
-    return name in u and u.endswith(".exe")
+    path = urllib.parse.urlparse(u).path
+    return path.endswith("/" + name) and name.lower().endswith(".exe")
 
 
 def next_daily_run_at(now: datetime, last_check_ts: float | None) -> datetime:
@@ -432,6 +490,13 @@ def _public_result(data: dict[str, Any]) -> dict[str, Any]:
         out["download_url"] = ""
     if setup_ok and data.get("asset_api_url"):
         out["asset_api_url"] = str(data.get("asset_api_url") or "")
+    if setup_ok:
+        out["sig_url"] = str(data.get("sig_url") or "")
+        out["sig_api_url"] = str(data.get("sig_api_url") or "")
+        if not _is_github_https(out["sig_url"]) and not _is_github_https(out["sig_api_url"]):
+            out["update_available"] = False
+            out["download_url"] = ""
+            out["error"] = out.get("error") or "release_unsigned"
     return out
 
 
@@ -444,6 +509,8 @@ def _persist_attempt(out: dict[str, Any]) -> None:
         "update_available",
         "download_url",
         "asset_api_url",
+        "sig_url",
+        "sig_api_url",
         "error",
         "published_at",
     )
@@ -487,6 +554,15 @@ def _github_get_json(url: str, token: str) -> Any:
 
 def _pick_setup_asset(rel: dict[str, Any], asset_name: str) -> dict[str, str] | None:
     assets = rel.get("assets") if isinstance(rel.get("assets"), list) else []
+    sig_url = sig_api = ""
+    for asset in assets:
+        if isinstance(asset, dict) and str(asset.get("name") or "") == asset_name + SIG_SUFFIX:
+            sig_url = str(asset.get("browser_download_url") or "")
+            sig_api = str(asset.get("url") or "")
+            break
+    if not _is_github_https(sig_url):
+        # Wydanie bez podpisu Ed25519 nie jest aktualizacja - patrz release_verify.py.
+        return None
     for asset in assets:
         if not isinstance(asset, dict):
             continue
@@ -496,7 +572,12 @@ def _pick_setup_asset(rel: dict[str, Any], asset_name: str) -> dict[str, str] | 
         api = str(asset.get("url") or "")
         if not _is_setup_download_url(url, asset_name):
             continue
-        return {"download_url": url, "asset_api_url": api}
+        return {
+            "download_url": url,
+            "asset_api_url": api,
+            "sig_url": sig_url,
+            "sig_api_url": sig_api,
+        }
     return None
 
 
@@ -577,6 +658,8 @@ def _perform_github_check(token: str) -> dict[str, Any]:
     out["published_at"] = str(rel.get("published_at") or "")
     out["download_url"] = asset["download_url"]
     out["asset_api_url"] = asset.get("asset_api_url") or ""
+    out["sig_url"] = asset.get("sig_url") or ""
+    out["sig_api_url"] = asset.get("sig_api_url") or ""
     out["ok"] = True
     return _public_result(out)
 
@@ -635,11 +718,36 @@ def _download_file(url: str, token: str, dest: Path) -> None:
     tmp.replace(dest)
 
 
-def _download_worker(url: str) -> None:
+def _download_signature(url: str, token: str, dest: Path) -> None:
+    if not _is_github_https(url):
+        raise OSError("bad_signature_url")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    download = "api.github.com" in url.lower() and "/releases/assets/" in url.lower()
+    req = urllib.request.Request(url, headers=_github_headers(token, download=download))
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        data = resp.read(MAX_SIG_BYTES + 1)
+    if not data or len(data) > MAX_SIG_BYTES:
+        raise OSError("signature_size")
+    tmp = dest.with_suffix(dest.suffix + ".part")
+    tmp.write_bytes(data)
+    tmp.replace(dest)
+
+
+def _download_worker(url: str, sig_url: str = "") -> None:
     token = _resolve_github_token()
     dest = installer_path()
     try:
+        _download_signature(sig_url, token, sig_path())
         _download_file(url, token, dest)
+        ok, reason = verify_downloaded_installer(use_cache=False)
+        if not ok:
+            # Niepodpisany / podmieniony plik nie zostaje na dysku ani sekundy dluzej.
+            _discard_download()
+            with _DL_LOCK:
+                _DL_STATE.update(
+                    {"status": "error", "error": "signature_" + reason, "path": "", "bytes": 0}
+                )
+            return
         with _DL_LOCK:
             _DL_STATE.update(
                 {
@@ -664,8 +772,13 @@ def start_background_download(download_url: str = "") -> dict[str, Any]:
     url = str(chk.get("asset_api_url") or chk.get("download_url") or download_url or "").strip()
     if not url:
         return {"ok": False, "error": "missing_download_url", "status": "idle"}
-    if url.startswith("https://github.com/") and not _is_setup_download_url(url):
+    if not _is_github_https(url) or (
+        url.startswith("https://github.com/") and not _is_setup_download_url(url)
+    ):
         return {"ok": False, "error": "bad_download_url", "status": "idle"}
+    sig_url = str(chk.get("sig_api_url") or chk.get("sig_url") or "").strip()
+    if not _is_github_https(sig_url):
+        return {"ok": False, "error": "release_unsigned", "status": "idle"}
     if installer_ready():
         with _DL_LOCK:
             _DL_STATE.update({"status": "ready", "path": str(installer_path()), "error": ""})
@@ -674,7 +787,9 @@ def start_background_download(download_url: str = "") -> dict[str, Any]:
         if _DL_STATE.get("status") == "downloading":
             return dict(_DL_STATE)
         _DL_STATE.update({"status": "downloading", "path": "", "error": "", "bytes": 0})
-    t = threading.Thread(target=_download_worker, args=(url,), name="dam-update-dl", daemon=True)
+    t = threading.Thread(
+        target=_download_worker, args=(url, sig_url), name="dam-update-dl", daemon=True
+    )
     t.start()
     return download_status()
 
@@ -685,6 +800,14 @@ def _launch_installer(path: Path) -> dict[str, Any]:
 
     if not path.is_file():
         return {"ok": False, "error": "installer_missing"}
+    # Swiezo liczone (bez cache): katalog data/updates jest zapisywalny dla usera,
+    # wiec plik mogl zostac podmieniony miedzy pobraniem a kliknieciem "Zainstaluj".
+    if path.resolve() != installer_path().resolve():
+        return {"ok": False, "error": "installer_path_forbidden"}
+    ok, reason = verify_downloaded_installer(use_cache=False)
+    if not ok:
+        _discard_download()
+        return {"ok": False, "error": "signature_" + reason}
     args = [str(path), "/VERYSILENT", "/NORESTART"]
     try:
         if sys.platform == "win32":

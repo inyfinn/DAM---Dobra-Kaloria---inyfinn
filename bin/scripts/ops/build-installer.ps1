@@ -265,9 +265,23 @@ $pgSrc = $pgCands | Where-Object { Test-PgConfigSecret $_ } | Select-Object -Fir
 if (-not $pgSrc) {
   throw "Brak passworded pg-config.json (gitignored). Setup NIE moze wyjechac — dummy user nie kopiuje nic. Poloz sekret w bin\apps\desktop\data\pg-config.json albo w zainstalowanym DAM."
 }
-Copy-Item -LiteralPath $pgSrc -Destination (Join-Path $deskDataDst "pg-config.json") -Force
-Copy-Item -LiteralPath $pgSrc -Destination (Join-Path $binDst "apps\desktop\pg-config.json") -Force
-Write-Host "Embedded pg-config.json (Synology, passworded) from build-machine secret. Not committed."
+# Audyt 2026-09-17: jawny pg-config.json w Setupie = haslo do bazy dla kazdego, kto pobierze
+# instalator. Do Setupu idzie TYLKO szyfrogram; odblokowuje go kod aktywacyjny (pg_seal.py).
+$sealScript = Join-Path $BinRoot "scripts\ops\seal-pg-config.py"
+$sealedDst = Join-Path $deskDataDst "pg-config.sealed.json"
+& $rtPyExe $sealScript --in $pgSrc --out $sealedDst
+if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $sealedDst)) {
+  throw "Pieczetowanie pg-config nieudane (exit $LASTEXITCODE). Setup NIE moze wyjechac."
+}
+$pgSecret = [string](Get-Content -LiteralPath $pgSrc -Raw -Encoding UTF8 | ConvertFrom-Json).password
+$leaks = @(Get-ChildItem -LiteralPath $stageRoot -Recurse -File -ErrorAction SilentlyContinue |
+  Where-Object { $_.Length -lt 5MB -and $_.Extension -in @(".json", ".env", ".py", ".ps1", ".txt", ".off", ".ini", ".cfg", ".md") } |
+  Where-Object { Select-String -LiteralPath $_.FullName -SimpleMatch -Pattern $pgSecret -Quiet })
+if ($leaks.Count -gt 0) {
+  throw ("Haslo bazy w staging (jawnie): " + (($leaks | ForEach-Object { $_.FullName }) -join "; "))
+}
+Remove-Variable pgSecret
+Write-Host "Sealed pg-config (kod aktywacyjny poza Setupem). Jawnego hasla w staging brak."
 New-Item -ItemType Directory -Force -Path (Join-Path $binDst "DATABASE") | Out-Null
 $usersSeedSrc = Join-Path $BinRoot "DATABASE\users-seed.sqlite"
 if (-not (Test-Path -LiteralPath $usersSeedSrc)) {
@@ -390,6 +404,12 @@ try {
   Write-Warning "Nie skopiowano do repo: $($_.Exception.Message)"
 }
 Write-Host "SHA256 $outHash"
+# Podpis wydania (Ed25519). Bez DAM-Setup.exe.sig w wydaniu GitHub aplikacje odrzuca aktualizacje.
+$signRelease = Join-Path $BinRoot "scripts\ops\sign-release.py"
+& $rtPyExe $signRelease sign $setupExe --version $Version
+if ($LASTEXITCODE -ne 0) { throw "Podpis wydania (sign-release.py) nieudany. Najpierw: sign-release.py init" }
+try { [IO.File]::Copy("$setupExe.sig", "$repoExe.sig", $true) } catch { Write-Warning "Nie skopiowano .sig do repo: $($_.Exception.Message)" }
+Write-Host "Do wydania GitHub wgraj OBA pliki: DAM-Setup.exe i DAM-Setup.exe.sig"
 $sizeMb = [math]::Round((Get-Item -LiteralPath $setupExe).Length / 1MB, 1)
 Write-Host ""
 Write-Host "GOTOWE - kliknij:"
