@@ -511,7 +511,7 @@ def _is_foreground_dam_window() -> bool:
             return False
         if fg == hwnd:
             return True
-        # WebView2 host moze byc child â€” idz w gore drzewa
+        # WebView2 host moze byc child — idz w gore drzewa
         walk = fg
         for _ in range(12):
             parent = user32.GetParent(walk)
@@ -794,7 +794,7 @@ def main() -> None:
             pass
 
     def _on_shown() -> None:
-        # WinForms bierze ikone z webview.start(icon=...); WM_SETICON to pas bezpieczeĹ„stwa.
+        # WinForms bierze ikone z webview.start(icon=...); WM_SETICON to pas bezpieczeństwa.
         if icon_path:
             apply_native_window_icon(icon_path)
 
@@ -830,7 +830,7 @@ def main() -> None:
 
         tray_stop = start_tray(title=APP_TITLE, on_show=_show_window, on_quit=_shutdown_all)
         if tray_stop is None:
-            _log_tray("pystray niedostepny â€” brak ikony w zasobniku (pip install pystray Pillow)")
+            _log_tray("pystray niedostepny — brak ikony w zasobniku (pip install pystray Pillow)")
         else:
             tray_active = True
     except Exception as exc:

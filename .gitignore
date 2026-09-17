@@ -209,6 +209,9 @@ bin/apps/desktop/data/index-last-report.json
 bin/apps/desktop/data/index-live.json
 bin/apps/desktop/data/index-run-snapshot.json
 bin/apps/desktop/data/index-rebuild.log*
+bin/apps/desktop/data/index-rebuild.lock.json
+bin/apps/desktop/data/ocr-assoc-batch.jsonl
+bin/apps/desktop/data/.ocr-thumb-cache/
 bin/apps/desktop/data/worker-serve*.log
 # Zapisy atomowe (write-tmp-then-rename) i rotowane logi - niedokonczone/stare kopie
 bin/apps/desktop/data/*.tmp

@@ -87,6 +87,51 @@ def _candidates_from_text(
     return cands
 
 
+def suggest_products(
+    text: str,
+    asset: dict,
+    *,
+    file_index: dict,
+    associations: dict,
+    fallback_path: str = "",
+) -> list[dict]:
+    """Ranking produktow dla tekstu OCR (bez zapisu czegokolwiek)."""
+    products = file_index.get("products") or []
+    products_by_id = {p.get("id"): p for p in products if p.get("id")}
+    sku_map = _sku_map(file_index)
+    ranked = rank_products_from_ocr(
+        ocr_text=text,
+        asset_name=str(asset.get("name") or ""),
+        asset_path=str(asset.get("path") or fallback_path),
+        products=products,
+        associations=associations,
+        min_score=50,
+        limit=8,
+    )
+    extra = _candidates_from_text(
+        text, str(asset.get("name") or ""), sku_map, associations, products_by_id
+    )
+    for pid in extra:
+        if not any(r[0] == pid for r in ranked):
+            from assoc_adequacy import score_product_link
+
+            p = products_by_id.get(pid) or {}
+            sc, reason = score_product_link(
+                asset_name=str(asset.get("name") or ""),
+                asset_path=str(asset.get("path") or ""),
+                ocr_text=text,
+                product_id=pid,
+                product_name=str(p.get("name") or p.get("display_name") or ""),
+                product_path=str(p.get("path") or ""),
+                product_indexes=p.get("indexes") or [],
+                associations=associations,
+            )
+            if sc >= 50:
+                ranked.append((pid, sc, reason))
+    ranked.sort(key=lambda x: (-x[1], x[0]))
+    return [{"product_id": pid, "score": sc, "reason": reason} for pid, sc, reason in ranked[:8]]
+
+
 def process_asset(
     asset: dict,
     *,
@@ -108,10 +153,6 @@ def process_asset(
                 if alt.is_file():
                     path = alt
                     break
-    products = file_index.get("products") or []
-    products_by_id = {p.get("id"): p for p in products if p.get("id")}
-    sku_map = _sku_map(file_index)
-
     result: dict = {
         "id": aid,
         "name": asset.get("name"),
@@ -143,41 +184,9 @@ def process_asset(
             result["ocr_meta"] = {"ok": False, "error": str(exc), "engine": "rapidocr"}
 
     result["ocr_text"] = text
-
-    ranked = rank_products_from_ocr(
-        ocr_text=text,
-        asset_name=str(asset.get("name") or ""),
-        asset_path=str(asset.get("path") or path),
-        products=products,
-        associations=associations,
-        min_score=50,
-        limit=8,
+    result["suggestions"] = suggest_products(
+        text, asset, file_index=file_index, associations=associations, fallback_path=str(path)
     )
-    # Uzupełnij kandydatami SKU/assoc i filtruj adequacy
-    extra = _candidates_from_text(
-        text, str(asset.get("name") or ""), sku_map, associations, products_by_id
-    )
-    for pid in extra:
-        if not any(r[0] == pid for r in ranked):
-            from assoc_adequacy import score_product_link
-
-            p = products_by_id.get(pid) or {}
-            sc, reason = score_product_link(
-                asset_name=str(asset.get("name") or ""),
-                asset_path=str(asset.get("path") or ""),
-                ocr_text=text,
-                product_id=pid,
-                product_name=str(p.get("name") or p.get("display_name") or ""),
-                product_path=str(p.get("path") or ""),
-                product_indexes=p.get("indexes") or [],
-                associations=associations,
-            )
-            if sc >= 50:
-                ranked.append((pid, sc, reason))
-    ranked.sort(key=lambda x: (-x[1], x[0]))
-    result["suggestions"] = [
-        {"product_id": pid, "score": sc, "reason": reason} for pid, sc, reason in ranked[:8]
-    ]
 
     # Zapisz do recognition zawsze
     rec = _load_json(REC_OUT, {"assets": {}})

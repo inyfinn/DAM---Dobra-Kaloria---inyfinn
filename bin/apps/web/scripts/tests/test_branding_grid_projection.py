@@ -157,6 +157,7 @@ class BrandingGridBundleTest(unittest.TestCase):
                     "media_type": "vector",
                     "path": "M:/brand/b.svg",
                     "name": "b.svg",
+                    "mtime_ms": 1_700_000_000_000,
                 }
             ),
             _slim_asset(
@@ -166,6 +167,7 @@ class BrandingGridBundleTest(unittest.TestCase):
                     "media_type": "image",
                     "path": "M:/www/slider.jpg",
                     "name": "slider.jpg",
+                    "mtime_ms": 1_800_000_000_000,
                 }
             ),
             _slim_asset(
@@ -195,7 +197,9 @@ class BrandingGridBundleTest(unittest.TestCase):
         self.assertNotIn("br-empty-role", head_ids)
         self.assertNotIn("br-element", head_ids)
         self.assertIn("br-web-1", head_ids)
+        # Glowa = poczatek domyslnego sortowania UI "Modyfikacja: najnowsze".
         self.assertEqual(head[0]["id"], "br-web-1")
+        self.assertEqual(head[1]["id"], "br-brand-2")
 
     def test_head_same_generation_id_meta(self):
         generation_id = "395b62542b94c15a"

@@ -1,10 +1,10 @@
 /**
- * DAM â€” wspĂłlny silnik animacji "reveal" (GSAP).
+ * DAM — wspólny silnik animacji "reveal" (GSAP).
  *
  * Dwa tryby:
  *  1) reveal(container, selector)          -> siatki kart/wierszy. Animacja
  *     odslania sie GORA->DOL (clipPath) + fade, ale KAZDY element startuje
- *     dopiero, gdy wjedzie w viewport (IntersectionObserver) â€” jak na
+ *     dopiero, gdy wjedzie w viewport (IntersectionObserver) — jak na
  *     prawdziwej stronie www.
  *  2) revealSequence(container, selector)  -> tresci modali / sidebar. Kaskada
  *     od gory do dolu: fade (mode:"fade") albo fade + zjazd z gory (mode:"slide").
@@ -26,7 +26,7 @@
   // Element musi wejsc ~50px w viewport zanim sie odsloni (nie tuz przy krawedzi,
   // zeby animacja byla widoczna, a nie "juz sie stala" poza ekranem).
   var VIEWPORT_MARGIN = 50;
-  /* Karty: /thumb-cache pending bez onerror (NFS) â€” wymus fallback po tym czasie. */
+  /* Karty: /thumb-cache pending bez onerror (NFS) — wymus fallback po tym czasie. */
   var THUMB_LOAD_TIMEOUT_MS = 1200;
 
   // "Belki": toolbary, paski filtrow, context bar, changelog. Animowane jako
@@ -84,7 +84,7 @@
     document.addEventListener("visibilitychange", flushPendingRevealOnVisible);
   }
 
-  /** GSAP tick nie leci przy document.hidden â€” odblokuj karty z opacity:0. */
+  /** GSAP tick nie leci przy document.hidden — odblokuj karty z opacity:0. */
   function scheduleStuckRevealFailsafe(nodes) {
     global.setTimeout(function () {
       nodes.forEach(function (el) {
@@ -228,7 +228,7 @@
   }
 
   // ---------------------------------------------------------------------------
-  // 1) Siatki â€” reveal z bramka viewportu
+  // 1) Siatki — reveal z bramka viewportu
   // ---------------------------------------------------------------------------
 
   var gridObserver = null;
@@ -352,7 +352,7 @@
   }
 
   // ---------------------------------------------------------------------------
-  // 2) Tresci (modale, sidebar) â€” kaskada od razu, bez bramki viewportu
+  // 2) Tresci (modale, sidebar) — kaskada od razu, bez bramki viewportu
   // ---------------------------------------------------------------------------
 
   /**
@@ -407,7 +407,7 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Belki (toolbary / paski filtrow / context bar) â€” reveal jako bloki
+  // Belki (toolbary / paski filtrow / context bar) — reveal jako bloki
   // ---------------------------------------------------------------------------
 
   function isVisible(el) {
@@ -436,7 +436,7 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Modale â€” generyczny reveal przy otwarciu (obserwator DOM)
+  // Modale — generyczny reveal przy otwarciu (obserwator DOM)
   // ---------------------------------------------------------------------------
 
   function isModalOverlay(node) {
@@ -534,7 +534,7 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Sidebar â€” reveal menu przy wejsciu na strone
+  // Sidebar — reveal menu przy wejsciu na strone
   // ---------------------------------------------------------------------------
 
   function revealSidebarWhenReady() {
@@ -556,7 +556,7 @@
 
     if (tryReveal()) return;
     if (!global.MutationObserver) return;
-    // Nav budowany jest przez dam-shell.js po zaladowaniu â€” poczekaj na items.
+    // Nav budowany jest przez dam-shell.js po zaladowaniu — poczekaj na items.
     var mo = new MutationObserver(function () {
       if (tryReveal()) mo.disconnect();
     });
@@ -571,7 +571,7 @@
   // ---------------------------------------------------------------------------
 
   // ---------------------------------------------------------------------------
-  // Wejscie strony â€” tytul + podtytul + belki, kaskada gora->dol
+  // Wejscie strony — tytul + podtytul + belki, kaskada gora->dol
   // ---------------------------------------------------------------------------
 
   // Sidebar oraz pasek akcji naglowka (#damHeaderAction: Pliki/Baza/PL/ADMIN)
@@ -669,7 +669,7 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Wiersze / pozycje list (tabele faktur, kosztĂłw) â€” fade + lekki zjazd
+  // Wiersze / pozycje list (tabele faktur, kosztów) — fade + lekki zjazd
   // ---------------------------------------------------------------------------
 
   function revealRows(container, selector, opts) {
@@ -706,7 +706,7 @@
   }
 
   // ---------------------------------------------------------------------------
-  // Skeleton loading (shimmer) â€” placeholder ksztaltu tresci podczas ladowania
+  // Skeleton loading (shimmer) — placeholder ksztaltu tresci podczas ladowania
   // ---------------------------------------------------------------------------
 
   function skeleton(mount, opts) {

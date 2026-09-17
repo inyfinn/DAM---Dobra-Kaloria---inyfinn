@@ -167,7 +167,14 @@ def _ensure_roots() -> None:
     global MARKETING_BASE, DEFAULT_ROOT, GC_ROOT, MARKETING_ROOT, ROOTS
     if MARKETING_BASE is not None and ROOTS:
         return
-    MARKETING_BASE = resolve_marketing_base()
+    base = resolve_marketing_base()
+    if base is None:
+        # Komputer bez dysku Marketing: zostaw dostarczony indeks nietkniety.
+        _LIVE["running"] = False
+        _write_index_live(force=True)
+        print("NO_MARKETING_ROOT: brak dysku Marketing - indeks bez zmian (tryb cache).", flush=True)
+        raise SystemExit(0)
+    MARKETING_BASE = base
     DEFAULT_ROOT = MARKETING_BASE / "- POLSKA" / "01 - PRODUKTY" / "- DK"
     GC_ROOT = MARKETING_BASE / "- EKSPORT" / "01 - PRODUCTS" / "- GC"
     MARKETING_ROOT = MARKETING_BASE / "- POLSKA"

@@ -170,6 +170,7 @@ $xdAgents = $xdCommon + @(
   "design-system-2026-09-07",
   "design-system-2026-09-09",
   "design-system-2026-09-10",
+  "qa-evidence",
   "sandbox"
 )
 foreach ($tree in @("apps\api", "scripts", "docs", "agents")) {
@@ -211,12 +212,26 @@ $webDataDst = Join-Path $binDst "apps\web\data"
 New-Item -ItemType Directory -Force -Path $webDataDst | Out-Null
 # Pelne dane, bez whitelisty: kazdy ekran (Wykrojniki, Kampanie, Koszty) ma dane
 # od pierwszego uruchomienia. Wykluczamy tylko smieci, logi, fat index i pliki per-maszyna.
+# UWAGA: NIE dodawaj tu wzorcow "file-index.json.*" / "search-index.json.*".
+# Robocopy (dopasowanie Win32) traktuje "nazwa.*" jak "nazwa" bez rozszerzenia,
+# wiec wyklucza tez sam file-index.json - przez to kazda instalacja miala
+# "Brak file-index.json (404)", pusty Eksplorer/Projekty i bridge_viz_index_404.
+# Kopie zapasowe indeksow usuwamy po kopiowaniu, dokladnym regexem.
 $xfData = $xfCommon + @(
   "*.tmp", "*.log", "*.jsonl", "*.lock.json", "dam-runtime.json", "dam-identity.json",
-  "branding-index.json.*", "file-index.json.*", "search-index.json.*",
   "_refilter-*.json", "_ocr_batch_ids.json", "warm-*.json"
 )
 Invoke-Robo $webDataSrc $webDataDst @("thumbs", "_invoice_mail_stage", "__pycache__", "backups", "backup") $xfData
+Get-ChildItem -LiteralPath $webDataDst -File |
+  Where-Object { $_.Name -match '^(branding|file|search)-index\.json\..+' } |
+  Remove-Item -Force
+foreach ($req in @("file-index.json", "search-index.json")) {
+  $reqPath = Join-Path $webDataDst $req
+  if (-not (Test-Path -LiteralPath $reqPath) -or ((Get-Item -LiteralPath $reqPath).Length -lt 1000)) {
+    throw "Brak $req w staging - Setup NIE moze wyjechac (Eksplorer, Projekty i Wizualizacje beda puste)."
+  }
+}
+Write-Host "Indeksy OK: file-index.json $((Get-Item (Join-Path $webDataDst 'file-index.json')).Length) B"
 $headSrc = Join-Path $webDataSrc "branding-grid-head.json"
 $indexDst = Join-Path $webDataDst "branding-grid-index.json"
 if ((-not (Test-Path -LiteralPath $indexDst) -or ((Get-Item -LiteralPath $indexDst).Length -lt 1000)) -and (Test-Path -LiteralPath $headSrc)) {

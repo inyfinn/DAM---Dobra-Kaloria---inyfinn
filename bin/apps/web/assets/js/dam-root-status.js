@@ -1,7 +1,7 @@
 /**
- * Status ROOT plikĂłw (nie API metadanych).
- * Online = da sie odczytaÄ‡ folder usera z -- ARCHIWUM -- / - EKSPORT / - POLSKA.
- * Offline = czerwona kropka + przycisk "WskaĹĽ Ĺ›cieĹĽkÄ™" + delikatny pasek u gĂłry okna.
+ * Status ROOT plików (nie API metadanych).
+ * Online = da sie odczytać folder usera z -- ARCHIWUM -- / - EKSPORT / - POLSKA.
+ * Offline = czerwona kropka + przycisk "Wskaż ścieżkę" + delikatny pasek u góry okna.
  */
 (function () {
   "use strict";
@@ -137,12 +137,12 @@
           '<span class="dam-status-line">online</span>' +
         "</span>" +
       "</span>" +
-      '<button type="button" class="dam-root-status__refresh" id="damRootRefreshBtn" title="Przeskanuj Marketing i odĹ›wieĹĽ indeks plikĂłw" data-dam-tip="Skan dysku Marketing â†’ file-index â†’ miniatury. Jak â€žOdĹ›wieĹĽ z dyskuâ€ť w eksploratorze." aria-label="OdĹ›wieĹĽ pliki z dysku">' +
+      '<button type="button" class="dam-root-status__refresh" id="damRootRefreshBtn" title="Przeskanuj Marketing i odśwież indeks plików" data-dam-tip="Skan dysku Marketing → file-index → miniatury. Jak „Odśwież z dysku” w eksploratorze." aria-label="Odśwież pliki z dysku">' +
         '<i class="uil uil-redo" aria-hidden="true"></i>' +
       "</button>" +
-      '<button type="button" class="dam-root-status__btn" id="damRootResetBtn" hidden title="WskaĹĽ folder Marketing">' +
+      '<button type="button" class="dam-root-status__btn" id="damRootResetBtn" hidden title="Wskaż folder Marketing">' +
         '<i class="uil uil-folder-open" aria-hidden="true"></i>' +
-        '<span>WskaĹĽ folder</span>' +
+        '<span>Wskaż folder</span>' +
       "</button>";
     host.insertBefore(el, host.firstChild);
     var refreshBtn = el.querySelector("#damRootRefreshBtn");
@@ -183,7 +183,7 @@
     if (!el) return;
     el.classList.toggle("is-offline", !online);
     el.classList.toggle("is-online", !!online);
-    el.title = detail || (online ? "ROOT plikĂłw online" : "ROOT plikĂłw offline");
+    el.title = detail || (online ? "ROOT plików online" : "ROOT plików offline");
     var label = el.querySelector(".dam-root-status__label");
     var btn = el.querySelector("#damRootResetBtn");
     var refreshBtn = el.querySelector("#damRootRefreshBtn");
@@ -195,7 +195,7 @@
         line2 = "offline";
       } else if (!online && reason === "no_root") {
         line1 = "Brak";
-        line2 = "Ĺ›cieĹĽki";
+        line2 = "ścieżki";
       }
       label.innerHTML =
         '<span class="dam-status-line">' +
@@ -209,9 +209,9 @@
       btn.hidden = !!online;
       btn.setAttribute("data-reason", reason || "");
       if (reason === "bridge") {
-        btn.innerHTML = '<i class="uil uil-question-circle" aria-hidden="true"></i><span>Jak uruchomiÄ‡</span>';
+        btn.innerHTML = '<i class="uil uil-question-circle" aria-hidden="true"></i><span>Jak uruchomić</span>';
       } else {
-        btn.innerHTML = '<i class="uil uil-folder-open" aria-hidden="true"></i><span>WskaĹĽ folder</span>';
+        btn.innerHTML = '<i class="uil uil-folder-open" aria-hidden="true"></i><span>Wskaż folder</span>';
       }
     }
     setBodyOffline(!online);
@@ -227,7 +227,7 @@
     var refreshBtn = document.getElementById("damRootRefreshBtn");
     if (refreshBtn) refreshBtn.classList.add("is-busy");
     if (window.DamLoader && typeof window.DamLoader.start === "function") {
-      window.DamLoader.start("SkanujÄ™ Marketingâ€¦");
+      window.DamLoader.start("Skanuję Marketing…");
     }
 
     var chain;
@@ -276,7 +276,7 @@
   function check() {
     var root = rootPath();
     if (!root) {
-      setState(false, "Brak ROOT - ustaw Ĺ›cieĹĽkÄ™ Marketing", "no_root");
+      setState(false, "Brak ROOT - ustaw ścieżkę Marketing", "no_root");
       return Promise.resolve({ online: false, reason: "no_root" });
     }
     var url = bridgeBase() + "/files/status?root=" + encodeURIComponent(root);
@@ -288,7 +288,7 @@
           ? ("ROOT OK: " + (res.root || root))
           : ("Offline: " + (res && res.missing && res.missing.length
             ? ("brak " + res.missing.join(", "))
-            : "nie moĹĽna odczytaÄ‡ plikĂłw"));
+            : "nie można odczytać plików"));
         setState(online, detail, online ? "ok" : "path");
         return res;
       })
@@ -298,7 +298,7 @@
             if (boot && boot.ok) return check();
             setState(
               false,
-              "Most plikĂłw (bridge) nie odpowiada. Uruchom skrĂłt DAM ETA na pulpicie.",
+              "Most plików (bridge) nie odpowiada. Uruchom skrót DAM ETA na pulpicie.",
               "bridge"
             );
             return { online: false, reason: "bridge" };
@@ -306,7 +306,7 @@
         }
         setState(
           false,
-          "Most plikĂłw (bridge) nie odpowiada na porcie 8766. Uruchom DAM albo serve_browser.py.",
+          "Most plików (bridge) nie odpowiada na porcie 8766. Uruchom DAM albo serve_browser.py.",
           "bridge"
         );
         return { online: false, reason: "bridge" };

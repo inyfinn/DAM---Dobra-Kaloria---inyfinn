@@ -35,6 +35,7 @@ SLIM_KEYS = (
     "sku",
     "source",
     "brand",
+    "mtime_ms",
 )
 
 # Controlled taxonomy (dam-asset-role-mapping.json) + legacy aliases www/social/campaign/brandbook.
@@ -83,7 +84,7 @@ HEAD_ROLE_PRIORITY = {
     "brandbook": 11,
     "icon": 12,
 }
-HEAD_LIMIT = 800
+HEAD_LIMIT = 1500
 HEAD_MEDIA = frozenset({"image", "raster", "vector", "video"})
 
 
@@ -156,7 +157,24 @@ def _atomic_write_json(path: Path, payload: dict) -> None:
     os.replace(tmp, path)
 
 
+def _stamp_disk_mtimes(assets: list[dict]) -> int:
+    """Data z dysku w chwili budowy - ta sama, ktora mostek zwraca w /branding/mtimes.
+
+    Bez niej UI sortowal "Modyfikacja: najnowsze" dopiero po dociagnieciu dat
+    (widoczny przeskok kart), a na komputerze bez dysku - nigdy.
+    """
+    stamped = 0
+    for row in assets:
+        try:
+            row["mtime_ms"] = int(os.stat(str(row.get("path") or "")).st_mtime * 1000)
+            stamped += 1
+        except OSError:
+            pass
+    return stamped
+
+
 def _build_head_assets(full_assets: list[dict]) -> list[dict]:
+    """Pierwsza porcja kart = poczatek domyslnego sortowania UI (najnowsze)."""
     candidates: list[dict] = []
     seen: set[str] = set()
     for row in full_assets:
@@ -170,12 +188,7 @@ def _build_head_assets(full_assets: list[dict]) -> list[dict]:
             continue
         seen.add(aid)
         candidates.append(row)
-    candidates.sort(
-        key=lambda r: (
-            HEAD_ROLE_PRIORITY.get(str(r.get("asset_role") or "").lower(), 99),
-            str(r.get("id") or ""),
-        )
-    )
+    candidates.sort(key=lambda r: (-int(r.get("mtime_ms") or 0), str(r.get("id") or "")))
     return candidates[:HEAD_LIMIT]
 
 
@@ -233,6 +246,14 @@ def main() -> int:
             links_from_sqlite = True
         except Exception as exc:  # noqa: BLE001
             print(f"WARN sqlite: {exc}", file=sys.stderr)
+
+    if not assets and out.is_file() and out.stat().st_size > 1000:
+        # Instalacja ma pusty stub branding-index.json - nie kasuj dostarczonej siatki.
+        print(json.dumps({"ok": False, "error": "empty_source_kept_existing", "out": str(out)}))
+        return 0
+
+    stamped = _stamp_disk_mtimes(assets)
+    print(f"mtime z dysku: {stamped}/{len(assets)}", file=sys.stderr)
 
     generation_id = compute_generation_id(src, args.from_sqlite)
     generated = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
