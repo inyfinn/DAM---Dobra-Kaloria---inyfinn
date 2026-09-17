@@ -48,7 +48,7 @@ USERS = [
     ("test@kubara.pl", "test", "user"),
 ]
 
-MIN_PASSWORD_LEN = 8
+MIN_PASSWORD_LEN = 10
 
 
 def _upsert_role_name(email: str, name: str, role: str) -> None:

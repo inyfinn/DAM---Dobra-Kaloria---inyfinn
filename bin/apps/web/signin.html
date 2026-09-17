@@ -222,6 +222,8 @@
 
   <script src="./assets/js/dam-runtime.js?v=1.8.9"></script>
   <script src="./assets/js/dam-api.js?v=2.0.0"></script>
+  <script src="./assets/js/dam-activation.js?v=2.0.8"></script>
+  <script src="./assets/js/dam-password-change.js?v=2.0.8"></script>
   <script>
     (function () {
       var mode = "login";
@@ -248,8 +250,9 @@
         nameWrap.hidden = m !== "register";
         nameWrap.classList.toggle("dam-auth-hidden", m !== "register");
         pass.autocomplete = m === "register" ? "new-password" : "current-password";
-        pass.minLength = 4;
-        pass.setAttribute("minlength", "4");
+        /* Logowanie przyjmuje stare krotkie hasla (most wymusi zmiane); nowe konto: min. 10. */
+        pass.minLength = m === "register" ? 10 : 4;
+        pass.setAttribute("minlength", m === "register" ? "10" : "4");
         submitBtn.textContent = m === "register" ? "Utwórz konto" : "Zaloguj";
         if (registrationOpen) {
           footer.innerHTML = m === "register"
@@ -342,6 +345,16 @@
           msg.textContent = "Zalogowano. Przekierowanie...";
           setTimeout(function () { location.replace("dashboard.html"); }, 300);
         }).catch(function (err) {
+          if (err && err.code === "password_change_required" && window.DamPasswordChange) {
+            msg.className = "dam-auth-msg";
+            msg.textContent = "";
+            submitBtn.disabled = false;
+            DamPasswordChange.open(email, password, function (newPassword) {
+              pass.value = newPassword;
+              document.getElementById("damAuthForm").requestSubmit();
+            });
+            return;
+          }
           msg.className = "dam-auth-msg is-err";
           msg.textContent = (err && err.message) || "Nie udalo sie zalogowac";
           submitBtn.disabled = false;

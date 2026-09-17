@@ -16,7 +16,7 @@ if str(DESKTOP) not in sys.path:
 from auth_store import set_user_password  # noqa: E402
 from seed_kubara_users import USERS  # noqa: E402
 
-MIN_LEN = 8
+MIN_LEN = 10
 
 
 def main() -> int:

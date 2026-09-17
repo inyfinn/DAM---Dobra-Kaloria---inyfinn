@@ -796,11 +796,21 @@
         if (bdata && bdata.error === "machine_id_required") {
           throw new Error("Brak ID maszyny - uruchom DAM przez skrot desktop.");
         }
+        if (bdata && bdata.error === "password_change_required") {
+          var pcr = new Error("To haslo jest za slabe. Ustaw nowe haslo, zeby sie zalogowac.");
+          pcr.code = "password_change_required";
+          throw pcr;
+        }
+        if (bdata && bdata.error === "too_many_attempts") {
+          var tma = new Error("Za duzo nieudanych prob. Odczekaj 5 minut.");
+          tma.code = "too_many_attempts";
+          throw tma;
+        }
         if (bdata && bdata.error) {
           throw new Error(String(bdata.error));
         }
       } catch (e) {
-        if (e && e.message && /Nieprawidlowy|Brak ID/.test(e.message)) throw e;
+        if (e && (e.code || (e.message && /Nieprawidlowy|Brak ID/.test(e.message)))) throw e;
         bridgeErr = e;
       }
       if (window.DAM_LARAVEL_AUTH) {
@@ -846,7 +856,8 @@
       if (!data || !data.ok) {
         var err = (data && data.error) || "register_failed";
         if (err === "email_taken") throw new Error("Konto z tym emailem juz istnieje.");
-        if (err === "password_too_short") throw new Error("Haslo min. 4 znaki.");
+        if (err === "password_too_short") throw new Error("Haslo musi miec co najmniej 10 znakow.");
+        if (err === "password_too_weak") throw new Error("To haslo jest zbyt oczywiste. Wybierz inne.");
         if (err === "invalid_email") throw new Error("Podaj poprawny email.");
         if (err === "admin_required") {
           throw new Error((data && data.hint) || "Nowe konta zaklada tylko administrator.");
@@ -891,6 +902,22 @@
       }
       window.location.href = "signin.html";
       return { ok: true, mode: "logged_out" };
+    },
+    async changePassword(email, oldPassword, newPassword) {
+      var r = await fetch(bridgeAuthUrl() + "/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ email: email, old_password: oldPassword, new_password: newPassword }),
+      });
+      var data = await r.json().catch(function () { return null; });
+      if (data && data.ok) return data;
+      var err = (data && data.error) || "change_failed";
+      if (err === "password_too_short") throw new Error("Nowe haslo musi miec co najmniej 10 znakow.");
+      if (err === "password_too_weak") throw new Error("To haslo jest zbyt oczywiste. Wybierz inne.");
+      if (err === "password_unchanged") throw new Error("Nowe haslo musi byc inne niz stare.");
+      if (err === "invalid_credentials") throw new Error("Stare haslo jest nieprawidlowe.");
+      if (err === "too_many_attempts") throw new Error("Za duzo nieudanych prob. Odczekaj 5 minut.");
+      throw new Error("Nie udalo sie zmienic hasla.");
     },
     async rehydrate() {
       var ident = await fetchIdentity();

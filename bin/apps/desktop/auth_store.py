@@ -15,6 +15,7 @@ import json
 import os
 import secrets
 import threading
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -82,6 +83,55 @@ def _verify_password(password: str, stored: str) -> bool:
         return bcrypt.checkpw(password.encode("utf-8"), stored.encode("utf-8"))
     except ValueError:
         return False
+
+
+MIN_PASSWORD_LEN = 10
+# Hasla, ktore byly w publicznym repo / komunikatach commitow albo sa oczywiste.
+_WEAK_PASSWORDS = frozenset(
+    {
+        "test", "test1234", "testtest", "password", "haslo", "haslo123", "12345678", "1234567890",
+        "qwerty", "qwertyuiop", "admin", "admin123", "dam", "damdam", "kubara", "kubara123",
+        "dobrakaloria", "goodcalories", "inyfinn", "zaq12wsx", "zaq1@wsx",
+    }
+)
+
+
+def password_policy_error(password: str, email: str = "") -> str:
+    """'' = haslo przechodzi. Inaczej kod bledu dla UI."""
+    pw = str(password or "")
+    if len(pw) < MIN_PASSWORD_LEN:
+        return "password_too_short"
+    low = pw.strip().lower()
+    local = (email or "").split("@")[0].strip().lower()
+    if low in _WEAK_PASSWORDS or (local and low == local) or len(set(low)) < 4:
+        return "password_too_weak"
+    return ""
+
+
+_LOGIN_LOCK = threading.Lock()
+_LOGIN_FAILS: dict[str, list[float]] = {}
+_LOGIN_MAX_FAILS = 8
+_LOGIN_WINDOW_S = 300.0
+
+
+def _login_throttled(email_n: str) -> bool:
+    now = time.time()
+    with _LOGIN_LOCK:
+        fails = [t for t in _LOGIN_FAILS.get(email_n, []) if now - t < _LOGIN_WINDOW_S]
+        _LOGIN_FAILS[email_n] = fails
+        return len(fails) >= _LOGIN_MAX_FAILS
+
+
+def _login_failed(email_n: str) -> None:
+    with _LOGIN_LOCK:
+        _LOGIN_FAILS.setdefault(email_n, []).append(time.time())
+        if len(_LOGIN_FAILS) > 2000:  # nie rosnij bez konca przy zgadywaniu emaili
+            _LOGIN_FAILS.clear()
+
+
+def _login_ok(email_n: str) -> None:
+    with _LOGIN_LOCK:
+        _LOGIN_FAILS.pop(email_n, None)
 
 
 def _hash_token(token: str) -> str:
@@ -190,13 +240,14 @@ def users_count() -> int:
 
 
 def set_user_password(email: str, new_password: str) -> dict:
-    """Ustaw haslo konta (skrypty go-live / admin ops). Min. 4 znaki."""
+    """Ustaw haslo konta (skrypty go-live / admin ops). Polityka: password_policy_error."""
     init_db()
     email_n = (email or "").strip().lower()
     if not email_n or "@" not in email_n:
         return {"ok": False, "error": "invalid_email"}
-    if not new_password or len(new_password) < 4:
-        return {"ok": False, "error": "password_too_short"}
+    policy = password_policy_error(new_password, email_n)
+    if policy:
+        return {"ok": False, "error": policy}
     with _LOCK:
         conn = _connect()
         try:
@@ -244,8 +295,9 @@ def register_user(email: str, password: str, name: str = "", role: str = "user")
     email_n = (email or "").strip().lower()
     if not email_n or "@" not in email_n:
         return {"ok": False, "error": "invalid_email"}
-    if not password or len(password) < 4:
-        return {"ok": False, "error": "password_too_short"}
+    policy = password_policy_error(password, email_n)
+    if policy:
+        return {"ok": False, "error": policy}
     display = (name or email_n.split("@")[0]).strip()
     role_n = role if role in ("admin", "power_user", "user") else "user"
     with _LOCK:
@@ -350,8 +402,16 @@ def login(
                 row = conn.execute(
                     "SELECT * FROM users WHERE email = ? COLLATE NOCASE", (email_n,)
                 ).fetchone()
+            if _login_throttled(email_n):
+                return {"ok": False, "error": "too_many_attempts"}
             if not row or not _verify_password(password, row["password_hash"]):
+                _login_failed(email_n)
                 return {"ok": False, "error": "invalid_credentials"}
+            _login_ok(email_n)
+            # Audyt 2026-09-17: konta seed mialy haslo "test" znane z publicznego repo.
+            # Poprawne, ale slabe haslo NIE daje sesji - tylko prawo do zmiany hasla.
+            if password_policy_error(password, email_n):
+                return {"ok": False, "error": "password_change_required", "email": email_n}
             token = secrets.token_urlsafe(48)
             now = _utc()
             hostname = str(identity.get("hostname") or "")
@@ -433,6 +493,55 @@ def login(
             conn.close()
 
 
+def change_password(email: str, old_password: str, new_password: str) -> dict:
+    """Zmiana hasla przez wlasciciela konta (stare haslo jako dowod). Uniewaznia sesje konta."""
+    init_db()
+    email_n = (email or "").strip().lower()
+    if not email_n or "@" not in email_n:
+        return {"ok": False, "error": "invalid_email"}
+    policy = password_policy_error(new_password, email_n)
+    if policy:
+        return {"ok": False, "error": policy}
+    if new_password == old_password:
+        return {"ok": False, "error": "password_unchanged"}
+    if _login_throttled(email_n):
+        return {"ok": False, "error": "too_many_attempts"}
+    with _LOCK:
+        conn = _connect()
+        try:
+            if _use_pg():
+                cur = conn.cursor()
+                cur.execute("SELECT id, password_hash FROM users WHERE LOWER(email) = LOWER(%s)", (email_n,))
+                row = cur.fetchone()
+            else:
+                row = conn.execute(
+                    "SELECT id, password_hash FROM users WHERE email = ? COLLATE NOCASE", (email_n,)
+                ).fetchone()
+            if not row or not _verify_password(old_password or "", row["password_hash"]):
+                _login_failed(email_n)
+                return {"ok": False, "error": "invalid_credentials"}
+            ph = _hash_password(new_password)
+            now = _utc()
+            if _use_pg():
+                cur = conn.cursor()
+                cur.execute(
+                    "UPDATE users SET password_hash = %s, updated_at = %s WHERE id = %s",
+                    (ph, now, row["id"]),
+                )
+                cur.execute("UPDATE device_sessions SET revoked = true WHERE user_id = %s", (row["id"],))
+            else:
+                conn.execute(
+                    "UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?",
+                    (ph, now, row["id"]),
+                )
+                conn.execute("UPDATE device_sessions SET revoked = 1 WHERE user_id = ?", (row["id"],))
+            conn.commit()
+            _login_ok(email_n)
+            return {"ok": True, "email": email_n}
+        finally:
+            conn.close()
+
+
 def rehydrate_session(
     session_id: str = "",
     device_id: str = "",
@@ -444,10 +553,14 @@ def rehydrate_session(
     """
     init_db()
     identity = _current_identity()
-    cur_mid = (machine_id or identity.get("machine_id") or "").strip()
-    cur_dev = (device_id or identity.get("device_id") or "").strip()
+    # Audyt 2026-09-17: tozsamosc maszyny liczy most, nie wolajacy. Naglowek moze ja
+    # najwyzej potwierdzic - inaczej kazdy, kto zna machine_id, odnawia cudza sesje.
+    cur_mid = str(identity.get("machine_id") or "").strip()
+    cur_dev = str(identity.get("device_id") or "").strip()
     if not cur_mid:
         return {"ok": False, "error": "machine_id_required"}
+    # machine_id / device_id od wolajacego sa ignorowane (UI bywa przed /auth/identity
+    # i wysyla tymczasowe "dev_pending_*"); liczy sie wylacznie tozsamosc lokalna.
 
     bound = None
     try:
@@ -456,30 +569,31 @@ def rehydrate_session(
         bound = read_bound_session()
     except Exception:
         bound = None
+    if not isinstance(bound, dict):
+        return {"ok": False, "error": "no_bound_session"}
 
-    sid = (session_id or "").strip()
-    bound_mid = ""
-    bound_dev = ""
-    bound_sid = ""
+    bound_mid = str(bound.get("machine_id") or "").strip()
+    bound_dev = str(bound.get("device_id") or "").strip()
+    bound_sid = str(bound.get("session_id") or "").strip()
     bound_uid = None
-    if isinstance(bound, dict):
-        bound_mid = str(bound.get("machine_id") or "").strip()
-        bound_dev = str(bound.get("device_id") or "").strip()
-        bound_sid = str(bound.get("session_id") or "").strip()
-        if bound.get("user_id") is not None:
-            try:
-                bound_uid = int(bound.get("user_id"))
-            except (TypeError, ValueError):
-                bound_uid = None
-        if not sid:
-            sid = bound_sid
-        if not cur_dev and bound_dev:
-            cur_dev = bound_dev
+    if bound.get("user_id") is not None:
+        try:
+            bound_uid = int(bound.get("user_id"))
+        except (TypeError, ValueError):
+            bound_uid = None
+    if not cur_dev and bound_dev:
+        cur_dev = bound_dev
 
     if bound_mid and bound_mid != cur_mid:
         return {"ok": False, "error": "machine_mismatch"}
-    if not sid and bound_uid is None:
-        return {"ok": False, "error": "no_bound_session"}
+    # session_id to sekret dzielony tylko przez UI (localStorage) i bound-session.json.
+    # Bez niego odnowienie bez hasla bylo dostepne dla kazdego, kto siegnal do :8766
+    # (inne konto Windows na tym PC, strona z DNS rebinding).
+    sid = (session_id or "").strip()
+    if not sid:
+        return {"ok": False, "error": "session_id_required"}
+    if not bound_sid or not secrets.compare_digest(sid.encode("utf-8"), bound_sid.encode("utf-8")):
+        return {"ok": False, "error": "invalid_session"}
 
     with _LOCK:
         conn = _connect()
