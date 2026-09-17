@@ -571,10 +571,90 @@ def handle_get(handler: Any, parsed: Any) -> bool:
             )
         return True
 
+    if path == "/assoc/history":
+        return _assoc_history_get(handler, parsed)
+
     return False
 
 
+def _admin_user(handler: Any) -> dict | None:
+    fn = getattr(handler, "_require_admin", None)
+    if callable(fn):
+        return fn()
+    if _CTX.get("require_admin") and not _CTX["require_admin"](handler):
+        return None
+    return {}
+
+
+def _assoc_history_get(handler: Any, parsed: Any) -> bool:
+    """Historia zmian i konflikty skojarzen z Postgresa (panel admina, ADR-011)."""
+    if _admin_user(handler) is None:
+        return True
+    q = parse_qs(parsed.query or "")
+
+    def arg(name: str, default: str = "") -> str:
+        return str((q.get(name) or [default])[0])
+
+    try:
+        import assoc_sync
+
+        data = assoc_sync.history(
+            kind=arg("kind", "conflict"),
+            open_only=arg("open", "1") != "0",
+            asset_id=arg("asset_id").strip(),
+            limit=int(arg("limit", "100") or 100),
+            offset=int(arg("offset", "0") or 0),
+        )
+    except Exception as exc:  # noqa: BLE001 - offline: panel pokazuje komunikat
+        handler._json(200, {"ok": False, "error": "pg_unavailable", "detail": str(exc)[:300]})
+        return True
+    try:
+        by_id = _assets_by_id()
+    except Exception:  # noqa: BLE001
+        by_id = {}
+    for item in data["items"]:
+        asset = by_id.get(item["asset_id"]) or {}
+        item["asset_name"] = str(asset.get("name") or "")
+        item["asset_path"] = str(asset.get("path") or "")
+    try:
+        import assoc_sync
+
+        data["sync"] = assoc_sync.status()
+    except Exception:  # noqa: BLE001
+        pass
+    handler._json(200, data)
+    return True
+
+
+def _assoc_history_post(handler: Any, path: str, body: dict) -> bool:
+    user = _admin_user(handler)
+    if user is None:
+        return True
+    actor = str((user or {}).get("email") or (user or {}).get("name") or "admin")
+    try:
+        hid = int((body or {}).get("id") or 0)
+    except (TypeError, ValueError):
+        hid = 0
+    if hid <= 0:
+        handler._json(400, {"ok": False, "error": "id_required"})
+        return True
+    try:
+        import assoc_sync
+
+        if path == "/assoc/history/restore":
+            result = assoc_sync.restore(hid, str((body or {}).get("version") or "lost"), actor)
+        else:
+            result = assoc_sync.resolve(hid, actor)
+    except Exception as exc:  # noqa: BLE001
+        handler._json(503, {"ok": False, "error": "pg_unavailable", "detail": str(exc)[:300]})
+        return True
+    handler._json(200 if result.get("ok") else 400, result)
+    return True
+
+
 def handle_post(handler: Any, parsed: Any, body: dict) -> bool:
+    if parsed.path in ("/assoc/history/restore", "/assoc/history/resolve"):
+        return _assoc_history_post(handler, parsed.path, body if isinstance(body, dict) else {})
     if parsed.path != "/assoc/decide":
         return False
     if _CTX.get("require_admin") and not _CTX["require_admin"](handler):

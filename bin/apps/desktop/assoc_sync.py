@@ -9,19 +9,30 @@ Zasady:
 - Konflikt: wygrywa nowszy updated_at. Decyzja reczna (confirmed/rejected/skipped)
   nigdy nie jest nadpisywana przez automat (auto/pending), a sama nadpisuje automat.
 - dirty=2 to znacznik techniczny "zapisane przez PULL" - nie wraca do Postgresa.
+- Historia: kazda zmiana wiersza w Postgresie (trigger) i kazda przegrana wersja
+  (konflikt) trafia do dam_assoc_history. Admin moze przywrocic dowolna wersje.
+  Historia trzymana 30 dni, nierozwiazane konflikty 90 dni.
+- Kopia lokalnej bazy raz dziennie w DATABASE/backups, 30 dni.
 """
 from __future__ import annotations
 
+import json
 import sqlite3
 import threading
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
 MANUAL = ("confirmed", "rejected", "skipped")
+FIELDS = ("status", "score", "source", "reason", "updated_at", "updated_by")
+HISTORY_DAYS = 30
+OPEN_CONFLICT_DAYS = 90
+BACKUP_DAYS = 30
 _PUSH_BATCH = 500
 _PULL_BATCH = 2000
 _INTERVAL_S = 20.0
+_HOUSEKEEP_S = 3600.0
 
 _LOCAL_SQL = """
 CREATE TABLE IF NOT EXISTS assoc_sync_state (
@@ -60,6 +71,45 @@ CREATE TABLE IF NOT EXISTS dam_asset_product_links (
 );
 CREATE INDEX IF NOT EXISTS dam_asset_product_links_rev_idx
   ON dam_asset_product_links (rev);
+CREATE TABLE IF NOT EXISTS dam_assoc_history (
+  id BIGSERIAL PRIMARY KEY,
+  asset_id TEXT NOT NULL,
+  product_id TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  kept JSONB,
+  lost JSONB,
+  note TEXT NOT NULL DEFAULT '',
+  actor TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  resolved_at TIMESTAMPTZ,
+  resolved_by TEXT NOT NULL DEFAULT '',
+  resolution TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS dam_assoc_history_created_idx
+  ON dam_assoc_history (created_at DESC);
+CREATE INDEX IF NOT EXISTS dam_assoc_history_open_idx
+  ON dam_assoc_history (kind, resolved_at);
+CREATE OR REPLACE FUNCTION dam_assoc_log_change() RETURNS trigger AS $$
+BEGIN
+  IF (OLD.status, OLD.score, OLD.source, OLD.reason)
+     IS DISTINCT FROM (NEW.status, NEW.score, NEW.source, NEW.reason) THEN
+    INSERT INTO dam_assoc_history (asset_id, product_id, kind, kept, lost, actor)
+    VALUES (
+      NEW.asset_id, NEW.product_id, 'change',
+      jsonb_build_object('status', NEW.status, 'score', NEW.score, 'source', NEW.source,
+        'reason', NEW.reason, 'updated_at', NEW.updated_at, 'updated_by', NEW.updated_by),
+      jsonb_build_object('status', OLD.status, 'score', OLD.score, 'source', OLD.source,
+        'reason', OLD.reason, 'updated_at', OLD.updated_at, 'updated_by', OLD.updated_by),
+      NEW.updated_by
+    );
+  END IF;
+  RETURN NEW;
+END
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS dam_assoc_history_trg ON dam_asset_product_links;
+CREATE TRIGGER dam_assoc_history_trg
+  AFTER UPDATE ON dam_asset_product_links
+  FOR EACH ROW EXECUTE PROCEDURE dam_assoc_log_change();
 """
 
 _PG_UPSERT = """
@@ -81,12 +131,19 @@ WHERE (t.status, t.score, t.source, t.reason, t.updated_at)
        AND NOT (t.status IN ('confirmed','rejected','skipped')
                 AND EXCLUDED.status NOT IN ('confirmed','rejected','skipped')))
   )
+RETURNING asset_id, product_id
 """
 
 _lock = threading.Lock()
 _wake = threading.Event()
 _thread: threading.Thread | None = None
-_state: dict[str, Any] = {"ok": None, "error": "", "last_run": 0.0, "pushed": 0, "pulled": 0}
+_pg_ready = False
+_state: dict[str, Any] = {"ok": None, "error": "", "last_run": 0.0, "pushed": 0, "pulled": 0,
+                          "conflicts": 0}
+
+
+def utc_now() -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
 def ensure_local(conn: sqlite3.Connection) -> None:
@@ -94,6 +151,15 @@ def ensure_local(conn: sqlite3.Connection) -> None:
     if "dirty" not in cols:
         conn.execute("ALTER TABLE asset_product_links ADD COLUMN dirty INTEGER NOT NULL DEFAULT 0")
     conn.executescript(_LOCAL_SQL)
+
+
+def _ensure_pg(pg) -> None:
+    global _pg_ready
+    if _pg_ready:
+        return
+    pg.cursor().execute(_PG_SQL)
+    pg.commit()
+    _pg_ready = True
 
 
 def _get_state(conn: sqlite3.Connection, key: str, default: str = "") -> str:
@@ -121,9 +187,27 @@ def _open_local(db_path: Path) -> sqlite3.Connection:
     return conn
 
 
-def _pull(local: sqlite3.Connection, pg) -> int:
+def _version(row: Any) -> dict[str, Any]:
+    return {k: row[k] for k in FIELDS}
+
+
+def _same_content(a: dict[str, Any], b: dict[str, Any]) -> bool:
+    return all(a.get(k) == b.get(k) for k in ("status", "score", "source", "reason"))
+
+
+def _log_conflict(pg, asset_id: str, product_id: str, kept: dict, lost: dict, note: str, actor: str) -> None:
+    import psycopg2.extras
+
+    pg.cursor().execute(
+        "INSERT INTO dam_assoc_history (asset_id, product_id, kind, kept, lost, note, actor) "
+        "VALUES (%s, %s, 'conflict', %s, %s, %s, %s)",
+        (asset_id, product_id, psycopg2.extras.Json(kept), psycopg2.extras.Json(lost), note, actor),
+    )
+
+
+def _pull(local: sqlite3.Connection, pg) -> tuple[int, int]:
     last_rev = int(_get_state(local, "pg_rev", "0") or 0)
-    applied = 0
+    applied = conflicts = 0
     cur = pg.cursor()
     while True:
         cur.execute(
@@ -137,22 +221,23 @@ def _pull(local: sqlite3.Connection, pg) -> int:
         for r in rows:
             last_rev = max(last_rev, int(r["rev"]))
             mine = local.execute(
-                "SELECT status, updated_at, dirty FROM asset_product_links "
-                "WHERE asset_id=? AND product_id=?",
+                "SELECT status, score, source, reason, updated_at, updated_by, dirty "
+                "FROM asset_product_links WHERE asset_id=? AND product_id=?",
                 (r["asset_id"], r["product_id"]),
             ).fetchone()
-            if mine is not None:
-                m_status, m_at, m_dirty = str(mine[0]), str(mine[1] or ""), int(mine[2] or 0)
-                if m_status in MANUAL and r["status"] not in MANUAL:
-                    if m_dirty != 1:
-                        local.execute(
-                            "UPDATE asset_product_links SET dirty=1 WHERE asset_id=? AND product_id=?",
-                            (r["asset_id"], r["product_id"]),
-                        )
-                    continue
+            if mine is not None and int(mine["dirty"] or 0) == 1:
+                m_status, m_at = str(mine["status"]), str(mine["updated_at"] or "")
                 remote_manual_wins = r["status"] in MANUAL and m_status not in MANUAL
-                if m_dirty == 1 and m_at > str(r["updated_at"] or "") and not remote_manual_wins:
-                    continue
+                if m_status in MANUAL and r["status"] not in MANUAL:
+                    continue  # reczna decyzja offline wygrywa z automatem - PUSH ja wysle
+                if m_at > str(r["updated_at"] or "") and not remote_manual_wins:
+                    continue  # lokalna zmiana nowsza - PUSH ja wysle
+                lost = _version(mine)
+                if not _same_content(lost, _version(r)):
+                    # Lokalna zmiana offline przegrywa z nowsza - zapisz ja do przegladu.
+                    _log_conflict(pg, r["asset_id"], r["product_id"], _version(r), lost,
+                                  "offline_change_older", str(mine["updated_by"] or ""))
+                    conflicts += 1
             local.execute(
                 "INSERT INTO asset_product_links"
                 "(asset_id, product_id, score, source, status, reason, updated_at, updated_by, dirty) "
@@ -165,18 +250,19 @@ def _pull(local: sqlite3.Connection, pg) -> int:
                  r["reason"], r["updated_at"], r["updated_by"]),
             )
             applied += 1
+        pg.commit()
         local.execute("UPDATE asset_product_links SET dirty=0 WHERE dirty=2")
         _set_state(local, "pg_rev", str(last_rev))
         local.commit()
         if len(rows) < _PULL_BATCH:
             break
-    return applied
+    return applied, conflicts
 
 
-def _push(local: sqlite3.Connection, pg) -> int:
+def _push(local: sqlite3.Connection, pg) -> tuple[int, int]:
     import psycopg2.extras
 
-    pushed = 0
+    pushed = conflicts = 0
     while True:
         rows = local.execute(
             "SELECT asset_id, product_id, score, source, status, reason, updated_at, updated_by "
@@ -187,7 +273,28 @@ def _push(local: sqlite3.Connection, pg) -> int:
             break
         values = [tuple(r) for r in rows]
         cur = pg.cursor()
-        psycopg2.extras.execute_values(cur, _PG_UPSERT, values, page_size=_PUSH_BATCH)
+        applied = psycopg2.extras.execute_values(
+            cur, _PG_UPSERT, values, page_size=_PUSH_BATCH, fetch=True
+        )
+        applied_keys = {(a["asset_id"], a["product_id"]) for a in applied}
+        refused = [r for r in rows if (r["asset_id"], r["product_id"]) not in applied_keys]
+        for r in refused:
+            cur.execute(
+                "SELECT status, score, source, reason, updated_at, updated_by "
+                "FROM dam_asset_product_links WHERE asset_id=%s AND product_id=%s",
+                (r["asset_id"], r["product_id"]),
+            )
+            current = cur.fetchone()
+            if current is None:
+                continue
+            kept, lost = _version(current), _version(r)
+            if _same_content(kept, lost):
+                continue
+            note = ("auto_vs_manual" if kept["status"] in MANUAL and lost["status"] not in MANUAL
+                    else "older_than_server")
+            _log_conflict(pg, r["asset_id"], r["product_id"], kept, lost, note,
+                          str(r["updated_by"] or ""))
+            conflicts += 1
         pg.commit()
         local.executemany(
             "UPDATE asset_product_links SET dirty=0 "
@@ -198,7 +305,7 @@ def _push(local: sqlite3.Connection, pg) -> int:
         pushed += len(values)
         if len(rows) < _PUSH_BATCH:
             break
-    return pushed
+    return pushed, conflicts
 
 
 def sync_once(db_path: Path) -> dict[str, Any]:
@@ -207,12 +314,11 @@ def sync_once(db_path: Path) -> dict[str, Any]:
 
     pg = pg_db.connect()
     try:
-        pg.cursor().execute(_PG_SQL)
-        pg.commit()
+        _ensure_pg(pg)
         local = _open_local(Path(db_path))
         try:
-            pulled = _pull(local, pg)
-            pushed = _push(local, pg)
+            pulled, c1 = _pull(local, pg)
+            pushed, c2 = _push(local, pg)
             pending_local = local.execute(
                 "SELECT COUNT(1) FROM asset_product_links WHERE dirty=1"
             ).fetchone()[0]
@@ -220,7 +326,171 @@ def sync_once(db_path: Path) -> dict[str, Any]:
             local.close()
     finally:
         pg.close()
-    return {"ok": True, "pulled": pulled, "pushed": pushed, "dirty_left": int(pending_local)}
+    return {"ok": True, "pulled": pulled, "pushed": pushed, "conflicts": c1 + c2,
+            "dirty_left": int(pending_local)}
+
+
+# --------------------------------------------------------------------------
+# Historia i konflikty (panel admina)
+# --------------------------------------------------------------------------
+
+def _iso(v: Any) -> str:
+    if isinstance(v, datetime):
+        return v.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return str(v or "")
+
+
+def history(*, kind: str = "conflict", open_only: bool = True, asset_id: str = "",
+            limit: int = 100, offset: int = 0) -> dict[str, Any]:
+    import pg_db
+
+    where, args = [], []
+    if kind in ("conflict", "change"):
+        where.append("kind = %s")
+        args.append(kind)
+    if open_only:
+        where.append("resolved_at IS NULL")
+    if asset_id:
+        where.append("asset_id = %s")
+        args.append(asset_id)
+    sql_where = ("WHERE " + " AND ".join(where)) if where else ""
+    pg = pg_db.connect()
+    try:
+        _ensure_pg(pg)
+        cur = pg.cursor()
+        cur.execute(f"SELECT COUNT(1) AS n FROM dam_assoc_history {sql_where}", args)
+        total = int(cur.fetchone()["n"])
+        cur.execute(
+            "SELECT COUNT(1) AS n FROM dam_assoc_history WHERE kind='conflict' AND resolved_at IS NULL"
+        )
+        open_conflicts = int(cur.fetchone()["n"])
+        cur.execute(
+            "SELECT id, asset_id, product_id, kind, kept, lost, note, actor, created_at, "
+            "resolved_at, resolved_by, resolution FROM dam_assoc_history "
+            f"{sql_where} ORDER BY created_at DESC, id DESC LIMIT %s OFFSET %s",
+            [*args, max(1, min(int(limit), 500)), max(0, int(offset))],
+        )
+        items = []
+        for r in cur.fetchall():
+            item = dict(r)
+            item["created_at"] = _iso(item["created_at"])
+            item["resolved_at"] = _iso(item["resolved_at"]) if item["resolved_at"] else ""
+            items.append(item)
+    finally:
+        pg.close()
+    return {"ok": True, "items": items, "total": total, "open_conflicts": open_conflicts,
+            "retention_days": HISTORY_DAYS}
+
+
+def restore(history_id: int, which: str, actor: str) -> dict[str, Any]:
+    """Zapisz wybrana wersje (lost = odrzucona/poprzednia, kept = obecna) jako aktualna."""
+    import pg_db
+
+    if which not in ("lost", "kept"):
+        return {"ok": False, "error": "bad_version"}
+    pg = pg_db.connect()
+    try:
+        _ensure_pg(pg)
+        cur = pg.cursor()
+        cur.execute("SELECT * FROM dam_assoc_history WHERE id=%s FOR UPDATE", (int(history_id),))
+        h = cur.fetchone()
+        if not h:
+            return {"ok": False, "error": "not_found"}
+        ver = h[which]
+        if isinstance(ver, str):
+            ver = json.loads(ver)
+        if not isinstance(ver, dict) or not ver.get("status"):
+            return {"ok": False, "error": "no_version"}
+        who = f"restore:{actor or 'admin'}"
+        cur.execute(
+            "INSERT INTO dam_asset_product_links AS t "
+            "(asset_id, product_id, score, source, status, reason, updated_at, updated_by) "
+            "VALUES (%s,%s,%s,%s,%s,%s,%s,%s) "
+            "ON CONFLICT (asset_id, product_id) DO UPDATE SET "
+            "score=EXCLUDED.score, source=EXCLUDED.source, status=EXCLUDED.status, "
+            "reason=EXCLUDED.reason, updated_at=EXCLUDED.updated_at, updated_by=EXCLUDED.updated_by, "
+            "rev=nextval('dam_asset_product_links_rev_seq')",
+            (h["asset_id"], h["product_id"], ver.get("score"), ver.get("source") or "",
+             ver["status"], ver.get("reason") or "", utc_now(), who),
+        )
+        cur.execute(
+            "UPDATE dam_assoc_history SET resolved_at=now(), resolved_by=%s, resolution=%s "
+            "WHERE id=%s",
+            (actor or "admin", "restored_" + which, int(history_id)),
+        )
+        pg.commit()
+    finally:
+        pg.close()
+    kick()
+    return {"ok": True, "id": int(history_id), "asset_id": h["asset_id"],
+            "product_id": h["product_id"], "status": ver["status"]}
+
+
+def resolve(history_id: int, actor: str) -> dict[str, Any]:
+    """Zaakceptuj wybor programu (konflikt znika z listy otwartych)."""
+    import pg_db
+
+    pg = pg_db.connect()
+    try:
+        cur = pg.cursor()
+        cur.execute(
+            "UPDATE dam_assoc_history SET resolved_at=now(), resolved_by=%s, resolution='accepted' "
+            "WHERE id=%s AND resolved_at IS NULL",
+            (actor or "admin", int(history_id)),
+        )
+        n = cur.rowcount
+        pg.commit()
+    finally:
+        pg.close()
+    return {"ok": True, "id": int(history_id), "updated": n}
+
+
+def _housekeep_pg() -> None:
+    import pg_db
+
+    pg = pg_db.connect()
+    try:
+        _ensure_pg(pg)
+        cur = pg.cursor()
+        cur.execute(
+            "DELETE FROM dam_assoc_history WHERE "
+            "(created_at < now() - make_interval(days => %s) "
+            "  AND (kind <> 'conflict' OR resolved_at IS NOT NULL)) "
+            "OR created_at < now() - make_interval(days => %s)",
+            (HISTORY_DAYS, OPEN_CONFLICT_DAYS),
+        )
+        pg.commit()
+    finally:
+        pg.close()
+
+
+def backup_local(db_path: Path, *, keep_days: int = BACKUP_DAYS) -> Path | None:
+    """Kopia lokalnej bazy raz dziennie (sqlite backup API - bezpieczne przy pracy mostka)."""
+    db_path = Path(db_path)
+    if not db_path.is_file():
+        return None
+    folder = db_path.parent / "backups"
+    folder.mkdir(parents=True, exist_ok=True)
+    target = folder / f"{db_path.stem}-{time.strftime('%Y%m%d')}.sqlite"
+    made = None
+    if not target.exists():
+        tmp = target.with_suffix(".tmp")
+        src = sqlite3.connect(str(db_path), timeout=60)
+        dst = sqlite3.connect(str(tmp))
+        try:
+            src.backup(dst)
+        finally:
+            dst.close()
+            src.close()
+        tmp.replace(target)
+        made = target
+    cutoff = time.time() - keep_days * 86400
+    for old in folder.glob(f"{db_path.stem}-*.sqlite"):
+        # tylko nasze pliki z data w nazwie
+        stamp = old.stem[len(db_path.stem) + 1:]
+        if len(stamp) == 8 and stamp.isdigit() and old.stat().st_mtime < cutoff:
+            old.unlink()
+    return made
 
 
 def status() -> dict[str, Any]:
@@ -242,18 +512,28 @@ def start(db_path: Path, on_pulled: Callable[[], None] | None = None) -> bool:
         def _loop() -> None:
             import pg_db
 
+            last_housekeep = 0.0
             while True:
                 _wake.wait(_INTERVAL_S)
                 _wake.clear()
                 time.sleep(1.0)  # zbierz kilka szybkich zapisow w jeden cykl
+                if time.time() - last_housekeep > _HOUSEKEEP_S:
+                    try:
+                        backup_local(db_path)
+                    except Exception as exc:  # noqa: BLE001
+                        print("assoc backup:", exc)
                 try:
                     if not pg_db.is_configured():
                         continue
                     res = sync_once(db_path)
+                    if time.time() - last_housekeep > _HOUSEKEEP_S:
+                        _housekeep_pg()
+                        last_housekeep = time.time()
                     with _lock:
                         _state.update(ok=True, error="", last_run=time.time(),
                                       pushed=_state["pushed"] + res["pushed"],
                                       pulled=_state["pulled"] + res["pulled"],
+                                      conflicts=_state["conflicts"] + res["conflicts"],
                                       dirty_left=res["dirty_left"])
                     if res["pulled"] and on_pulled:
                         on_pulled()
@@ -269,7 +549,6 @@ def start(db_path: Path, on_pulled: Callable[[], None] | None = None) -> bool:
 
 if __name__ == "__main__":
     import argparse
-    import json
     import sys
 
     sys.path.insert(0, str(Path(__file__).resolve().parent))

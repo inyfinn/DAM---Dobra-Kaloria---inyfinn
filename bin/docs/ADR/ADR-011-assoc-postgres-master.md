@@ -11,3 +11,9 @@
 - **Consequences:**
   - The slim grid is still built from the local SQLite, which is a fast, offline-capable mirror. It is rebuilt whenever a pull brings changes.
   - The CLI `python apps/desktop/assoc_sync.py --db <sqlite>` forces one cycle.
+- **Conflicts and history (admin panel):**
+  - A Postgres trigger saves every change of a row to `dam_assoc_history` (kind `change`, versions before and after).
+  - Every losing version is also saved there (kind `conflict`): an older offline change beaten by a newer one, or an automatic suggestion stopped by a manual decision.
+  - Settings → "Konflikty i historia skojarzeń" (`/assoc/history`, `/assoc/history/restore`, `/assoc/history/resolve`, admin only) lets the admin keep the program's choice or restore the rejected or previous version. A restore is written straight to Postgres, and every PC pulls it.
+  - Retention: history 30 days, unresolved conflicts 90 days.
+  - The bridge also makes a daily copy of the local SQLite in `DATABASE/backups` and keeps it 30 days.

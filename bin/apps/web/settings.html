@@ -26,7 +26,7 @@ html.dam-booting{background:#F6F7F6}html.dam-booting.dark,html.dam-booting[data-
   <link rel="stylesheet" href="./assets/css/dam-dashboard.css?v=1.0.79">
   <link rel="stylesheet" href="./assets/css/dam-bento.css?v=5.0.196">
   <link rel="stylesheet" href="./assets/css/dam-accent.css?v=1.0.78">
-  <link rel="stylesheet" href="./assets/css/dam-settings.css?v=1.8.8">
+  <link rel="stylesheet" href="./assets/css/dam-settings.css?v=2.0.8">
   <link rel="stylesheet" href="./assets/css/dam-integrations.css?v=1.0.79">
   <link rel="stylesheet" href="./assets/css/dam-integrations-settings.css?v=1.0.79">
   <script src="./assets/js/dam-theme.js?v=1.8.8"></script>
@@ -398,6 +398,15 @@ html.dam-booting{background:#F6F7F6}html.dam-booting.dark,html.dam-booting[data-
           <div class="dam-widget__body" id="damIpBlocksBody"></div>
         </section>
 
+        <section class="dam-widget dam-sw--system" id="damAssocHistory" data-section="system" hidden
+          data-search="konflikty historia skojarzenia skojarzeń produkty przywróć przywroc synology baza backup kopia">
+          <div class="dam-widget__head">
+            <h2 class="dam-widget__title"><i class="uil uil-history" aria-hidden="true"></i> Konflikty i historia skojarzeń</h2>
+            <p class="dam-widget__meta">Gdy dwie osoby zmienią to samo skojarzenie, program zostawia nowszą zmianę. Tu możesz przywrócić wersję, którą odrzucił. Historia zmian jest przechowywana przez 30&nbsp;dni, a kopia lokalnej bazy robi się codziennie.</p>
+          </div>
+          <div class="dam-widget__body" id="damAssocHistoryBody"></div>
+        </section>
+
         <section class="dam-widget dam-sw--notify" id="damNotificationGroups" data-section="notify"
           data-search="powiadomienia notify email e-mail grafik odbiorcy lista">
           <div class="dam-widget__head">
@@ -581,6 +590,7 @@ html.dam-booting{background:#F6F7F6}html.dam-booting.dark,html.dam-booting[data-
   <script src="./assets/js/dam-integrations.js?v=5.0.196"></script>
   <script src="./assets/js/dam-settings.js?v=6.0.9"></script>
   <script src="./assets/js/dam-ip-blocks.js?v=2.0.8"></script>
+  <script src="./assets/js/dam-assoc-history.js?v=2.0.8"></script>
   <script src="./assets/js/dam-device-paths.js?v=1.0.79"></script>
   <style id="damDangerZoneCss">
     /* Pełna szerokość w siatce 12-col (bez .dam-sw--danger w dam-settings.css) */
