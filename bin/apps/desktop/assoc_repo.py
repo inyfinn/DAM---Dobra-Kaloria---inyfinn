@@ -45,6 +45,9 @@ def utc_now() -> str:
 
 def ensure_schema(conn: sqlite3.Connection) -> None:
     conn.executescript(_SCHEMA_SQL)
+    import assoc_sync
+
+    assoc_sync.ensure_local(conn)
 
 
 def connect(db_path: Path | None = None) -> sqlite3.Connection:
@@ -95,6 +98,12 @@ def status_counts(db_path: Path | None = None) -> dict[str, Any]:
     except sqlite3.Error as exc:
         out["ok"] = False
         out["schema_error"] = str(exc)
+    try:
+        import assoc_sync
+
+        out["sync"] = assoc_sync.status()
+    except Exception:
+        pass
     return out
 
 
@@ -272,6 +281,12 @@ def set_slim_publish_callback(cb: Callable[[], None] | None) -> None:
 def schedule_slim_publish(delay_sec: float = 2.0) -> None:
     """Debounced slim grid publish (no fat rebuild)."""
     global _publish_timer
+    try:
+        import assoc_sync
+
+        assoc_sync.kick()  # kazdy lokalny zapis leci tez do bazy glownej
+    except Exception:
+        pass
     with _publish_lock:
         if _publish_timer is not None:
             try:

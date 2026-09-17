@@ -10593,6 +10593,11 @@ def main() -> None:
         # Jedna przebudowa slim-grid z lokalnej bazy przy kazdym starcie naprawia to same,
         # bez czekania az ktos cokolwiek recznie edytuje.
         _schedule_slim_grid_publish(delay_sec=10.0)
+        if db_path:
+            import assoc_sync
+
+            # Postgres na Synology = baza glowna skojarzen; lokalny SQLite = zrzut offline.
+            assoc_sync.start(Path(db_path), on_pulled=_schedule_slim_grid_publish)
     except Exception as exc:
         print("assoc_repo wire:", exc)
     try:
