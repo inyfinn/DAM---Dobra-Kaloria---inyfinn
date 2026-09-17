@@ -3320,6 +3320,161 @@
       },
       "revision_index": "",
       "lifecycle_history_id": "lc_1789044091828"
+    },
+    {
+      "id": "chg_1789551854911",
+      "ts": "2026-09-16T09:44:14.911737+00:00",
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "D",
+      "status": "demo",
+      "product_id": "kulki-z-kreatyna-kreatyna",
+      "path_renames": [
+        {
+          "kind": "variant",
+          "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+          "old_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]"
+        }
+      ],
+      "folder_rename": {
+        "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+        "old_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]"
+      },
+      "revision_index": "",
+      "lifecycle_history_id": "lc_1789551854859"
+    },
+    {
+      "id": "chg_1789551898325",
+      "ts": "2026-09-16T09:44:58.325628+00:00",
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "product",
+      "action": "lifecycle_status",
+      "letter": "D",
+      "status": "demo",
+      "product_id": "kulki-z-kreatyna-kreatyna",
+      "path_renames": [
+        {
+          "kind": "variant_cascade",
+          "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D\\DOY - 65 g - 16.09.2026 - 6300XXX - D",
+          "old_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D\\DOY - 65 g - 16.09.2026 - 6300XXX"
+        }
+      ],
+      "folder_rename": {
+        "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+        "old_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D"
+      },
+      "revision_index": "",
+      "lifecycle_history_id": "lc_1789551898267"
+    },
+    {
+      "id": "chg_1789551905797",
+      "ts": "2026-09-16T09:45:05.797583+00:00",
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": null,
+      "status": "clear",
+      "product_id": "kulki-z-kreatyna-kreatyna",
+      "path_renames": [
+        {
+          "kind": "variant",
+          "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+          "old_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D"
+        }
+      ],
+      "folder_rename": {
+        "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+        "old_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D"
+      },
+      "revision_index": "",
+      "lifecycle_history_id": "lc_1789551905740"
+    },
+    {
+      "id": "chg_1789551911949",
+      "ts": "2026-09-16T09:45:11.949883+00:00",
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "product",
+      "action": "lifecycle_status",
+      "letter": null,
+      "status": "clear",
+      "product_id": "kulki-z-kreatyna-kreatyna",
+      "path_renames": [
+        {
+          "kind": "variant_cascade",
+          "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]\\DOY - 65 g - 16.09.2026 - 6300XXX",
+          "old_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]\\DOY - 65 g - 16.09.2026 - 6300XXX - D"
+        },
+        {
+          "kind": "product",
+          "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+          "old_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]"
+        }
+      ],
+      "folder_rename": {
+        "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+        "old_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]"
+      },
+      "revision_index": "",
+      "lifecycle_history_id": "lc_1789551911867"
+    },
+    {
+      "id": "chg_1789551917611",
+      "ts": "2026-09-16T09:45:17.611334+00:00",
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": null,
+      "status": "clear",
+      "product_id": "kulki-z-kreatyna-kreatyna",
+      "path_renames": [
+        {
+          "kind": "variant",
+          "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+          "old_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D"
+        }
+      ],
+      "folder_rename": {
+        "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+        "old_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D"
+      },
+      "revision_index": "",
+      "lifecycle_history_id": "lc_1789551917557"
+    },
+    {
+      "id": "chg_1789551923121",
+      "ts": "2026-09-16T09:45:23.121109+00:00",
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "D",
+      "status": "demo",
+      "product_id": "kulki-z-kreatyna-kreatyna",
+      "path_renames": [
+        {
+          "kind": "variant",
+          "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+          "old_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]"
+        }
+      ],
+      "folder_rename": {
+        "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+        "old_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]"
+      },
+      "revision_index": "curr",
+      "lifecycle_history_id": "lc_1789551923071"
     }
   ]
 }

@@ -10,6 +10,9 @@ jobId = "panel-dam-sync"
 If WScript.Arguments.Count > 0 Then
   jobId = WScript.Arguments(0)
 End If
-cmd = "powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File """ & here & "\run-dam-bg-job.ps1"" -JobId " & jobId
+' Bez -ExecutionPolicy Bypass: ukryty script-host + Bypass to wzorzec, ktory Bitdefender
+' flaguje jako Heur.BZC.PZQ.Boxter (patrz .cursor/ops/synology/README.md). Skrypt lezy
+' lokalnie i nie ma znacznika MOTW, wiec pod RemoteSigned startuje bez podpisu.
+cmd = "powershell.exe -NoProfile -NonInteractive -File """ & here & "\run-dam-bg-job.ps1"" -JobId " & jobId
 ' 0 = hidden, True = wait so Last Result reflects the job
 sh.Run cmd, 0, True

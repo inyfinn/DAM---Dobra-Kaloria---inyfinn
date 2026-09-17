@@ -12,6 +12,12 @@
       "letter": null,
       "status": "clear"
     },
+    "kulki-z-kreatyna-kreatyna": {
+      "note": "Lifecycle clear",
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+      "letter": null,
+      "status": "clear"
+    },
     "test-lifecycle-nerkowcowy": {
       "note": "Lifecycle X",
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\TEST LIFECYCLE — [ nerkowcowy ] - X",
@@ -48,6 +54,12 @@
       "letter": null,
       "status": "clear"
     },
+    "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D": {
+      "note": "Lifecycle clear",
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+      "letter": null,
+      "status": "clear"
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - D": {
       "note": "Lifecycle D",
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ] - D",
@@ -68,6 +80,11 @@
     }
   },
   "revisions": {
+    "curr": {
+      "note": "Lifecycle D",
+      "letter": "D",
+      "status": "demo"
+    },
     "TEST-TEST": {
       "note": "Lifecycle D",
       "letter": "D",
@@ -141,6 +158,16 @@
       "note": "Lifecycle clear",
       "letter": null,
       "status": "clear"
+    },
+    "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]": {
+      "note": "Lifecycle D",
+      "letter": "D",
+      "status": "demo"
+    },
+    "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D": {
+      "note": "Lifecycle D",
+      "letter": "D",
+      "status": "demo"
     },
     "M:/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/MALINA — [ owocowe ]/DOY - 65 g - 24.02.2026 - 6300727.00": {
       "note": "Lifecycle F",
@@ -222,6 +249,11 @@
       "note": "Lifecycle clear",
       "letter": null,
       "status": "clear"
+    },
+    "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/02 - KULKI/KULKI Z KREATYNĄ — [ kreatyna ]/DOY - 00 g - 09 09 2026 - 6300XXX.00": {
+      "note": "Lifecycle D",
+      "letter": "D",
+      "status": "demo"
     },
     "X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/MUFFIN JAGODOWY — [ nerkowcowy ]/KAR6X - 20.03.2025 - 6300525.00 - X": {
       "note": "Lifecycle clear",

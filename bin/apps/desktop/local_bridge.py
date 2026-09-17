@@ -10264,6 +10264,15 @@ def _kv_cache_watcher() -> None:
 
 
 def main() -> None:
+    # Port najpierw: autostart (klucz Run) i DAM.exe moga wystartowac mostek rownolegle.
+    # Bez tego drugi proces robi cala inicjalizacje (index_supervisor, sync cache, watki)
+    # i dopiero potem wywala sie na bindzie - pod pythonw.exe po cichu, bez sladu.
+    try:
+        httpd = ThreadingHTTPServer((HOST, PORT), Handler)
+    except OSError as exc:
+        print(f"DAM local bridge: port {PORT} zajety ({exc}) - mostek juz dziala, wychodze.")
+        return
+
     AUDIT_FILE.parent.mkdir(parents=True, exist_ok=True)
     DESKTOP_DATA_DIR.mkdir(parents=True, exist_ok=True)
     if branding_asset_routes is not None:
@@ -10354,7 +10363,6 @@ def main() -> None:
     threading.Thread(target=_tag_proposal_watcher, daemon=True).start()
     threading.Thread(target=_kv_cache_watcher, daemon=True).start()
     threading.Thread(target=_pg_backup_watcher, daemon=True, name="dam-pg-backup").start()
-    httpd = ThreadingHTTPServer((HOST, PORT), Handler)
     print(f"DAM local bridge http://{HOST}:{PORT}")
     try:
         httpd.serve_forever()

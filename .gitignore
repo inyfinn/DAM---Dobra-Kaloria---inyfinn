@@ -7,6 +7,10 @@
 # Design tokens CSS (nie secret) - wymagane w repo (Geex realign F2+)
 !bin/apps/web/assets/css/dam-tokens.css
 **/*secret*
+# Modul szyfrujacy (nie secret) - wymagany w repo i w instalatorze.
+# Bez tego wyjatku oauth_integrations.py nie importuje sie u uzytkownika.
+# Sam klucz (data/secret.key) zostaje ignorowany.
+!bin/apps/desktop/secret_box.py
 *.pem
 *.p12
 

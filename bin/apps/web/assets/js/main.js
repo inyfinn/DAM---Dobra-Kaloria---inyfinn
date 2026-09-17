@@ -1613,14 +1613,21 @@
 	};
 
 
-	// Kanban Board JS
+	// Kanban Board JS - demo motywu. Wezly #one..#won nie istnieja w DAM, a biblioteki
+	// dragula nie ma w paczce: bez tej bramki kazda strona rzucala "dragula is not defined".
 	$(document).ready(function(){
-		var drake = dragula([document.querySelector('#one'), document.querySelector('#two'), document.querySelector('#three'), document.querySelector('#four'), document.querySelector('#five'), document.querySelector('#won')]);
-	
+		if (typeof dragula !== 'function') { return; }
+		var columns = ['#one', '#two', '#three', '#four', '#five', '#won']
+			.map(function (sel) { return document.querySelector(sel); })
+			.filter(Boolean);
+		if (!columns.length) { return; }
+
+		var drake = dragula(columns);
+
 		drake.on('drag', function(el){
 			el.classList.add('gu-transit');
 		});
-	
+
 		drake.on('drop', function(el){
 			el.classList.remove('gu-transit');
 		});
