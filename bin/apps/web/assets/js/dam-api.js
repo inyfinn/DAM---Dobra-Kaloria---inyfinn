@@ -475,14 +475,29 @@
     };
   }
 
+  /* Surowy JSON indeksu: wspolne Promise strony (dam-file-index.js). */
+  function sharedFileIndex() {
+    if (window.DamFileIndex && typeof window.DamFileIndex.get === "function") {
+      return window.DamFileIndex.get();
+    }
+    return fetch(INDEX_URL + "?v=" + Date.now()).then(function (r) {
+      if (!r.ok) throw new Error("Brak file-index.json (" + r.status + ")");
+      return r.json();
+    });
+  }
+
+  var _indexPackData = null;
+
+  /* Promise nie jest trzymane tutaj: cache jest w DamFileIndex, a pack
+     przeliczamy tylko, gdy DamFileIndex oddal inny obiekt (po refresh()). */
   function loadFileIndex() {
     if (_indexPromise) return _indexPromise;
-    _indexPromise = fetch(INDEX_URL + "?v=" + Date.now())
-      .then(function (r) {
-        if (!r.ok) throw new Error("Brak file-index.json (" + r.status + ")");
-        return r.json();
-      })
+    var p = sharedFileIndex()
       .then(function (data) {
+        data = data || {};
+        if (_indexPackData === data && _projectsCache) {
+          return { index: data, projects: _projectsCache };
+        }
         if (window.DamPaths && typeof window.DamPaths.detectIndexBaseFromRoots === "function") {
           window.DamPaths.detectIndexBaseFromRoots(data.roots || []);
         }
@@ -490,6 +505,7 @@
         _projectsCache = products.map(function (p, i) {
           return productToProject(p, i + 1);
         });
+        _indexPackData = data;
         try {
           window._DAM_FILE_INDEX = data;
         } catch (eShareIdx) {
@@ -497,11 +513,18 @@
         }
         return { index: data, projects: _projectsCache };
       })
-      .catch(function (e) {
-        _indexPromise = null;
-        throw e;
-      });
-    return _indexPromise;
+      .then(
+        function (pack) {
+          if (_indexPromise === p) _indexPromise = null;
+          return pack;
+        },
+        function (e) {
+          if (_indexPromise === p) _indexPromise = null;
+          throw e;
+        }
+      );
+    _indexPromise = p;
+    return p;
   }
 
   function localProjects() {
@@ -1120,6 +1143,9 @@
         this.offline = true;
         _indexPromise = null;
         _projectsCache = null;
+        if (window.DamFileIndex && typeof window.DamFileIndex.invalidate === "function") {
+          window.DamFileIndex.invalidate();
+        }
         var pack = await loadFileIndex();
         offlineQueuePush({ action: "ingest_pointers" });
         return {

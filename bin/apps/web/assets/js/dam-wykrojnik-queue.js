@@ -125,9 +125,16 @@
   async function loadProductLabels() {
     if (Object.keys(state.productLabels).length) return;
     try {
-      var r = await fetch("data/file-index.json?v=" + Date.now(), { cache: "force-cache" });
-      if (!r.ok) return;
-      var idx = await r.json();
+      var idx;
+      if (window.DamFileIndex && typeof window.DamFileIndex.get === "function") {
+        /* Wspolne Promise strony (dam-file-index.js). */
+        idx = await window.DamFileIndex.get();
+      } else {
+        var r = await fetch("data/file-index.json?v=" + Date.now(), { cache: "force-cache" });
+        if (!r.ok) return;
+        idx = await r.json();
+      }
+      if (!idx) return;
       var map = {};
       (idx.products || []).forEach(function (p) {
         if (!p || !p.id) return;

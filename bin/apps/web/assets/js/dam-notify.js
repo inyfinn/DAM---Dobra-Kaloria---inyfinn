@@ -75,10 +75,17 @@
   }
 
   function checkIndex() {
-    return fetch("data/file-index.json?v=" + Date.now())
-      .then(function (r) {
-        return r.ok ? r.json() : null;
-      })
+    /* Co 60 s pytamy tylko most o znacznik przebudowy; 9 MB pobieramy ponownie
+       wylacznie po nowej przebudowie (wspolne Promise z dam-file-index.js). */
+    var FI = global.DamFileIndex;
+    var p = FI && typeof FI.get === "function"
+      ? (FI.peek() ? FI.revalidate() : Promise.resolve(false)).then(function () {
+          return FI.get();
+        })
+      : fetch("data/file-index.json?v=" + Date.now()).then(function (r) {
+          return r.ok ? r.json() : null;
+        });
+    return p
       .then(function (data) {
         if (!data) return;
         var list = data.viz_latest || [];

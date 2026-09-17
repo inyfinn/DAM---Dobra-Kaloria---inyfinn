@@ -81,11 +81,13 @@
     var reloader =
       window.DamSearch && typeof window.DamSearch.reload === "function"
         ? window.DamSearch.reload()
-        : fetch("data/file-index.json?v=" + Date.now(), { cache: "no-store" })
-            .then(function (r) {
-              if (!r.ok) throw new Error("file-index");
-              return r.json();
-            })
+        : (window.DamFileIndex && typeof window.DamFileIndex.refresh === "function"
+            ? window.DamFileIndex.refresh()
+            : fetch("data/file-index.json?v=" + Date.now(), { cache: "no-store" }).then(function (r) {
+                if (!r.ok) throw new Error("file-index");
+                return r.json();
+              })
+          )
             .then(function (d) {
               window._DAM_FILE_INDEX = d;
               return d;

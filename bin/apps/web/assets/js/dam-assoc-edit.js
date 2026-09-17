@@ -265,6 +265,17 @@
     });
   }
 
+  /* Wspolne Promise strony (dam-file-index.js): jeden fetch + parse na strone. */
+  function sharedFileIndex(label) {
+    if (global.DamFileIndex && typeof global.DamFileIndex.get === "function") {
+      return global.DamFileIndex.get();
+    }
+    return fetch("data/file-index.json?v=" + Date.now()).then(function (r) {
+      if (!r.ok) throw new Error("file-index");
+      return parseResponseJsonOffMain(r, label || "file-index");
+    });
+  }
+
   function ensureFileIndex() {
     if (global._DAM_FILE_INDEX && global._DAM_FILE_INDEX.products) {
       return Promise.resolve(global._DAM_FILE_INDEX);
@@ -283,10 +294,7 @@
       });
     }
     /* 3.1.5: fetch + worker race — szybsze pierwsze otwarcie pickera produktów. */
-    var fetchP = fetch("data/file-index.json?v=" + Date.now())
-      .then(function (r) {
-        return parseResponseJsonOffMain(r, "file-index");
-      })
+    var fetchP = sharedFileIndex("file-index")
       .then(function (d) {
         global._DAM_FILE_INDEX = d;
         return d;
@@ -323,11 +331,7 @@
     if (global._DAM_FILE_INDEX && global._DAM_FILE_INDEX.products && global._DAM_FILE_INDEX.products.length) {
       return Promise.resolve(global._DAM_FILE_INDEX);
     }
-    return fetch("data/file-index.json?v=" + Date.now())
-      .then(function (r) {
-        if (!r.ok) throw new Error("file-index");
-        return parseResponseJsonOffMain(r, "file-index-picker");
-      })
+    return sharedFileIndex("file-index-picker")
       .then(function (d) {
         global._DAM_FILE_INDEX = d;
         return d;

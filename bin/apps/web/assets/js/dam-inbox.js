@@ -1155,9 +1155,15 @@
   }
 
   function loadProductLookup() {
-    return fetch("data/file-index.json?v=" + Date.now())
-      .then(function (r) {
-        return r.ok ? r.json() : {};
+    /* Wspolne Promise strony (dam-file-index.js). */
+    var p = window.DamFileIndex && typeof window.DamFileIndex.get === "function"
+      ? window.DamFileIndex.get()
+      : fetch("data/file-index.json?v=" + Date.now()).then(function (r) {
+          return r.ok ? r.json() : {};
+        });
+    return p
+      .then(function (data) {
+        return data || {};
       })
       .catch(function () {
         return {};

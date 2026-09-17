@@ -425,10 +425,13 @@
         });
       });
     }
-    return fetch("data/file-index.json?v=" + Date.now())
-      .then(function (r) {
-        return r.ok ? r.json() : null;
-      })
+    /* Wspolne Promise strony (dam-file-index.js). */
+    var p = global.DamFileIndex && typeof global.DamFileIndex.get === "function"
+      ? global.DamFileIndex.get()
+      : fetch("data/file-index.json?v=" + Date.now()).then(function (r) {
+          return r.ok ? r.json() : null;
+        });
+    return p
       .then(function (d) {
         if (d) global._DAM_FILE_INDEX = d;
         return fromProducts((d && d.products) || []);

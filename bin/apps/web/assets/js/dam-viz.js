@@ -3750,6 +3750,11 @@
     }
 
     function reloadFileIndexFresh() {
+      /* Viz nie pobiera 9 MB z :8765; uniewaznij wspolny loader, zeby inne moduly
+         tej strony (picker, podglad) dostaly swiezy plik przy nastepnym get(). */
+      if (window.DamFileIndex && typeof window.DamFileIndex.invalidate === "function") {
+        window.DamFileIndex.invalidate();
+      }
       return fetchVizIndexFromBridge().then(function (data) {
         if (data && (data.products || data.viz_latest)) {
           indexData = data;

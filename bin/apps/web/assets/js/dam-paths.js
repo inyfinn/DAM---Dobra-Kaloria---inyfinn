@@ -573,8 +573,11 @@
         if (pn.indexOf("explorer.html") !== -1 || pn.indexOf("visualizations.html") !== -1) {
           return Promise.resolve(window._DAM_FILE_INDEX || null);
         }
-        return fetch("data/file-index.json?v=" + Date.now())
-          .then(function (r) { return r.ok ? r.json() : null; })
+        /* Wspolne Promise strony (dam-file-index.js). */
+        return (window.DamFileIndex && typeof window.DamFileIndex.get === "function"
+          ? window.DamFileIndex.get()
+          : fetch("data/file-index.json?v=" + Date.now())
+              .then(function (r) { return r.ok ? r.json() : null; }))
           .catch(function () { return null; });
       })()
     ]).then(function (pack) {

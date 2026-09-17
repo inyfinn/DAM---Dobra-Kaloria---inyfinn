@@ -558,14 +558,22 @@
         return Promise.resolve(false);
       }
     } catch (ePage) { /* ignore */ }
-    global._DAM_SUBCATEGORY_CATALOG_P = fetch("data/file-index.json?v=" + Date.now())
-      .then(function (r) {
-        return r.ok ? r.text() : "";
-      })
+    /* Wspolne Promise strony (dam-file-index.js); parse w workerze robi loader. */
+    var FI = global.DamFileIndex;
+    var textP = FI && typeof FI.get === "function"
+      ? FI.get().catch(function () {
+          return "";
+        })
+      : fetch("data/file-index.json?v=" + Date.now()).then(function (r) {
+          return r.ok ? r.text() : "";
+        });
+    global._DAM_SUBCATEGORY_CATALOG_P = textP
       .then(function (text) {
         if (!text) return false;
         var parse =
-          global.DamSearch && typeof global.DamSearch.parseJsonInWorker === "function"
+          typeof text !== "string"
+            ? Promise.resolve(text)
+            : global.DamSearch && typeof global.DamSearch.parseJsonInWorker === "function"
             ? global.DamSearch.parseJsonInWorker(text, "file-index-subcats", 20000)
             : Promise.resolve().then(function () {
                 return JSON.parse(text);

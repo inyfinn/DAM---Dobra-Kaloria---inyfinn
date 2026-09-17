@@ -314,23 +314,13 @@
         return { tasks: [], open: 0 };
       });
 
-    var pIndex = fetch("data/file-index.json?v=" + Date.now(), { cache: "no-store" })
-      .then(function (r) {
-        if (!r.ok) return {};
-        return r.text();
-      })
-      .then(function (text) {
-        if (!text) return {};
-        return new Promise(function (resolve, reject) {
-          setTimeout(function () {
-            try {
-              resolve(JSON.parse(text));
-            } catch (eParse) {
-              reject(eParse);
-            }
-          }, 0);
-        });
-      })
+    /* Wspolne Promise strony (dam-file-index.js) zamiast wlasnego fetch 9 MB. */
+    var pIndex = (window.DamFileIndex && typeof window.DamFileIndex.get === "function"
+      ? window.DamFileIndex.get()
+      : fetch("data/file-index.json?v=" + Date.now()).then(function (r) {
+          return r.ok ? r.json() : {};
+        })
+    )
       .then(function (data) {
         /* Nie zapisuj calego indeksu w window._DAM_FILE_INDEX (RAM + explorer freeze). */
         return data || {};

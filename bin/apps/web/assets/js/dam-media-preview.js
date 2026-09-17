@@ -1714,10 +1714,13 @@
     ) {
       var idxLoad = Promise.resolve();
       if (!window._DAM_FILE_INDEX || !window._DAM_FILE_INDEX.viz_latest) {
-        idxLoad = fetch("data/file-index.json")
-          .then(function (r) {
-            return r.ok ? r.json() : null;
-          })
+        /* Wspolne Promise strony (dam-file-index.js). */
+        idxLoad = (window.DamFileIndex && typeof window.DamFileIndex.get === "function"
+          ? window.DamFileIndex.get()
+          : fetch("data/file-index.json").then(function (r) {
+              return r.ok ? r.json() : null;
+            })
+        )
           .then(function (d) {
             if (d) window._DAM_FILE_INDEX = d;
             return d;

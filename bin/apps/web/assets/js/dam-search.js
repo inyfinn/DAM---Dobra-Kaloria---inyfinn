@@ -46,6 +46,10 @@
     if (pageIsExplorer() || pageIsViz()) {
       searchIndex = null;
       loading = null;
+      /* Bez pobierania 9 MB tutaj; tylko porzuc pamiec wspolnego loadera. */
+      if (window.DamFileIndex && typeof window.DamFileIndex.invalidate === "function") {
+        window.DamFileIndex.invalidate();
+      }
       try {
         window._DAM_SEARCH_INDEX = null;
       } catch (eExp) {
@@ -58,6 +62,10 @@
     loading = null;
     window._DAM_SEARCH_INDEX = null;
     window._DAM_FILE_INDEX = null;
+    /* Po przebudowie: wspolny loader pobierze swiezy plik (nowy znacznik, no-store). */
+    if (window.DamFileIndex && typeof window.DamFileIndex.invalidate === "function") {
+      window.DamFileIndex.invalidate();
+    }
     return loadIndexes();
   }
 
@@ -148,6 +156,9 @@
         fileIndex = null;
         try {
           window._DAM_FILE_INDEX = null;
+          if (window.DamFileIndex && typeof window.DamFileIndex.invalidate === "function") {
+            window.DamFileIndex.invalidate();
+          }
         } catch (eForce) {
           /* ignore */
         }
@@ -185,12 +196,15 @@
           })
         : Promise.resolve(searchIndex),
       needFile
-        ? fetch("data/file-index.json?v=20260717ux3&_=" + bust).then(function (r) {
-            if (!r.ok) throw new Error("file-index.json");
-            return r.text().then(function (text) {
-              return parseJsonInWorker(text, "file-index", 20000);
-            });
-          })
+        ? window.DamFileIndex && typeof window.DamFileIndex.get === "function"
+          ? /* Wspolne Promise strony (dam-file-index.js); force -> invalidate wyzej. */
+            window.DamFileIndex.get()
+          : fetch("data/file-index.json?v=20260717ux3&_=" + bust).then(function (r) {
+              if (!r.ok) throw new Error("file-index.json");
+              return r.text().then(function (text) {
+                return parseJsonInWorker(text, "file-index", 20000);
+              });
+            })
         : Promise.resolve(fileIndex),
     ])
       .then(function (pair) {

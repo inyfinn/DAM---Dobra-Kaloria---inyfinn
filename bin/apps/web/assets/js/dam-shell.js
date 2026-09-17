@@ -3182,7 +3182,7 @@
     // Status ROOT plików (czerwona kropka gdy offline)
     if (!window.DamRootStatus) {
       var rs = document.createElement("script");
-      rs.src = "assets/js/dam-root-status.js?v=2.0.5";
+      rs.src = "assets/js/dam-root-status.js?v=2.0.8";
       document.head.appendChild(rs);
     } else if (typeof window.DamRootStatus.start === "function") {
       window.DamRootStatus.start();
