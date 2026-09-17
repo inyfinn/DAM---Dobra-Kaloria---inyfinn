@@ -167,14 +167,38 @@ def roots_mtime(roots: list[Path], max_depth: int = 5) -> float:
     return max((tree_mtime(r, max_depth=max_depth) for r in roots), default=0.0)
 
 
+def _read_status(path: Path) -> dict:
+    """Read the status JSON without ever raising.
+
+    ValueError covers JSONDecodeError and UnicodeDecodeError (Synology Drive copy
+    with byte 0x81 killed the watcher once). A file that stays unreadable after one
+    retry is moved to <name>.corrupt so the loop continues from an empty dict.
+    Separate process from index_supervisor, hence a local copy of the helper.
+    """
+    for attempt in (0, 1):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except OSError:
+            return {}
+        except ValueError:
+            if attempt == 0:
+                time.sleep(0.05)
+                continue
+            try:
+                os.replace(path, path.with_name(path.name + ".corrupt"))
+                print(f"[watch] corrupt status moved to {path.name}.corrupt")
+            except OSError:
+                pass
+            return {}
+        return data if isinstance(data, dict) else {}
+    return {}
+
+
 def _write_status(path: Path, payload: dict, *, preserve_last: bool = True) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     body = dict(payload)
     if preserve_last and path.is_file():
-        try:
-            prev = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            prev = {}
+        prev = _read_status(path)
         if isinstance(prev, dict):
             for key in ("last_ok", "last_rc", "last_error", "last_started", "last_finished", "last_duration_sec"):
                 if key not in body and prev.get(key) is not None:
@@ -651,10 +675,10 @@ def main() -> None:
     last_hourly = 0.0
     last_duration = None
     try:
-        prev = json.loads(args.status_file.read_text(encoding="utf-8"))
-        if isinstance(prev, dict) and prev.get("last_duration_sec"):
+        prev = _read_status(args.status_file)
+        if prev.get("last_duration_sec"):
             last_duration = float(prev.get("last_duration_sec"))
-    except (OSError, json.JSONDecodeError, TypeError, ValueError):
+    except (TypeError, ValueError):
         last_duration = None
 
     while True:
@@ -698,10 +722,10 @@ def main() -> None:
             last_hourly = time.time()
             if rc == 0:
                 try:
-                    st = json.loads(args.status_file.read_text(encoding="utf-8"))
-                    if isinstance(st, dict) and st.get("last_duration_sec"):
+                    st = _read_status(args.status_file)
+                    if st.get("last_duration_sec"):
                         last_duration = float(st.get("last_duration_sec"))
-                except (OSError, json.JSONDecodeError, TypeError, ValueError):
+                except (TypeError, ValueError):
                     pass
                 last_product = (
                     roots_mtime(product_roots, max_depth=depth) if product_roots else last_product

@@ -128,14 +128,57 @@ def write_watcher_status(payload: dict[str, Any], *, preserve_last: bool = True)
             pass
 
 
+CORRUPT_SUFFIX = ".corrupt"
+
+
+def quarantine_corrupt_file(path: Path) -> Path | None:
+    """Move an unreadable JSON file aside to <name>.corrupt (overwrites older copy)."""
+    target = path.with_name(path.name + CORRUPT_SUFFIX)
+    try:
+        os.replace(path, target)
+    except OSError:
+        return None
+    return target
+
+
+def read_json_file(path: Path, *, quarantine: bool = False) -> tuple[Any, str]:
+    """Read JSON without ever raising. Returns (data, error); data is None on failure.
+
+    ValueError covers both JSONDecodeError and UnicodeDecodeError (e.g. a Synology
+    Drive conflict copy with byte 0x81). A decode error is retried once, because a
+    concurrent non-atomic writer may leave a half-written file for a moment. When
+    ``quarantine`` is set, a file that is still unreadable is moved to *.corrupt so
+    the next writer starts from an empty dict instead of failing forever.
+    """
+    for attempt in (0, 1):
+        try:
+            return json.loads(path.read_text(encoding="utf-8")), ""
+        except FileNotFoundError:
+            return None, "missing"
+        except OSError as exc:
+            return None, str(exc)
+        except ValueError as exc:
+            if attempt == 0:
+                time.sleep(0.05)
+                continue
+            if quarantine:
+                quarantine_corrupt_file(path)
+            return None, f"corrupt:{type(exc).__name__}"
+    return None, "corrupt"
+
+
+def _read_dict(path: Path, *, quarantine: bool = False) -> dict[str, Any]:
+    data, _err = read_json_file(path, quarantine=quarantine)
+    return data if isinstance(data, dict) else {}
+
+
 def read_watcher_status() -> dict[str, Any]:
     if not WATCHER_STATUS.is_file():
         return {"ok": False, "watcher_ok": False, "error": "no_status"}
-    try:
-        data = json.loads(WATCHER_STATUS.read_text(encoding="utf-8"))
-        return data if isinstance(data, dict) else {"ok": False, "watcher_ok": False}
-    except (OSError, json.JSONDecodeError) as exc:
-        return {"ok": False, "watcher_ok": False, "error": str(exc)}
+    data, err = read_json_file(WATCHER_STATUS, quarantine=True)
+    if err:
+        return {"ok": False, "watcher_ok": False, "error": err}
+    return data if isinstance(data, dict) else {"ok": False, "watcher_ok": False}
 
 
 def supervisor_lock_status() -> dict[str, Any]:
@@ -164,11 +207,7 @@ def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
 def read_control() -> dict[str, Any]:
     if not CONTROL_FILE.is_file():
         return {}
-    try:
-        data = json.loads(CONTROL_FILE.read_text(encoding="utf-8"))
-        return data if isinstance(data, dict) else {}
-    except (OSError, json.JSONDecodeError):
-        return {}
+    return _read_dict(CONTROL_FILE, quarantine=True)
 
 
 def write_control(payload: dict[str, Any]) -> None:
@@ -180,11 +219,7 @@ def write_control(payload: dict[str, Any]) -> None:
 def read_live() -> dict[str, Any]:
     if not LIVE_FILE.is_file():
         return {}
-    try:
-        data = json.loads(LIVE_FILE.read_text(encoding="utf-8"))
-        return data if isinstance(data, dict) else {}
-    except (OSError, json.JSONDecodeError):
-        return {}
+    return _read_dict(LIVE_FILE, quarantine=True)
 
 
 def write_live(payload: dict[str, Any]) -> None:
@@ -196,11 +231,7 @@ def write_live(payload: dict[str, Any]) -> None:
 def read_run_snapshot() -> dict[str, Any]:
     if not SNAPSHOT_FILE.is_file():
         return {}
-    try:
-        data = json.loads(SNAPSHOT_FILE.read_text(encoding="utf-8"))
-        return data if isinstance(data, dict) else {}
-    except (OSError, json.JSONDecodeError):
-        return {}
+    return _read_dict(SNAPSHOT_FILE, quarantine=True)
 
 
 def parse_builder_live_line(line: str) -> dict[str, Any] | None:
@@ -379,11 +410,10 @@ def read_report() -> dict[str, Any]:
                 }
             )
         return _hydrate_report_counts({"ok": True, "items": [], "finished_at": ""})
-    try:
-        data = json.loads(REPORT_FILE.read_text(encoding="utf-8"))
-        return _hydrate_report_counts(data if isinstance(data, dict) else {"ok": False, "items": []})
-    except (OSError, json.JSONDecodeError):
+    data, err = read_json_file(REPORT_FILE, quarantine=True)
+    if err or not isinstance(data, dict):
         return _hydrate_report_counts({"ok": False, "items": []})
+    return _hydrate_report_counts(data)
 
 
 def _norm_key(path: str) -> str:
@@ -500,7 +530,7 @@ def _branding_snapshot_map() -> dict[str, dict[str, Any]]:
         return {}
     try:
         data = json.loads(BRANDING_HEAD.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, ValueError):
         return {}
     assets = data.get("assets") if isinstance(data, dict) else []
     out: dict[str, dict[str, Any]] = {}
@@ -669,7 +699,7 @@ def _load_web_index() -> dict[str, Any]:
     try:
         data = json.loads(WEB_INDEX.read_text(encoding="utf-8"))
         return data if isinstance(data, dict) else {}
-    except (OSError, json.JSONDecodeError):
+    except (OSError, ValueError):
         return {}
 
 
@@ -678,7 +708,7 @@ def _load_json_dict(path: Path) -> dict[str, Any] | None:
         return None
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, ValueError):
         return None
     return data if isinstance(data, dict) else None
 
@@ -1195,12 +1225,8 @@ def terminate_rebuild_child() -> dict[str, Any]:
 
 
 def read_run_snapshot() -> dict[str, Any]:
-    try:
-        if SNAPSHOT_FILE.is_file():
-            data = json.loads(SNAPSHOT_FILE.read_text(encoding="utf-8"))
-            return data if isinstance(data, dict) else {}
-    except (OSError, json.JSONDecodeError):
-        pass
+    if SNAPSHOT_FILE.is_file():
+        return _read_dict(SNAPSHOT_FILE, quarantine=True)
     return {}
 
 
@@ -1410,6 +1436,20 @@ def _progress_from_watcher(w: dict[str, Any], rebuild: dict[str, Any]) -> dict[s
     }
 
 
+LOOP_TICK_SEC = 2.5
+RESTART_BACKOFF_BASE_SEC = 5.0
+RESTART_BACKOFF_MAX_SEC = 300.0
+# A watcher that ran at least this long counts as healthy: the next restart is immediate.
+RESTART_STABLE_SEC = 60.0
+
+
+def restart_backoff_sec(failures: int) -> float:
+    """0 for a healthy exit, then 5, 10, 20 ... seconds, capped at 5 minutes."""
+    if failures <= 0:
+        return 0.0
+    return min(RESTART_BACKOFF_MAX_SEC, RESTART_BACKOFF_BASE_SEC * (2 ** min(failures - 1, 16)))
+
+
 class IndexSupervisor:
     """Owns watch-file-index subprocess + status/log files."""
 
@@ -1434,6 +1474,9 @@ class IndexSupervisor:
         self._thread: threading.Thread | None = None
         self._lock_handle = None
         self._owned = False
+        self._failures = 0
+        self._spawned_at = 0.0
+        self._next_spawn_at = 0.0
 
     def try_become_owner(self) -> dict[str, Any]:
         handle, meta = acquire_lock(
@@ -1566,28 +1609,46 @@ class IndexSupervisor:
                     self._lock_handle.update(stage="supervising", heartbeat_at=_utc())
                 except Exception:
                     pass
-            alive = self._proc is not None and self._proc.poll() is None
-            if not alive:
-                if self._proc is not None:
-                    rc = self._proc.poll()
-                    write_watcher_status(
-                        {
-                            "ok": False,
-                            "watcher_ok": False,
-                            "last_ok": False,
-                            "last_rc": rc,
-                            "last_error": f"watcher_exited_rc_{rc}",
-                            "stage": "restarting",
-                        }
-                    )
-                    log_f = getattr(self._proc, "_dam_log_f", None)
-                    if log_f:
-                        try:
-                            log_f.close()
-                        except Exception:
-                            pass
-                self._proc = self._spawn_watcher()
-            self._stop.wait(2.5)
+            self._tick(time.monotonic())
+            self._stop.wait(LOOP_TICK_SEC)
+
+    def _tick(self, now: float) -> None:
+        """One supervision step: restart a dead watcher, with growing backoff."""
+        alive = self._proc is not None and self._proc.poll() is None
+        if alive:
+            return
+        if self._proc is not None:
+            rc = self._proc.poll()
+            lived = now - self._spawned_at
+            self._failures = 0 if lived >= RESTART_STABLE_SEC else self._failures + 1
+            delay = restart_backoff_sec(self._failures)
+            self._next_spawn_at = now + delay
+            write_watcher_status(
+                {
+                    "ok": False,
+                    "watcher_ok": False,
+                    "last_ok": False,
+                    "last_rc": rc,
+                    "last_error": f"watcher_exited_rc_{rc}",
+                    "stage": "restarting",
+                    "restart_failures": self._failures,
+                    "restart_in_sec": round(delay, 1),
+                }
+            )
+            log_f = getattr(self._proc, "_dam_log_f", None)
+            if log_f:
+                try:
+                    log_f.close()
+                except Exception:
+                    pass
+            self._proc = None
+        if now < self._next_spawn_at:
+            return
+        self._proc = self._spawn_watcher()
+        self._spawned_at = now
+        if self._proc is None:
+            self._failures += 1
+            self._next_spawn_at = now + restart_backoff_sec(self._failures)
 
     def stop(self) -> None:
         self._stop.set()
