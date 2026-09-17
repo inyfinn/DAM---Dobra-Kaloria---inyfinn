@@ -2015,7 +2015,57 @@ def _publish_via_ssh(files: list[Path], publisher: str) -> dict:
     if proc.returncode != 0:
         detail = (err or b"").decode("utf-8", "replace").strip()[:200]
         return {"ok": False, "error": f"ssh_tar_rc{proc.returncode}:{detail}", "copied": 0, "skipped": skipped}
-    return {"ok": True, "copied": len(send), "skipped": skipped, "manifest": manifest}
+    pack = _refresh_remote_sidecars(host, dest)
+    return {"ok": True, "copied": len(send), "skipped": skipped, "manifest": manifest, "pack": pack}
+
+
+def _refresh_remote_sidecars(host: str, dest: str) -> str:
+    """Odswiez files.tsv i cache-pack.tar na NAS.
+
+    Z tych dwoch plikow swieza instalacja bez SSH pobiera miniatury po HTTPS
+    (_pull_https_pack, _download_https_file_index). Bez odswiezenia nowe
+    miniatury nigdy nie trafilyby na obcy komputer przy pierwszym starcie.
+    """
+    skip = (
+        "! -name manifest.json ! -name cache-pack.tar "
+        "! -name cache-pack.meta.json ! -name files.tsv "
+        "! -name files.tsv.tmp ! -name cache-pack.tar.tmp "
+        "! -name thumb-rel-index.json ! -name .dam-write-probe"
+    )
+    script = (
+        f"DEST={dest!r}\n"
+        "set -e\n"
+        "cd \"$DEST\"\n"
+        f"find . -type f {skip} -printf '%s\\t%P\\n' > files.tsv.tmp\n"
+        "mv -f files.tsv.tmp files.tsv\n"
+        "n=$(wc -l < files.tsv | tr -d ' ')\n"
+        "b=$(awk -F'\\t' '{s+=$1} END {print s+0}' files.tsv)\n"
+        "need=1\n"
+        "if [ -f cache-pack.meta.json ] && [ -f cache-pack.tar ]; then\n"
+        "  oldn=$(sed -n 's/.*\"file_count\"[[:space:]]*:[[:space:]]*\\([0-9]*\\).*/\\1/p' cache-pack.meta.json | head -1)\n"
+        "  oldb=$(sed -n 's/.*\"total_bytes\"[[:space:]]*:[[:space:]]*\\([0-9]*\\).*/\\1/p' cache-pack.meta.json | head -1)\n"
+        "  if [ \"$oldn\" = \"$n\" ] && [ \"$oldb\" = \"$b\" ]; then need=0; fi\n"
+        "fi\n"
+        "if [ \"$need\" = 1 ]; then\n"
+        "  tar -cf cache-pack.tar.tmp --exclude=cache-pack.tar --exclude=cache-pack.tar.tmp "
+        "--exclude=cache-pack.meta.json --exclude=manifest.json --exclude=files.tsv "
+        "--exclude=files.tsv.tmp --exclude=thumb-rel-index.json --exclude=.dam-write-probe .\n"
+        "  mv -f cache-pack.tar.tmp cache-pack.tar\n"
+        "  printf '{\"file_count\": %s, \"total_bytes\": %s, \"generated_at\": \"%s\"}\\n' "
+        "\"$n\" \"$b\" \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\" > cache-pack.meta.json\n"
+        "  echo PACK_REFRESHED\n"
+        "else\n"
+        "  echo PACK_OK\n"
+        "fi\n"
+    )
+    try:
+        proc = _ssh_run(host, "sh -s", stdin=script.encode("utf-8"))
+    except OSError as exc:
+        return f"error:{exc}"
+    if proc.returncode != 0:
+        return "error:" + (proc.stderr or b"").decode("utf-8", "replace").strip()[:200]
+    lines = (proc.stdout or b"").decode("utf-8", "replace").strip().splitlines()
+    return lines[-1] if lines else "unknown"
 
 
 def _record_publish(manifest: dict, publisher: str, nas_display: str) -> tuple[bool, bool]:
