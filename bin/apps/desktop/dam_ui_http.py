@@ -89,6 +89,20 @@ class DamUiRequestHandler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, fmt, *args):
         pass
 
+    def parse_request(self):  # noqa: D102
+        """Anty DNS-rebinding: UI (w tym data/*.json z indeksem plikow) tylko dla Host = loopback."""
+        if not super().parse_request():
+            return False
+        host = (self.headers.get("Host") or "").strip().lower()
+        if host.startswith("["):
+            name = host.split("]", 1)[0] + "]"
+        else:
+            name = host.rsplit(":", 1)[0] if ":" in host else host
+        if name not in ("127.0.0.1", "localhost", "[::1]"):
+            self.send_error(403, "host_forbidden")
+            return False
+        return True
+
     def end_headers(self):
         path = self.path.split("?", 1)[0]
         if self.cache_control_static == "no-store":

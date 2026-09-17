@@ -232,6 +232,68 @@ USER_PREFS_FILE = DESKTOP_DIR / "data" / "user-prefs.json"
 SYNOLOGY_SCRIPT = DESKTOP_DIR / "synology_get_link.ps1"
 REQUIRED_ROOT_FOLDERS = ("-- ARCHIWUM --", "- EKSPORT", "- POLSKA")
 CORS_ORIGIN = os.environ.get("DAM_UI_ORIGIN", "http://127.0.0.1:8765")
+
+
+def _origin_of(url: str) -> str:
+    """scheme://host[:port] - naglowek Origin nigdy nie ma sciezki ('/Panel-DAM')."""
+    try:
+        u = urlparse(str(url or "").strip())
+    except ValueError:
+        return ""
+    if not u.scheme or not u.netloc:
+        return ""
+    return f"{u.scheme}://{u.netloc}".lower()
+
+
+_LOOPBACK_NAMES = ("127.0.0.1", "localhost", "[::1]", "::1")
+_UI_HOST = (urlparse(CORS_ORIGIN).hostname or "").lower()
+# Tryb publiczny: most stoi na NAS za nginx (/dam-api/) i jest osiagalny z internetu.
+# Wykrywany po DAM_UI_ORIGIN spoza loopback (start-dam-bridge.sh) albo DAM_PUBLIC_MODE=1.
+PUBLIC_MODE = (os.environ.get("DAM_PUBLIC_MODE", "").strip().lower() in ("1", "true", "yes")) or (
+    bool(_UI_HOST) and _UI_HOST not in _LOOPBACK_NAMES
+)
+PUBLIC_HOSTS = {
+    h.strip().lower()
+    for h in ([_UI_HOST] + (os.environ.get("DAM_PUBLIC_HOSTS") or "").split(","))
+    if h and h.strip() and h.strip().lower() not in _LOOPBACK_NAMES
+}
+# Jedyne sciezki dostepne w trybie publicznym bez waznej sesji.
+PUBLIC_ANON_PATHS = frozenset(
+    {
+        "/health",
+        "/auth/login",
+        "/auth/logout",
+        "/auth/me",
+        "/auth/registration-open",
+        "/auth/register",
+        "/auth/change-password",
+        "/db/status",
+        "/pg/status",
+        "/files/status",
+        "/oauth/callback",
+    }
+)
+# Funkcje komputera uzytkownika: na serwerze nie maja sensu, a w internecie sa grozne.
+PUBLIC_FORBIDDEN_PATHS = frozenset(
+    {
+        "/open",
+        "/reveal",
+        "/pick-folder",
+        "/open-image-resizer",
+        "/synology-share",
+        "/validate-base",
+        "/detect-marketing-bases",
+        "/db/activate",
+        "/db/activation",
+        "/db/path",
+        "/auth/rehydrate",
+        "/auth/identity",
+        "/debug/self-test",
+        "/telemetry/tail",
+        "/app-update/install",
+        "/app-update/download",
+    }
+)
 # Kolejnosc: M: (komputer zrodlowy Synology) -> X:/Marketing -> staging D:
 MARKETING_CANDIDATES = (
     Path("M:/"),
@@ -574,6 +636,16 @@ def reveal_in_explorer(target: str) -> dict:
         return {"ok": False, "error": str(exc), "path": target}
 
 
+OPEN_BLOCKED_EXTENSIONS = frozenset(
+    (
+        ".exe .com .scr .pif .cpl .msi .msp .mst .msix .appx .appinstaller .bat .cmd .ps1 .psm1 "
+        ".psd1 .vbs .vbe .js .jse .wsf .wsh .wsc .hta .jar .lnk .url .reg .inf .scf .dll .sys "
+        ".chm .hlp .application .gadget .settingcontent-ms .library-ms .search-ms .website "
+        ".iso .img .vhd .vhdx .py .pyw .sh .docm .dotm .xlsm .xltm .xlam .pptm .potm .ppam"
+    ).split()
+)
+
+
 def open_in_default_app(target: str) -> dict:
     """Otworz plik domyslna aplikacja Windows (os.startfile). Tylko pliki w Marketing."""
     target = (
@@ -592,6 +664,10 @@ def open_in_default_app(target: str) -> dict:
         return {"ok": False, "error": "path_outside_marketing", "path": target}
     if not os.path.isfile(target) and not is_probably_file(target):
         return {"ok": False, "error": "not_a_file", "path": target}
+    # Udzial Marketing jest zapisywalny dla wielu osob: podrzucony .bat/.lnk/.exe
+    # nie moze zostac uruchomiony jednym kliknieciem (ani zadaniem do mostu).
+    if Path(target).suffix.lower() in OPEN_BLOCKED_EXTENSIONS:
+        return {"ok": False, "error": "file_type_blocked", "path": target}
     try:
         os.startfile(target)  # type: ignore[attr-defined]
         return {"ok": True, "path": target, "command": "startfile"}
@@ -7414,19 +7490,128 @@ def media_meta(path: str) -> dict:
     return out
 
 
+try:
+    import ip_guard
+except Exception:  # pragma: no cover
+    ip_guard = None  # type: ignore[assignment]
+
+
+def _pg_activation_required() -> bool:
+    try:
+        import pg_db as _pg
+
+        return bool(_pg.activation_required())
+    except Exception:
+        return False
+
+
+def _reset_db_status_cache() -> None:
+    """Po aktywacji pill "Baza" ma od razu pokazac prawde, nie 30-sekundowy cache."""
+    try:
+        if dam_db is not None:
+            dam_db._STATUS_CACHE = None  # type: ignore[attr-defined]
+            dam_db._STATUS_CACHE_TS = 0.0  # type: ignore[attr-defined]
+    except Exception:
+        pass
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         print("[dam-bridge]", fmt % args)
 
+    def _host_ok(self) -> bool:
+        """Anty DNS-rebinding: most odpowiada tylko na Host = loopback.
+
+        Strona z internetu, ktorej domena po chwili wskazuje na 127.0.0.1, jest dla
+        przegladarki "same-origin" (brak Origin, brak CORS) i czytalaby caly most.
+        Jej naglowek Host to jednak nadal obca domena - i na tym ja odcinamy.
+        """
+        host = (self.headers.get("Host") or "").strip().lower()
+        if not host:
+            return False
+        if host.startswith("["):
+            name = host.split("]", 1)[0] + "]"
+        else:
+            name = host.rsplit(":", 1)[0] if ":" in host else host
+        if name in ("127.0.0.1", "localhost", "[::1]"):
+            return True
+        return PUBLIC_MODE and name in PUBLIC_HOSTS
+
+    def _client_ip(self) -> str:
+        """Adres klienta do blokady IP. Tylko tryb publiczny: nginx wpisuje X-Real-IP,
+        a most slucha na 127.0.0.1, wiec naglowka nie podstawi nikt spoza NAS."""
+        if not PUBLIC_MODE or ip_guard is None:
+            return ""
+        return ip_guard.normalize_ip(self.headers.get("X-Real-IP") or "")
+
+    def _ip_guard_login_result(self, res: dict, email: str) -> dict:
+        """Po probie logowania: policz blad dla IP (3 w 999 min = blok) albo wyzeruj licznik."""
+        ip = self._client_ip()
+        if not ip or ip_guard is None:
+            return res
+        err = str(res.get("error") or "")
+        if err == "invalid_credentials":
+            state = ip_guard.record_failure(ip, email)
+            if state.get("blocked"):
+                return {
+                    "ok": False,
+                    "error": "ip_blocked",
+                    "hint": "Ten adres IP zostal zablokowany po nieudanych logowaniach. Odblokowuje administrator.",
+                }
+            out = dict(res)
+            out["attempts_left"] = state.get("remaining")
+            return out
+        if res.get("ok") or err == "password_change_required":
+            ip_guard.record_success(ip)
+        return res
+
+    def _public_gate(self, parsed) -> bool:
+        """True = odpowiedz juz wyslana (zadanie zatrzymane). Poza trybem publicznym nic nie robi."""
+        if not PUBLIC_MODE:
+            return False
+        ip = self._client_ip()
+        if ip and ip_guard is not None and ip_guard.is_blocked(ip):
+            self._json(
+                403,
+                {
+                    "ok": False,
+                    "error": "ip_blocked",
+                    "hint": "Ten adres IP zostal zablokowany po nieudanych logowaniach. Odblokowuje administrator.",
+                },
+            )
+            return True
+        if parsed.path in PUBLIC_FORBIDDEN_PATHS:
+            self._json(404, {"ok": False, "error": "desktop_only"})
+            return True
+        if parsed.path in PUBLIC_ANON_PATHS:
+            return False
+        res = resolve_session(self._bearer())
+        if not res.get("ok"):
+            self._json(401, {"ok": False, "error": "login_required"})
+            return True
+        return False
+
+    def parse_request(self):  # noqa: D102
+        if not super().parse_request():
+            return False
+        if not self._host_ok():
+            self.send_error(403, "host_forbidden")
+            return False
+        return True
+
     def _origin_ok(self) -> bool:
         """CORS: tylko UI origin (albo brak Origin = same-origin / narzedzia lokalne)."""
+        # <img>/<script> z obcej strony nie wysyla Origin, ale przegladarka oznacza
+        # takie zadanie Sec-Fetch-Site: cross-site. UI :8765 -> most :8766 to same-site.
+        if (self.headers.get("Sec-Fetch-Site") or "").strip().lower() == "cross-site":
+            return False
         origin = (self.headers.get("Origin") or "").strip()
         if not origin:
             return True
-        return origin.rstrip("/") == CORS_ORIGIN.rstrip("/")
+        return _origin_of(origin) == _origin_of(CORS_ORIGIN)
 
     def _cors(self):
-        self.send_header("Access-Control-Allow-Origin", CORS_ORIGIN)
+        self.send_header("Access-Control-Allow-Origin", _origin_of(CORS_ORIGIN) or CORS_ORIGIN)
         self.send_header("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         # JS fetch() needs Expose-Headers to read thumb cache probes (8765→8766).
@@ -7488,6 +7673,8 @@ class Handler(BaseHTTPRequestHandler):
             if user.get("email") or user.get("role"):
                 return user
         # Desktop: wygasly Bearer, ale bound-session na maszynie — rehydrate bez hasla.
+        if PUBLIC_MODE:
+            return None
         try:
             rh = auth_rehydrate(
                 session_id=(self.headers.get("X-Dam-Session-Id") or "").strip(),
@@ -7604,6 +7791,23 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path != "/oauth/callback" and not self._origin_ok():
             self._json(403, {"ok": False, "error": "origin_forbidden"})
             return
+        if self._public_gate(parsed):
+            return
+        if parsed.path == "/auth/ip-blocks":
+            if self._require_admin() is None:
+                return
+            self._json(
+                200,
+                {
+                    "ok": True,
+                    "public_mode": PUBLIC_MODE,
+                    "blocks": ip_guard.list_blocks() if ip_guard else [],
+                    "allowlist": sorted(ip_guard.allowlist()) if ip_guard else [],
+                    "max_failures": ip_guard.MAX_FAILURES if ip_guard else 0,
+                    "window_minutes": (ip_guard.WINDOW_S // 60) if ip_guard else 0,
+                },
+            )
+            return
         if parsed.path == "/file-availability":
             if dam_file_availability is None:
                 self._json(500, {"ok": False, "error": "dam_file_availability_missing"})
@@ -7630,6 +7834,10 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as exc:  # noqa: BLE001
                 self._json(500, {"ok": False, "error": "branding_routes", "detail": str(exc)})
                 return
+        if parsed.path == "/health" and PUBLIC_MODE and not resolve_session(self._bearer()).get("ok"):
+            # Internet dostaje tylko "zyje": bez sciezek, wersji tras i stanu watcherow.
+            self._json(200, {"ok": True, "service": "dam-local-bridge"})
+            return
         if parsed.path == "/health":
             assoc = _assoc_status_payload()
             watcher = {}
@@ -8014,10 +8222,12 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path in ("/db/status", "/pg/status"):
             # Pill "Baza online/offline" - bez Bearera (localhost); cache 30s (status_light)
-            self._json(
-                200,
-                dam_db.status_light() if dam_db else {"ok": False, "error": "dam_db_missing"},
-            )
+            st = dam_db.status_light() if dam_db else {"ok": False, "error": "dam_db_missing"}
+            st["activation_required"] = _pg_activation_required()
+            self._json(200, st)
+            return
+        if parsed.path == "/db/activation":
+            self._json(200, {"ok": True, "activation_required": _pg_activation_required()})
             return
         if parsed.path == "/db/ping":
             self._json(200, dam_db.ping() if dam_db else {"ok": False, "error": "dam_db_missing"})
@@ -8052,6 +8262,9 @@ class Handler(BaseHTTPRequestHandler):
             )
             return
         if parsed.path == "/telemetry/tail":
+            # Telemetria zawiera sciezki i zachowanie uzytkownika - tylko admin.
+            if self._require_admin() is None:
+                return
             qs = parse_qs(parsed.query)
             limit = int((qs.get("limit") or ["100"])[0] or 100)
             if dam_debug is None:
@@ -8060,6 +8273,8 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, {"ok": True, "events": dam_debug.read_tail(limit=limit)})
             return
         if parsed.path == "/debug/self-test":
+            if self._require_login() is None:
+                return
             if dam_debug is None:
                 self._json(500, {"ok": False, "error": "dam_debug_missing"})
                 return
@@ -8724,6 +8939,11 @@ class Handler(BaseHTTPRequestHandler):
         raw = self.rfile.read(length) if length else b"{}"
         parsed = urlparse(self.path)
         content_type = self.headers.get("Content-Type") or ""
+        if parsed.path != "/oauth/callback" and not self._origin_ok():
+            self._json(403, {"ok": False, "error": "origin_forbidden"})
+            return
+        if self._public_gate(parsed):
+            return
 
         if parsed.path in ("/finance/fmcg-import", "/finance/invoices/import"):
             if parsed.path != "/oauth/callback" and not self._origin_ok():
@@ -8780,8 +9000,22 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as exc:  # noqa: BLE001
                 self._json(500, {"ok": False, "error": "branding_routes_post", "detail": str(exc)})
                 return
+        if parsed.path == "/db/activate":
+            # Przed logowaniem (bez bazy nie ma kont): chroni Host/Origin + limit prob w pg_seal.
+            try:
+                import pg_db as _pg
+
+                res = _pg.activate(str(data.get("code") or ""))
+            except Exception as exc:  # noqa: BLE001
+                res = {"ok": False, "error": "activate_failed", "detail": type(exc).__name__}
+            if res.get("ok"):
+                _reset_db_status_cache()
+            self._json(200 if res.get("ok") else 400, res)
+            return
         if parsed.path == "/reveal":
-            # Lokalny most 127.0.0.1: otwarcie folderu w Marketing (jail) bez Bearer.
+            # Audyt 2026-09-17: uruchamianie Eksploratora/aplikacji tylko z sesja.
+            if self._require_login() is None:
+                return
             path = (data.get("path") or "").strip()
             if not path:
                 self._json(400, {"ok": False, "error": "path_required"})
@@ -8790,6 +9024,8 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/open":
             # Otworz plik w domyslnej aplikacji Windows (os.startfile).
+            if self._require_login() is None:
+                return
             path = (data.get("path") or "").strip()
             if not path:
                 self._json(400, {"ok": False, "error": "path_required"})
@@ -8798,6 +9034,8 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/open-image-resizer":
             # STREFA A3 / pkt 37: Inyfinn Image resizer (CLI albo GUI+Explorer)
+            if self._require_login() is None:
+                return
             self._json(
                 200,
                 open_image_resizer(
@@ -8972,15 +9210,30 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200 if res.get("ok") else 400, res)
             return
         if parsed.path == "/auth/login":
-            self._json(
-                200,
-                auth_login(
-                    data.get("email") or "",
-                    data.get("password") or "",
-                    data.get("device_id") or "",
-                    data.get("machine_id") or "",
-                ),
+            res = auth_login(
+                data.get("email") or "",
+                data.get("password") or "",
+                data.get("device_id") or "",
+                data.get("machine_id") or "",
             )
+            self._json(200, self._ip_guard_login_result(res, data.get("email") or ""))
+            return
+        if parsed.path == "/auth/ip-unblock":
+            if self._require_admin() is None:
+                return
+            ok = bool(ip_guard and ip_guard.unblock(str(data.get("ip") or "")))
+            self._json(200 if ok else 400, {"ok": ok})
+            return
+        if parsed.path == "/auth/change-password":
+            # Bez Bearer: dowodem jest stare haslo (takze dla kont z wymuszona zmiana).
+            from auth_store import change_password as _auth_change_password
+
+            res = _auth_change_password(
+                data.get("email") or "",
+                data.get("old_password") or "",
+                data.get("new_password") or "",
+            )
+            self._json(200, self._ip_guard_login_result(res, data.get("email") or ""))
             return
         if parsed.path == "/auth/rehydrate":
             payload = data if isinstance(data, dict) else {}
