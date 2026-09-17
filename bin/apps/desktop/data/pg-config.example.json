@@ -2,8 +2,8 @@
   "_readme": "Kolejnosc hostow: DDNS (WAN), IP WAN, LAN. sslmode=require = TLS do Synology (self-signed OK). verify-full wymaga data/dam_pg_root.crt. Env: DAM_PG_SSLMODE.",
   "hosts": [
     "inyfinn.synology.me",
-    "212.87.249.132",
-    "192.168.1.145"
+    "WAN_IP_PLACEHOLDER",
+    "LAN_IP_PLACEHOLDER"
   ],
   "host": "inyfinn.synology.me",
   "port": 5433,

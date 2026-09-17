@@ -75,7 +75,10 @@ $rcArgs = @(
     '/XD', 'pamiec-podreczna',
     '/XD', 'data\thumbs',
     '/XF', 'dam-runtime.json', 'dam-identity.json',
-    '/XF', '*_Conflict*', '*.tmp'
+    '/XF', '*_Conflict*', '*.tmp',
+    # Audyt 2026-09-17: katalog WWW na NAS jest publiczny - dane firmowe tam nie trafiaja.
+    '/XF', 'invoices.json', 'invoice-erp-export-last.json', 'invoice-erp-sync.json', 'project-costs.json', 'cost-rates.json', 'production-cost-catalog.json', 'fmcg-cost-averages.json', 'fmcg-cost-catalog.json', 'fmcg-cost-import-map.json', 'inbox-items.json', 'notification-groups.json', 'asana-tasks.json', 'asana-tasks-kw.csv', 'product-people.json', 'app-settings.json', 'user-prefs.json', 'audit-log.jsonl', 'campaigns.json',
+    '/XD', 'scripts'
 )
 
 Write-Host "Robocopy: $($rcArgs -join ' ')"

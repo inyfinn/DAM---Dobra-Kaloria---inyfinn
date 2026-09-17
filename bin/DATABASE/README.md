@@ -62,8 +62,8 @@ Wymaga SSH hosta `syno` w `~/.ssh/config`. Nie commituje hasel - tylko `.sql.gz`
 | Skad | Host |
 |------|------|
 | Domyslnie (WAN / DDNS) | `inyfinn.synology.me:5433` |
-| Ten sam WAN, gdy DNS padnie | `212.87.249.132:5433` |
-| W domu (LAN) | `192.168.1.145:5433` |
+| Ten sam WAN, gdy DNS padnie | `WAN_IP_PLACEHOLDER:5433` |
+| W domu (LAN) | `LAN_IP_PLACEHOLDER:5433` |
 
 Aplikacja proboje hosty po kolei (patrz `pg-config.example.json` / `dam-connection.env.example`).
 

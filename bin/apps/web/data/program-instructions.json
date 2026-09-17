@@ -332,7 +332,7 @@
       "id": "db.postgres_synology_live",
       "must": [
         "Silnik live: Postgres Docker dam-eta-postgres na NAS, port 5433, baza/user dam_eta.",
-        "Hosty w tej kolejnosci: inyfinn.synology.me (DDNS/WAN), 212.87.249.132 (IP WAN), 192.168.1.145 (LAN w domu).",
+        "Hosty w tej kolejnosci: inyfinn.synology.me (DDNS/WAN), WAN_IP_PLACEHOLDER (IP WAN), LAN_IP_PLACEHOLDER (LAN w domu).",
         "dam_db mode = postgres (synology=true). db-prefer.json na stacji: mode postgres, sources.synology true.",
         "Gdy PG padnie: OFFLINE na lokalny SQLite + jasny hint, nie udawac online.",
         "Klucze SSH NAS w %USERPROFILE%\\.ssh (syno_ed25519, cursor-cloud-agent). Nigdy w Git."
