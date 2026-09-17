@@ -21,10 +21,8 @@ _QUEUE_ITEM_LIMIT = 200
 # previewability is decided via in-memory fat dict, not per-row disk I/O.
 _QUEUE_CANDIDATE_LIMIT = 12000
 
-_WWW_SCAN_ROOTS = (
-    Path(r"M:\- POLSKA\06 - STRONY WWW - INTERNET\01 - Strona Dobra Kaloria"),
-    Path(r"D:\Marketing\- POLSKA\06 - STRONY WWW - INTERNET\01 - Strona Dobra Kaloria"),
-)
+_WWW_SCAN_REL = "- POLSKA/06 - STRONY WWW - INTERNET/01 - Strona Dobra Kaloria"
+_DEFAULT_ROOT_PREFIXES = ("M:/", "X:/Marketing/", "D:/Marketing/")
 _WWW_SCAN_EXTS = frozenset(
     {".png", ".jpg", ".jpeg", ".webp", ".gif", ".tif", ".tiff", ".svg", ".mp4", ".webm", ".pdf"}
 )
@@ -33,6 +31,31 @@ _WWW_SCAN_SKIP_DIRS = frozenset(
 )
 _WWW_SCAN_MAX_FILES = 400
 _MTIME_ID_LIMIT = 200
+
+
+def _root_prefixes() -> list[str]:
+    """Marketing roots as 'M:/', 'X:/Marketing/' (bridge injects detected ones)."""
+    fn = _CTX.get("marketing_root_prefixes")
+    if callable(fn):
+        try:
+            got = [str(x) for x in (fn() or []) if x]
+            if got:
+                return got
+        except Exception:  # noqa: BLE001
+            pass
+    return list(_DEFAULT_ROOT_PREFIXES)
+
+
+def _www_scan_roots() -> list[Path]:
+    """First existing WWW folder only: mirrors (M: vs D:) would be walked twice."""
+    for prefix in _root_prefixes():
+        root = Path(prefix + _WWW_SCAN_REL)
+        try:
+            if root.is_dir():
+                return [root]
+        except OSError:
+            continue
+    return []
 
 
 def _path_candidates(path: str) -> list[str]:
@@ -50,16 +73,13 @@ def _path_candidates(path: str) -> list[str]:
         out.append(val)
 
     add(p)
-    repls = (
-        ("X:/Marketing/", "D:/Marketing/"),
-        ("X:/Marketing/", "M:/"),
-        ("D:/Marketing/", "M:/"),
-        ("M:/", "D:/Marketing/"),
-        ("X:/Marketing/", "D:/Marketing/"),
-    )
-    for a, b in repls:
-        if p.lower().startswith(a.lower()):
-            add(b + p[len(a) :])
+    prefixes = _root_prefixes()
+    low_p = p.lower()
+    for a in prefixes:
+        if low_p.startswith(a.lower()):
+            for b in prefixes:
+                if b != a:
+                    add(b + p[len(a) :])
     low = p.lower()
     marker = "/01 - logo/"
     idx = low.find(marker)
@@ -100,7 +120,7 @@ def _live_www_scan(days: int) -> list[dict[str, Any]]:
     cutoff = time.time() - days * 86400
     found: list[tuple[float, Path]] = []
     seen: set[str] = set()
-    for root in _WWW_SCAN_ROOTS:
+    for root in _www_scan_roots():
         try:
             if not root.is_dir():
                 continue

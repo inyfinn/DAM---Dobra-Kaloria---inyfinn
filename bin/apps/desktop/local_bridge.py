@@ -210,6 +210,11 @@ try:
 except ImportError:
     dam_path_resolve = None  # type: ignore
 
+try:
+    import marketing_discovery
+except ImportError:
+    marketing_discovery = None  # type: ignore
+
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("DAM_BRIDGE_PORT", "8766"))
 # Bump po nowych endpointach hub (smoke: GET /health -> api_version)
@@ -294,12 +299,48 @@ PUBLIC_FORBIDDEN_PATHS = frozenset(
         "/app-update/download",
     }
 )
-# Kolejnosc: M: (komputer zrodlowy Synology) -> X:/Marketing -> staging D:
-MARKETING_CANDIDATES = (
+# Kolejnosc: M: (komputer zrodlowy Synology) -> X:/Marketing -> staging D: -> inne wykryte.
+# Uzupelniane w tle przy starcie mostu (marketing_discovery); funkcje czytaja globala
+# w chwili wywolania, wiec podmiana krotki wystarcza.
+MARKETING_CANDIDATES: tuple[Path, ...] = (
     Path("M:/"),
     Path("X:/Marketing"),
     Path("D:/Marketing"),
 )
+MARKETING_DISCOVERY_INTERVAL_SEC = 300.0
+
+
+def _set_marketing_candidates(discovered) -> tuple[Path, ...]:
+    global MARKETING_CANDIDATES
+    if marketing_discovery is None:
+        return MARKETING_CANDIDATES
+    cands = tuple(marketing_discovery.ordered_candidates((), discovered))
+    MARKETING_CANDIDATES = cands
+    if dam_path_resolve is not None:
+        dam_path_resolve.set_marketing_candidates(cands)
+    return cands
+
+
+def refresh_marketing_candidates(*, use_cache: bool = False) -> tuple[Path, ...]:
+    """Probe all drives (max ok. 2 s) and extend MARKETING_CANDIDATES."""
+    if marketing_discovery is None:
+        return MARKETING_CANDIDATES
+    try:
+        roots = marketing_discovery.discover_roots(
+            required=REQUIRED_ROOT_FOLDERS, use_cache=use_cache
+        )
+    except Exception as exc:  # noqa: BLE001
+        print("marketing_discovery:", exc)
+        return MARKETING_CANDIDATES
+    return _set_marketing_candidates(roots)
+
+
+def _marketing_discovery_watcher() -> None:
+    """Start mostu i co 5 min: litera dysku moze pojawic sie po VPN."""
+    while True:
+        cands = refresh_marketing_candidates()
+        print("marketing_candidates:", [str(c) for c in cands])
+        time.sleep(MARKETING_DISCOVERY_INTERVAL_SEC)
 
 _index_lock = threading.Lock()
 _index_state: dict = {
@@ -846,7 +887,43 @@ def pick_folder_dialog(start: str = "") -> dict:
 
 
 def detect_marketing_bases() -> dict:
-    """Wykryj dostepne rooty Marketing na TYM komputerze."""
+    """Wykryj dostepne rooty Marketing na TYM komputerze (M:/X:/D: + dowolna litera).
+
+    Kazda litera sprawdzana w osobnym watku; odpowiedz najpozniej po ok. 2-3 s,
+    zawieszony dysk sieciowy dostaje ``timeout: true``. ``valid`` = wszystkie
+    poprawne rooty w kolejnosci kandydatow, ``recommended`` = pierwszy z nich.
+    """
+    if marketing_discovery is not None:
+        entries = marketing_discovery.probe_drives(required=REQUIRED_ROOT_FOLDERS)
+        _set_marketing_candidates([e["path"] for e in entries if e.get("ok")])
+        key = marketing_discovery.path_key
+        by_key = {key(e["path"]): e for e in entries}
+        preferred = {key(p) for p in marketing_discovery.PREFERRED_CANDIDATES}
+        listed: list[dict] = []
+        for cand in marketing_discovery.PREFERRED_CANDIDATES:
+            e = by_key.get(key(cand)) or {}
+            listed.append(
+                {
+                    "path": str(cand),
+                    "ok": bool(e.get("ok")),
+                    "exists": bool(e.get("exists")),
+                    "missing": list(e.get("missing") or REQUIRED_ROOT_FOLDERS),
+                    "timeout": bool(e.get("timeout")),
+                }
+            )
+        for e in entries:
+            if e.get("ok") and key(e["path"]) not in preferred:
+                listed.append(
+                    {"path": e["path"], "ok": True, "exists": True, "missing": [], "timeout": False}
+                )
+        valid = [x["path"] for x in listed if x["ok"]]
+        return {
+            "ok": True,
+            "candidates": listed,
+            "valid": valid,
+            "recommended": valid[0] if valid else None,
+            "required": list(REQUIRED_ROOT_FOLDERS),
+        }
     found: list[dict] = []
     for candidate in MARKETING_CANDIDATES:
         try:
@@ -5588,8 +5665,13 @@ def add_global_variant_type(payload: dict, *, actor: str = "") -> dict:
         except Exception:  # noqa: BLE001
             marketing_base = ""
         if not marketing_base:
-            # Common local mount
-            for cand in (r"X:\Marketing", r"P:\Marketing"):
+            # Wykryty root (dowolna litera, walidacja 3 folderow), potem stary P:
+            found = (
+                marketing_discovery.discover_roots(required=REQUIRED_ROOT_FOLDERS)
+                if marketing_discovery is not None
+                else []
+            )
+            for cand in [str(f) for f in found] + [r"P:\Marketing"]:
                 if Path(cand).is_dir():
                     marketing_base = cand
                     break
@@ -7123,15 +7205,25 @@ def _logo_drive_variants(path: str) -> list[str]:
         out.append(val)
 
     add(p)
-    repls = (
-        ("X:/Marketing/", "D:/Marketing/"),
-        ("X:/Marketing/", "M:/"),
-        ("D:/Marketing/", "M:/"),
-        ("M:/", "D:/Marketing/"),
-    )
-    for a, b in repls:
-        if p.lower().startswith(a.lower()):
-            add(b + p[len(a) :])
+    # Kazdy root Marketing (M:/, X:/Marketing, D:/Marketing + wykryte) na kazdy inny.
+    prefixes = marketing_root_prefixes()
+    low = p.lower()
+    for a in prefixes:
+        if low.startswith(a.lower()):
+            rest = p[len(a) :]
+            for b in prefixes:
+                if b != a:
+                    add(b + rest)
+    return out
+
+
+def marketing_root_prefixes() -> list[str]:
+    """MARKETING_CANDIDATES jako prefiksy 'M:/', 'X:/Marketing/' (kolejnosc zachowana)."""
+    out: list[str] = []
+    for c in MARKETING_CANDIDATES:
+        s = str(c).replace("\\", "/").rstrip("/") + "/"
+        if s not in out:
+            out.append(s)
     return out
 
 
@@ -10528,6 +10620,10 @@ def main() -> None:
 
     AUDIT_FILE.parent.mkdir(parents=True, exist_ok=True)
     DESKTOP_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    # Dysk Marketing pod dowolna litera: w tle, nie blokuje startu (martwy dysk sieciowy).
+    threading.Thread(
+        target=_marketing_discovery_watcher, daemon=True, name="dam-marketing-discovery"
+    ).start()
     if branding_asset_routes is not None:
         sqlite_path = None
         try:
@@ -10557,6 +10653,7 @@ def main() -> None:
             require_admin=_require_admin_wrap,
             mirror_override=_mirror_override,
             assoc_decide=None,  # wired below after assoc_repo import
+            marketing_root_prefixes=marketing_root_prefixes,
         )
     try:
         if dam_db is not None:

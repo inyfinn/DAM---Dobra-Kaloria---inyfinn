@@ -14,11 +14,28 @@ from pathlib import Path
 from typing import Callable, Optional, Sequence
 
 # Default candidates when bridge has not injected its list yet.
+# Order (HARD): M:\ -> X:\Marketing -> D:\Marketing (same as marketing_discovery).
 DEFAULT_MARKETING_CANDIDATES: tuple[Path, ...] = (
+    Path("M:/"),
     Path("X:/Marketing"),
     Path("D:/Marketing"),
-    Path("M:/"),
 )
+# Live list: the bridge replaces it after drive discovery (set_marketing_candidates).
+# Functions read it at call time; a default argument would freeze it at import.
+_active_candidates: tuple[Path, ...] = DEFAULT_MARKETING_CANDIDATES
+
+
+def set_marketing_candidates(candidates: Sequence[Path]) -> None:
+    global _active_candidates
+    _active_candidates = tuple(Path(str(c)) for c in candidates if c)
+
+
+def current_marketing_candidates() -> tuple[Path, ...]:
+    return _active_candidates
+
+
+def _candidates(value: Optional[Sequence[Path]]) -> Sequence[Path]:
+    return _active_candidates if value is None else value
 
 
 def _norm(p: str | Path) -> str:
@@ -39,7 +56,7 @@ def marketing_roots(
     *,
     email: str = "",
     resolve_base_path: Optional[Callable[[str], dict]] = None,
-    marketing_candidates: Sequence[Path] = DEFAULT_MARKETING_CANDIDATES,
+    marketing_candidates: Optional[Sequence[Path]] = None,
     machine_config_path: Optional[Path] = None,
 ) -> list[Path]:
     """Ordered unique roots: UDP current → machine-config → candidates."""
@@ -75,7 +92,7 @@ def marketing_roots(
         except (OSError, ValueError, TypeError):
             pass
 
-    for c in marketing_candidates:
+    for c in _candidates(marketing_candidates):
         add(c)
     return roots
 
@@ -85,7 +102,7 @@ def is_under_marketing(
     *,
     email: str = "",
     resolve_base_path: Optional[Callable[[str], dict]] = None,
-    marketing_candidates: Sequence[Path] = DEFAULT_MARKETING_CANDIDATES,
+    marketing_candidates: Optional[Sequence[Path]] = None,
     machine_config_path: Optional[Path] = None,
 ) -> bool:
     try:
@@ -111,7 +128,7 @@ def marketing_relative_key(
     *,
     email: str = "",
     resolve_base_path: Optional[Callable[[str], dict]] = None,
-    marketing_candidates: Sequence[Path] = DEFAULT_MARKETING_CANDIDATES,
+    marketing_candidates: Optional[Sequence[Path]] = None,
     machine_config_path: Optional[Path] = None,
 ) -> str:
     """Relative key under Marketing root (forward slashes, lower drive-agnostic)."""
@@ -143,7 +160,7 @@ def resolve_physical_path(
     *,
     normalize_path: Optional[Callable[[str], str]] = None,
     resolve_base_path: Optional[Callable[[str], dict]] = None,
-    marketing_candidates: Sequence[Path] = DEFAULT_MARKETING_CANDIDATES,
+    marketing_candidates: Optional[Sequence[Path]] = None,
     machine_config_path: Optional[Path] = None,
     fuzzy_resolve: Optional[Callable[[str], Optional[str]]] = None,
 ) -> str:

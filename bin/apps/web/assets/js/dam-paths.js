@@ -1021,6 +1021,7 @@
           '<strong>-- ARCHIWUM --</strong>, <strong>- EKSPORT</strong>, <strong>- POLSKA</strong>.</p>' +
         '<p class="dam-basepath-examples">Przyklady: <code>X:\\Marketing</code> | <code>D:\\Marketing</code> | <code>M:\\</code></p>' +
         '<p id="damBasePathDeviceHint" class="dam-basepath-examples" hidden></p>' +
+        '<div id="damBasePathFound" class="dam-basepath-found" hidden></div>' +
         '<label class="dam-basepath-label" for="damBasePathInput">Sciezka bazowa</label>' +
         '<div class="dam-basepath-field">' +
           '<input type="text" id="damBasePathInput" class="dam-basepath-input" placeholder="np. X:\\Marketing" ' +
@@ -1081,9 +1082,12 @@
     document.getElementById("damBasePathSuggest").addEventListener("click", function () {
       setMsg("Szukam folderu Marketing na dyskach tego komputera...", true);
       detectMarketingBasesRemote().then(function (res) {
-        if (res && res.recommended) {
-          document.getElementById("damBasePathInput").value = res.recommended;
-          setMsg("Znaleziono: " + res.recommended + " - kliknij \"Zapisz i kontynuuj\", jesli to prawidlowa sciezka.", true);
+        var valid = renderFound(res);
+        if (valid.length === 1) {
+          document.getElementById("damBasePathInput").value = valid[0];
+          setMsg("Znaleziono: " + valid[0] + " - kliknij \"Użyj tej ścieżki\" albo \"Zapisz i kontynuuj\".", true);
+        } else if (valid.length > 1) {
+          setMsg("Znaleziono " + valid.length + " foldery Marketing - wybierz jeden z listy.", true);
         } else {
           setMsg("Nie znaleziono folderu Marketing automatycznie - wpisz sciezke recznie.", false);
         }
@@ -1092,7 +1096,73 @@
       });
     });
     document.getElementById("damBasePathSave").addEventListener("click", function () {
-      var raw = (document.getElementById("damBasePathInput").value || "").trim();
+      saveBase((document.getElementById("damBasePathInput").value || "").trim());
+    });
+
+    /* Poprawne rooty z GET /detect-marketing-bases (dowolna litera dysku).
+       Jeden = jedno klikniecie; kilka = lista. Budowane przez DOM, bez innerHTML. */
+    function validRoots(res) {
+      if (!res) return [];
+      if (Array.isArray(res.valid)) {
+        return res.valid.filter(function (p) { return typeof p === "string" && p; });
+      }
+      return (res.candidates || [])
+        .filter(function (c) { return c && c.ok && c.path; })
+        .map(function (c) { return String(c.path); });
+    }
+
+    function renderFound(res) {
+      var box = document.getElementById("damBasePathFound");
+      var valid = validRoots(res);
+      if (!box) return valid;
+      while (box.firstChild) box.removeChild(box.firstChild);
+      box.hidden = valid.length === 0;
+      if (!valid.length) return valid;
+      ensureFoundCss();
+      var title = document.createElement("p");
+      title.className = "dam-basepath-found-title";
+      title.textContent = valid.length === 1
+        ? "Znaleziono folder Marketing na tym komputerze:"
+        : "Znaleziono kilka folderów Marketing. Wybierz ten, z którego chcesz korzystać:";
+      box.appendChild(title);
+      valid.forEach(function (path) {
+        var row = document.createElement("div");
+        row.className = "dam-basepath-found-row";
+        var code = document.createElement("code");
+        code.textContent = path;
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "geex-btn geex-btn--primary dam-basepath-use";
+        btn.textContent = valid.length === 1 ? "Użyj tej ścieżki" : "Użyj";
+        btn.setAttribute("aria-label", "Użyj ścieżki " + path);
+        btn.addEventListener("click", function () {
+          document.getElementById("damBasePathInput").value = path;
+          saveBase(path);
+        });
+        row.appendChild(code);
+        row.appendChild(btn);
+        box.appendChild(row);
+      });
+      return valid;
+    }
+
+    function ensureFoundCss() {
+      if (document.getElementById("damBasePathFoundCss")) return;
+      var s = document.createElement("style");
+      s.id = "damBasePathFoundCss";
+      s.textContent =
+        ".dam-basepath-found{margin:0 0 14px;padding:12px 14px;border-radius:10px;" +
+          "border:1px solid rgba(44,191,68,.45);background:rgba(44,191,68,.08)}" +
+        ".dam-basepath-found-title{margin:0 0 8px;font-weight:600}" +
+        ".dam-basepath-found-row{display:flex;align-items:center;gap:12px;margin-top:6px}" +
+        ".dam-basepath-found-row code{flex:1 1 auto;min-width:0;overflow-wrap:anywhere;font-size:14px;" +
+          "color:inherit;font-weight:600}" +
+        ".dam-basepath-found-row .dam-basepath-use{flex:0 0 auto;white-space:nowrap;" +
+          "min-height:0;padding:8px 18px;line-height:1.3}";
+      document.head.appendChild(s);
+    }
+
+    function saveBase(raw) {
       if (!raw) {
         setMsg("Podaj sciezke bazowa.", false);
         return;
@@ -1114,7 +1184,7 @@
         setMsg("Zapisano Twoj wybor.", true);
         setTimeout(function () { modal.remove(); }, 600);
       });
-    });
+    }
 
     // Podpis urzadzenia (hostname / device_id)
     ensureUserBase().then(function (info) {
@@ -1129,12 +1199,14 @@
       }
     }).catch(function () { /* ignore */ });
 
-    // Wypelnia pole podpowiedzia TYLKO gdy jest puste - nie zapisuje automatycznie
+    // Gdy pole jest puste: podpowiedz + propozycja wykrytych rootow.
+    // Nic nie zapisuje samo - zapis dopiero po kliknieciu (POST /machine-config).
     detectMarketingBasesRemote().then(function (res) {
       var input = document.getElementById("damBasePathInput");
       if (input && !input.value && res && res.recommended) {
         input.placeholder = "wykryto: " + res.recommended;
       }
+      if (input && !input.value) renderFound(res);
     }).catch(function () { /* ignore */ });
   }
 
