@@ -1947,8 +1947,109 @@ def _nas_dir_writable(root: Path) -> bool:
         return False
 
 
+def _publish_via_ssh(files: list[Path], publisher: str) -> dict:
+    """Wyslij brakujace miniatury przez SSH - tym samym kanalem, ktorym juz pobieramy.
+
+    Bez tego publikacja dziala wylacznie na maszynie z zamapowanym dyskiem W:
+    (RaiDrive). Na kazdej innej kolejka rosla w nieskonczonosc, a realny upload
+    robilo zewnetrzne zadanie Harmonogramu Windows wskazujace na repo dewelopera.
+    """
+    host = nas_ssh_host()
+    dest = nas_ssh_dest()
+    remote = _walk_remote_ssh()
+    send: list[tuple[Path, str]] = []
+    skipped = 0
+    for p in files:
+        rel = "thumbs/" + p.name
+        try:
+            size = int(p.stat().st_size)
+        except OSError:
+            continue
+        if remote.get(rel) == size:
+            skipped += 1
+            continue
+        send.append((p, rel))
+    manifest = build_local_manifest(publisher=publisher)
+    slim = {k: v for k, v in manifest.items() if k != "entries"}
+    extras: list[tuple[str, bytes]] = [
+        ("manifest.json", json.dumps(slim, ensure_ascii=False, indent=2).encode("utf-8"))
+    ]
+    try:
+        rel_index = _rel_index_path()
+        if rel_index.is_file():
+            extras.append(("thumb-rel-index.json", rel_index.read_bytes()))
+    except OSError:
+        pass
+    try:
+        proc = subprocess.Popen(
+            [
+                "ssh",
+                "-o",
+                "BatchMode=yes",
+                "-o",
+                "ConnectTimeout=20",
+                host,
+                f"mkdir -p {dest!r} && tar -xf - -C {dest!r}",
+            ],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            creationflags=_no_window_flags(),
+        )
+    except OSError as exc:
+        return {"ok": False, "error": f"ssh_spawn:{exc}", "copied": 0, "skipped": skipped}
+    try:
+        with tarfile.open(fileobj=proc.stdin, mode="w|", format=tarfile.PAX_FORMAT) as tar:
+            for src, rel in send:
+                tar.add(src, arcname=rel, recursive=False)
+            for name, payload in extras:
+                info = tarfile.TarInfo(name)
+                info.size = len(payload)
+                info.mtime = int(time.time())
+                tar.addfile(info, io.BytesIO(payload))
+    except (OSError, tarfile.TarError) as exc:
+        proc.kill()
+        proc.communicate()
+        return {"ok": False, "error": f"ssh_tar:{exc}", "copied": 0, "skipped": skipped}
+    _out, err = proc.communicate()
+    if proc.returncode != 0:
+        detail = (err or b"").decode("utf-8", "replace").strip()[:200]
+        return {"ok": False, "error": f"ssh_tar_rc{proc.returncode}:{detail}", "copied": 0, "skipped": skipped}
+    return {"ok": True, "copied": len(send), "skipped": skipped, "manifest": manifest}
+
+
+def _record_publish(manifest: dict, publisher: str, nas_display: str) -> tuple[bool, bool]:
+    """Zapisz slad publikacji w Postgresie i w lokalnym stanie cache."""
+    kv_ok = False
+    table_ok = False
+    try:
+        import pg_db
+
+        kv_ok = bool(
+            pg_db.upsert_thumb_cache_manifest(
+                {
+                    "version": 1,
+                    "nas_url": nas_cache_url() + "/",
+                    "nas_path": nas_display,
+                    "thumb_count": manifest["thumb_count"],
+                    "avif": manifest.get("avif"),
+                    "publisher": publisher,
+                    "published_at": manifest["generated_at"],
+                    "rel_count": manifest.get("rel_count") or 0,
+                },
+                updated_by=publisher,
+            )
+        )
+        table_ok = bool(pg_db.upsert_thumb_cache_rows(manifest.get("entries") or [], publisher=publisher))
+    except Exception:  # noqa: BLE001
+        kv_ok = False
+        table_ok = False
+    persist_cache_state(source="local", synced=True)
+    return kv_ok, table_ok
+
+
 def publish_new_thumbs(*, publisher: str = "") -> dict:
-    """Copy local thumbs missing on NAS. Queue when W: is absent."""
+    """Copy local thumbs missing on NAS. Use SSH when W: is absent."""
     with _publish_lock:
         return _publish_new_thumbs_locked(publisher=publisher or _publisher_name())
 
@@ -1973,12 +2074,29 @@ def _publish_new_thumbs_locked(*, publisher: str) -> dict:
     skipped = 0
     queued: list[dict] = []
     if queued_only:
+        res = _publish_via_ssh(files, publisher)
+        if res.get("ok"):
+            _write_json_atomic(PUBLISH_QUEUE_FILE, {"pending": [], "updated_at": _utc_iso()})
+            manifest = res.get("manifest") or build_local_manifest(publisher=publisher)
+            kv_ok, table_ok = _record_publish(manifest, publisher, nas_ssh_dest())
+            return {
+                "ok": True,
+                "transport": "ssh",
+                "copied": int(res.get("copied") or 0),
+                "skipped": int(res.get("skipped") or 0),
+                "queued": 0,
+                "nas_path": nas_ssh_dest(),
+                "publisher": publisher,
+                "kv": kv_ok,
+                "table": table_ok,
+                "thumb_count": manifest["thumb_count"],
+            }
         for p in files:
             queued.append({"digest": p.stem, "ext": p.suffix.lstrip("."), "src": str(p)})
         _queue_publish(queued)
         return {
             "ok": False,
-            "error": "nas_not_writable",
+            "error": str(res.get("error") or "nas_not_writable"),
             "queued": len(queued),
             "nas_path": str(nas_root),
             "copied": 0,
@@ -2039,33 +2157,10 @@ def _publish_new_thumbs_locked(*, publisher: str) -> dict:
         shutil.copy2(_rel_index_path(), nas_root / "thumb-rel-index.json")
     except OSError:
         pass
-    kv_ok = False
-    table_ok = False
-    try:
-        import pg_db
-
-        kv_ok = bool(
-            pg_db.upsert_thumb_cache_manifest(
-                {
-                    "version": 1,
-                    "nas_url": nas_cache_url() + "/",
-                    "nas_path": str(nas_root).replace("/", "\\"),
-                    "thumb_count": manifest["thumb_count"],
-                    "avif": manifest.get("avif"),
-                    "publisher": publisher,
-                    "published_at": manifest["generated_at"],
-                    "rel_count": manifest.get("rel_count") or 0,
-                },
-                updated_by=publisher,
-            )
-        )
-        table_ok = bool(pg_db.upsert_thumb_cache_rows(manifest.get("entries") or [], publisher=publisher))
-    except Exception:
-        kv_ok = False
-        table_ok = False
-    persist_cache_state(source="local", synced=True)
+    kv_ok, table_ok = _record_publish(manifest, publisher, str(nas_root).replace("/", "\\"))
     return {
         "ok": True,
+        "transport": "drive",
         "copied": copied,
         "skipped": skipped,
         "queued": len(queued),

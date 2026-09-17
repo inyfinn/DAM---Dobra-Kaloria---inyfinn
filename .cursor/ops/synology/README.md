@@ -40,11 +40,17 @@ The indexer writes AVIFs into `bin/PAMIEC-PODRECZNA` as files are added. That fo
 
 | | |
 |--|--|
-| Script | `.cursor/ops/synology/sync-pamiec-podreczna.ps1` (calls `sync-pamiec-podreczna.py`) |
+| Script | `.cursor/ops/synology/sync-pamiec-podreczna.ps1` (calls `sync-pamiec-podreczna.py`) — **manual / recovery use only** |
 | How | SSH host `syno-ddns`. Lists NAS files (`size` + relative path), sends **only new or size-changed** files as one tar stream. No delete of extras on the NAS. Local cache is read-only. |
 | Incremental | Yes. A newly indexed AVIF is one extra file on the next run, not a 98 MB re-upload. Same at 20k / 40k files. |
-| Trigger | Windows Task Scheduler **`DAM-PAMIEC-PODRECZNA-sync`** (created 2026-09-15, State Ready). Daily from 00:20, repeat every 4 hours. Runs only while this PC is on and can SSH to the NAS. **Not** a DSM task. |
-| Log | `%USERPROFILE%\.dam-ops\pamiec-podreczna-sync.log` |
+| Trigger | **The app itself.** The bridge publishes after every index run (`dam_thumb_cache.start_publish_after_index`). There is no scheduled task. |
+| Log | `%USERPROFILE%\.dam-ops\pamiec-podreczna-sync.log` (only the manual script writes here) |
+
+### Why the scheduled task is gone (2026-09-17)
+
+`publish_new_thumbs()` used to write **only** to the mapped drive `W:` (RaiDrive). `W:` is not mapped on this workstation, so every run took the `nas_not_writable` branch and queued instead of sending — `cache-publish-queue.json` had grown to **12 946 pending entries** and had never delivered a single file. The real upload was being done behind the app's back by a Windows Scheduled Task (`DAM-PAMIEC-PODRECZNA-sync`) that ran `pythonw.exe` against **this dev repo's** copy of `sync-pamiec-podreczna.py`. So the NAS cache looked healthy while the application's own publishing path was dead — and on any machine without that task (i.e. every fresh install) nothing would ever be published.
+
+Fixed by giving `publish_new_thumbs()` an SSH fallback (`_publish_via_ssh`) that reuses the same transport the **download** side already used. Verified end to end: a probe file was published with `transport: ssh`, `copied: 1`, confirmed present on the NAS, then removed from both sides. The queue is now empty and the scheduled task was unregistered.
 
 ```powershell
 powershell -File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\.cursor\ops\synology\sync-pamiec-podreczna.ps1"
@@ -77,7 +83,7 @@ schtasks /Create /TN "DAM-PAMIEC-PODRECZNA-sync" /SC DAILY /ST 00:20 /RI 240 /DU
 | `.cursor/ops/synology/sync-pamiec-podreczna.py` | Incremental cache copy (size-compare, tar over SSH) |
 | `.cursor/ops/synology/sync-pamiec-podreczna.ps1` | PowerShell wrapper for the cache copy |
 | (removed 2026-09-16) `sync-pamiec-podreczna-hidden.vbs` / `.cmd` | Bitdefender flagged the hidden VBS → PowerShell `-ExecutionPolicy Bypass` chain as Heur.BZC.PZQ.Boxter. The task calls `pythonw.exe` directly: no console, no script-host chain. |
-| `.cursor/ops/synology/DAM-PAMIEC-PODRECZNA-sync.xml` | Task definition used to register the job |
+| (removed 2026-09-17) `DAM-PAMIEC-PODRECZNA-sync.xml` | Definition of the retired scheduled task. Do not recreate it: the bridge publishes over SSH by itself, and an external task only hides a broken app path. In Git history if ever needed. |
 | `.cursor/ops/synology/_count-nas-cache.py` | Read-only NAS file/byte count |
 | `/var/services/homes/Inyfinn/bin/dam-repo-pull.sh` | Copy the DSM task actually runs (works before this folder is on `main`) |
 | `/var/services/homes/Inyfinn/logs/panel-dam-git-pull.log` | Git-pull run log |
