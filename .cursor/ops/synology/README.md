@@ -53,8 +53,10 @@ powershell -File "D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pr
 Optional Windows Task Scheduler (when this PC is on), every 4 hours, same clock as the git pull:
 
 ```
-schtasks /Create /TN "DAM-PAMIEC-PODRECZNA-sync" /SC DAILY /ST 00:20 /RI 240 /DU 24:00 /RL LIMITED /F /TR "pythonw.exe \"D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\.cursor\ops\synology\sync-pamiec-podreczna.py\" --ssh-host syno-ddns"
+schtasks /Create /TN "DAM-PAMIEC-PODRECZNA-sync" /SC DAILY /ST 00:20 /RI 240 /DU 24:00 /RL LIMITED /F /TR "C:\Users\krzysztof.wieczorek\AppData\Local\Programs\Python\Python312\pythonw.exe \"D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\.cursor\ops\synology\sync-pamiec-podreczna.py\" --ssh-host syno-ddns"
 ```
+
+**Use the full path to `pythonw.exe`, never the bare name.** Found 2026-09-17: the live task had been left pointing at the deleted `sync-pamiec-podreczna-hidden.vbs` (WSH popup on this PC), so it was repointed at `pythonw.exe` by bare name via `Set-ScheduledTask` — that registered fine and looked correct in `Get-ScheduledTask`, but every actual run failed with `LastTaskResult 0x80070002` (file not found), because Task Scheduler's process launch does not reliably resolve a bare exe name against the interactive user's `PATH` the way a shell does. Resolving it to the absolute path (`(Get-Command pythonw.exe).Source`) fixed it immediately — confirmed by `LastTaskResult 0`. If this task (or `run-dam-bg-job-hidden.vbs`'s successor) is ever recreated, always use the full path.
 
 `Panel-DAM/data/*.json` on the NAS is leftover from the old web-only mirror, not the thumb cache. It stays **inside** `Panel-DAM`. If that folder exists without `.git`, the pull script **inits in place**. It must never create a sibling (`*.pre-git*`, `*.bak`, timestamped sidecars). There is exactly one panel folder: `/volume1/web/Panel-DAM`.
 
