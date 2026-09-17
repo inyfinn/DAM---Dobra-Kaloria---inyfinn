@@ -149,7 +149,7 @@ $binDst = Join-Path $stageRoot "bin"
 New-Item -ItemType Directory -Force -Path $binDst | Out-Null
 
 $xdCommon = @(
-  "__pycache__", ".venv", "node_modules", "webview2-profile", "logs", "_qa",
+  "__pycache__", ".pytest_cache", ".ocr-thumb-cache", ".venv", "node_modules", "webview2-profile", "logs", "_qa",
   "vendor", "framework", "bootstrap", "thumbs", "_invoice_mail_stage", "tooling", "data"
 )
 $xfCommon = @(
@@ -285,7 +285,14 @@ if (Test-Path -LiteralPath $readmeDb) {
   Copy-Item -LiteralPath $readmeDb -Destination (Join-Path $binDst "DATABASE\README.md") -Force
 }
 if (-not (Test-Path -LiteralPath (Join-Path $webDataDst "branding-index.json"))) {
-  Set-Content -Path (Join-Path $webDataDst "branding-index.json") -Value '{"version":1,"assets":[],"note":"slim-only-installer-use-branding-grid-head"}' -Encoding UTF8
+  # -Encoding UTF8 w Windows PowerShell 5.1 dopisuje BOM: ijson (build-branding-grid-index.py)
+  # padal na tym IncompleteJSONError zamiast zwrocic pusta liste - most nigdy nie odzyskiwal
+  # lokalnych skojarzen po instalacji, bo auto-naprawa siatki przy starcie zawsze konczyla sie rc=1.
+  [IO.File]::WriteAllText(
+    (Join-Path $webDataDst "branding-index.json"),
+    '{"version":1,"assets":[],"note":"slim-only-installer-use-branding-grid-head"}',
+    (New-Object Text.UTF8Encoding $false)
+  )
 }
 
 # Obrazy logowania + ikony — bez tego WebView pokazuje broken image.

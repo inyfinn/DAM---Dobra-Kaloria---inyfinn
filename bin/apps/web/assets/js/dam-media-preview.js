@@ -4204,6 +4204,29 @@
   }
   ensureGlobalMarketingIdCopy();
 
+  /** Lista produktow tuz po zapisie: znane rekordy + nazwy z file-index, miniatury pozniej. */
+  function provisionalLinkedProducts(productIds, previous) {
+    var known = {};
+    (previous || []).forEach(function (p) {
+      if (p && p.id) known[p.id] = p;
+    });
+    var catalog = {};
+    var fi = window._DAM_FILE_INDEX;
+    ((fi && fi.products) || []).forEach(function (p) {
+      if (p && p.id) catalog[p.id] = p;
+    });
+    return (productIds || []).map(function (id) {
+      if (known[id]) return known[id];
+      var p = catalog[id] || {};
+      return {
+        id: id,
+        display_name: p.display_name || p.name || id,
+        path: p.path || "",
+        thumb_url: "",
+      };
+    });
+  }
+
   function seedLinkedProducts(asset, groupContext) {
     var linked = (groupContext && groupContext.linked_products) || asset.linked_products || [];
     if (linked && linked.length) return linked.slice();
@@ -5669,9 +5692,16 @@
                 renderMeta(asset);
               },
               onSaved: function (productIds, variantIds) {
-                if (productIds && productIds.length) {
+                if (Array.isArray(productIds)) {
+                  // Od razu, zanim dociagna sie miniatury - inaczej onRefresh rysuje stara liste.
+                  var provisional = provisionalLinkedProducts(
+                    productIds,
+                    groupContext.linked_products || a.linked_products
+                  );
                   a.linked_product_ids = productIds.slice();
                   a.folder_linked_product_ids = productIds.slice();
+                  groupContext.linked_products = provisional;
+                  a.linked_products = provisional;
                 }
                 if (variantIds && variantIds.length) {
                   a.linked_variant_ids = variantIds.slice();

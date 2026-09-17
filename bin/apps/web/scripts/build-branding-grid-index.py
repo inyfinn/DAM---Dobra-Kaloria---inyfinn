@@ -217,6 +217,12 @@ def main() -> int:
     t0 = time.time()
     assets: list[dict] = []
     with src.open("rb") as f:
+        # Stub branding-index.json (instalator, brak dysku Marketing) bywa zapisany
+        # PowerShell "-Encoding UTF8", ktory dopisuje BOM - ijson pada na tym z
+        # IncompleteJSONError zanim zdazy zwrocic pusta liste, wiec strip trzeba
+        # zrobic tutaj, nie liczyc na pusty wynik nizej.
+        if f.peek(3)[:3] == b"\xef\xbb\xbf":
+            f.read(3)
         for a in ijson.items(f, "assets.item"):
             if not isinstance(a, dict):
                 continue

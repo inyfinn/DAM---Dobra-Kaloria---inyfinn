@@ -1,6 +1,6 @@
 ﻿; DAM Windows installer - pelny kreator (licencja, sciezka, aktualizacja)
 #ifndef MyAppVersion
-  #define MyAppVersion "2.0.5"
+  #define MyAppVersion "2.0.7"
 #endif
 #ifndef StageDir
   #define StageDir "..\dist\staging\DAM-install"
@@ -116,7 +116,12 @@ Type: filesandordirs; Name: "{app}\bin\apps\desktop\tests"
 [Files]
 Source: "{#StageDir}\DAM.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#StageDir}\README.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#StageDir}\bin\*"; DestDir: "{app}\bin"; Flags: ignoreversion recursesubdirs createallsubdirs
+; branding-index.json wykluczony z gornej linii (Excludes) - patrz oddzielny wpis nizej.
+; Bez tego kazda aktualizacja kasowala uzytkownikowi juz-zeskanowany plik (9000+ pozycji,
+; 15-30 min skanu dysku Marketing) z powrotem do zaslepki instalatora (assets:[]),
+; wymuszajac pelny reskan i zerujac skojarzenia widoczne w Brandingu do czasu jego konca.
+Source: "{#StageDir}\bin\*"; DestDir: "{app}\bin"; Excludes: "apps\web\data\branding-index.json"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#StageDir}\bin\apps\web\data\branding-index.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
 Source: "{#GitRoot}\bin\installer\redist\vc_redist.x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
 Source: "{#GitRoot}\bin\installer\redist\MicrosoftEdgeWebview2Setup.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
 Source: "{#GitRoot}\bin\installer\inyfinn-dam-codesign.cer"; DestDir: "{app}\bin\installer"; Flags: ignoreversion skipifsourcedoesntexist

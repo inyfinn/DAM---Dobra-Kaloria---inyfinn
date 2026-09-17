@@ -10334,6 +10334,12 @@ def main() -> None:
                 )
 
             branding_asset_routes.configure(assoc_decide=_assoc_decide)
+        # Aktualizacja instalatora podmienia branding-grid-index.json na wersje z maszyny
+        # budujacej (starsza/inna baza) i przykrywa lokalne skojarzenia uzytkownika -
+        # wygladaja jakby zniknely, chociaz w jego wlasnym dam-local.sqlite sa nietkniete.
+        # Jedna przebudowa slim-grid z lokalnej bazy przy kazdym starcie naprawia to same,
+        # bez czekania az ktos cokolwiek recznie edytuje.
+        _schedule_slim_grid_publish(delay_sec=10.0)
     except Exception as exc:
         print("assoc_repo wire:", exc)
     try:

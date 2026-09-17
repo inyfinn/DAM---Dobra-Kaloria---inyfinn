@@ -6091,6 +6091,13 @@
         if (sel) sel.value = wantLang;
       }
       applyFilters();
+      if (wantProduct) {
+        // Wejscie z "skojarzony produkt" (Branding/podglad): od razu karta produktu, nie sama lista.
+        setTimeout(function () {
+          var group = groupByProduct(filtered).find(function (g) { return g.pid === wantProduct; });
+          if (group) openProductModal(group);
+        }, 0);
+      }
       if (window.DamShell && typeof window.DamShell.setTrailLeaf === "function") {
         window.DamShell.setTrailLeaf("Wizualizacje");
       }

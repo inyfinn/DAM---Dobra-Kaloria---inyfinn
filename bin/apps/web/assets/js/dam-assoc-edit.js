@@ -6920,45 +6920,19 @@
       });
     });
 
-    assocEl.querySelectorAll("[data-assoc-name]").forEach(function (btn) {
+    // Zwykly klik (nawigacja) obsluguje delegowany listener - patrz installAssocProductNav.
+    // Tu tylko Shift+klik = edycja skojarzen.
+    assocEl.querySelectorAll("[data-assoc-name], [data-assoc-thumb-go]").forEach(function (btn) {
       btn.addEventListener("click", function (e) {
+        if (!e.shiftKey) return;
         e.preventDefault();
         e.stopPropagation();
-        if (e.shiftKey) {
-          if (!canEditAssoc()) {
-            toast("Włącz tryb admina, aby edytować skojarzenia.");
-            return;
-          }
-          var col = btn.closest(".dam-media-preview__assoc-col");
-          if (col) openEditPicker(col, "product", ctx);
+        if (!canEditAssoc()) {
+          toast("Włącz tryb admina, aby edytować skojarzenia.");
           return;
         }
-        var pid = btn.getAttribute("data-product-id") || "";
-        ensureFileIndex().then(function (fi) {
-          var p = (fi.products || []).find(function (x) {
-            return x.id === pid;
-          });
-          openActionMenu(btn, p || { id: pid, display_name: btn.textContent.trim() });
-        });
-      });
-    });
-
-    assocEl.querySelectorAll("[data-assoc-thumb-go]").forEach(function (btn) {
-      btn.addEventListener("click", function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.shiftKey) {
-          if (!canEditAssoc()) {
-            toast("Włącz tryb admina, aby edytować skojarzenia.");
-            return;
-          }
-          var col = btn.closest(".dam-media-preview__assoc-col");
-          if (col) openEditPicker(col, "product", ctx);
-          return;
-        }
-        var pid = btn.getAttribute("data-product-id") || "";
-        if (pid && navigateAssocProduct(pid)) return;
-        if (pid) location.href = "explorer.html?product=" + encodeURIComponent(pid);
+        var col = btn.closest(".dam-media-preview__assoc-col");
+        if (col) openEditPicker(col, "product", ctx);
       });
     });
 
@@ -6985,9 +6959,55 @@
     pid = String(pid || "").trim();
     if (!pid) return false;
     if (global.DamViz && typeof global.DamViz.openByProductId === "function") {
-      return !!global.DamViz.openByProductId(pid);
+      if (global.DamViz.openByProductId(pid)) return true;
     }
-    return false;
+    // Poza Wizualizacjami (Branding, Eksplorer) albo produkt odfiltrowany: karta w Wizualizacjach.
+    location.href = "visualizations.html?product=" + encodeURIComponent(pid);
+    return true;
+  }
+
+  /**
+   * Klik w zdjecie/nazwe skojarzonego produktu - delegowany na dokument, bo panel
+   * "Skojarzone produkty" jest przerysowywany po dociagnieciu miniatur (listenery
+   * przypiete do starych wezlow gina). Prawy przycisk = menu (Przejdz/Eksplorator/link).
+   */
+  function installAssocProductNav() {
+    if (global.__damAssocProductNavInstalled) return;
+    global.__damAssocProductNavInstalled = true;
+    var SEL = "[data-assoc-thumb-go], [data-assoc-name]";
+    document.addEventListener(
+      "click",
+      function (e) {
+        if (e.shiftKey || e.button !== 0) return;
+        var btn = e.target && e.target.closest ? e.target.closest(SEL) : null;
+        if (!btn || btn.closest(".is-editing")) return;
+        var pid = btn.getAttribute("data-product-id") || "";
+        if (!pid) return;
+        e.preventDefault();
+        e.stopPropagation();
+        closeActionMenu();
+        closePicker();
+        navigateAssocProduct(pid);
+      },
+      true
+    );
+    document.addEventListener(
+      "contextmenu",
+      function (e) {
+        var btn = e.target && e.target.closest ? e.target.closest(SEL) : null;
+        if (!btn) return;
+        var pid = btn.getAttribute("data-product-id") || "";
+        if (!pid) return;
+        e.preventDefault();
+        ensureFileIndex().then(function (fi) {
+          var p = (fi.products || []).find(function (x) {
+            return x.id === pid;
+          });
+          openActionMenu(btn, p || { id: pid, display_name: btn.textContent.trim() });
+        });
+      },
+      true
+    );
   }
 
   function dbSyncSince() {
@@ -7092,6 +7112,8 @@
   }
 
   loadAssocOverrides();
+
+  installAssocProductNav();
 
   global.DamAssocEdit = {
     canEdit: canEditAssoc,
