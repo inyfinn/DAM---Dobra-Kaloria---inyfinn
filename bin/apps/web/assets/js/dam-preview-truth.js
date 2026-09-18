@@ -229,6 +229,62 @@
       });
   }
 
+  /*
+   * Most po 2,5 s oddaje 504 (thumb_timeout), ale dalej liczy miniature w tle i zapisuje
+   * ja w PAMIEC-PODRECZNA. Plik JEST - podglad jeszcze nie. Zamiast od razu
+   * "Podglad niedostepny" (a potem kilka recznych przeladowan okna) ponawiamy sami.
+   */
+  var RETRY_DELAYS_MS = [2500, 6000, 12000, 25000, 45000];
+  var RETRY_CSS_ID = "damThumbRetryCss";
+
+  function ensureRetryCss() {
+    if (document.getElementById(RETRY_CSS_ID)) return;
+    var st = document.createElement("style");
+    st.id = RETRY_CSS_ID;
+    st.textContent =
+      ".dam-thumb-wait{background:linear-gradient(100deg,var(--dam-surface-muted,#f1f3f2) 30%,var(--dam-surface,#fff) 50%,var(--dam-surface-muted,#f1f3f2) 70%);" +
+      "background-size:300% 100%;animation:damThumbWait 1.6s ease-in-out infinite;}" +
+      "@keyframes damThumbWait{0%{background-position:100% 0}100%{background-position:0 0}}" +
+      "@media (prefers-reduced-motion: reduce){.dam-thumb-wait{animation:none}}";
+    (document.head || document.documentElement).appendChild(st);
+  }
+
+  function waitHost(img) {
+    return (img.closest && img.closest(".dam-viz-thumb, .dam-branding-thumb")) || img.parentNode;
+  }
+
+  /**
+   * Zaplanuj ponowne wczytanie img z url po chwili. Zwraca false, gdy limit prob wyczerpany
+   * (wtedy wolajacy pokazuje uczciwy placeholder).
+   */
+  function retryThumbLater(img, url) {
+    if (!img || !url) return false;
+    var n = Number(img.getAttribute("data-thumb-retry") || "0");
+    if (n >= RETRY_DELAYS_MS.length) return false;
+    img.setAttribute("data-thumb-retry", String(n + 1));
+    ensureRetryCss();
+    var host = waitHost(img);
+    if (host && host.classList) host.classList.add("dam-thumb-wait");
+    if (img.getAttribute("data-thumb-retry-bound") !== "1") {
+      img.setAttribute("data-thumb-retry-bound", "1");
+      img.addEventListener("load", function () {
+        var h = waitHost(img);
+        if (h && h.classList) h.classList.remove("dam-thumb-wait");
+      });
+    }
+    setTimeout(function () {
+      if (!img.isConnected) return;
+      if (img.getAttribute("data-dam-original-ready") === "1") return;
+      img.src = url + (url.indexOf("?") >= 0 ? "&" : "?") + "_r=" + (n + 1);
+    }, RETRY_DELAYS_MS[n]);
+    return true;
+  }
+
+  function stopThumbWait(img) {
+    var host = img && waitHost(img);
+    if (host && host.classList) host.classList.remove("dam-thumb-wait");
+  }
+
   function rootUnsetCtaHref() {
     return CTA_DISK;
   }
@@ -257,6 +313,8 @@
     warmThumbs: warmThumbs,
     rootUnsetCtaHref: rootUnsetCtaHref,
     applyFallbackEl: applyFallbackEl,
+    retryThumbLater: retryThumbLater,
+    stopThumbWait: stopThumbWait,
   };
 
   if (document.readyState === "loading") {

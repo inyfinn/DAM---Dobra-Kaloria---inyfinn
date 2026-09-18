@@ -14,30 +14,48 @@
   max-width: 1400px;
 }
 
-/* Title/breadcrumb own row. Pills never share the H1 line. Hero stays below. */
+/* Title/breadcrumb own row. Pills never share the H1 line. Hero stays below.
+   P6 fix: z-index 3 (position:relative) capped the whole header - including
+   any popup rendered inside it - below other page content in the stacking
+   order. Raised to match the shell's global header z-index (200) so the
+   user-menu popup is never trapped underneath settings widgets.
+   K11 fix: flex-direction:column + width:100% used to force the action row
+   (search / bell / avatar icons) onto its own line even on desktop, unlike
+   every other page (which only stacks under ~991px, see dam-app.css). Now
+   settings only stacks below that same breakpoint. */
 .dam-settings-page > .geex-content__header {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  align-items: stretch;
   gap: 8px;
   min-height: 0;
   margin-bottom: 12px;
   position: relative;
-  z-index: 3;
+  z-index: 200;
   overflow: visible;
+}
+
+@media (max-width: 991.98px) {
+  .dam-settings-page > .geex-content__header {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+  }
 }
 
 .dam-settings-page > .geex-content__header .geex-content__header__content {
   flex: 0 0 auto;
-  width: 100%;
-  max-width: 100%;
   min-width: 0;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px 14px;
+}
+
+@media (max-width: 991.98px) {
+  .dam-settings-page > .geex-content__header .geex-content__header__content {
+    width: 100%;
+    max-width: 100%;
+  }
 }
 
 .dam-settings-page > .geex-content__header .geex-content__header__title {
@@ -63,13 +81,18 @@
 
 .dam-settings-page > .geex-content__header .geex-content__header__action {
   flex: 0 0 auto;
-  width: 100%;
   max-width: 100%;
   justify-content: flex-start;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+}
+
+@media (max-width: 991.98px) {
+  .dam-settings-page > .geex-content__header .geex-content__header__action {
+    width: 100%;
+  }
 }
 
 .dam-settings-page > .geex-content__header .geex-content__header__action::-webkit-scrollbar {

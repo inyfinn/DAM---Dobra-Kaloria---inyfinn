@@ -1712,8 +1712,19 @@
         });
       }
     } catch (e) {
-      if (titleEl) titleEl.textContent = "Błąd ladowania projektu";
+      if (titleEl) titleEl.textContent = "Błąd ładowania projektu";
       if (subEl) subEl.textContent = e.message;
+      /* bez wiecznego "Ładowanie…" w sekcjach, gdy projekt sie nie wczytal */
+      document.querySelectorAll(".dam-catalog-marketing__empty").forEach(function (el) {
+        if (/adowanie/i.test(el.textContent || "")) el.textContent = "Brak danych - projekt nie został wczytany.";
+      });
+      var rowsEl = document.getElementById("damChecklistRows");
+      if (rowsEl && !rowsEl.children.length) {
+        var none = document.createElement("p");
+        none.className = "dam-catalog-marketing__empty";
+        none.textContent = "Brak danych - projekt nie został wczytany.";
+        rowsEl.appendChild(none);
+      }
     }
   }
 

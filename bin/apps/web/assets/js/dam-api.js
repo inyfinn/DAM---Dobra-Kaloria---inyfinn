@@ -541,7 +541,8 @@
         if (String(rows[i].product_index) === key) return rows[i];
         if (String(rows[i].seq) === key) return rows[i];
       }
-      return rows[0] || null;
+      /* Bez zgadywania: rows[0] pokazywal cudzy projekt pod nieznanym id. */
+      return null;
     });
   }
 
@@ -715,13 +716,15 @@
       data = null;
     }
     if (r.status === 401) {
-      // Sesja urządzeńia: nie kasuj tokenu automatycznie przy chwilowym 401 API Laravel.
+      // Sesja urządzenia: nie kasuj tokenu automatycznie przy chwilowym 401 API Laravel.
       // Tylko przekieruj gdy naprawde brak lokalnej sesji.
       if (!token()) location.href = "signin.html";
       throw new Error("Unauthenticated");
     }
     if (!r.ok) {
-      throw new Error((data && data.message) || "HTTP " + r.status);
+      var httpErr = new Error((data && data.message) || "HTTP " + r.status);
+      httpErr.status = r.status;
+      throw httpErr;
     }
     return data;
   }
@@ -731,6 +734,13 @@
       e instanceof TypeError ||
       (e && (e.name === "AbortError" || /fetch|network|abort/i.test(String(e.message))))
     );
+  }
+
+  /* Most lokalny (:8766) nie ma czesci tras Laravela (np. /api/projects/<id>).
+     404/501 = "brak API" jak brak sieci: dane bierzemy z lokalnego indeksu. */
+  function isMissingRouteError(e) {
+    var st = e && Number(e.status);
+    return st === 404 || st === 501;
   }
 
   window.DamApi = {
@@ -814,18 +824,18 @@
           return bdata;
         }
         if (bdata && bdata.error === "invalid_credentials") {
-          throw new Error("Nieprawidlowy email lub haslo.");
+          throw new Error("Nieprawidłowy email lub hasło.");
         }
         if (bdata && bdata.error === "machine_id_required") {
-          throw new Error("Brak ID maszyny - uruchom DAM przez skrot desktop.");
+          throw new Error("Brak ID maszyny - uruchom DAM przez skrót na pulpicie.");
         }
         if (bdata && bdata.error === "password_change_required") {
-          var pcr = new Error("To haslo jest za slabe. Ustaw nowe haslo, zeby sie zalogowac.");
+          var pcr = new Error("To hasło jest za słabe. Ustaw nowe hasło, żeby się zalogować.");
           pcr.code = "password_change_required";
           throw pcr;
         }
         if (bdata && bdata.error === "too_many_attempts") {
-          var tma = new Error("Za duzo nieudanych prob. Odczekaj 5 minut.");
+          var tma = new Error("Za dużo nieudanych prób. Odczekaj 5 minut.");
           tma.code = "too_many_attempts";
           throw tma;
         }
@@ -833,7 +843,7 @@
           throw new Error(String(bdata.error));
         }
       } catch (e) {
-        if (e && (e.code || (e.message && /Nieprawidlowy|Brak ID/.test(e.message)))) throw e;
+        if (e && (e.code || (e.message && /Nieprawid(ł|l)owy|Brak ID/.test(e.message)))) throw e;
         bridgeErr = e;
       }
       if (window.DAM_LARAVEL_AUTH) {
@@ -851,7 +861,7 @@
         }
       }
       throw new Error(
-        "Most DAM niedostepny (port 8766). Uruchom URUCHOM-DAM.bat / skrot pulpitu." +
+        "Most DAM niedostępny (port 8766). Uruchom URUCHOM-DAM.bat / skrót na pulpicie." +
           (bridgeErr && bridgeErr.message ? " (" + bridgeErr.message + ")" : "")
       );
     },
@@ -878,17 +888,17 @@
       var data = await r.json().catch(function () { return null; });
       if (!data || !data.ok) {
         var err = (data && data.error) || "register_failed";
-        if (err === "email_taken") throw new Error("Konto z tym emailem juz istnieje.");
-        if (err === "password_too_short") throw new Error("Haslo musi miec co najmniej 10 znakow.");
-        if (err === "password_too_weak") throw new Error("To haslo jest zbyt oczywiste. Wybierz inne.");
+        if (err === "email_taken") throw new Error("Konto z tym emailem już istnieje.");
+        if (err === "password_too_short") throw new Error("Hasło musi mieć co najmniej 10 znaków.");
+        if (err === "password_too_weak") throw new Error("To hasło jest zbyt oczywiste. Wybierz inne.");
         if (err === "invalid_email") throw new Error("Podaj poprawny email.");
         if (err === "admin_required") {
-          throw new Error((data && data.hint) || "Nowe konta zaklada tylko administrator.");
+          throw new Error((data && data.hint) || "Nowe konta zakłada tylko administrator.");
         }
         if (err === "database_unavailable") {
-          throw new Error("Brak polaczenia z baza. Sprawdz most DAM i siec do Synology.");
+          throw new Error("Brak połączenia z bazą. Sprawdź most DAM i sieć do Synology.");
         }
-        throw new Error((data && data.hint) || "Nie udalo sie utworzyc konta.");
+        throw new Error((data && data.hint) || "Nie udało się utworzyć konta.");
       }
       if (t) return data;
       return this.login(email, password);
@@ -935,12 +945,12 @@
       var data = await r.json().catch(function () { return null; });
       if (data && data.ok) return data;
       var err = (data && data.error) || "change_failed";
-      if (err === "password_too_short") throw new Error("Nowe haslo musi miec co najmniej 10 znakow.");
-      if (err === "password_too_weak") throw new Error("To haslo jest zbyt oczywiste. Wybierz inne.");
-      if (err === "password_unchanged") throw new Error("Nowe haslo musi byc inne niz stare.");
-      if (err === "invalid_credentials") throw new Error("Stare haslo jest nieprawidlowe.");
-      if (err === "too_many_attempts") throw new Error("Za duzo nieudanych prob. Odczekaj 5 minut.");
-      throw new Error("Nie udalo sie zmienic hasla.");
+      if (err === "password_too_short") throw new Error("Nowe hasło musi mieć co najmniej 10 znaków.");
+      if (err === "password_too_weak") throw new Error("To hasło jest zbyt oczywiste. Wybierz inne.");
+      if (err === "password_unchanged") throw new Error("Nowe hasło musi być inne niż stare.");
+      if (err === "invalid_credentials") throw new Error("Stare hasło jest nieprawidłowe.");
+      if (err === "too_many_attempts") throw new Error("Za dużo nieudanych prób. Odczekaj 5 minut.");
+      throw new Error("Nie udało się zmienić hasła.");
     },
     async rehydrate() {
       var ident = await fetchIdentity();
@@ -1098,12 +1108,21 @@
     },
     async project(id) {
       try {
-        return await parse(await apiFetch(API + "/projects/" + id, { headers: authHeaders() }));
+        return await parse(
+          await apiFetch(API + "/projects/" + encodeURIComponent(id), { headers: authHeaders() })
+        );
       } catch (e) {
-        if (!isNetworkError(e)) throw e;
-        this.offline = true;
+        var offline = isNetworkError(e);
+        if (!offline && !isMissingRouteError(e)) throw e;
+        if (offline) this.offline = true;
         var row = await localProjectById(id);
-        if (!row) throw new Error("Brak projektu w file-index: " + id);
+        if (!row) {
+          var nf = new Error(
+            "Nie znaleziono tego projektu w lokalnym indeksie. Wróć do listy projektów i odśwież indeks dysku."
+          );
+          nf.code = "project_not_found";
+          throw nf;
+        }
         return { data: row, source: "file-index" };
       }
     },
@@ -1171,7 +1190,7 @@
         if (!isNetworkError(e)) throw e;
         this.offline = true;
         offlineQueuePush({ action: "notify_integrations", variant: variantId });
-        return { message: "Zakolejkowano powiadomienie (Asana + Teams) - wysylka po polaczeniu z API", mode: "offline" };
+        return { message: "Zakolejkowano powiadomienie (Asana + Teams) - wysyłka po połączeniu z API", mode: "offline" };
       }
     },
     async authSettings() {

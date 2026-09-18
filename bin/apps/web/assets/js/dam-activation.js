@@ -77,7 +77,7 @@
     var btn = el(
       "button",
       "display:block;width:100%;padding:12px 16px;border:0;border-radius:10px;cursor:pointer;" +
-        "background:var(--dam-accent,#2f6fed);color:#fff;font:600 15px/1.2 inherit;",
+        "background:var(--dam-primary,#0a7b3e);color:#fff;font:600 15px/1.2 inherit;",
       "Aktywuj"
     );
     btn.type = "submit";

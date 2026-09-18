@@ -225,24 +225,127 @@ def _sqlite_path() -> Path | None:
     return Path(p) if p else None
 
 
-def _assets_by_id() -> dict[str, dict]:
-    cache = _CTX.setdefault("_by_id_cache", {"mtime": -1.0, "map": {}})
-    path = _branding_index_file()
+def _asset_index_candidates() -> list[Path]:
+    """Gruby indeks, potem siatka (instalator wiezie atrape branding-index.json)."""
+    out = [_branding_index_file()]
     try:
-        mtime = path.stat().st_mtime
-    except OSError:
-        return {}
-    if cache["mtime"] == mtime and cache["map"]:
-        return cache["map"]
-    data = _load_json(path, None)
-    m: dict[str, dict] = {}
-    if isinstance(data, dict):
-        for a in data.get("assets") or []:
-            if isinstance(a, dict) and a.get("id"):
-                m[str(a["id"])] = a
-    cache["mtime"] = mtime
-    cache["map"] = m
-    return m
+        out.append(_ensure_grid_index())
+    except Exception:  # noqa: BLE001
+        out.append(_grid_index_file())
+    out.append(_web_root() / "data" / "branding-grid-head.json")
+    return out
+
+
+def _assets_by_id() -> dict[str, dict]:
+    """id -> asset. Pusty/atrapa branding-index.json => branding-grid-index/head.json."""
+    cache = _CTX.setdefault("_by_id_cache", {"key": None, "map": {}})
+    for path in _asset_index_candidates():
+        try:
+            mtime = path.stat().st_mtime
+        except OSError:
+            continue
+        key = (str(path), mtime)
+        if cache.get("key") == key and cache.get("map"):
+            return cache["map"]
+        data = _load_json(path, None)
+        m: dict[str, dict] = {}
+        if isinstance(data, dict):
+            for a in data.get("assets") or []:
+                if isinstance(a, dict) and a.get("id"):
+                    m[str(a["id"])] = a
+        if m:
+            cache["key"] = key
+            cache["map"] = m
+            return m
+    return {}
+
+
+def _with_file_links(assets: list[dict]) -> list[dict]:
+    """Nadpisz skojarzone produkty stanem per plik (SQLite + mirror); kopie, nie cache."""
+    ids = [str(a.get("id")) for a in assets if isinstance(a, dict) and a.get("id")]
+    if not ids:
+        return assets
+    try:
+        links = fetch_asset_links(
+            ids,
+            sqlite_path=_sqlite_path(),
+            overrides=_load_json(_assoc_overrides_file(), {}),
+        )
+    except sqlite3.Error:
+        return assets
+    out: list[dict] = []
+    for a in assets:
+        row = links.get(str(a.get("id") or "")) if isinstance(a, dict) else None
+        if not row or row.get("source") == "none":
+            out.append(a)
+            continue
+        pids = list(row.get("product_ids") or [])
+        known = {
+            str(p.get("id")): p
+            for p in (a.get("linked_products") or [])
+            if isinstance(p, dict) and p.get("id")
+        }
+        b = dict(a)
+        b["linked_product_ids"] = pids
+        b["folder_linked_product_ids"] = list(pids)
+        b["linked_products"] = [known.get(pid) or {"id": pid} for pid in pids]
+        b["links_source"] = row.get("source")
+        out.append(b)
+    return out
+
+
+_FOR_PRODUCT_DEFAULT_LIMIT = 400
+_FOR_PRODUCT_MAX_LIMIT = 1000
+
+
+def assets_for_product(product_id: str, *, limit: int = _FOR_PRODUCT_DEFAULT_LIMIT) -> dict[str, Any]:
+    """Produkt -> zasoby brandingowe z asset_product_links (confirmed/auto) + mirror."""
+    pid = str(product_id or "").strip()
+    if not pid:
+        return {"ok": False, "error": "product_id_required"}
+    lim = max(1, min(int(limit or _FOR_PRODUCT_DEFAULT_LIMIT), _FOR_PRODUCT_MAX_LIMIT))
+    candidates: list[str] = []
+    db = _sqlite_path()
+    if db is not None and Path(db).is_file():
+        conn = sqlite3.connect(Path(db).resolve().as_uri() + "?mode=ro", uri=True, timeout=5)
+        try:
+            cur = conn.execute(
+                "SELECT asset_id FROM asset_product_links WHERE product_id=? "
+                "AND status IN ('confirmed','auto') "
+                "ORDER BY CASE status WHEN 'confirmed' THEN 0 ELSE 1 END, COALESCE(score, 0) DESC, asset_id",
+                (pid,),
+            )
+            candidates = [str(r[0]) for r in cur.fetchall() if r and r[0]]
+        finally:
+            conn.close()
+    overrides = _load_json(_assoc_overrides_file(), {})
+    ov_assets = overrides.get("assets") if isinstance(overrides, dict) else None
+    if isinstance(ov_assets, dict):
+        for aid, entry in ov_assets.items():
+            if isinstance(entry, dict) and pid in (entry.get("linked_product_ids") or []):
+                if str(aid) not in candidates:
+                    candidates.append(str(aid))
+    links = fetch_asset_links(candidates, sqlite_path=db, overrides=overrides) if candidates else {}
+    by_id = _assets_by_id()
+    rows: list[dict] = []
+    missing = 0
+    for aid in candidates:
+        if pid not in (links.get(aid) or {}).get("product_ids", []):
+            continue  # mirror nowszy: produkt usuniety z tego pliku
+        a = by_id.get(aid)
+        if not a:
+            missing += 1
+            continue
+        rows.append(a)
+        if len(rows) >= lim:
+            break
+    return {
+        "ok": True,
+        "product_id": pid,
+        "count": len(rows),
+        "missing": missing,
+        "assets": _with_file_links(rows),
+    }
 
 
 def is_previewable_asset(asset: dict | None) -> bool:
@@ -354,6 +457,88 @@ def fetch_assoc_queue_link_rows(
     return [dict(r) for r in cur.fetchall()]
 
 
+_ASSET_LINKS_MAX_IDS = 200
+
+
+def _norm_ts(value: Any) -> str:
+    """ISO/PG timestamp -> porownywalny 'YYYY-MM-DDTHH:MM:SS'."""
+    s = str(value or "").strip().replace(" ", "T")
+    return s[:19]
+
+
+def fetch_asset_links(
+    asset_ids: list[str],
+    *,
+    sqlite_path: Path | None,
+    overrides: dict | None,
+) -> dict[str, dict]:
+    """Skojarzone produkty per plik (wariant materialu).
+
+    Zrodla: SQLite asset_product_links (confirmed + auto) oraz mirror
+    branding-associations-overrides.json (assets[id]). Mirror wygrywa, gdy jest
+    nie starszy niz ostatni potwierdzony wiersz SQLite - zapis edytora nie
+    kasuje usunietych wierszy (upsert), a mirror trzyma pelny zestaw po edycji.
+    """
+    ids: list[str] = []
+    for x in asset_ids or []:
+        s = str(x or "").strip()
+        if s and s not in ids:
+            ids.append(s)
+    rows_by: dict[str, list[dict]] = {aid: [] for aid in ids}
+    if ids and sqlite_path is not None and Path(sqlite_path).is_file():
+        db = Path(sqlite_path).resolve()
+        # Tylko odczyt (URI z procentowym kodowaniem - sciezki ze spacjami).
+        conn = sqlite3.connect(db.as_uri() + "?mode=ro", uri=True, timeout=5)
+        try:
+            placeholders = ",".join("?" for _ in ids)
+            cur = conn.execute(
+                "SELECT asset_id, product_id, status, updated_at FROM asset_product_links "
+                f"WHERE asset_id IN ({placeholders}) AND status IN ('confirmed','auto') "
+                "ORDER BY asset_id, CASE status WHEN 'confirmed' THEN 0 ELSE 1 END, "
+                "COALESCE(score, 0) DESC, product_id",
+                ids,
+            )
+            for aid, pid, status, updated_at in cur.fetchall():
+                rows_by.setdefault(str(aid), []).append(
+                    {"product_id": str(pid), "status": str(status), "updated_at": str(updated_at or "")}
+                )
+        finally:
+            conn.close()
+    ov_assets = (overrides or {}).get("assets") if isinstance(overrides, dict) else None
+    if not isinstance(ov_assets, dict):
+        ov_assets = {}
+    out: dict[str, dict] = {}
+    for aid in ids:
+        rows = rows_by.get(aid) or []
+        sql_ids: list[str] = []
+        for r in rows:
+            if r["product_id"] not in sql_ids:
+                sql_ids.append(r["product_id"])
+        confirmed_ts = max(
+            (_norm_ts(r["updated_at"]) for r in rows if r["status"] == "confirmed"),
+            default="",
+        )
+        entry = ov_assets.get(aid) if isinstance(ov_assets.get(aid), dict) else None
+        ov_ids = [
+            str(x).strip() for x in ((entry or {}).get("linked_product_ids") or []) if str(x).strip()
+        ]
+        ov_ts = _norm_ts((entry or {}).get("updated_at"))
+        if ov_ids and (not sql_ids or ov_ts >= confirmed_ts):
+            out[aid] = {"product_ids": ov_ids, "source": "override", "updated_at": ov_ts}
+        elif sql_ids:
+            out[aid] = {"product_ids": sql_ids, "source": "sqlite", "updated_at": confirmed_ts}
+        else:
+            out[aid] = {"product_ids": [], "source": "none", "updated_at": ""}
+    return out
+
+
+def _assoc_overrides_file() -> Path:
+    p = _CTX.get("assoc_overrides_file")
+    if p:
+        return Path(p)
+    return _web_root() / "data" / "branding-associations-overrides.json"
+
+
 _HEAD_ASSET_KEEP = (
     "id",
     "path",
@@ -442,10 +627,48 @@ def handle_get(handler: Any, parsed: Any) -> bool:
             if not a:
                 handler._json(404, {"ok": False, "error": "not_found", "id": ids[0]})
                 return True
-            handler._json(200, {"ok": True, "asset": a})
+            handler._json(200, {"ok": True, "asset": _with_file_links([a])[0]})
             return True
-        assets = [by_id[i] for i in ids if i in by_id]
+        assets = _with_file_links([by_id[i] for i in ids if i in by_id])
         handler._json(200, {"ok": True, "assets": assets, "missing": [i for i in ids if i not in by_id]})
+        return True
+
+    if path == "/branding-for-product":
+        pid = str((qs.get("product_id") or [""])[0]).strip()
+        try:
+            limit = int((qs.get("limit") or [_FOR_PRODUCT_DEFAULT_LIMIT])[0])
+        except (TypeError, ValueError):
+            limit = _FOR_PRODUCT_DEFAULT_LIMIT
+        if not pid:
+            handler._json(400, {"ok": False, "error": "product_id_required"})
+            return True
+        try:
+            payload = assets_for_product(pid, limit=limit)
+        except sqlite3.Error as exc:
+            handler._json(503, {"ok": False, "error": "sqlite_unavailable", "detail": str(exc)[:200]})
+            return True
+        handler._json(200, payload)
+        return True
+
+    if path == "/branding/asset-links":
+        raw = (qs.get("ids") or qs.get("id") or [""])[0]
+        ids = [x.strip() for x in str(raw).split(",") if x.strip()]
+        if not ids:
+            handler._json(400, {"ok": False, "error": "id_required"})
+            return True
+        if len(ids) > _ASSET_LINKS_MAX_IDS:
+            handler._json(400, {"ok": False, "error": "too_many_ids", "max": _ASSET_LINKS_MAX_IDS})
+            return True
+        try:
+            links = fetch_asset_links(
+                ids,
+                sqlite_path=_sqlite_path(),
+                overrides=_load_json(_assoc_overrides_file(), {}),
+            )
+        except sqlite3.Error as exc:
+            handler._json(503, {"ok": False, "error": "sqlite_unavailable", "detail": str(exc)[:200]})
+            return True
+        handler._json(200, {"ok": True, "links": links})
         return True
 
     if path == "/branding/mtimes":

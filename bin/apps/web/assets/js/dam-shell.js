@@ -621,7 +621,7 @@
       company: "KUBARA",
       phone: "502597985",
       manager: "Karolina Poznar",
-      managerTitle: "Czlonek Zarządu / Dyrektor Marketingu",
+      managerTitle: "Członek Zarządu / Dyrektor Marketingu",
       colleagues: ["Szymon Ryngwelski", "Anna Polanska", "Marta Zasępa", "Beata Scibik", "Sylwia Zarychta", "Maciej Labus"]
     }));
   }
@@ -1579,11 +1579,25 @@
     return tt("update.check_now", "Sprawd\u017A aktualizacj\u0119");
   }
 
+  /* K13: po kliknieciu "Sprawdz aktualizacje" menu uzytkownika zostawalo otwarte. */
+  function closeUserMenuPopup() {
+    var root = document.querySelector(".geex-content__header__action");
+    if (!root) return;
+    root.querySelectorAll(".geex-content__header__popup.is-open").forEach(function (p) {
+      p.classList.remove("is-open");
+    });
+    document.body.classList.toggle(
+      "dam-header-popup-open",
+      !!root.querySelector(".geex-content__header__popup.is-open")
+    );
+  }
+
   function triggerAppUpdateCheck(e) {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
+    closeUserMenuPopup();
     if (window.DamAppUpdate && typeof window.DamAppUpdate.checkFromMenu === "function") {
       window.DamAppUpdate.checkFromMenu();
       return;
@@ -1894,6 +1908,43 @@
     });
   }
 
+  /**
+   * P4: magnifier w headerze byl czysto dekoracyjny (tylko placeholder Szukaj...).
+   * Enter w polu albo klik na ikonce lupy w popupie -> explorer.html?q=<zapytanie>.
+   * Eksplorer musi umiec odczytac ?q= (nie edytujemy tu dam-explorer.js).
+   */
+  function bindHeaderGlobalSearch() {
+    var form = document.querySelector(".geex-content__header__searchform");
+    if (!form) return;
+    var input = form.querySelector("input");
+    var icon = form.querySelector("i.uil-search");
+
+    function go() {
+      var q = ((input && input.value) || "").trim();
+      if (!q) return;
+      window.location.href = "explorer.html?q=" + encodeURIComponent(q);
+    }
+
+    if (input && input.getAttribute("data-dam-search-bound") !== "1") {
+      input.setAttribute("data-dam-search-bound", "1");
+      input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.keyCode === 13) {
+          e.preventDefault();
+          go();
+        }
+      });
+    }
+    if (icon && icon.getAttribute("data-dam-search-bound") !== "1") {
+      icon.setAttribute("data-dam-search-bound", "1");
+      icon.style.cursor = "pointer";
+      icon.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        go();
+      });
+    }
+  }
+
   function formatBadgeCount(n) {
     var c = parseInt(n, 10) || 0;
     if (c <= 0) return "";
@@ -1948,12 +1999,15 @@
       }
     } catch (e) { /* ignore */ }
 
-    var teamsMessages = [
-      { from: "Anna Polanska", time: "10 min temu", msg: "Prosze sprawdz projekt Tuba Prezentowa - oczekuje na akceptacje." },
-      { from: "Marek Paluszewski", time: "1 godz. temu", msg: "Karta wprowadzenia dla DK TUBA gotowa do przejrzenia." },
-      { from: "Karolina Kubara", time: "2 godz. temu", msg: "Potrzebujemy grafiki do kategorii dla nowej linii produktów." },
-      { from: "Maciej Labus", time: "wczoraj", msg: "Specyfikacja techniczna zaktualizowana - prosze weryfikowac." }
-    ];
+    /* Realne wiadomości Teams (jeśli integracja jest połączona i moduł je opublikował).
+       Brak fałszywych danych: dopóki nic nie wystawi window._DAM_TEAMS_MESSAGES,
+       zakładka Teams pokazuje uczciwy stan pusty (patrz teamsHTML nizej). */
+    var teamsMessages = [];
+    try {
+      if (window._DAM_TEAMS_MESSAGES && window._DAM_TEAMS_MESSAGES.length) {
+        teamsMessages = window._DAM_TEAMS_MESSAGES.slice(0, 10);
+      }
+    } catch (eTeams) { /* ignore */ }
 
     var pendingMod = 0;
     try {
@@ -2019,19 +2073,21 @@
         }).join("")
       : '<li class="dam-msg-empty">Brak otwartych zadań Asana albo jeszcze sie laduja.</li>';
 
-    var teamsHTML = teamsMessages.map(function (m) {
-      return '<li class="geex-content__header__popup__item">' +
-        '<a class="geex-content__header__popup__link" href="#">' +
-        '<div class="geex-content__header__popup__item__img">' +
-        '<img src="assets/img/avatar/user.svg" alt="" />' +
-        "</div>" +
-        '<div class="geex-content__header__popup__item__content">' +
-        '<h5 class="geex-content__header__popup__item__title">' + escHtml(m.from) + "</h5>" +
-        '<span class="geex-content__header__popup__item__time">' + escHtml(m.time) + "</span>" +
-        '<div class="geex-content__header__popup__item__desc dam-msg-desc">' + escHtml(m.msg) + "</div>" +
-        '<span class="dam-msg-source">Teams</span>' +
-        "</div></a></li>";
-    }).join("");
+    var teamsHTML = teamsMessages.length
+      ? teamsMessages.map(function (m) {
+          return '<li class="geex-content__header__popup__item">' +
+            '<a class="geex-content__header__popup__link" href="#">' +
+            '<div class="geex-content__header__popup__item__img">' +
+            '<img src="assets/img/avatar/user.svg" alt="" />' +
+            "</div>" +
+            '<div class="geex-content__header__popup__item__content">' +
+            '<h5 class="geex-content__header__popup__item__title">' + escHtml(m.from) + "</h5>" +
+            '<span class="geex-content__header__popup__item__time">' + escHtml(m.time) + "</span>" +
+            '<div class="geex-content__header__popup__item__desc dam-msg-desc">' + escHtml(m.msg) + "</div>" +
+            '<span class="dam-msg-source">Teams</span>' +
+            "</div></a></li>";
+        }).join("")
+      : '<li class="dam-msg-empty">Brak wiadomości z Teams - <a href="integrations.html">połącz Teams w Integracjach</a>.</li>';
 
     msgPopup.innerHTML =
       '<div class="dam-popup-head">' +
@@ -2047,7 +2103,7 @@
         '<div id="damMsgTeams" hidden><ul class="geex-content__header__popup__items">' + teamsHTML + "</ul></div>" +
       "</div>" +
       '<div class="dam-msg-footer-link"><a href="inbox.html">Wszystkie zadania</a></div>' +
-      '<div class="dam-msg-resize-handle" title="Przeciagnij, aby zmienic wysokosc" aria-label="Zmien wysokosc okna wiadomości"></div>';
+      '<div class="dam-msg-resize-handle" title="Przeciągnij, aby zmienić wysokość" aria-label="Zmień wysokość okna wiadomości"></div>';
 
     msgPopup.querySelectorAll(".dam-msg-tab").forEach(function (tab) {
       tab.addEventListener("click", function (e) {
@@ -2135,30 +2191,35 @@
   function buildNotificationsPopup() {
     var notifPopup = document.querySelector(".geex-content__header__popup--notification");
     if (!notifPopup) return;
-    var items = [
-      { title: "Brak pliku do druku", time: "12 min temu", desc: "Banoffee kakao - DOYPACK 65 g", icon: "uil-file-times", tone: "warn", source: "DAM" },
-      { title: "Termin jutro", time: "1 godz. temu", desc: "Wykonanie wizualizacji - Nuggets", icon: "uil-clock", tone: "info", source: "Asana" },
-      { title: "Prosba o akceptacje", time: "2 godz. temu", desc: "Tuba prezentowa 516 g", icon: "uil-comment-alt-message", tone: "info", source: "Teams" },
-      { title: "Checklist uzupelniony", time: "wczoraj", desc: "Tiramisu czekolada kakao", icon: "uil-check-circle", tone: "ok", source: "DAM" }
-    ];
+    /* Bez fałszywych powiadomień: tylko realny zrodlo (window._DAM_NOTIFICATIONS),
+       jesli jakis modul je opublikuje. Dopoki nic tam nie wystawi danych - pusty stan. */
+    var items = [];
+    try {
+      if (window._DAM_NOTIFICATIONS && window._DAM_NOTIFICATIONS.length) {
+        items = window._DAM_NOTIFICATIONS.slice(0, 10);
+      }
+    } catch (eNotif) { /* ignore */ }
     setHeaderBadge("damNotifBadge", items.length);
+    var notifItemsHTML = items.length
+      ? items.map(function (n) {
+          return '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link" href="#">' +
+            '<div class="dam-notif-icon dam-notif-icon--' + n.tone + '" aria-hidden="true">' +
+            '<i class="uil ' + n.icon + '"></i></div>' +
+            '<div class="geex-content__header__popup__item__content">' +
+            '<h5 class="geex-content__header__popup__item__title">' + escHtml(n.title) + "</h5>" +
+            '<span class="geex-content__header__popup__item__time">' + escHtml(n.time) + "</span>" +
+            '<div class="geex-content__header__popup__item__desc">' + escHtml(n.desc) + "</div>" +
+            '<span class="dam-msg-source">' + escHtml(n.source) + "</span>" +
+            "</div></a></li>";
+        }).join("")
+      : '<li class="dam-msg-empty">Brak powiadomień.</li>';
     notifPopup.innerHTML =
       '<div class="dam-popup-head">' +
         '<h3 class="dam-popup-head__title">Powiadomienia</h3>' +
         '<span class="dam-popup-head__count">' + items.length + "</span>" +
       "</div>" +
       '<div class="geex-content__header__popup__content"><ul class="geex-content__header__popup__items">' +
-      items.map(function (n) {
-        return '<li class="geex-content__header__popup__item"><a class="geex-content__header__popup__link" href="#">' +
-          '<div class="dam-notif-icon dam-notif-icon--' + n.tone + '" aria-hidden="true">' +
-          '<i class="uil ' + n.icon + '"></i></div>' +
-          '<div class="geex-content__header__popup__item__content">' +
-          '<h5 class="geex-content__header__popup__item__title">' + escHtml(n.title) + "</h5>" +
-          '<span class="geex-content__header__popup__item__time">' + escHtml(n.time) + "</span>" +
-          '<div class="geex-content__header__popup__item__desc">' + escHtml(n.desc) + "</div>" +
-          '<span class="dam-msg-source">' + escHtml(n.source) + "</span>" +
-          "</div></a></li>";
-      }).join("") +
+      notifItemsHTML +
       "</ul></div>";
   }
 
@@ -2496,9 +2557,14 @@
     document.documentElement.style.removeProperty(SIDEBAR_W_VAR);
     var bottomLogo = document.querySelector(".dam-sidebar-logo-collapsed");
     var collapsedMeta = document.querySelector(".dam-sidebar-collapsed-meta");
+    var footerEl = document.querySelector(".geex-sidebar__footer");
     if (collapsed) {
       /* Zachowaj tor ikon = koniec morph (bez snap do justify:center). */
       applyCollapsedIconTrackVars();
+      /* K16: pelny footer (inyfinn.art (c) rok . vX.X.X) musi zniknac w stanie
+         zwinietym - inaczej duplikuje sie z kompaktowym .dam-sidebar-collapsed-meta
+         (tylko "DAM vX.X.X"). Wczesniej byl chowany tylko podczas przejscia morph. */
+      if (footerEl) footerEl.style.display = "none";
       if (bottomLogo) {
         bottomLogo.style.display = "flex";
         resetSidebarIdentityEl(bottomLogo);
@@ -2509,8 +2575,9 @@
       }
     } else {
       clearSidebarMorphVars();
-      var footer = document.querySelector(".geex-sidebar__footer");
+      var footer = footerEl;
       if (footer) {
+        footer.style.removeProperty("display");
         footer.style.removeProperty("opacity");
         footer.style.removeProperty("visibility");
       }
@@ -3228,7 +3295,7 @@
     // F1 pomoc / F5 odśwież
     if (!window.DamShortcuts) {
       var sc = document.createElement("script");
-      sc.src = "assets/js/dam-shortcuts.js?v=5.0.196";
+      sc.src = "assets/js/dam-shortcuts.js?v=2.1.0";
       document.head.appendChild(sc);
     }
 
@@ -3245,6 +3312,7 @@
     normalizeHeaderIcons();
     ensureAdminModeSwitch();
     bindDamHeaderPopups();
+    bindHeaderGlobalSearch();
     updateSidebarBrand();
     updateUserPopup();
     buildNotificationsPopup();
@@ -3272,6 +3340,7 @@
       ensureCustomizerPeek();
       ensureHeaderChrome();
       bindDamHeaderPopups();
+      bindHeaderGlobalSearch();
       normalizeHeaderIcons();
       ensureAdminModeSwitch();
       if (window.jQuery) {

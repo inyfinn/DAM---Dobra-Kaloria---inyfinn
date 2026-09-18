@@ -163,6 +163,27 @@ def tree_mtime(root: Path, max_depth: int = 5) -> float:
     return latest
 
 
+def _replace_with_retry(tmp, target, attempts: int = 8, delay: float = 0.03) -> bool:
+    """os.replace z ponowieniami. Windows: PermissionError, gdy ktos czyta cel w tej chwili.
+    False = nie udalo sie (tmp usuniety); NIGDY nie zapisujemy celu nieatomowo, bo dwa takie
+    zapisy naraz zostawialy poprawny JSON z ogonem starszej wersji ('Extra data')."""
+    import os as _os
+    import time as _time
+
+    for i in range(attempts):
+        try:
+            _os.replace(tmp, target)
+            return True
+        except OSError:
+            if i + 1 < attempts:
+                _time.sleep(delay * (i + 1))
+    try:
+        _os.unlink(tmp)
+    except OSError:
+        pass
+    return False
+
+
 def roots_mtime(roots: list[Path], max_depth: int = 5) -> float:
     return max((tree_mtime(r, max_depth=max_depth) for r in roots), default=0.0)
 
@@ -209,15 +230,11 @@ def _write_status(path: Path, payload: dict, *, preserve_last: bool = True) -> N
         body["awaiting_first_rebuild"] = False
     body["updated_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     tmp = path.with_name(path.name + f".{os.getpid()}.tmp")
-    tmp.write_text(json.dumps(body, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     try:
-        os.replace(tmp, path)
+        tmp.write_text(json.dumps(body, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     except OSError:
-        path.write_text(json.dumps(body, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        try:
-            tmp.unlink()
-        except OSError:
-            pass
+        return
+    _replace_with_retry(tmp, path)
 
 
 def spawn_branding_pipeline(*, status_file: Path | None = None) -> None:

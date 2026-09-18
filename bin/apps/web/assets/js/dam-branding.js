@@ -4409,7 +4409,11 @@
 
   function thumbStackHtml(assets, primary) {
     var p = primary || pickPrimaryMarketing(assets) || assets[0];
-    var thumbPrimary = pickThumbAsset(assets) || p;
+    /* front = ten sam plik co tytul karty (jak w cardHtml) */
+    var thumbPrimary =
+      p && /\.(png|jpe?g|webp|gif|tiff?|psd|psb|bmp)$/i.test(p.path || p.name || "") && !isLogoFolderAsset(p)
+        ? p
+        : pickThumbAsset(assets) || p;
     var second = assets.find(function (a) {
       return a && p && a.id !== p.id && /\.(png|jpe?g|webp)$/i.test(a.name || "") && !isProductVizLike(a);
     });
@@ -4508,7 +4512,15 @@
     var assetList = siblings && siblings.length ? siblings : [a];
     var cardAsset =
       siblings && siblings.length > 1 ? pickPrimaryMarketing(siblings) || a : a;
-    var thumbAsset = pickThumbAsset(assetList) || cardAsset;
+    /* Miniatura = TEN SAM plik co tytul karty, jesli da sie go pokazac (TIF/PSD tez -
+     * /thumb-cache je renderuje). Wczesniej brany byl "pierwszy JPG w grupie", wiec karta
+     * "MINIATURA-MINI cynamonka" pokazywala i otwierala chrup_orzech (2026-09-18). */
+    var thumbAsset =
+      cardAsset &&
+      /\.(png|jpe?g|webp|gif|tiff?|psd|psb|bmp)$/i.test(cardAsset.path || cardAsset.name || "") &&
+      !isLogoFolderAsset(cardAsset)
+        ? cardAsset
+        : pickThumbAsset(assetList) || cardAsset;
     var displayAssets = brandingCardDisplayAssets(assetList);
     var displayCount = displayAssets.length || assetList.length;
     var tileCls =
@@ -4980,9 +4992,97 @@
     renderActiveSection();
   }
 
+  /* Dymek "Indeksy w grupie": zostaje, dopoki kursor jest na "Obraz" albo na dymku,
+   * i jeszcze 1 s po zjechaniu. Prawy przycisk (na "Obraz" lub dymku) = kopiuj wszystkie
+   * indeksy po przecinku. */
+  var META_TIP_GRACE_MS = 1000;
+  var metaTipHideTimer = 0;
+  var metaTipLabels = [];
+
+  function metaTipLabelsFor(meta) {
+    var raw = meta.getAttribute("data-branding-meta-ids") || "";
+    var seen = {};
+    return raw
+      .split(",")
+      .filter(Boolean)
+      .map(function (id) {
+        var asset = ((index && index.assets) || []).find(function (a) {
+          return a.id === id;
+        });
+        return asset ? marketingDisplayId(asset) : id;
+      })
+      .filter(function (label) {
+        if (!label || seen[label]) return false;
+        seen[label] = true;
+        return true;
+      });
+  }
+
+  function copyMetaTipLabels(labels) {
+    var text = (labels || []).join(", ");
+    if (!text) return;
+    var toast = function (msg) {
+      if (typeof window.damShowToast === "function") {
+        window.damShowToast(msg);
+        return;
+      }
+      /* ten sam mechanizm co toastCopied w dam-badges.js */
+      var t = document.getElementById("damGlobalToast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "damGlobalToast";
+        t.className = "dam-global-toast";
+        t.setAttribute("role", "status");
+        document.body.appendChild(t);
+      }
+      t.textContent = msg;
+      t.classList.add("is-on");
+      clearTimeout(t._t);
+      t._t = setTimeout(function () {
+        t.classList.remove("is-on");
+      }, 1600);
+    };
+    var done = function () {
+      var n = labels.length;
+      var n10 = n % 10;
+      var n100 = n % 100;
+      var word =
+        n === 1 ? "indeks" : n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14) ? "indeksy" : "indeksów";
+      toast("Skopiowano " + n + " " + word);
+    };
+    var fail = function () {
+      toast("Nie udało się skopiować");
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fail);
+      return;
+    }
+    try {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      done();
+    } catch (e) {
+      fail();
+    }
+  }
+
   function bindMetaTooltips(grid) {
     if (!grid) return;
     var tipEl = document.getElementById("damBrandingMetaTip");
+    var hideNow = function () {
+      clearTimeout(metaTipHideTimer);
+      if (tipEl) tipEl.hidden = true;
+    };
+    var hideLater = function () {
+      clearTimeout(metaTipHideTimer);
+      metaTipHideTimer = setTimeout(hideNow, META_TIP_GRACE_MS);
+    };
     if (!tipEl) {
       tipEl = document.createElement("div");
       tipEl.id = "damBrandingMetaTip";
@@ -4990,36 +5090,65 @@
       tipEl.setAttribute("role", "tooltip");
       tipEl.hidden = true;
       document.body.appendChild(tipEl);
+      tipEl.addEventListener("mouseenter", function () {
+        clearTimeout(metaTipHideTimer);
+      });
+      tipEl.addEventListener("mouseleave", hideLater);
+      tipEl.addEventListener("contextmenu", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        copyMetaTipLabels(metaTipLabels);
+      });
     }
-    var hideTip = function () {
-      tipEl.hidden = true;
-    };
     grid.querySelectorAll(".dam-viz-card__meta[data-branding-meta-ids]").forEach(function (meta) {
+      if (meta._damMetaTipBound) return;
+      meta._damMetaTipBound = true;
       meta.addEventListener("mouseenter", function () {
-        var raw = meta.getAttribute("data-branding-meta-ids") || "";
-        var ids = raw.split(",").filter(Boolean);
-        if (!ids.length) return;
-        var chips = ids
-          .map(function (id) {
-            var asset = ((index && index.assets) || []).find(function (a) {
-              return a.id === id;
-            });
-            var label = asset ? marketingDisplayId(asset) : id;
+        var labels = metaTipLabelsFor(meta);
+        if (!labels.length) return;
+        clearTimeout(metaTipHideTimer);
+        metaTipLabels = labels;
+        var chips = labels
+          .map(function (label) {
             return '<span class="dam-viz-badge dam-viz-badge--index">' + esc(label) + "</span>";
           })
           .join("");
-        tipEl.innerHTML = '<div class="dam-branding-meta-tip__label">Indeksy w grupie</div><div class="dam-branding-meta-tip__chips">' + chips + "</div>";
+        tipEl.innerHTML =
+          '<div class="dam-branding-meta-tip__label">Indeksy w grupie</div>' +
+          '<div class="dam-branding-meta-tip__chips">' +
+          chips +
+          "</div>" +
+          '<div class="dam-branding-meta-tip__hint">Prawy przycisk myszy: kopiuj wszystkie (' +
+          labels.length +
+          ")</div>";
         var r = meta.getBoundingClientRect();
         tipEl.hidden = false;
-        tipEl.style.left = Math.max(8, r.left + r.width / 2 - tipEl.offsetWidth / 2) + "px";
-        tipEl.style.top = Math.max(8, r.top - tipEl.offsetHeight - 8) + "px";
+        tipEl.style.left = Math.max(8, Math.min(window.innerWidth - tipEl.offsetWidth - 8, r.left + r.width / 2 - tipEl.offsetWidth / 2)) + "px";
+        var top = r.top - tipEl.offsetHeight - 8;
+        if (top < 8) top = r.bottom + 8;
+        tipEl.style.top = top + "px";
       });
-      meta.addEventListener("mouseleave", hideTip);
-      meta.addEventListener("click", hideTip);
+      meta.addEventListener("mouseleave", hideLater);
+      meta.addEventListener("click", hideNow);
+      meta.addEventListener("contextmenu", function (e) {
+        var labels = metaTipLabelsFor(meta);
+        if (!labels.length) return;
+        e.preventDefault();
+        e.stopPropagation();
+        copyMetaTipLabels(labels);
+      });
     });
     if (!grid.__damMetaTipBound) {
       grid.__damMetaTipBound = true;
-      window.addEventListener("scroll", hideTip, true);
+      window.addEventListener(
+        "scroll",
+        function (e) {
+          /* przewijanie wewnatrz dymku nie zamyka go */
+          if (e && e.target && tipEl.contains && e.target.nodeType === 1 && tipEl.contains(e.target)) return;
+          hideNow();
+        },
+        true
+      );
     }
   }
 
@@ -5080,7 +5209,10 @@
 
   function resolveAssetIdFromThumb(card, thumbEl) {
     if (!card || !thumbEl) return "";
+    /* Karta grupy ma stos: warstwa tylna (inny plik) jest PIERWSZA w DOM. Klik ma otwierac
+     * plik z przedniej warstwy = ten z tytulu karty, nie tylny (cynamonka -> chrup_orzech). */
     var pathEl =
+      thumbEl.querySelector(".dam-branding-thumb-stack__layer--front [data-path]") ||
       thumbEl.querySelector("[data-path]") ||
       (thumbEl.hasAttribute && thumbEl.hasAttribute("data-path") ? thumbEl : null);
     var path = pathEl ? String(pathEl.getAttribute("data-path") || "").trim() : "";

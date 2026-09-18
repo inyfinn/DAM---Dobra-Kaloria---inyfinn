@@ -1,6 +1,6 @@
 ﻿; DAM Windows installer - pelny kreator (licencja, sciezka, aktualizacja)
 #ifndef MyAppVersion
-  #define MyAppVersion "2.0.9"
+  #define MyAppVersion "2.1.0"
 #endif
 #ifndef StageDir
   #define StageDir "..\dist\staging\DAM-install"
@@ -356,9 +356,27 @@ begin
   end;
 end;
 
+{ Kazdy proces uruchomiony z katalogu instalacji (obserwator indeksu, skrypty tla):
+  KillDamProcesses lapie tylko launch/local_bridge, a pomocnicze pythonw.exe z bin\runtime
+  zostawaly i trzymaly zablokowany runtime - cicha aktualizacja w tym samym katalogu
+  mogla utknac na podmianie pliku. Test 2026-09-18: po instalacji zostaly 3 takie procesy. }
+procedure KillProcessesFromDir(const Dir: String);
+var
+  ResultCode: Integer;
+  Safe: String;
+begin
+  if Length(Dir) < 8 then
+    Exit;
+  Safe := Dir;
+  StringChangeEx(Safe, '''', '''''', True);
+  Exec('powershell.exe', '-NoProfile -NonInteractive -Command "$d = ''' + AddBackslash(Safe) + '''; Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -and $_.ExecutablePath.StartsWith($d, [StringComparison]::OrdinalIgnoreCase) -and ($_.ExecutablePath -notmatch ''\\data\\updates\\'') -and ($_.Name -notlike ''*Setup*'') } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+end;
+
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
   KillDamProcesses;
+  KillProcessesFromDir(WizardDirValue);
+  Sleep(1000);
   Result := '';
   if PathNeedsAdmin(WizardDirValue) and (not IsAdminInstallMode) then
   begin

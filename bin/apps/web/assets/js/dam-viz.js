@@ -4873,6 +4873,15 @@
       DamPreviewTruth.fileAvailability(path).then(function (avail) {
         if (!img || !img.parentNode) return;
         avail = avail || {};
+        /* Plik jest - most po 504 dalej liczy miniature; ponow zamiast "niedostepny". */
+        if (
+          (avail.treat_as_local || avail.ok === false) &&
+          typeof DamPreviewTruth.retryThumbLater === "function" &&
+          DamPreviewTruth.retryThumbLater(img, DamPreviewTruth.thumbCacheUrl(path, "grid"))
+        ) {
+          return;
+        }
+        if (typeof DamPreviewTruth.stopThumbWait === "function") DamPreviewTruth.stopThumbWait(img);
         img.onerror = null;
         img.title = DamPreviewTruth.onErrorTitle(avail.state);
         img.src = PLACEHOLDER_SVG;

@@ -892,6 +892,105 @@
     });
   }
 
+  /*
+   * Okno DAM (WebView2, debug=False) nie ma systemowego menu pod prawym przyciskiem,
+   * wiec "Kopiuj" nie istnieje. Prawy przycisk na nazwie (karta, modal, nazwa pliku,
+   * wariant) albo na zaznaczonym tekscie = kopiuj. Chipy/tagi obsluguja wlasne handlery
+   * (preventDefault) - tu ich nie dublujemy.
+   */
+  var NAME_COPY_SEL = [
+    "[data-copy-text]",
+    "#damMediaPreviewTitle",
+    "#damVizModalTitle",
+    ".dam-viz-modal__title",
+    ".dam-viz-modal__filename",
+    ".dam-viz-modal__variant-label",
+    ".dam-viz-card__title",
+    ".dam-lightbox__title",
+    ".dam-mat-file-row__name",
+    ".dam-folder-item__name",
+    ".dam-prod-row__title",
+  ].join(",");
+
+  function nameCopyText(el) {
+    if (!el) return "";
+    var explicit = el.getAttribute("data-copy-text");
+    if (explicit) return String(explicit).trim();
+    var base =
+      el.querySelector(".dam-media-preview__title-base") ||
+      el.querySelector(".dam-branding-card__title-text");
+    var text = (base || el).textContent || "";
+    return String(text).replace(/\s+/g, " ").trim();
+  }
+
+  function selectedTextWithin(target) {
+    try {
+      var sel = global.getSelection && global.getSelection();
+      if (!sel || sel.isCollapsed) return "";
+      var text = String(sel.toString() || "").trim();
+      if (!text) return "";
+      var node = sel.anchorNode;
+      if (node && node.nodeType !== 1) node = node.parentNode;
+      var host = target.closest ? target.closest("p,h1,h2,h3,h4,h5,li,td,div,span,a") : null;
+      if (host && node && (host.contains(node) || node.contains(host))) return text;
+      return "";
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function copyPlainText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise(function (resolve, reject) {
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  function copyWithToast(text) {
+    return copyPlainText(text).then(
+      function () {
+        toastCopied("Skopiowano: " + (text.length > 80 ? text.slice(0, 77) + "..." : text));
+      },
+      function () {
+        toastCopied("Nie udalo sie skopiowac");
+      }
+    );
+  }
+
+  function ensureNameCopyOnRightClick() {
+    if (document.documentElement._damNameCopyBound) return;
+    document.documentElement._damNameCopyBound = true;
+    document.addEventListener("contextmenu", function (e) {
+      if (e.defaultPrevented || !e.target || !e.target.closest) return;
+      if (e.target.closest("input, textarea, select")) return;
+      var text = selectedTextWithin(e.target);
+      if (!text) {
+        var el = e.target.closest(NAME_COPY_SEL);
+        if (!el) return;
+        text = nameCopyText(el);
+      }
+      if (!text) return;
+      e.preventDefault();
+      copyWithToast(text);
+    });
+  }
+  ensureNameCopyOnRightClick();
+
   function bindClicks(root, context) {
     var el = typeof root === "string" ? document.querySelector(root) : root;
     if (!el || el._damBadgesBound) return;

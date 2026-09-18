@@ -675,12 +675,12 @@
       lines.push(
         "<strong>Dysk:</strong> ścieżka nie istnieje" +
           (disk.path ? " (" + esc(disk.path) + ")" : "") +
-          ". Mozliwe usuniecie lub przeniesienie poza logi DAM."
+          ". Możliwe usunięcie lub przeniesienie poza logi DAM."
       );
     }
     (res.timeline || []).forEach(function (row) {
       var ts = String(row.ts || "").replace("T", " ").slice(0, 16);
-      var mark = row.is_this ? " [ta zmiana]" : row.is_after ? " [pozniej]" : "";
+      var mark = row.is_this ? " [ta zmiana]" : row.is_after ? " [później]" : "";
       var miss =
         row.disk && row.disk.kind === "missing" ? " · BRAK NA DYSKU" : "";
       lines.push(
@@ -1097,15 +1097,15 @@
     var note =
       st === "approved"
         ? isLast
-          ? "Ostatnia zmiana na dysku - mozesz ja cofnac. Po cofnieciu masz 30 s na Anuluj cofniecie."
-          : "Jesli sa nowsze zmiany, Cofnij pokaze przebieg (kto/kiedy) zamiast cichego bledu."
+          ? "Ostatnia zmiana na dysku - możesz ją cofnąć. Po cofnięciu masz 30 s na Anuluj cofnięcie."
+          : "Jeśli są nowsze zmiany, Cofnij pokaże przebieg (kto/kiedy) zamiast cichego błędu."
         : st === "rejected"
-          ? "Odrzucono bez zmian na dysku. Wroc do kolejki = ponowna decyzja, nie cofniecie plikow."
+          ? "Odrzucono bez zmian na dysku. Wróć do kolejki = ponowna decyzja, nie cofnięcie plików."
           : inGrace
-            ? "Wlasnie wycofano. Masz ok. 30 s na Anuluj cofniecie albo pozniej Ponow na pasku."
+            ? "Właśnie wycofano. Masz ok. 30 s na Anuluj cofnięcie albo później Ponów na pasku."
             : st === "undone"
-              ? "Wycofane. Mozesz wrocic do kolejki albo Ponow ostatnio wycofane na pasku."
-              : "Mozesz wrocic do kolejki.";
+              ? "Wycofane. Możesz wrócić do kolejki albo Ponów ostatnio wycofane na pasku."
+              : "Możesz wrócić do kolejki.";
     return (
       '<div class="dam-inbox-hist-item" data-proposal-id="' +
       esc(it.id) +
@@ -1798,13 +1798,17 @@
   }
 
   function load() {
+    /* P7: /inbox-items i /change-log sa admin-only na bridgu (401/403 dla
+       roli user na kazdym wejsciu na strone) - nie odpytuj ich, gdy rola
+       nie moze ich uzyc. Bez zmiany danych - tylko realne domyslne wartosci. */
+    var admin = isAdmin();
     Promise.all([
       refreshCarrierTypes(),
       loadTagProposals(),
-      loadInboxItems(),
+      admin ? loadInboxItems() : Promise.resolve([]),
       loadAsanaAsInbox(),
       loadProductLookup(),
-      refreshChangeLogMeta(),
+      admin ? refreshChangeLogMeta() : Promise.resolve(changeLogMeta),
       loadLifecycleHistoryAsInbox(),
     ]).then(function (results) {
       results = results.slice(1);

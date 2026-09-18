@@ -85,7 +85,7 @@
     var save = el(
       "button",
       "flex:1 1 auto;padding:12px 16px;border:0;border-radius:10px;cursor:pointer;" +
-        "background:var(--dam-accent,#2f6fed);color:#fff;font:600 15px/1.2 inherit;",
+        "background:var(--dam-primary,#0a7b3e);color:#fff;font:600 15px/1.2 inherit;",
       "Zapisz i zaloguj"
     );
     save.type = "submit";

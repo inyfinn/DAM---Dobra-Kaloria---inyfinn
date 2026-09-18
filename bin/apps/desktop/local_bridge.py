@@ -3771,7 +3771,9 @@ def _apply_assoc_patch_to_index(
                 a["folder_variants"] = variants
 
     apply_to_asset(target)
-    if group:
+    # spray_group=False: zapis "Tylko ten plik" / jawna lista plikow - bez rozlewania
+    # na caly folder (kazdy wariant materialu ma wlasne skojarzenia).
+    if group and patch.get("spray_group", True):
         for a in assets:
             ag = str(a.get("folder_group_id") or "").strip().lower()
             if ag == group:
@@ -3822,6 +3824,7 @@ def _enqueue_assoc_index_patch(
     folder_group_id: str,
     linked_product_ids: list,
     linked_variant_ids: list | None,
+    spray_group: bool = True,
 ) -> None:
     global _FAT_ASSOC_THREAD
     with _FAT_ASSOC_LOCK:
@@ -3831,6 +3834,7 @@ def _enqueue_assoc_index_patch(
                 "folder_group_id": str(folder_group_id or ""),
                 "linked_product_ids": list(linked_product_ids or []),
                 "linked_variant_ids": list(linked_variant_ids or []),
+                "spray_group": bool(spray_group),
             }
         )
         if _FAT_ASSOC_THREAD is None or not _FAT_ASSOC_THREAD.is_alive():
@@ -4365,10 +4369,15 @@ def _patch_branding_associations(
     linked_product_ids: list,
     linked_variant_ids: list | None,
     updated_by: str = "local_bridge",
+    spray_group: bool = True,
 ) -> tuple[bool, str | None]:
-    """Reczna edycja: SQLite SoT + mirror override; fat index patch best-effort."""
+    """Reczna edycja: SQLite SoT + mirror override; fat index patch best-effort.
+
+    spray_group=False: skojarzenia tylko tego pliku (bez wpisu folder_groups
+    w mirrorze i bez rozlewania latki grubego indeksu na caly folder).
+    """
     aid = str(asset_id or "").strip()
-    group = str(folder_group_id or "").strip().lower()
+    group = str(folder_group_id or "").strip().lower() if spray_group else ""
     if not aid:
         return False, "asset_id_required"
     pids = [str(x).strip() for x in (linked_product_ids or []) if str(x).strip()]
@@ -4387,6 +4396,7 @@ def _patch_branding_associations(
             reason="editor_confirm",
             updated_by=updated_by,
             reject_other_pending=True,
+            replace_confirmed=True,
             mirror=True,
             overrides_path=BRANDING_ASSOC_OVERRIDES_FILE,
             variant_ids=vids,
@@ -4399,8 +4409,81 @@ def _patch_branding_associations(
         return False, f"assoc_sqlite:{exc}"
 
     # Fat index (48 MB) is not SoT - patch it off the request thread.
-    _enqueue_assoc_index_patch(aid, group, pids, vids)
+    _enqueue_assoc_index_patch(aid, group, pids, vids, spray_group=spray_group)
     return True, None
+
+
+_ASSOC_SCOPE_MAX_ASSETS = 500
+
+
+def _save_branding_associations_scoped(data: dict, updated_by: str) -> tuple[int, dict]:
+    """POST /branding/asset-associations z `scope` / `asset_ids` (warianty materialu).
+
+    scope="file": tylko `asset_id`. scope="all": `asset_id` + `asset_ids` (kazdy plik
+    z grupy "Warianty materialu") dostaje ten sam zestaw produktow. Petla po
+    assoc_repo.upsert_confirmed_links (przez _patch_branding_associations), bez
+    rozlewania na folder. linked_variant_ids z zadania dotycza pliku `asset_id`;
+    pozostale pliki zachowuja swoje z mirrora.
+    """
+    scope = str(data.get("scope") or "").strip().lower()
+    raw_ids = data.get("asset_ids")
+    if raw_ids is not None and not isinstance(raw_ids, list):
+        return 400, {"ok": False, "error": "asset_ids_invalid"}
+    extra = [str(x).strip() for x in (raw_ids or []) if str(x or "").strip()]
+    primary = str(data.get("asset_id") or "").strip() or (extra[0] if extra else "")
+    if not primary:
+        return 400, {"ok": False, "error": "asset_id_required"}
+    if not scope:
+        scope = "all" if extra else "file"
+    if scope not in ("file", "all"):
+        return 400, {"ok": False, "error": "invalid_scope"}
+    targets: list[str] = [primary]
+    if scope == "all":
+        for x in extra:
+            if x not in targets:
+                targets.append(x)
+    if len(targets) > _ASSOC_SCOPE_MAX_ASSETS:
+        return 400, {"ok": False, "error": "too_many_assets", "max": _ASSOC_SCOPE_MAX_ASSETS}
+    pids = [str(x).strip() for x in (data.get("linked_product_ids") or []) if str(x).strip()]
+    req_vids = [str(x).strip() for x in (data.get("linked_variant_ids") or []) if str(x).strip()]
+    mirror_assets: dict = {}
+    if len(targets) > 1:
+        ov = _load_json(BRANDING_ASSOC_OVERRIDES_FILE, {})
+        if isinstance(ov, dict) and isinstance(ov.get("assets"), dict):
+            mirror_assets = ov["assets"]
+    results: list[dict] = []
+    for aid in targets:
+        if aid == primary:
+            vids = req_vids
+        else:
+            entry = mirror_assets.get(aid)
+            if isinstance(entry, dict) and "linked_variant_ids" in entry:
+                vids = [str(v).strip() for v in (entry.get("linked_variant_ids") or []) if str(v).strip()]
+            else:
+                vids = req_vids
+        ok, err = _patch_branding_associations(
+            aid, "", pids, vids, updated_by=updated_by, spray_group=False
+        )
+        row: dict = {"asset_id": aid, "ok": bool(ok)}
+        if not ok:
+            row["error"] = err or "patch_failed"
+        results.append(row)
+    saved = sum(1 for r in results if r["ok"])
+    failed = len(results) - saved
+    payload: dict = {
+        "ok": failed == 0,
+        "scope": scope,
+        "asset_id": primary,
+        "asset_ids": targets,
+        "linked_product_ids": pids,
+        "linked_variant_ids": req_vids,
+        "results": results,
+        "saved": saved,
+        "failed": failed,
+    }
+    if failed:
+        payload["error"] = "partial_failure" if saved else (results[0].get("error") or "patch_failed")
+    return (200 if saved else 400), payload
 
 
 def _copy_media_file(src: str, dest_dir: str) -> tuple[bool, str | None, str | None]:
@@ -9575,6 +9658,14 @@ class Handler(BaseHTTPRequestHandler):
             if role not in ("admin", "power_user"):
                 self._json(403, {"ok": False, "error": "forbidden"})
                 return
+            if data.get("scope") is not None or data.get("asset_ids") is not None:
+                # Nowy kontrakt (warianty materialu): scope file|all + asset_ids.
+                status, payload = _save_branding_associations_scoped(
+                    data,
+                    str(user.get("email") or user.get("name") or "user"),
+                )
+                self._json(status, payload)
+                return
             ok, err = _patch_branding_associations(
                 data.get("asset_id"),
                 data.get("folder_group_id") or "",
@@ -10825,6 +10916,7 @@ def main() -> None:
             branding_index_file=BRANDING_INDEX_FILE,
             load_json=_load_json,
             sqlite_path=sqlite_path,
+            assoc_overrides_file=BRANDING_ASSOC_OVERRIDES_FILE,
             require_admin=_require_admin_wrap,
             mirror_override=_mirror_override,
             assoc_decide=None,  # wired below after assoc_repo import

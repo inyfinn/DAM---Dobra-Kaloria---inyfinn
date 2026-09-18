@@ -593,12 +593,14 @@
             }
           };
 
-    if (
-      path &&
-      window.DamPreviewTruth &&
-      typeof window.DamPreviewTruth.fileAvailability === "function"
-    ) {
-      window.DamPreviewTruth.fileAvailability(path).then(function (avail) {
+    var truth = window.DamPreviewTruth;
+    /* Ponawiamy miniature z cache (most liczy ja dalej po 504), w modalu - podglad zrodla. */
+    var retryUrl =
+      opts.retryUrl ||
+      (truth && typeof truth.thumbCacheUrl === "function" ? truth.thumbCacheUrl(path, "grid") : "") ||
+      liveUrl;
+    if (path && truth && typeof truth.fileAvailability === "function") {
+      truth.fileAvailability(path).then(function (avail) {
         if (!img.parentNode) return;
         avail = avail || {};
         if (avail.treat_as_local && avail.state !== "online_only" && avail.state !== "missing") {
@@ -609,6 +611,12 @@
             return;
           }
         }
+        /* Plik jest lokalnie albo most nie odpowiedzial (ok:false) - to nie "brak podgladu". */
+        var worthRetry = avail.treat_as_local || avail.ok === false;
+        if (worthRetry && typeof truth.retryThumbLater === "function" && truth.retryThumbLater(img, retryUrl)) {
+          return;
+        }
+        if (typeof truth.stopThumbWait === "function") truth.stopThumbWait(img);
         onFinal(avail.state || "missing", avail);
       });
       return;

@@ -95,12 +95,9 @@ def _write_index_live(*, force: bool = False) -> None:
         _LIVE_PATH.parent.mkdir(parents=True, exist_ok=True)
         tmp = _LIVE_PATH.with_suffix(_LIVE_PATH.suffix + f".{os.getpid()}.tmp")
         tmp.write_text(json.dumps(body, ensure_ascii=False), encoding="utf-8")
-        os.replace(tmp, _LIVE_PATH)
     except OSError:
-        try:
-            _LIVE_PATH.write_text(json.dumps(body, ensure_ascii=False), encoding="utf-8")
-        except OSError:
-            pass
+        return
+    _replace_with_retry(tmp, _LIVE_PATH)
 
 
 def touch_index_live(
@@ -191,7 +188,29 @@ def _atomic_write_json(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + f".{os.getpid()}.tmp")
     tmp.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
-    os.replace(tmp, path)
+    if not _replace_with_retry(tmp, path, attempts=20, delay=0.05):
+        raise OSError(f"nie udalo sie podmienic {path} (plik zajety)")
+
+def _replace_with_retry(tmp, target, attempts: int = 8, delay: float = 0.03) -> bool:
+    """os.replace z ponowieniami. Windows: PermissionError, gdy ktos czyta cel w tej chwili.
+    False = nie udalo sie (tmp usuniety); NIGDY nie zapisujemy celu nieatomowo, bo dwa takie
+    zapisy naraz zostawialy poprawny JSON z ogonem starszej wersji ('Extra data')."""
+    import os as _os
+    import time as _time
+
+    for i in range(attempts):
+        try:
+            _os.replace(tmp, target)
+            return True
+        except OSError:
+            if i + 1 < attempts:
+                _time.sleep(delay * (i + 1))
+    try:
+        _os.unlink(tmp)
+    except OSError:
+        pass
+    return False
+
 
 _LANGS_FROM_DICT = NAMING.get("languages") or {}
 # HARD 2026-07-21: UK/GB/EN = English = kanonicznie "en" (chip EN). Ukraina = UA. NIGDY UK→Ukraina.

@@ -1781,7 +1781,14 @@
           })
         ).then(function (linked) {
           if (linked && linked.length) {
-            if (groupContext) groupContext.linked_products = linked;
+            /* Warianty materiału: grupa trzyma produkty BIEZACEGO pliku - nie nadpisuj
+               jej wynikiem dla pliku, z ktorego uzytkownik juz przeszedl. */
+            var legacyGroup = groupContext && !groupContext._damLinksAssetId;
+            var sameFileSet =
+              groupContext &&
+              groupContext._damLinksAssetId === asset.id &&
+              pids.join("\u0000") === (groupContext.linked_product_ids || []).join("\u0000");
+            if (legacyGroup || sameFileSet) groupContext.linked_products = linked;
             asset.linked_products = linked;
           }
         });
@@ -4230,6 +4237,14 @@
     });
   }
 
+  function linkRecordsSig(list) {
+    return (list || [])
+      .map(function (p) {
+        return String((p && p.id) || "");
+      })
+      .join("\u0000");
+  }
+
   function seedLinkedProducts(asset, groupContext) {
     var linked = (groupContext && groupContext.linked_products) || asset.linked_products || [];
     if (linked && linked.length) return linked.slice();
@@ -4390,6 +4405,122 @@
       }
     }
 
+    /* Warianty materiału: każdy plik (asset_id) ma własne "Skojarzone produkty".
+       groupContext.linked_products = produkty BIEZACEGO pliku (edytor i panel czytaja
+       z grupy), fileLinks = potwierdzony stan per plik (most / zapis). */
+    var isBrandingVariants = (options.mode || "") !== "viz-studio";
+    var fileLinks = Object.create(null);
+    var linksSeq = 0;
+    var linksLoadingId = "";
+    var paintAssocLatest = null;
+
+    function localLinkIdsFor(x) {
+      if (!x || !x.id) return [];
+      if (fileLinks[x.id]) return fileLinks[x.id].slice();
+      var AE = window.DamAssocEdit;
+      if (AE && typeof AE.applyAssetAssocOverrides === "function") AE.applyAssetAssocOverrides(x);
+      var ids = effectiveLinkedProductIds(x);
+      if (!ids.length && x.linked_products && x.linked_products.length) {
+        ids = x.linked_products
+          .map(function (p) {
+            return p && p.id;
+          })
+          .filter(Boolean);
+      }
+      return ids;
+    }
+
+    function adoptFileLinks(x) {
+      if (!isBrandingVariants || !groupContext || !x || !x.id) return;
+      var ids = localLinkIdsFor(x);
+      var known = (x.linked_products || []).concat(groupContext.linked_products || []);
+      var linked = provisionalLinkedProducts(ids, known);
+      x.linked_product_ids = ids.slice();
+      x.folder_linked_product_ids = ids.slice();
+      x.linked_products = linked;
+      groupContext.linked_products = linked;
+      groupContext.linked_product_ids = ids.slice();
+      groupContext._damLinksAssetId = x.id;
+    }
+
+    function setLinksLoadingUi() {
+      var host = document.getElementById("damMediaPreviewLinkedProductsHost");
+      if (!host) return;
+      var on = !!linksLoadingId && !!asset && String(asset.id) === linksLoadingId;
+      host.classList.toggle("is-links-loading", on);
+      host.setAttribute("aria-busy", on ? "true" : "false");
+      var note = host.querySelector(".dam-assoc-links-loading");
+      if (on && !note) {
+        note = document.createElement("p");
+        note.className = "dam-assoc-links-loading";
+        note.setAttribute("role", "status");
+        note.textContent = "Wczytywanie produktów tego pliku…";
+        var row = host.querySelector(".dam-media-preview__assoc-label-row");
+        if (row && row.parentNode) row.parentNode.insertBefore(note, row.nextSibling);
+        else host.insertBefore(note, host.firstChild);
+      } else if (!on && note && note.parentNode) {
+        note.parentNode.removeChild(note);
+      }
+    }
+
+    function enrichFileLinks(x, seq) {
+      var AE = window.DamAssocEdit;
+      if (!AE || typeof AE.enrichLinkedProducts !== "function") return;
+      var seed = (x.linked_products || []).slice();
+      if (!seed.length) return;
+      AE.enrichLinkedProducts(seed)
+        .then(function (linked) {
+          if (seq !== linksSeq || !asset || asset.id !== x.id) return;
+          if (!document.getElementById("damMediaPreview") || !linked || !linked.length) return;
+          x.linked_products = linked;
+          groupContext.linked_products = linked;
+          if (paintAssocLatest) paintAssocLatest();
+        })
+        .catch(function () {
+          /* zostaje lista provisional */
+        });
+    }
+
+    /** Swiezy stan pliku z mostu; starsze odpowiedzi (szybkie klikanie) sa ignorowane. */
+    function refreshFileLinks(x) {
+      var AE = window.DamAssocEdit;
+      if (!isBrandingVariants || !x || !x.id || !AE || typeof AE.fetchAssetLinks !== "function") {
+        return;
+      }
+      var seq = ++linksSeq;
+      var id = String(x.id);
+      linksLoadingId = id;
+      setLinksLoadingUi();
+      AE.fetchAssetLinks([id]).then(function (map) {
+        if (seq !== linksSeq) return;
+        linksLoadingId = "";
+        if (!document.getElementById("damMediaPreview")) return;
+        var ids = map && Array.isArray(map[id]) ? map[id] : null;
+        var pending =
+          typeof AE.hasPendingAssocSave === "function" && AE.hasPendingAssocSave(id);
+        if (ids && !pending) fileLinks[id] = ids.slice();
+        if (!asset || String(asset.id) !== id) return;
+        var before = (groupContext.linked_product_ids || []).join("\u0000");
+        if (ids && !pending) adoptFileLinks(asset);
+        var changed = before !== (groupContext.linked_product_ids || []).join("\u0000");
+        if (changed && paintAssocLatest) paintAssocLatest();
+        else setLinksLoadingUi();
+        if (changed) enrichFileLinks(asset, seq);
+      });
+    }
+
+    function variantScopeIdsFromDom() {
+      if (!isBrandingVariants) return [];
+      var host = document.getElementById("damMediaPreviewAssoc");
+      var ids = [];
+      if (!host) return ids;
+      host.querySelectorAll(".dam-media-preview__variant[data-variant-id]").forEach(function (b) {
+        var vid = b.getAttribute("data-variant-id") || "";
+        if (vid && ids.indexOf(vid) === -1) ids.push(vid);
+      });
+      return ids;
+    }
+
     var existing = document.getElementById("damMediaPreview");
     if (existing) existing.remove();
 
@@ -4539,6 +4670,7 @@
       ) {
         window.DamModalShared.applyThumbAvailabilityFallback(img, path, {
           liveUrl: path ? previewUrl(path) : "",
+          retryUrl: path ? previewUrl(path) : "",
           placeholder: PLACEHOLDER_SVG,
         });
         return;
@@ -5648,6 +5780,7 @@
               (a && a.product_id) ||
               "",
           });
+          setLinksLoadingUi();
           rewireShiftAssocUxFromEl(
             document.getElementById("damMediaPreviewLinkedProductsHost") || assocHost
           );
@@ -5691,10 +5824,36 @@
             window.DamAssocEdit.bind(assocHost, {
               asset: a,
               groupContext: groupContext,
+              /* Pliki z "Warianty materiału" (zakres zapisu produktow w edytorze). */
+              variantAssetIds: isBrandingVariants ? variantScopeIdsFromDom : null,
               onRefresh: function () {
                 renderMeta(asset);
               },
-              onSaved: function (productIds, variantIds) {
+              onSaved: function (productIds, variantIds, saveMeta) {
+                if (Array.isArray(productIds) && isBrandingVariants) {
+                  var savedIds =
+                    saveMeta && saveMeta.assetIds && saveMeta.assetIds.length
+                      ? saveMeta.assetIds
+                      : [a.id];
+                  savedIds.forEach(function (sid) {
+                    fileLinks[sid] = productIds.slice();
+                    if (sid === a.id) return;
+                    var sib = siblings.find(function (x) {
+                      return x && x.id === sid;
+                    });
+                    if (!sib) return;
+                    sib.linked_product_ids = productIds.slice();
+                    sib.folder_linked_product_ids = productIds.slice();
+                    sib.linked_products = provisionalLinkedProducts(
+                      productIds,
+                      (sib.linked_products || []).concat(groupContext.linked_products || [])
+                    );
+                  });
+                  fileLinks[a.id] = productIds.slice();
+                }
+                /* Uzytkownik przeszedl juz na inny wariant: stan pliku zapisany wyzej,
+                   nie nadpisuj panelu biezacego pliku. */
+                if (isBrandingVariants && asset && a && asset.id !== a.id) return;
                 if (Array.isArray(productIds)) {
                   // Od razu, zanim dociagna sie miniatury - inaczej onRefresh rysuje stara liste.
                   var provisional = provisionalLinkedProducts(
@@ -5739,8 +5898,9 @@
                         return { id: id };
                       })
                     ).then(function (linked) {
-                      groupContext.linked_products = linked;
                       a.linked_products = linked;
+                      if (isBrandingVariants && asset && asset.id !== a.id) return;
+                      groupContext.linked_products = linked;
                       renderMeta(asset);
                     });
                   } else {
@@ -5764,11 +5924,20 @@
         /* brandComposer20260721a: NEVER block WARIANTY strip on enrichLinkedProducts /
            ensureFileIndex (huge file-index can hang). Paint seed first; enrich async. */
         paintAssoc();
+        /* Odpowiedz async po przelaczeniu wariantu nie moze malowac starego pliku. */
+        paintAssocLatest = function () {
+          if (asset && a && asset.id !== a.id) return;
+          paintAssoc();
+        };
         if (window.DamAssocEdit && typeof window.DamAssocEdit.enrichLinkedProducts === "function") {
           var seedLinked = seedLinkedProducts(a, groupContext);
           if (seedLinked && seedLinked.length) {
+            var seedSig = linkRecordsSig(seedLinked);
             window.DamAssocEdit.enrichLinkedProducts(seedLinked)
               .then(function (linked) {
+                if (isBrandingVariants && asset && asset.id !== a.id) return;
+                /* Most zdazyl podmienic zestaw pliku - nie przywracaj starego. */
+                if (isBrandingVariants && linkRecordsSig(groupContext.linked_products) !== seedSig) return;
                 var byId = {};
                 seedLinked.forEach(function (s) {
                   if (s && s.id) byId[s.id] = s;
@@ -5851,7 +6020,10 @@
       if (newIdx < 0 || newIdx >= siblings.length) return;
       idx = newIdx;
       asset = siblings[idx];
+      /* Prawa kolumna idzie za wybranym wariantem: lokalny stan od razu, most w tle. */
+      adoptFileLinks(asset);
       renderMeta(asset);
+      refreshFileLinks(asset);
       if (zoomCtrl) zoomCtrl.resetView();
       if (!navOpts.skipHistory && !options.skipNavPush && previewNavCtrl) {
         pushBrandingNavState(idx);
@@ -5908,6 +6080,8 @@
         }
       }
       if (patchOpts.groupContext) groupContext = patchOpts.groupContext;
+      /* Pelny rekord (gruby indeks) moze niesc produkty folderu - wracamy do stanu pliku. */
+      adoptFileLinks(asset);
       renderMeta(asset);
       return true;
     };

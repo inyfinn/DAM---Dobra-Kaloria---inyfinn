@@ -362,12 +362,70 @@
     }
 
     if (state.canonCat) {
+      /* Materiały: podfolder → folder nadrzędny (aż do korzenia kategorii),
+         dopiero z korzenia na ekran startowy. Historia Do przodu zostaje. */
+      var parentCanon = materialParentCanon(state.canonCat);
+      if (parentCanon) {
+        navStepToCanon(parentCanon);
+        return;
+      }
       state.canonCat = null;
       state.navStack = [];
       state.navPos = -1;
       renderAll();
       return;
     }
+  }
+
+  function samePathKey(a, b) {
+    return normExplorerPath(a).toLowerCase() === normExplorerPath(b).toLowerCase();
+  }
+
+  /** Korzeń kategorii materiałów zawierający ścieżkę (lub null). */
+  function materialRootForPath(path) {
+    var key = normExplorerPath(path).toLowerCase();
+    if (!key) return null;
+    var roots = state.materialRoots || [];
+    var i;
+    for (i = 0; i < roots.length; i++) {
+      var rk = normExplorerPath(roots[i].path || roots[i].id).toLowerCase();
+      if (rk && (key === rk || key.indexOf(rk + "/") === 0)) return roots[i];
+    }
+    return null;
+  }
+
+  /**
+   * Rodzic podfolderu materiałów jako canonCat albo null (korzeń / tryb produktów).
+   * Dla rodzica = korzeń zwraca root.id, żeby tytuł i podświetlenie w sidebarze pasowały.
+   */
+  function materialParentCanon(canon) {
+    if (state.catMode !== EXPLORER_CAT_MATERIAL || !canon) return null;
+    var root = materialRootForPath(canon);
+    if (!root || samePathKey(canon, root.path || root.id)) return null;
+    var parent = parentExplorerPath(canon);
+    if (!parent || samePathKey(parent, canon)) return null;
+    if (samePathKey(parent, root.path || root.id)) return root.id;
+    return parent;
+  }
+
+  /** Krok w górę do canonCat bez kasowania historii Do przodu. */
+  function navStepToCanon(canon) {
+    var snap = { canonCat: canon, productId: null };
+    var prev = state.navPos > 0 ? state.navStack[state.navPos - 1] : null;
+    if (prev && !prev.productId && samePathKey(prev.canonCat, canon)) {
+      state.navPos -= 1;
+      navApply(prev);
+      return;
+    }
+    var cur = navSnapshot();
+    if (state.navPos < 0 || !state.navStack.length) {
+      state.navStack = [snap, cur];
+    } else {
+      /* Wstaw rodzica przed bieżący wpis: bieżący staje się celem Do przodu. */
+      state.navStack.splice(state.navPos, 0, snap);
+    }
+    state.navPos = Math.max(0, state.navStack.indexOf(snap));
+    navApply(snap);
   }
 
   var EXPLORER_CTA_STYLE_ID = "damExplorerCtaUnify";
@@ -580,7 +638,28 @@
       "background:transparent;border-color:rgba(255,255,255,.18);color:#c4c0ce}" +
       "html[data-theme=dark] #damExplorerConfirmModal .dam-basepath-actions .dam-int-cta--cancel{" +
       "background:transparent!important;border-color:rgba(255,255,255,.22)!important;color:#e8e6ef!important}" +
-      /* Slot CTAs: always RIGHT, equal 34px icons, fade-in on press (opacity only). */ +
+      /* Pliki w folderze materiałów: wiersz nie nawiguje, akcje jak .dam-file-reveal. */
+      ".dam-prod-row.dam-mat-file-row{cursor:default}" +
+      ".dam-mat-file-row .dam-prod-row__title{flex-wrap:nowrap;align-items:flex-start}" +
+      ".dam-mat-file-row__name{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}" +
+      ".dam-mat-file-row__icon{flex:0 0 auto;font-size:18px;line-height:1;" +
+      "color:var(--dam-primary,#005A29)}" +
+      ".dam-mat-file-open{border:none;background:none;cursor:pointer;padding:4px;" +
+      "border-radius:8px;width:32px;height:32px;display:inline-flex;align-items:center;" +
+      "justify-content:center;flex-shrink:0;color:var(--dam-primary,#005A29)}" +
+      ".dam-mat-file-open i{font-size:18px;line-height:1}" +
+      /* Wąski panel: dam-brand.css kładzie .dam-path-actions w kolumnę; w wierszu pliku
+         trzy akcje (Otwórz, Kopiuj, Pokaż) zostają w jednym rzędzie. */
+      "@container dam-explorer-panel (max-width: 440px){" +
+      ".dam-mat-file-row .dam-prod-row__actions," +
+      ".dam-mat-file-row .dam-prod-row__actions .dam-path-actions{" +
+      "flex-direction:row;align-items:center;gap:6px}}" +
+      ".dam-mat-file-open:hover{background:color-mix(in srgb,var(--dam-primary,#005A29) 8%,transparent)}" +
+      ".dam-mat-file-open:focus-visible{outline:2px solid color-mix(in srgb,var(--dam-primary,#005A29) 55%,transparent);" +
+      "outline-offset:2px}" +
+      ".dam-product-loading{display:flex;flex-direction:column;align-items:flex-start;gap:10px}" +
+      /* Slot CTAs: always RIGHT, equal 34px icons, fade-in on press (opacity only).
+         (Bez "+" po komentarzu: unarny + dawal "NaN" zamiast pierwszego selektora.) */
       ".dam-card-checklist .dam-check-ok," +
       ".dam-card-checklist .dam-check-brak," +
       ".dam-checklist.dam-card-checklist .dam-check-ok," +
@@ -760,6 +839,23 @@
     return String(s || "")
       .replace(/&/g, "&amp;").replace(/</g, "&lt;")
       .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  /**
+   * Polska liczba mnoga: plPlural(n, "folder", "foldery", "folderów").
+   * 1 = one; końcówka 2-4 (poza 12-14, np. 2, 23, 104) = few; pozostałe (0, 5-21, 25...) = many.
+   */
+  function plPlural(n, one, few, many) {
+    n = Math.abs(Number(n) || 0);
+    if (n === 1) return one;
+    var d = n % 10;
+    var h = n % 100;
+    if (d >= 2 && d <= 4 && (h < 12 || h > 14)) return few;
+    return many;
+  }
+
+  function plCount(n, one, few, many) {
+    return (Number(n) || 0) + " " + plPlural(n, one, few, many);
   }
 
   function fmtSize(n) {
@@ -1392,7 +1488,8 @@
       revAll += (p.revisions || []).length;
     });
     status.textContent =
-      visible.length + " produktów (" + revVisible + " wariantow)" +
+      plCount(visible.length, "produkt", "produkty", "produktów") +
+      " (" + plCount(revVisible, "wariant", "warianty", "wariantów") + ")" +
       (visible.length !== all.length || revVisible !== revAll
         ? " / z " + all.length + " wszystkich"
         : "");
@@ -2045,8 +2142,8 @@
     if (elementsLinked) {
       hasElements = true;
       elementsNote = link.file_count
-        ? ("powiazane: " + link.file_count + " pl.")
-        : "powiazane recznie";
+        ? ("powiązane: " + link.file_count + " pl.")
+        : "powiązane ręcznie";
     }
     if (!hasElements) {
       var otherRev = null;
@@ -3481,12 +3578,12 @@
           var msg =
             (data && data.message) ||
             (err === "folders_missing"
-              ? "Brak folderow: " + ((data.missing || []).join(", ") || "2 - PROJEKT / 4 - WIZKI")
+              ? "Brak folderów: " + ((data.missing || []).join(", ") || "2 - PROJEKT / 4 - WIZKI")
               : err === "ai_project_missing"
                 ? "Brak pliku .ai projektu w 2 - PROJEKT."
                 : err === "login_required"
-                  ? "Zaloguj się, aby utworzyc PAKIET."
-                  : "Nie udalo sie utworzyc pakietu (" + err + ").");
+                  ? "Zaloguj się, aby utworzyć PAKIET."
+                  : "Nie udało się utworzyć pakietu (" + err + ").");
           showToast(msg, "error");
           return;
         }
@@ -3605,7 +3702,9 @@
       );
     }
     var drukDetail = cl.drukarnia ? "drukarnia: " + cl.drukarnia : "";
-    var elemDetail = cl.elementsNote ? cl.elementsNote : (cl.elements ? "" : "BRAK");
+    /* Bez "BRAK": czerwony X juz mowi, ze brakuje (uwaga uzytkownika 2026-09-18).
+       Notatka zostaje, bo niesie tresc (liczba plikow, "z wariantu ..."). */
+    var elemDetail = cl.elementsNote || "";
     var elemActions =
         '<button type="button" class="dam-check-action" data-elements-link="' + esc(cl.revisionPath || "") +
           '" data-elements-index="' + esc(cl.revisionIndex || "") +
@@ -3615,9 +3714,9 @@
         (cl.elementsLinked
           ? '<button type="button" class="dam-check-action dam-check-action--danger" data-elements-unlink="' +
             esc(cl.revisionPath || "") + '" data-elements-index="' + esc(cl.revisionIndex || "") +
-            '" data-dam-hold-delete data-dam-label="Usuń powiazanie"' +
-            ' data-dam-hint="Przytrzymaj, aby usunac powiazanie"' +
-            ' title="Przytrzymaj, aby usunac powiazanie" data-dam-tip="Przytrzymaj, aby usunac reczne powiazanie">' +
+            '" data-dam-hold-delete data-dam-label="Usuń powiązanie"' +
+            ' data-dam-hint="Przytrzymaj, aby usunąć powiązanie"' +
+            ' title="Przytrzymaj, aby usunąć powiązanie" data-dam-tip="Przytrzymaj, aby usunąć ręczne powiązanie">' +
             '<i class="uil uil-link-broken" aria-hidden="true"></i></button>'
           : "");
     var fallback = (rev && rev.path) || "";
@@ -3710,7 +3809,7 @@
       "</article>";
     });
     html += "</div>" +
-      '<p class="dam-viz-hint">Jeden podgląd na widok (najwyzsza jakosc). Kliknij, aby otwórzyc studio: L/S, formaty, zoom, języki.</p>' +
+      '<p class="dam-viz-hint">Jeden podgląd na widok (najwyższa jakość). Kliknij, aby otworzyć studio: L/S, formaty, zoom, języki.</p>' +
     "</div>";
     return html;
   }
@@ -3730,7 +3829,7 @@
     } else if (pid) {
       html += '<p class="dam-explorer-marketing-loading">Ładowanie skojarzonych materiałów…</p>';
     }
-    html += '<p class="dam-marketing-hint">Sciezki lokalne po mapowaniu bazy (Ustawienia). Kopiuj lub pokaz w Eksploratorze.</p></div>';
+    html += '<p class="dam-marketing-hint">Ścieżki lokalne po mapowaniu bazy (Ustawienia). Kopiuj lub pokaż w Eksploratorze.</p></div>';
     return html;
   }
 
@@ -3782,7 +3881,7 @@
     var emptyHtml =
       '<div class="dam-file-layer__title">Materiały marketingowe</div>' +
       '<p class="dam-media-preview__assoc-empty">Brak skojarzonych materiałów.</p>' +
-      '<p class="dam-marketing-hint">Sciezki lokalne po mapowaniu bazy (Ustawienia). Kopiuj lub pokaz w Eksploratorze.</p>';
+      '<p class="dam-marketing-hint">Ścieżki lokalne po mapowaniu bazy (Ustawienia). Kopiuj lub pokaż w Eksploratorze.</p>';
     var loadingTimer = setTimeout(function () {
       if (!layer.isConnected) return;
       if (layer.querySelector(".dam-explorer-marketing-loading")) layer.innerHTML = emptyHtml;
@@ -3803,7 +3902,7 @@
         layer.innerHTML =
           '<div class="dam-file-layer__title">Materiały marketingowe</div>' +
           merged.map(marketingRowHtml).join("") +
-          '<p class="dam-marketing-hint">Sciezki lokalne po mapowaniu bazy (Ustawienia). Kopiuj lub pokaz w Eksploratorze.</p>';
+          '<p class="dam-marketing-hint">Ścieżki lokalne po mapowaniu bazy (Ustawienia). Kopiuj lub pokaż w Eksploratorze.</p>';
         bindCopyButtons(layer);
       })
       .catch(function () {
@@ -4022,7 +4121,7 @@
         (forceOlder
           ? '<div class="dam-show-older-label">Nieaktualne / starsze (' + olderRevs.length + ")</div>"
           : '<button type="button" class="dam-show-older-btn" data-code="' + esc(resolvedCode) + '">' +
-              (showOlder ? "Ukryj starsze" : "Pokaz starsze (" + olderRevs.length + ")") +
+              (showOlder ? "Ukryj starsze" : "Pokaż starsze (" + olderRevs.length + ")") +
             "</button>");
       if (olderOpen) {
         olderHtml += '<div class="dam-older-revs">';
@@ -4106,7 +4205,7 @@
               esc((product && product.id) || "") +
               '" data-product-name="' +
               esc((product && (product.display_name || product.name || product.title)) || "") +
-              '" data-dam-tip="Nośnik. Klik: filtr. Admin: Shift+klik lub podwojny klik - wybierz z listy.">' +
+              '" data-dam-tip="Nośnik. Klik: filtr. Admin: Shift+klik lub podwójny klik - wybierz z listy.">' +
               esc(label) +
               "</span>" +
               '<div class="dam-carrier-toggle__chips">' +
@@ -4161,11 +4260,9 @@
     if (!el) return;
     var parts = ['<a href="#" class="dam-breadcrumb__link" data-nav="root">DAM</a>'];
     if (state.canonCat) {
-      var title = "";
-      if (DL) {
-        DL.CATEGORY_CANON.forEach(function (c) { if (c.id === state.canonCat) title = c.title; });
-      }
-      title = title || state.canonCat;
+      /* resolveCanonCatTitle zna tez foldery Materialow; wczesniej okruszek pokazywal surowa
+         sciezke sieciowa (//192.168.x.x/Marketing/...), bo szukal tylko w kategoriach produktow. */
+      var title = resolveCanonCatTitle() || state.canonCat;
       parts.push(state.product
         ? '<a href="#" class="dam-breadcrumb__link" data-nav="cat">' + esc(title) + "</a>"
         : "<span>" + esc(title) + "</span>"
@@ -4493,7 +4590,7 @@
     var folderName = (folder && folder.name) || folderPath.split("/").pop() || "Folder";
     var childMeta =
       folder && folder.child_count != null
-        ? String(folder.child_count) + " elementów"
+        ? plCount(folder.child_count, "element", "elementy", "elementów")
         : "Folder materiałów";
     var tagsHtml =
       '<span class="dam-viz-badge dam-viz-badge--subcat">Folder</span>';
@@ -4525,6 +4622,91 @@
     );
   }
 
+  /** Wiersz pliku w folderze materiałów (payload /folder-browse: name, path, ext, size). */
+  function buildMaterialFileRowHtml(file) {
+    var filePath = (file && file.path) || "";
+    var fileName = (file && file.name) || filePath.split("/").pop() || "Plik";
+    var ext = String((file && file.ext) || fileExt(fileName) || "").replace(/^\./, "").toLowerCase();
+    var metaBits = [];
+    if (file && file.size != null) metaBits.push(fmtSize(file.size));
+    if (file && file.mtime) metaBits.push(fmtDate(file.mtime));
+    var openBtn = filePath
+      ? '<button type="button" class="dam-mat-file-open" data-mat-open="' +
+        esc(filePath) +
+        '" aria-label="Otwórz plik" title="Otwórz plik"' +
+        ' data-dam-tip="Otwiera plik w domyślnej aplikacji Windows i kopiuje ścieżkę">' +
+        '<i class="uil uil-external-link-alt" aria-hidden="true"></i></button>'
+      : "";
+    var actionsHtml = filePath
+      ? '<div class="dam-prod-row__end" data-stop-nav="1">' +
+        '<div class="dam-prod-row__actions dam-carrier-toggle__actions">' +
+        openBtn +
+        pathActions(filePath) +
+        "</div>" +
+        "</div>"
+      : "";
+    return (
+      '<div class="dam-prod-row dam-prod-row--actions dam-mat-file-row" data-mat-file="' +
+      esc(filePath) +
+      '">' +
+      '<div class="dam-prod-row__main">' +
+      '<div class="dam-prod-row__title">' +
+      '<i class="' +
+      fileIcon(ext) +
+      ' dam-mat-file-row__icon" aria-hidden="true"></i>' +
+      '<span class="dam-mat-file-row__name">' +
+      esc(fileName) +
+      "</span>" +
+      "</div>" +
+      '<div class="dam-prod-row__tags">' +
+      '<span class="dam-viz-badge dam-viz-badge--meta">' +
+      esc(ext ? ext.toUpperCase() : "Plik") +
+      "</span>" +
+      "</div>" +
+      (metaBits.length
+        ? '<div class="dam-prod-row__sub"><span class="dam-prod-row__revs">' +
+          esc(metaBits.join(" · ")) +
+          "</span></div>"
+        : "") +
+      "</div>" +
+      actionsHtml +
+      "</div>"
+    );
+  }
+
+  function openMaterialFile(path) {
+    if (!path) return;
+    var dp = window.DamPaths;
+    if (dp && typeof dp.openFileAndCopyPath === "function") {
+      dp.openFileAndCopyPath(path);
+    } else if (dp && typeof dp.openInDefaultApp === "function") {
+      dp.openInDefaultApp(path);
+    } else {
+      showToast("Otwieranie plików wymaga uruchomionej aplikacji DAM.", "error");
+    }
+  }
+
+  function bindMaterialFileActions(mount) {
+    mount.querySelectorAll("[data-mat-open]").forEach(function (btn) {
+      if (btn._damMatOpenBound) return;
+      btn._damMatOpenBound = true;
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openMaterialFile(this.getAttribute("data-mat-open") || "");
+      });
+    });
+    mount.querySelectorAll("[data-mat-file]").forEach(function (row) {
+      if (row._damMatFileBound) return;
+      row._damMatFileBound = true;
+      /* Jak w Eksploratorze Windows: dwuklik otwiera plik; pojedynczy klik nic nie robi. */
+      row.addEventListener("dblclick", function (e) {
+        if (productRowNavBlocked(e.target)) return;
+        openMaterialFile(this.getAttribute("data-mat-file") || "");
+      });
+    });
+  }
+
   function bindMaterialFolderClicks(mount) {
     mount.querySelectorAll("[data-mat-path]").forEach(function (row) {
       if (row._damMatBound) return;
@@ -4546,23 +4728,13 @@
   function materialCategoryMetaText(productCount, folderCount, fileCount) {
     var bits = [];
     if (productCount) {
-      bits.push(
-        productCount +
-          " " +
-          (productCount === 1
-            ? "produkt"
-            : productCount >= 2 && productCount <= 4
-              ? "produkty"
-              : "produktów")
-      );
+      bits.push(plCount(productCount, "produkt", "produkty", "produktów"));
     }
     if (folderCount) {
-      bits.push(
-        folderCount + " " + (folderCount === 1 ? "folder" : "foldery")
-      );
+      bits.push(plCount(folderCount, "folder", "foldery", "folderów"));
     }
     if (fileCount) {
-      bits.push(fileCount + " " + (fileCount === 1 ? "plik" : "pliki"));
+      bits.push(plCount(fileCount, "plik", "pliki", "plików"));
     }
     return bits.length ? bits.join(" · ") : "Brak elementów w tym folderze";
   }
@@ -4650,23 +4822,33 @@
       var files = (data && data.files) || [];
       var folderRows = folders
         .map(function (f) {
+          /* /folder-browse zwraca dla podfolderow tylko nazwe i sciezke. Suma brakujacych
+             licznikow dawala "0 elementow" przy pelnych folderach - bez danych nie pokazujemy liczby. */
+          var hasCounts = f.file_count != null || f.folder_count != null || f.child_count != null;
           return buildMaterialFolderRowHtml(
             Object.assign({}, f, {
-              child_count:
-                (f.file_count || 0) +
-                (f.folder_count || 0) +
-                (f.child_count || 0),
+              child_count: hasCounts
+                ? (f.file_count || 0) + (f.folder_count || 0) + (f.child_count || 0)
+                : null,
             })
           );
         })
+        .join("");
+      /* Pliki bezposrednio w folderze - wczesniej liczone w meta ("1 plik"), ale nie rysowane. */
+      var fileRows = files
+        .filter(function (f) {
+          return f && (f.path || f.name);
+        })
+        .map(buildMaterialFileRowHtml)
         .join("");
       mountCategoryListPanel(mount, products, {
         icon: "uil-folder",
         kicker: "Materiały",
         title: resolveCanonCatTitle(),
         meta: materialCategoryMetaText(products.length, folders.length, files.length),
-        extraRowsHtml: folderRows,
+        extraRowsHtml: folderRows + fileRows,
       });
+      bindMaterialFileActions(mount);
     });
   }
 
@@ -4745,14 +4927,7 @@
         icon: "uil-layer-group",
         kicker: i18nText("explorer.status_filter_kicker", "Filtr statusu"),
         title: label,
-        meta:
-          products.length +
-          " " +
-          (products.length === 1
-            ? "trafiony produkt"
-            : products.length >= 2 && products.length <= 4
-              ? "trafione produkty"
-              : "trafionych produktów")
+        meta: plCount(products.length, "trafiony produkt", "trafione produkty", "trafionych produktów")
       });
     if (!products.length) {
       html += renderStatusEmptyCard(letter) + "</div>";
@@ -4808,14 +4983,8 @@
         kicker: "Wyszukiwanie",
         title: q,
         meta:
-          products.length +
-          " " +
-          (products.length === 1
-            ? "trafiony produkt"
-            : products.length >= 2 && products.length <= 4
-              ? "trafione produkty"
-              : "trafionych produktów") +
-          (hits.length ? " · " + hits.length + " pozycji" : "")
+          plCount(products.length, "trafiony produkt", "trafione produkty", "trafionych produktów") +
+          (hits.length ? " · " + plCount(hits.length, "pozycja", "pozycje", "pozycji") : "")
       });
 
     if (!hits.length && !products.length && !(res.suggestions && res.suggestions.length)) {
@@ -4950,13 +5119,13 @@
         : "";
       mount.innerHTML = '<div class="dam-explorer-panel dam-explorer-welcome">' +
         '<h5 class="dam-explorer-panel__title">Eksplorator DAM</h5>' +
-        '<p class="dam-explorer-panel__lead">Wybierz kategorie po lewej lub wyszukaj indeks / skojarzenie (np. <strong>6300</strong>, <strong>czekolada</strong>).</p>' +
+        '<p class="dam-explorer-panel__lead">Wybierz kategorię po lewej lub wyszukaj indeks / skojarzenie (np. <strong>6300</strong>, <strong>czekolada</strong>).</p>' +
         '<div class="dam-welcome-section"><div class="dam-welcome-section__title">Szybkie linki</div>' +
         '<div class="dam-welcome-links">' +
           '<a href="visualizations.html" class="dam-welcome-link"><i class="uil uil-image" aria-hidden="true"></i> Wizualizacje</a>' +
           '<button type="button" class="dam-welcome-link" data-focus-search="1"><i class="uil uil-search" aria-hidden="true"></i> Szukaj indeksu</button>' +
         "</div></div>" + recentHtml +
-        '<p class="dam-welcome-hint">' + (state.fileIndex.product_count || 0) + " produktów - wybierz kategorie z panelu bocznego.</p>" +
+        '<p class="dam-welcome-hint">' + (state.fileIndex.product_count || 0) + " produktów - wybierz kategorię z panelu bocznego.</p>" +
       "</div>";
       mount.querySelectorAll("[data-pid]").forEach(function (btn) {
         btn.addEventListener("click", function () {
@@ -4985,15 +5154,7 @@
         icon: "uil-folder",
         kicker: "Kategoria",
         title: catTitle,
-        meta:
-          products.length +
-          " " +
-          (products.length === 1
-            ? "produkt"
-            : products.length >= 2 && products.length <= 4
-              ? "produkty"
-              : "produktów") +
-          " w tej kategorii",
+        meta: plCount(products.length, "produkt", "produkty", "produktów") + " w tej kategorii",
         showAddProduct: true,
       });
       return;
@@ -5020,15 +5181,8 @@
     }
 
     var variantMetaLabel = showAllOn
-      ? visibleGroups +
-        " wariant" +
-        (visibleGroups === 1 ? "" : visibleGroups >= 2 && visibleGroups <= 4 ? "y" : "ów") +
-        " (wszystkie)"
-      : visibleGroups +
-        " typ" +
-        (visibleGroups === 1 ? "" : "y") +
-        " nośnika" +
-        " (aktualne)";
+      ? plCount(visibleGroups, "wariant", "warianty", "wariantów") + " (wszystkie)"
+      : plCount(visibleGroups, "typ", "typy", "typów") + " nośnika (aktualne)";
 
     var html2 = '<div class="dam-explorer-panel">' +
       panelHeadHtml({
@@ -5039,10 +5193,11 @@
           ". Kliknij, aby rozwinąć szczegóły.",
         showAddVariant: true
       }) +
-      '<div class="dam-product-toolbar">' +
-        '<div class="dam-product-toolbar__main">' +
-          (state.adminMode
-            ? '<div class="dam-product-toolbar__lifecycle">' +
+      /* Pusta biała karta dla ról bez uprawnień admina (K6): toolbar tylko gdy ma treść. */
+      (state.adminMode
+        ? '<div class="dam-product-toolbar">' +
+            '<div class="dam-product-toolbar__main">' +
+              '<div class="dam-product-toolbar__lifecycle">' +
               '<span class="dam-product-toolbar__life-label">Produkt</span>' +
               renderLifecycleControls({
                 scope: "product",
@@ -5051,14 +5206,28 @@
                 productPath: state.product.path || "",
                 productId: state.product.id || ""
               }) +
-              "</div>"
-            : "") +
-        "</div>" +
-      "</div>" +
+              "</div>" +
+            "</div>" +
+          "</div>"
+        : "") +
       '<div class="dam-carrier-list">';
 
-    if (groups.length === 0 && allRevisions.length === 0) {
-      html2 += '<div class="dam-explorer-empty">Brak danych o nośnikach. Sprawdz indeks dysku.</div>';
+    var hydrateState = productHydrationViewState(state.product);
+    if (hydrateState === "loading") {
+      /* Nigdy checklista z "slim" produktu: same czerwone X i 0 plików (P9). */
+      html2 +=
+        '<div class="dam-explorer-empty dam-product-loading" role="status" aria-live="polite">' +
+        "Wczytywanie plików produktu…</div>";
+    } else if (hydrateState === "failed") {
+      html2 +=
+        '<div class="dam-explorer-empty dam-product-loading" role="alert">' +
+        "<span>Nie udało się wczytać plików tego produktu. Sprawdź, czy aplikacja DAM działa, i spróbuj ponownie.</span>" +
+        '<button type="button" class="dam-int-cta" data-product-hydrate-retry="' +
+        esc(state.product.id || "") +
+        '"><i class="uil uil-redo" aria-hidden="true"></i><span>Spróbuj ponownie</span></button>' +
+        "</div>";
+    } else if (groups.length === 0 && allRevisions.length === 0) {
+      html2 += '<div class="dam-explorer-empty">Brak danych o nośnikach. Sprawdź indeks dysku.</div>';
     } else {
       var anyShown = false;
       if (showAllOn) {
@@ -5091,6 +5260,15 @@
     "</div>";
     mount.innerHTML = html2;
     bindPanelNav(mount);
+    mount.querySelectorAll("[data-product-hydrate-retry]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var rid = this.getAttribute("data-product-hydrate-retry") || "";
+        delete _hydrateFailed[rid];
+        ensureProductHydrated(rid);
+        renderMain();
+      });
+    });
+    if (hydrateState === "loading") ensureProductHydrated(state.product.id);
 
     bindProductToolbar(mount);
     bindCarrierInteractions(mount);
@@ -5593,7 +5771,7 @@
         });
         bgBox.innerHTML = bgOpts.map(function (o) {
           return '<button type="button" class="dam-lb-chip dam-lb-chip--bg' + (o.id === studio.bg ? " is-active" : "") +
-            '" data-lb-bg="' + esc(o.id) + '" title="' + esc(o.id === "bez-tla" ? "PNG - przezroczyste tlo" : "JPG - biale tlo") + '">' +
+            '" data-lb-bg="' + esc(o.id) + '" title="' + esc(o.id === "bez-tla" ? "PNG - przezroczyste tło" : "JPG - białe tło") + '">' +
             '<span class="dam-lb-chip__label">' + esc(o.label) + "</span>" +
             '<span class="dam-lb-chip__sub">' + esc(o.sub) + "</span></button>";
         }).join("");
@@ -5683,7 +5861,7 @@
                 '<span class="dam-lb-size__ext">' + esc(it.ext || "") + "</span></button>";
             }).join("") +
             "</div>"
-          : '<p class="dam-lb-meta__muted">Brak wariantow dla tego widoku.</p>';
+          : '<p class="dam-lb-meta__muted">Brak wariantów dla tego widoku.</p>';
       }
 
       var revealBtn = document.getElementById("damLbRevealFile");
@@ -5715,7 +5893,7 @@
           '<button type="button" class="dam-lightbox__close" data-lb-close aria-label="Zamknij"><i class="uil uil-times"></i></button>' +
           '<div class="dam-lightbox__layout">' +
             '<aside class="dam-lightbox__side" aria-label="Szukaj wizualizacji">' +
-              '<p class="dam-lb-lead">Wybierz perspektywe, tlo i rozmiar. Brakujace pliki oznaczone na czerwono.</p>' +
+              '<p class="dam-lb-lead">Wybierz perspektywę, tło i rozmiar. Brakujące pliki oznaczone na czerwono.</p>' +
               '<div class="dam-lb-filters">' +
                 '<div class="dam-lb-section">' +
                   '<div class="dam-lb-section__title">Tlo / format</div>' +
@@ -5731,7 +5909,7 @@
                 "</div>" +
               "</div>" +
               '<div class="dam-lb-section dam-lb-section--sizes">' +
-                '<div class="dam-lb-section__title">Rozmiar i jakosc</div>' +
+                '<div class="dam-lb-section__title">Rozmiar i jakość</div>' +
                 '<div class="dam-lb-variants" id="damLbVariants"></div>' +
               "</div>" +
               '<details class="dam-lb-details">' +
@@ -5757,7 +5935,7 @@
                 '<div class="dam-lightbox__title" title=""></div>' +
                 '<div class="dam-lightbox__cta">' +
                   '<button type="button" class="geex-btn geex-btn--primary geex-btn--sm dam-lb-cta-reveal" id="damLbRevealFile" data-dam-tip="Otwórz folder w Windows i zaznacz ten plik">' +
-                    '<i class="uil uil-folder-open" aria-hidden="true"></i><span>Pokaz w Explorerze</span></button>' +
+                    '<i class="uil uil-folder-open" aria-hidden="true"></i><span>Pokaż w Eksploratorze</span></button>' +
                   '<button type="button" class="geex-btn geex-btn--sm dam-lb-cta-copy" id="damLbCopyPath" data-dam-tip="Kopiuj ścieżkę pliku">' +
                     '<i class="uil uil-copy" aria-hidden="true"></i><span>Kopiuj ścieżkę</span></button>' +
                 "</div>" +
@@ -5912,7 +6090,7 @@
             '<input type="text" id="damAddVariantPath" class="dam-basepath-input" placeholder="Wklej ścieżkę lub wybierz folder…" style="flex:1" autocomplete="off" spellcheck="false">' +
             '<button type="button" class="geex-btn geex-btn--primary" id="damAddVariantPick">Wybierz folder</button>' +
           "</div>" +
-          '<label class="dam-basepath-label" for="damAddVariantCarrier">Typ nosnika</label>' +
+          '<label class="dam-basepath-label" for="damAddVariantCarrier">Typ nośnika</label>' +
           '<select id="damAddVariantCarrier" class="dam-basepath-input">' + opts + "</select>" +
           '<label class="dam-basepath-label" for="damAddVariantStatus">Status</label>' +
           '<select id="damAddVariantStatus" class="dam-basepath-input">' +
@@ -5976,7 +6154,7 @@
       var market = (document.getElementById("damAddVariantMarket").dataset.market) || "";
       if (!pathRaw) { showToast("Wklej ścieżkę lub wybierz folder wariantu"); return; }
       if (!carrier || carrier === "UNKNOWN") {
-        showToast("Wybierz konkretny typ nosnika - nie zapisujemy UNKNOWN");
+        showToast("Wybierz konkretny typ nośnika - nie zapisujemy UNKNOWN");
         return;
       }
       var canonPath = pathRaw.replace(/\\/g, "/");
@@ -5997,11 +6175,11 @@
         folder: canonPath.split("/").pop()
       };
       saveCarrierOverride(canonPath, entry).then(function () {
-        showToast("Zapisano mapowanie nosnika");
+        showToast("Zapisano mapowanie nośnika");
         modal.remove();
         return loadCarrierOverrides().then(function () { renderMain(); });
       }).catch(function (err) {
-        showToast("Blad zapisu: " + (err && err.message ? err.message : "bridge"));
+        showToast("Błąd zapisu: " + (err && err.message ? err.message : "bridge"));
       });
     });
   }
@@ -6228,7 +6406,7 @@
         /* Pkt 32: soft-delete z oknem cofniecia zamiast twardej destrukcji. */
         if (prevTarget && window.DamDanger && typeof window.DamDanger.toastUndo === "function") {
           window.DamDanger.toastUndo({
-            message: "Usuńieto powiazanie Elementy",
+            message: "Usunięto powiązanie Elementy",
             actionLabel: "Cofnij",
             duration: 8000,
             onUndo: function () {
@@ -6236,7 +6414,7 @@
             }
           });
         } else {
-          showToast("Usuńieto powiazanie Elementy");
+          showToast("Usunięto powiązanie Elementy");
         }
       });
   }
@@ -6254,7 +6432,7 @@
     window.DamFolderPicker.open({
       startDir: startDir,
       mode: "folder",
-      title: "Wskaz Elementy / skladniki",
+      title: "Wskaż Elementy / składniki",
       showWindowsButton: true,
       onPicked: function (picked) {
         var path = picked && picked.path;
@@ -6967,7 +7145,7 @@
       exportBtn.addEventListener("click", exportStatusJson);
       exportBtn.setAttribute(
         "data-dam-tip",
-        "Opcjonalna kopia zapasowa zmergowanego statusu z tej sesji. Wspolne F/X/D zapisuje most (dysk Marketing + apps/web/data/*.json + Postgres KV). Nie podmieniaj recznie pliku na P:."
+        "Opcjonalna kopia zapasowa zmergowanego statusu z tej sesji. Wspólne F/X/D zapisuje most (dysk Marketing + apps/web/data/*.json + Postgres KV). Nie podmieniaj ręcznie pliku na P:."
       );
       exportBtn.title = "Pobierz kopie statusu (JSON backup)";
     }
@@ -7074,7 +7252,9 @@
     if (window.DamShell && typeof window.DamShell.setTrailLeaf === "function") {
       var leaf = state.product
         ? (DL ? DL.cleanProductDisplayName(state.product.display_name || state.product.name) : (state.product.display_name || state.product.name))
-        : (state.canonCat || "Eksplorator");
+        : (state.canonCat ? (resolveCanonCatTitle() || state.canonCat) : "Eksplorator");
+      /* Wczesniej: surowe state.canonCat, czyli w trybie Materialow pelna sciezka
+         sieciowa //192.168.x.x/Marketing/- POLSKA/... zamiast nazwy folderu. */
       window.DamShell.setTrailLeaf(leaf);
     }
   }
@@ -7543,14 +7723,14 @@
     saveLocalStatus(local);
     syncStatusMirrorFromLifecycle();
     fresh.revisions = dedupeLifecycleTwinRevisions(fresh.revisions || []);
-    state.product = fresh;
+    state.product = preferHydratedProduct(fresh);
     return fresh;
   }
 
   function refreshOpenProductFromIndex(productId, pathHint) {
     var pid = productId || (state.product && state.product.id) || "";
     var fresh = findFreshProductInIndex(pid, pathHint || (state.product && state.product.path) || "");
-    if (fresh) state.product = fresh;
+    if (fresh) state.product = preferHydratedProduct(fresh);
     return fresh;
   }
 
@@ -7606,6 +7786,22 @@
     var params = new URLSearchParams(location.search);
     var qIndex = params.get("index");
     var qProd  = params.get("product");
+    var qText = String(params.get("q") || "").trim();
+    /* ?q= z wyszukiwarki w naglowku (dam-shell.js): wpisz w pole i puść ten sam jeden lot
+       wyszukiwania co przy pisaniu (bindSearchBox slucha "input"). */
+    if (qText && !qProd && !qIndex) {
+      var qInput = document.getElementById("damFileSearch");
+      if (qInput) {
+        qInput.value = qText;
+        qInput.dispatchEvent(new Event("input", { bubbles: true }));
+        try {
+          qInput.focus({ preventScroll: true });
+        } catch (eFocus) {
+          /* ignore */
+        }
+      }
+      return;
+    }
     if (qProd && window.DamSearch) {
       var p = window.DamSearch.productById(qProd);
       if (p) openProduct(p);
@@ -8065,6 +8261,7 @@
 
   function productNeedsFileHydration(prod) {
     if (!prod) return false;
+    if (prod._damHydrated) return false;
     if (prod.files_slim) return true;
     var revs = prod.revisions || [];
     if (!revs.length) return false;
@@ -8076,12 +8273,15 @@
   }
 
   function mergeHydratedExplorerProduct(full) {
-    if (!full || !full.id || !state.fileIndex || !state.fileIndex.products) return full;
+    if (!full || !full.id) return full;
+    full.files_slim = false;
+    full._damHydrated = true;
+    /* Zawsze do BIEZACEGO state.fileIndex (mogl zostac podmieniony w trakcie fetch). */
+    if (!state.fileIndex || !state.fileIndex.products) return full;
     var list = state.fileIndex.products;
     var i;
     for (i = 0; i < list.length; i++) {
       if (list[i] && list[i].id === full.id) {
-        full.files_slim = false;
         list[i] = full;
         break;
       }
@@ -8112,6 +8312,78 @@
       .catch(function () {
         return null;
       });
+  }
+
+  /*
+   * P9 (race "slim" produktu): indeks z mostu ma produkty files_slim (bez files_by_role).
+   * Pliki dociaga hydrateExplorerProduct, ale state.product byl nadpisywany slim-kopia
+   * z nowego indeksu (bindExplorerData → refreshOpenProductFromIndex, reconcile...) bez
+   * ponownej hydratacji - checklista z samymi czerwonymi X i 0 plikow.
+   * Teraz: jedna kolejka hydratacji per id, podmiana na slim nigdy nie cofa juz
+   * wczytanych plikow, a widok slim renderuje "Wczytywanie", nie checkliste.
+   */
+  var _hydrateInFlight = Object.create(null);
+  var _hydrateFailed = Object.create(null);
+
+  function isSlimProduct(prod) {
+    return !!(prod && prod.files_slim && !prod._damHydrated);
+  }
+
+  /** "ready" | "loading" | "failed" dla widoku produktu. */
+  function productHydrationViewState(prod) {
+    if (!isSlimProduct(prod)) return "ready";
+    var id = String(prod.id || "");
+    if (_hydrateInFlight[id]) return "loading";
+    if (_hydrateFailed[id]) return "failed";
+    return "loading";
+  }
+
+  function adoptHydratedOpenProduct(id, full) {
+    if (!full || !state.product) return;
+    var cur = state.product;
+    if (cur === full) return;
+    if (cur.id !== id && cur.id !== full.id) return;
+    state.product = full;
+  }
+
+  /** Hydratacja z deduplikacja (jeden fetch na id naraz). opts.force = ponow po bledzie. */
+  function ensureProductHydrated(pid, opts) {
+    var id = String(pid || "").trim();
+    if (!id) return Promise.resolve(null);
+    opts = opts || {};
+    if (_hydrateInFlight[id]) return _hydrateInFlight[id];
+    if (_hydrateFailed[id] && !opts.force) return Promise.resolve(null);
+    delete _hydrateFailed[id];
+    var p = hydrateExplorerProduct(id).then(function (full) {
+      delete _hydrateInFlight[id];
+      if (full) {
+        adoptHydratedOpenProduct(id, full);
+      } else {
+        _hydrateFailed[id] = true;
+      }
+      scheduleExplorerRender();
+      return full;
+    });
+    _hydrateInFlight[id] = p;
+    return p;
+  }
+
+  /**
+   * Kandydat na state.product z (nowego) indeksu. Slim nie wypiera juz nawodnionej
+   * kopii tego samego produktu - ta trafia do biezacego indeksu, a pliki odswiezamy w tle.
+   */
+  function preferHydratedProduct(fresh) {
+    if (!fresh) return fresh;
+    var cur = state.product;
+    if (isSlimProduct(fresh)) {
+      if (cur && cur !== fresh && cur.id === fresh.id && !isSlimProduct(cur) && cur._damHydrated) {
+        mergeHydratedExplorerProduct(cur);
+        ensureProductHydrated(fresh.id, { force: true });
+        return cur;
+      }
+      ensureProductHydrated(fresh.id);
+    }
+    return fresh;
   }
 
   function openProduct(product) {
@@ -8146,14 +8418,11 @@
       window.DamApi && typeof window.DamApi.loadChecklistExtras === "function"
         ? window.DamApi.loadChecklistExtras()
         : Promise.resolve(null);
-    var hydrateP = productNeedsFileHydration(product)
-      ? hydrateExplorerProduct(product.id)
-      : Promise.resolve(product);
-    Promise.all([extrasP, hydrateP]).then(function (pack) {
-      var full = pack[1];
-      if (full && state.product && state.product.id === full.id) {
-        state.product = full;
-      }
+    /* Jawne otwarcie = ponow hydratacje nawet po wczesniejszym bledzie. */
+    var hydrateP = productNeedsFileHydration(state.product)
+      ? ensureProductHydrated(state.product.id, { force: true })
+      : Promise.resolve(state.product);
+    Promise.all([extrasP, hydrateP]).then(function () {
       scheduleExplorerRender();
     });
   }

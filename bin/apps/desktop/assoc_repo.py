@@ -173,8 +173,15 @@ def upsert_confirmed_links(
     variant_ids: list[str] | None = None,
     folder_group_id: str = "",
     schedule_publish: bool = True,
+    replace_confirmed: bool = False,
 ) -> dict[str, Any]:
-    """Single write path for quiz confirm + manual editor."""
+    """Single write path for quiz confirm + manual editor.
+
+    replace_confirmed=True (edytor): product_ids to PELNY zestaw dla pliku. Skojarzenia
+    confirmed/auto spoza zestawu dostaja status 'rejected' (trigger oznacza dirty ->
+    assoc_sync wypycha na NAS). Do 2026-09-18 odznaczony produkt zostawal 'confirmed'
+    w SQLite i Postgresie, wiec inne komputery dalej go widzialy.
+    """
     aid = str(asset_id or "").strip()
     pids = [str(x).strip() for x in (product_ids or []) if str(x).strip()]
     if not aid:
@@ -196,6 +203,23 @@ def upsert_confirmed_links(
                 cur.execute(
                     "UPDATE asset_product_links SET status='rejected', updated_at=?, updated_by=? "
                     "WHERE asset_id=? AND status='pending'",
+                    (now, updated_by, aid),
+                )
+        if replace_confirmed:
+            if pids:
+                cur.execute(
+                    "UPDATE asset_product_links SET status='rejected', reason='editor_removed', "
+                    "updated_at=?, updated_by=? "
+                    "WHERE asset_id=? AND status IN ('confirmed','auto') AND product_id NOT IN ({})".format(
+                        ",".join("?" for _ in pids)
+                    ),
+                    (now, updated_by, aid, *pids),
+                )
+            else:
+                cur.execute(
+                    "UPDATE asset_product_links SET status='rejected', reason='editor_removed', "
+                    "updated_at=?, updated_by=? "
+                    "WHERE asset_id=? AND status IN ('confirmed','auto')",
                     (now, updated_by, aid),
                 )
         for pid in pids:

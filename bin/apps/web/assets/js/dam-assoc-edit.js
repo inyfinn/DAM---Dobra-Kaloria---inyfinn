@@ -1818,21 +1818,30 @@
     return ctx._assocSaveGen;
   }
 
-  function callAssocOnSaved(ctx, productIds, variantIds) {
+  /** meta (opcjonalne): { scope: "file"|"all"|"", assetIds: [...] } - zakres zapisu. */
+  function callAssocOnSaved(ctx, productIds, variantIds, meta) {
     if (!ctx || typeof ctx.onSaved !== "function") return;
     try {
       global.__damAssocOnSavedCalls = (global.__damAssocOnSavedCalls || 0) + 1;
     } catch (eCnt) { /* ignore */ }
-    ctx.onSaved(productIds, variantIds);
+    ctx.onSaved(productIds, variantIds, meta || null);
   }
 
   /** Natychmiastowy UI po Zatwierdz (zapis bridge w tle). */
-  function flushOptimisticAssocUi(ctx, productIds, variantIds) {
+  function flushOptimisticAssocUi(ctx, productIds, variantIds, scopeOpts) {
     patchCtxProductIds(ctx, productIds);
     patchCtxVariantIds(ctx, variantIds);
     ctx._assocOptimisticSig = assocIdsSig(productIds, variantIds);
     ctx._assocOptimisticGen = bumpAssocSaveGen(ctx);
-    callAssocOnSaved(ctx, productIds, variantIds);
+    callAssocOnSaved(ctx, productIds, variantIds, {
+      scope: (scopeOpts && scopeOpts.scope) || "",
+      assetIds:
+        scopeOpts && scopeOpts.scope === "all"
+          ? (scopeOpts.scopeAssetIds || []).slice()
+          : ctx.asset && ctx.asset.id
+            ? [String(ctx.asset.id)]
+            : [],
+    });
     if (typeof ctx.onRefresh === "function") ctx.onRefresh();
     bustAssocThumbsInScope();
   }
@@ -1888,22 +1897,30 @@
    * Seed UI + toast natychmiast; zapis bridge w kolejce (retry, bez rollbacku przy timeout).
    * Cofnij = undoCfg.onUndo (przywraca stan + osobny zapis).
    */
-  function seedEnrichAssocSave(ctx, productIds, variantIds, undoCfg) {
+  function seedEnrichAssocSave(ctx, productIds, variantIds, undoCfg, scopeOpts) {
     undoCfg = undoCfg || {};
     if (global.DamDanger && typeof global.DamDanger.toastUndo === "function") {
       global.DamDanger.toastUndo(undoCfg);
     } else if (undoCfg.message) {
       toast(undoCfg.message);
     }
-    return enqueueAssocSave(ctx, productIds, variantIds, {
-      silentToast: true,
-      suppressErrorToast: true,
-      optimistic: true,
-    });
+    return enqueueAssocSave(
+      ctx,
+      productIds,
+      variantIds,
+      Object.assign(
+        {
+          silentToast: true,
+          suppressErrorToast: true,
+          optimistic: true,
+        },
+        scopeOpts || {}
+      )
+    );
   }
 
   var ASSOC_CSS_ID = "damAssocEditInjectedCss";
-  var ASSOC_CSS_TOKEN = "assocPickerActionsSlot67Align20260729l";
+  var ASSOC_CSS_TOKEN = "assocVariantScope20260918a";
   var PICKER_LIST_CAP = 80;
   /* Max raw iterations in collect (defense vs filter that skips most rows before CAP). */
   var PICKER_SCAN_BUDGET = 400;
@@ -2208,6 +2225,44 @@
       "background:#fff;border-color:#e2e2ea;color:#6b6b76;}" +
       ".dam-assoc-edit-overlay .dam-tag-edit-popover__cancel:hover{" +
       "background:#f4f4f6;color:#464255;}" +
+      /* Zakres zapisu produktow: segment w kolumnie 3 stopki (Wstecz | Dysk | zakres | Zatwierdź). */
+      /* Shell pickera jest jasny w obu motywach (parity COMBO: #f7f6fa / #fff jak
+         Wstecz) - segment bierze te same wartosci co sasiednie przyciski stopki. */
+      ".dam-assoc-scope{--dam-assoc-scope-bg:#fff;--dam-assoc-scope-line:#e2e2ea;" +
+      "--dam-assoc-scope-ink:#464255;--dam-assoc-scope-ink-muted:#6b6b76;}" +
+      ".dam-assoc-edit-overlay .dam-thumb-picker__footer > .dam-assoc-scope{" +
+      "grid-column:3;justify-self:end;display:flex;align-items:center;gap:8px;min-width:0;margin:0;}" +
+      ".dam-assoc-scope__label{font-size:var(--dam-fs-sm,12px);font-weight:600;white-space:nowrap;" +
+      "color:var(--dam-assoc-scope-ink-muted);}" +
+      ".dam-assoc-scope__seg{display:inline-flex;align-items:stretch;gap:2px;padding:3px;min-width:0;" +
+      "border-radius:var(--dam-radius-md,12px);background:var(--dam-assoc-scope-bg);" +
+      "border:1px solid var(--dam-assoc-scope-line);}" +
+      ".dam-assoc-scope__opt{position:relative;display:inline-flex;align-items:center;min-height:34px;" +
+      "padding:0 12px;border-radius:var(--dam-radius-sm,8px);cursor:pointer;margin:0;" +
+      "font-size:12.5px;font-weight:500;line-height:1.25;white-space:nowrap;color:var(--dam-assoc-scope-ink);" +
+      "transition:background-color var(--dam-anim-hover,.22s) ease,color var(--dam-anim-hover,.22s) ease;}" +
+      ".dam-assoc-scope__opt > span{display:inline-flex;align-items:center;gap:6px;}" +
+      ".dam-assoc-scope__opt i{font-size:15px;line-height:1;}" +
+      ".dam-assoc-scope__opt input{position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none;}" +
+      ".dam-assoc-scope__opt:hover{background:color-mix(in srgb,var(--dam-primary,#005A29) 8%,transparent);}" +
+      ".dam-assoc-scope__opt.is-checked{font-weight:600;" +
+      "color:color-mix(in srgb,var(--dam-primary,#005A29) 80%,#000);" +
+      "background:color-mix(in srgb,var(--dam-primary,#005A29) 14%,var(--dam-assoc-scope-bg));" +
+      "box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dam-primary,#005A29) 45%,transparent);}" +
+      ".dam-assoc-scope__opt input:focus-visible + span{outline:2px solid var(--dam-primary,#005A29);" +
+      "outline-offset:4px;border-radius:4px;}" +
+      /* Prawa kolumna modala: lekki stan ladowania produktow wybranego wariantu. */
+      "#damMediaPreviewLinkedProductsHost.is-links-loading [data-produkty-host]{" +
+      "opacity:.5;transition:opacity var(--dam-anim-hover,.22s) ease;pointer-events:none;}" +
+      "#damMediaPreviewLinkedProductsHost .dam-assoc-links-loading{display:none;align-items:center;gap:6px;" +
+      "margin:0 0 6px;font-size:var(--dam-fs-sm,12px);color:var(--dam-text-muted,#8f8b9f);}" +
+      "#damMediaPreviewLinkedProductsHost.is-links-loading .dam-assoc-links-loading{display:flex;}" +
+      "#damMediaPreviewLinkedProductsHost .dam-assoc-links-loading::before{content:'';width:12px;height:12px;" +
+      "border-radius:50%;border:2px solid color-mix(in srgb,var(--dam-primary,#005A29) 25%,transparent);" +
+      "border-top-color:var(--dam-primary,#005A29);animation:damAssocLinksSpin .8s linear infinite;}" +
+      "@keyframes damAssocLinksSpin{to{transform:rotate(360deg);}}" +
+      "@media (prefers-reduced-motion:reduce){" +
+      "#damMediaPreviewLinkedProductsHost .dam-assoc-links-loading::before{animation:none;}}" +
       /* Breakpoints */
       "@media (max-width:767.98px){" +
       ".dam-assoc-edit-overlay #damAssocEditPopover.dam-thumb-picker-box," +
@@ -2219,6 +2274,17 @@
       ".dam-assoc-edit-overlay .dam-thumb-picker__footer{justify-content:stretch;}" +
       ".dam-assoc-edit-overlay .dam-tag-edit-popover__confirm," +
       ".dam-assoc-edit-overlay .dam-tag-edit-popover__cancel{flex:1 1 auto;}" +
+      /* Mobile + zakres zapisu: segment w 1. rzedzie, Wstecz|Dysk, Zatwierdz na cala szerokosc. */
+      "#damAssocEditPopover.has-assoc-scope .dam-thumb-picker__footer{" +
+      "grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto auto auto;row-gap:10px;}" +
+      "#damAssocEditPopover.has-assoc-scope .dam-thumb-picker__footer > .dam-assoc-scope{" +
+      "grid-column:1 / -1;grid-row:1;justify-self:stretch;flex-direction:column;align-items:stretch;gap:6px;}" +
+      "#damAssocEditPopover.has-assoc-scope .dam-thumb-picker__footer > [data-cancel]{grid-column:1;grid-row:2;}" +
+      "#damAssocEditPopover.has-assoc-scope .dam-thumb-picker__footer > [data-goto-combo]{grid-column:2;grid-row:2;}" +
+      "#damAssocEditPopover.has-assoc-scope .dam-thumb-picker__footer > [data-confirm]{" +
+      "grid-column:1 / -1;grid-row:3;justify-self:stretch;}" +
+      "#damAssocEditPopover.has-assoc-scope .dam-assoc-scope__seg{display:grid;grid-template-columns:minmax(0,1fr);}" +
+      "#damAssocEditPopover.has-assoc-scope .dam-assoc-scope__opt{white-space:normal;min-height:44px;}" +
       "}" +
       "@media (min-width:768px){" +
       ".dam-assoc-edit-overlay #damAssocEditPopover.dam-thumb-picker-box," +
@@ -3487,8 +3553,17 @@
             linkedMetaByIdFromCtx(actxP)
           );
           patchCtxProductIds(actxP, nextPids);
-          flushOptimisticAssocUi(actxP, nextPids, prevVidsP);
-          saveAssociations(actxP, nextPids, prevVidsP, { silentToast: true });
+          var unpinScope = productSaveScope(
+            actxP,
+            typeof opts._scopeChoice === "function" ? opts._scopeChoice() : "file"
+          );
+          flushOptimisticAssocUi(actxP, nextPids, prevVidsP, unpinScope);
+          saveAssociations(
+            actxP,
+            nextPids,
+            prevVidsP,
+            Object.assign({ silentToast: true }, unpinScope)
+          );
           return;
         }
         if (opts.productSearchForVariants) {
@@ -4165,9 +4240,16 @@
         '">' +
         '<i class="uil uil-folder-plus" aria-hidden="true"></i><span>Dodaj z dysku</span></button>' +
         '<span class="dam-dialog-actions__spacer" aria-hidden="true"></span>' +
+        assocScopeChoiceHtml(opts.scopeChoice) +
         '<button type="button" class="dam-tag-edit-popover__confirm" data-confirm><i class="uil uil-check"></i><span>Zatwierdź</span></button>' +
         "</div>";
       pop.innerHTML = html;
+      if (opts.scopeChoice) pop.classList.add("has-assoc-scope");
+      /* Zakres zapisu produktow (plik / wszystkie warianty) - czytany przy zapisie. */
+      opts._scopeChoice = function () {
+        var picked = pop.querySelector('input[name="damAssocScope"]:checked');
+        return picked && picked.value === "all" ? "all" : "file";
+      };
       pop._damAssocRefresh = function () {
         renderPinned();
         var s = pop.querySelector("#damAssocEditSearch");
@@ -4488,13 +4570,25 @@
               opts.onConfirmVariants(picks.length ? picks : ids);
               return;
             }
+            var scopeChoice =
+              typeof opts._scopeChoice === "function" ? opts._scopeChoice() : "file";
             closePicker();
-            if (typeof opts.onConfirm === "function") opts.onConfirm(ids, selected);
+            if (typeof opts.onConfirm === "function") {
+              opts.onConfirm(ids, selected, { scope: scopeChoice });
+            }
           };
           confirmEl.onclick = function () {
             pop._damAssocRunConfirm();
           };
         }
+        pop.querySelectorAll('input[name="damAssocScope"]').forEach(function (radio) {
+          radio.addEventListener("change", function () {
+            pop.querySelectorAll(".dam-assoc-scope__opt").forEach(function (lab) {
+              var inp = lab.querySelector("input");
+              lab.classList.toggle("is-checked", !!(inp && inp.checked));
+            });
+          });
+        });
         var comboEl = pop.querySelector("[data-goto-combo]");
         if (comboEl) {
           comboEl.onclick = function () {
@@ -4961,24 +5055,127 @@
     return ctx && ctx.asset && ctx.asset.id ? String(ctx.asset.id) : "";
   }
 
-  function assocSavePayload(ctx, productIds, variantIds) {
-    return {
+  /**
+   * Pliki grupy "Warianty materiału" z kontekstu modala (ctx.variantAssetIds:
+   * tablica albo funkcja). Zawsze zawiera biezacy plik; < 2 = brak wyboru zakresu.
+   */
+  function variantScopeIds(ctx) {
+    if (!ctx || !ctx.asset || !ctx.asset.id) return [];
+    var src = ctx.variantAssetIds;
+    var raw = typeof src === "function" ? src() : src;
+    var out = [String(ctx.asset.id)];
+    (Array.isArray(raw) ? raw : []).forEach(function (id) {
+      id = String(id || "").trim();
+      if (id && out.indexOf(id) === -1) out.push(id);
+    });
+    return out;
+  }
+
+  /**
+   * Zakres zapisu skojarzonych PRODUKTOW: "file" (domyslnie, tylko ten plik)
+   * albo "all" (kazdy plik z "Warianty materiału"). Bez grupy wariantow = {}
+   * (stary kontrakt mostu).
+   */
+  function productSaveScope(ctx, chosen) {
+    var ids = variantScopeIds(ctx);
+    if (ids.length < 2) return {};
+    if (chosen === "all") return { scope: "all", scopeAssetIds: ids };
+    return { scope: "file" };
+  }
+
+  function plFilesLabel(n) {
+    var mod10 = n % 10;
+    var mod100 = n % 100;
+    if (n === 1) return "plik";
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "pliki";
+    return "plików";
+  }
+
+  /** Segment w stopce pickera produktow: "Tylko ten plik" | "Wszystkie warianty materiału (N)". */
+  function assocScopeChoiceHtml(choice) {
+    if (!choice || !(choice.count > 1)) return "";
+    var n = choice.count;
+    return (
+      '<div class="dam-assoc-scope" role="radiogroup" aria-labelledby="damAssocScopeLabel" data-assoc-scope>' +
+      '<span class="dam-assoc-scope__label" id="damAssocScopeLabel">Zapisz dla:</span>' +
+      '<div class="dam-assoc-scope__seg">' +
+      '<label class="dam-assoc-scope__opt is-checked">' +
+      '<input type="radio" name="damAssocScope" value="file" checked />' +
+      '<span><i class="uil uil-file" aria-hidden="true"></i>Tylko ten plik</span></label>' +
+      '<label class="dam-assoc-scope__opt" data-dam-tip="Ten sam zestaw produktów dla każdego pliku z sekcji Warianty materiału">' +
+      '<input type="radio" name="damAssocScope" value="all" />' +
+      '<span><i class="uil uil-copy" aria-hidden="true"></i>Wszystkie warianty materiału (' +
+      esc(String(n)) +
+      " " +
+      plFilesLabel(n) +
+      ")</span></label>" +
+      "</div></div>"
+    );
+  }
+
+  function assocSavePayload(ctx, productIds, variantIds, scopeOpts) {
+    var payload = {
       asset_id: ctx.asset.id,
       folder_group_id: (ctx.groupContext && ctx.groupContext.folder_group_id) || "",
       linked_product_ids: (productIds || []).slice(),
       linked_variant_ids: (variantIds || []).slice(),
     };
+    if (scopeOpts && (scopeOpts.scope === "file" || scopeOpts.scope === "all")) {
+      payload.scope = scopeOpts.scope;
+      if (scopeOpts.scope === "all") {
+        payload.asset_ids = (scopeOpts.scopeAssetIds || []).slice();
+      }
+    }
+    return payload;
   }
 
-  function applyAssocSaveSuccess(ctx, productIds, variantIds, opts) {
+  /** Pliki, ktore dostaly zapis (scope all = cala grupa; partial = tylko udane). */
+  function savedAssetIdsFor(ctx, opts, res) {
+    if (res && Array.isArray(res.results) && res.results.length) {
+      return res.results
+        .filter(function (r) {
+          return r && r.ok && r.asset_id;
+        })
+        .map(function (r) {
+          return String(r.asset_id);
+        });
+    }
+    if (opts && opts.scope === "all" && opts.scopeAssetIds && opts.scopeAssetIds.length) {
+      return opts.scopeAssetIds.slice();
+    }
+    return ctx && ctx.asset && ctx.asset.id ? [String(ctx.asset.id)] : [];
+  }
+
+  function applyAssocSaveSuccess(ctx, productIds, variantIds, opts, res) {
     opts = opts || {};
-    if (!opts.silentToast) toast("Zapisano skojarzenia");
-    if (_assocOverrides && _assocOverrides.assets && ctx.asset && ctx.asset.id) {
-      _assocOverrides.assets[ctx.asset.id] = {
-        linked_product_ids: (productIds || []).slice(),
-        linked_variant_ids: (variantIds || []).slice(),
-        folder_group_id: (ctx.groupContext && ctx.groupContext.folder_group_id) || "",
-      };
+    var savedIds = savedAssetIdsFor(ctx, opts, res);
+    if (!opts.silentToast) {
+      toast(
+        opts.scope === "all" && savedIds.length > 1
+          ? "Zapisano skojarzenia dla " + savedIds.length + " plików"
+          : "Zapisano skojarzenia"
+      );
+    }
+    var selfId = ctx.asset && ctx.asset.id ? String(ctx.asset.id) : "";
+    if (_assocOverrides && _assocOverrides.assets) {
+      savedIds.forEach(function (aid) {
+        var prev = _assocOverrides.assets[aid] || {};
+        _assocOverrides.assets[aid] = {
+          linked_product_ids: (productIds || []).slice(),
+          linked_variant_ids:
+            aid === selfId ? (variantIds || []).slice() : (prev.linked_variant_ids || []).slice(),
+          folder_group_id: opts.scope
+            ? ""
+            : (ctx.groupContext && ctx.groupContext.folder_group_id) || "",
+        };
+      });
+    }
+    /* Wiersze siatki w pamieci: odznaki / filtry po skojarzeniach przy nastepnym renderze. */
+    if (global.DamBranding && typeof global.DamBranding.findAssetById === "function") {
+      savedIds.forEach(function (aid) {
+        var row = global.DamBranding.findAssetById(aid);
+        if (row && typeof row === "object") row.linked_product_ids = (productIds || []).slice();
+      });
     }
     if (global.DamBranding && typeof global.DamBranding.clearComputeCache === "function") {
       global.DamBranding.clearComputeCache();
@@ -4989,9 +5186,60 @@
       startedGen != null && (ctx._assocSaveGen || 0) !== startedGen;
     var alreadyShown = ctx._assocOptimisticSig === incoming;
     if (!stale && !alreadyShown) {
-      callAssocOnSaved(ctx, productIds, variantIds);
+      callAssocOnSaved(ctx, productIds, variantIds, {
+        scope: opts.scope || "",
+        assetIds: savedIds,
+      });
     }
     bustAssocThumbsInScope();
+  }
+
+  /** true = zapis tego pliku czeka w kolejce / leci (UI nie nadpisuje odczytem z mostu). */
+  function hasPendingAssocSave(assetId) {
+    var key = String(assetId || "");
+    if (!key) return false;
+    return _assocSaveInflightKey === key || !!_assocSavePending[key];
+  }
+
+  var ASSET_LINKS_TIMEOUT_MS = 8000;
+
+  /**
+   * GET /branding/asset-links - skojarzone produkty per plik (wariant materialu).
+   * Resolve: { id: [productId,...] } albo null (most niedostepny / blad).
+   */
+  function fetchAssetLinks(assetIds) {
+    var ids = (assetIds || [])
+      .map(function (x) {
+        return String(x || "").trim();
+      })
+      .filter(Boolean);
+    if (!ids.length) return Promise.resolve({});
+    var ctrl = typeof AbortController === "function" ? new AbortController() : null;
+    var timer = setTimeout(function () {
+      if (ctrl) ctrl.abort();
+    }, ASSET_LINKS_TIMEOUT_MS);
+    return fetch(
+      bridgeUrl() + "/branding/asset-links?ids=" + encodeURIComponent(ids.join(",")),
+      ctrl ? { signal: ctrl.signal } : undefined
+    )
+      .then(function (r) {
+        return r.ok ? r.json() : null;
+      })
+      .then(function (j) {
+        if (!j || !j.ok || !j.links) return null;
+        var out = {};
+        Object.keys(j.links).forEach(function (id) {
+          var row = j.links[id] || {};
+          out[id] = (row.product_ids || []).map(String);
+        });
+        return out;
+      })
+      .catch(function () {
+        return null;
+      })
+      .finally(function () {
+        clearTimeout(timer);
+      });
   }
 
   function newAssocJobId() {
@@ -5260,10 +5508,21 @@
         linkedMetaByIdFromCtx(ctx)
       );
     }
-    var payload = assocSavePayload(ctx, productIds, variantIds);
+    var payload = assocSavePayload(ctx, productIds, variantIds, opts);
     return saveAssociationsHttp(payload, opts)
       .then(function (r) {
         return r.json().then(function (res) {
+          if (r.ok && res && res.error === "partial_failure") {
+            /* Zakres "wszystkie warianty": czesc plikow zapisana - UI zostaje, ostrzezenie. */
+            toast(
+              "Zapisano skojarzenia dla " +
+                (res.saved || 0) +
+                " z " +
+                ((res.saved || 0) + (res.failed || 0)) +
+                " plików. Pozostałe spróbuj zapisać ponownie."
+            );
+            return Object.assign({}, res, { ok: true, partial: true });
+          }
           if (!r.ok || !res || !res.ok) {
             var code = (res && res.error) || ("http_" + r.status);
             if (code === "not_found") {
@@ -5275,7 +5534,13 @@
         });
       })
       .then(function (res) {
-        applyAssocSaveSuccess(ctx, productIds, variantIds, opts);
+        applyAssocSaveSuccess(
+          ctx,
+          productIds,
+          variantIds,
+          res && res.partial ? Object.assign({}, opts, { silentToast: true }) : opts,
+          res
+        );
         return res;
       })
       .catch(function (err) {
@@ -5304,10 +5569,13 @@
     _assocSaveInflightKey = key;
 
     saveAssociationsDirect(job.ctx, job.productIds, job.variantIds, {
-      silentToast: true,
+      /* Toast tylko dla zapisu calej grupy wariantow ("Zapisano ... dla N plików"). */
+      silentToast: job.scope !== "all",
       suppressErrorToast: true,
       timeoutMs: ASSOC_SAVE_TIMEOUT_MS,
       startedGen: job.gen,
+      scope: job.scope || "",
+      scopeAssetIds: (job.scopeAssetIds || []).slice(),
     }).then(function (res) {
       _assocSaveInflightKey = null;
       if (res && res.ok !== false) {
@@ -5324,7 +5592,7 @@
         return;
       }
       persistAssocSaveOffline({
-        payload: assocSavePayload(job.ctx, job.productIds, job.variantIds),
+        payload: assocSavePayload(job.ctx, job.productIds, job.variantIds, job),
         attempt: job.attempt,
       });
       if (!job._bgToastShown) {
@@ -5353,6 +5621,8 @@
       productIds: (productIds || []).slice(),
       variantIds: (variantIds || []).slice(),
       opts: opts,
+      scope: opts.scope || "",
+      scopeAssetIds: (opts.scopeAssetIds || []).slice(),
       attempt: 0,
       gen: ctx._assocSaveGen || 0,
     };
@@ -5575,7 +5845,12 @@
           gc.linked_product_ids = dedupedExplicit.slice();
           patchLinkedProductsWithFolderPick(ctx, dedupedExplicit, null);
           var prevVidsDedupe = collectLinkedIdsFromCtx(ctx, "variant");
-          saveAssociations(ctx, dedupedExplicit, prevVidsDedupe, { silentToast: true }).then(function () {
+          saveAssociations(
+            ctx,
+            dedupedExplicit,
+            prevVidsDedupe,
+            Object.assign({ silentToast: true }, productSaveScope(ctx, "file"))
+          ).then(function () {
             if (typeof ctx.onRefresh === "function") ctx.onRefresh();
           });
           toast("Usunięto duplikaty indeksu ze skojarzeń");
@@ -5735,6 +6010,7 @@
       openMediaPicker(colEl, varPickerOpts);
       return;
     }
+    var scopeFileIds = kind === "product" ? variantScopeIds(ctx) : [];
     openMediaPicker(colEl, {
       kind: kind,
       pickerMode: resolvePickerMode(kind, ctx, ctx.pickerId),
@@ -5748,11 +6024,17 @@
       excludeIds: excludeIds,
       excludeIndexes: excludeIndexes,
       filterType: filterType,
-      onConfirm: function (ids) {
+      /* Warianty materiału: wybor zakresu zapisu produktow (domyslnie tylko ten plik). */
+      scopeChoice: scopeFileIds.length > 1 ? { count: scopeFileIds.length } : null,
+      onConfirm: function (ids, _selected, confirmMeta) {
         if (kind === "variant" && typeof ctx.onConfirmVariants === "function") {
           ctx.onConfirmVariants(ids);
           return;
         }
+        var saveScope =
+          kind === "product"
+            ? productSaveScope(ctx, confirmMeta && confirmMeta.scope)
+            : {};
         var prevPids = collectLinkedIdsFromCtx(ctx, "product");
         var prevVids = collectLinkedIdsFromCtx(ctx, "variant");
         var pids = kind === "product" ? ids : prevPids;
@@ -5772,7 +6054,7 @@
           patchLinkedProductsWithFolderPick(ctx, pids, ctx.lastFolderPick);
         }
 
-        flushOptimisticAssocUi(ctx, pids, vids);
+        flushOptimisticAssocUi(ctx, pids, vids, saveScope);
 
         /* Pkt 32: cooldown / soft-delete. Jesli zapis USUWA skojarzenia,
            daj okno "Cofnij" (~7 s) przywracajace poprzedni stan. */
@@ -5782,16 +6064,31 @@
           return nextForKind.indexOf(x) === -1;
         });
 
-        saveAssociations(ctx, pids, vids, {
-          silentToast: removed.length > 0,
-          optimistic: removed.length > 0,
-        }).then(function (res) {
+        saveAssociations(
+          ctx,
+          pids,
+          vids,
+          Object.assign(
+            {
+              silentToast: removed.length > 0,
+              optimistic: removed.length > 0,
+            },
+            saveScope
+          )
+        ).then(function (res) {
           ctx.lastFolderPick = null;
           if ((!res || res.ok === false) && !removed.length) {
             flushOptimisticAssocUi(ctx, prevPids, prevVids);
             return;
           }
-          if (removed.length && global.DamDanger && typeof global.DamDanger.toastUndo === "function") {
+          /* Zakres "wszystkie warianty": poprzedni stan kazdego pliku jest inny -
+             brak jednoklikowego Cofnij (toast z liczba plikow po zapisie). */
+          if (
+            removed.length &&
+            saveScope.scope !== "all" &&
+            global.DamDanger &&
+            typeof global.DamDanger.toastUndo === "function"
+          ) {
             global.DamDanger.toastUndo({
               message:
                 removed.length === 1
@@ -5800,8 +6097,13 @@
               actionLabel: "Cofnij",
               duration: 1000,
               onUndo: function () {
-                flushOptimisticAssocUi(ctx, prevPids, prevVids);
-                saveAssociations(ctx, prevPids, prevVids, { silentToast: true }).then(function () {
+                flushOptimisticAssocUi(ctx, prevPids, prevVids, saveScope);
+                saveAssociations(
+                  ctx,
+                  prevPids,
+                  prevVids,
+                  Object.assign({ silentToast: true }, saveScope)
+                ).then(function () {
                   if (typeof ctx.onRefresh === "function") ctx.onRefresh();
                 });
               },
@@ -5880,7 +6182,7 @@
                 return v && v.id;
               })
               .filter(Boolean);
-      saveAssociations(ctx, pids, vids).then(function () {
+      saveAssociations(ctx, pids, vids, kind === "product" ? productSaveScope(ctx, "file") : {}).then(function () {
         exitEdit();
       });
     });
@@ -5941,15 +6243,23 @@
     }
     patchCtxProductIds(ctx, nextPids);
     if (typeof ctx.onRefresh === "function") ctx.onRefresh();
-    return seedEnrichAssocSave(ctx, nextPids, prevVids, {
-      message: "Usunięto 1 skojarzenie",
-      actionLabel: "Cofnij",
-      duration: 1000,
-      onUndo: function () {
-        restoreSeed();
-        saveAssociations(ctx, prevPids, prevVids, { silentToast: true });
+    /* Shift-minus na kafelku produktu = tylko ten plik (wariant materialu). */
+    var fileScope = productSaveScope(ctx, "file");
+    return seedEnrichAssocSave(
+      ctx,
+      nextPids,
+      prevVids,
+      {
+        message: "Usunięto 1 skojarzenie",
+        actionLabel: "Cofnij",
+        duration: 1000,
+        onUndo: function () {
+          restoreSeed();
+          saveAssociations(ctx, prevPids, prevVids, Object.assign({ silentToast: true }, fileScope));
+        },
       },
-    });
+      fileScope
+    );
   }
 
   /** Shift+minus na kafelku WARIANTY MATERIAŁU — usuwa wariant z grupy. */
@@ -6599,6 +6909,13 @@
 
   function resolvePickerCtx(root, col, kind) {
     if (kind === "material") return resolveMaterialsCtx(root, col);
+    /* Branding #damMediaPreview: "Dodaj/Edytuj produkty" w prawej kolumnie = zloty path
+       (ctx z renderMeta: biezacy plik/wariant, onSaved, zakres zapisu), nie ctx materialow. */
+    if (kind === "product" && col && col.closest("#damMediaPreview")) {
+      var mpAssoc = document.getElementById("damMediaPreviewAssoc");
+      var mainCtx = mpAssoc && mpAssoc._damAssocCtx;
+      if (mainCtx && typeof mainCtx.onSaved === "function" && mainCtx.asset) return mainCtx;
+    }
     if (col && col._damAssocCtx) return col._damAssocCtx;
     if (kind === "variant" && root && root._damVizVariantsCtx) return root._damVizVariantsCtx;
     return root && root._damAssocCtx;
@@ -7125,6 +7442,9 @@
     loadAssocOverrides: loadAssocOverrides,
     applyAssetAssocOverrides: applyAssetAssocOverrides,
     effectiveLinkedProductIds: effectiveLinkedProductIds,
+    /** Skojarzone produkty per plik (wariant materialu) z mostu: { id: [pid] } | null. */
+    fetchAssetLinks: fetchAssetLinks,
+    hasPendingAssocSave: hasPendingAssocSave,
     /** Shift+/−/plus na panelu materialow (#damVizModalAssoc + branding linked). */
     bindMaterialsPane: bindMaterialsPane,
     /** P1: sync ctx przed async enrich (viz modal open). */

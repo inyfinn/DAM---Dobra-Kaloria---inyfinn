@@ -90,23 +90,25 @@ def lock_is_stale(payload: dict[str, Any], ttl_sec: float = DEFAULT_TTL_SEC) -> 
     pid = int(payload.get("pid") or 0)
     if pid and not _pid_alive(pid):
         return True
-    started = str(payload.get("started_at") or payload.get("updated_at") or "")
-    if not started:
-        return True
-    try:
-        # Accept Z or +00:00
-        ts = started.replace("Z", "+00:00")
-        # Fallback: parse as epoch if numeric
-        if started.isdigit():
-            age = time.time() - float(started)
-        else:
-            from datetime import datetime
+    # Wiek liczymy od NAJSWIEZSZEGO znacznika (heartbeat_at > updated_at > started_at).
+    # Blad do 2026-09-18: brany byl started_at, wiec supervisor z TTL 120 s byl "stale"
+    # 2 minuty po starcie mimo zywego PID i heartbeatu sprzed sekundy - /preflight
+    # pokazywal wtedy "Aktualizacja indeksu nie dziala" przy kazdym dluzszym uruchomieniu.
+    from datetime import datetime
 
-            dt = datetime.fromisoformat(ts)
-            age = time.time() - dt.timestamp()
-        return age > float(ttl_sec)
-    except Exception:
+    newest: float | None = None
+    for key in ("heartbeat_at", "updated_at", "started_at"):
+        raw = str(payload.get(key) or "").strip()
+        if not raw:
+            continue
+        try:
+            ts = float(raw) if raw.isdigit() else datetime.fromisoformat(raw.replace("Z", "+00:00")).timestamp()
+        except Exception:
+            continue
+        newest = ts if newest is None else max(newest, ts)
+    if newest is None:
         return True
+    return (time.time() - newest) > float(ttl_sec)
 
 
 def acquire_lock(

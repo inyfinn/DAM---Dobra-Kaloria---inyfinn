@@ -1816,20 +1816,49 @@
     });
   }
 
+  /* 2026-09-18: petla zamrazajaca UI. MutationObserver na body -> showSad dokleja dymek
+     do body -> obserwator odpala sie znowu -> ten sam pusty element nadal jest -> showSad...
+     Bez konca (1,8 GB RAM, martwe UI po kliknieciu np. kategorii Materialow, ktora na
+     chwile pokazuje ".dam-explorer-empty" z "Ladowanie materialow..."). Straznicy nizej. */
+  var SAD_COOLDOWN_MS = 30000;
+  var _sadSeen = typeof WeakSet === "function" ? new WeakSet() : null;
+
   function maybeEmptySearchSad() {
+    if (state.companionEl) return; /* dymek juz jest - nie przerysowuj go w kolko */
+    if (Date.now() - (state.lastSadAt || 0) < SAD_COOLDOWN_MS) return;
     var empty = document.querySelector(
       ".dam-tag-edit-popover__empty:not([hidden]), .dam-assoc-edit-popover__empty, [data-empty]:not([hidden]), .dam-explorer-empty, .dam-empty"
     );
     if (!empty) return;
+    if (_sadSeen && _sadSeen.has(empty)) return;
+    /* Ladowanie to nie pusty wynik. */
+    if (/adowanie|Wczytywanie|Loading/i.test(empty.textContent || "")) return;
     var style = global.getComputedStyle ? global.getComputedStyle(empty) : null;
     if (style && style.display === "none") return;
+    if (_sadSeen) _sadSeen.add(empty);
+    state.lastSadAt = Date.now();
     showSad("empty-search");
   }
 
   function watchEmptyResults() {
     if (watchEmptyResults._obs) return;
     try {
-      watchEmptyResults._obs = new MutationObserver(function () {
+      watchEmptyResults._obs = new MutationObserver(function (muts) {
+        /* Zmiany zrobione wylacznie przez sam dymek maskotki nie sa powodem do reakcji. */
+        var own = true;
+        for (var i = 0; i < muts.length && own; i++) {
+          var m = muts[i];
+          var nodes = [m.target].concat(
+            Array.prototype.slice.call(m.addedNodes || []),
+            Array.prototype.slice.call(m.removedNodes || [])
+          );
+          own = nodes.every(function (n) {
+            if (n === document.body) return m.type === "childList";
+            return !!(n && n.nodeType === 1 && (n.classList.contains("dam-tut-companion") ||
+              (n.closest && n.closest(".dam-tut-companion"))));
+          });
+        }
+        if (own) return;
         maybeEmptySearchSad();
       });
       watchEmptyResults._obs.observe(document.body, {

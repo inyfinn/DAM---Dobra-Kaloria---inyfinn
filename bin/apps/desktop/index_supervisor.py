@@ -70,6 +70,27 @@ _state_lock = threading.Lock()
 _owner: "IndexSupervisor | None" = None
 
 
+def _replace_with_retry(tmp, target, attempts: int = 8, delay: float = 0.03) -> bool:
+    """os.replace z ponowieniami. Windows: PermissionError, gdy ktos czyta cel w tej chwili.
+    False = nie udalo sie (tmp usuniety); NIGDY nie zapisujemy celu nieatomowo, bo dwa takie
+    zapisy naraz zostawialy poprawny JSON z ogonem starszej wersji ('Extra data')."""
+    import os as _os
+    import time as _time
+
+    for i in range(attempts):
+        try:
+            _os.replace(tmp, target)
+            return True
+        except OSError:
+            if i + 1 < attempts:
+                _time.sleep(delay * (i + 1))
+    try:
+        _os.unlink(tmp)
+    except OSError:
+        pass
+    return False
+
+
 def _utc() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
@@ -114,18 +135,9 @@ def write_watcher_status(payload: dict[str, Any], *, preserve_last: bool = True)
     tmp = WATCHER_STATUS.with_name(WATCHER_STATUS.name + f".{os.getpid()}.tmp")
     try:
         tmp.write_text(text, encoding="utf-8")
-        os.replace(tmp, WATCHER_STATUS)
     except OSError:
-        # Windows race with concurrent readers/writers: best-effort direct write
-        try:
-            WATCHER_STATUS.write_text(text, encoding="utf-8")
-        except OSError:
-            pass
-        try:
-            if tmp.is_file():
-                tmp.unlink()
-        except OSError:
-            pass
+        return
+    _replace_with_retry(tmp, WATCHER_STATUS)
 
 
 CORRUPT_SUFFIX = ".corrupt"
@@ -191,17 +203,9 @@ def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
     text = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
     try:
         tmp.write_text(text, encoding="utf-8")
-        os.replace(tmp, path)
     except OSError:
-        try:
-            path.write_text(text, encoding="utf-8")
-        except OSError:
-            pass
-        try:
-            if tmp.is_file():
-                tmp.unlink()
-        except OSError:
-            pass
+        return
+    _replace_with_retry(tmp, path)
 
 
 def read_control() -> dict[str, Any]:
