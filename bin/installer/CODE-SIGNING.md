@@ -16,6 +16,30 @@ Self-signed **nie** uczy SmartScreen. Plik z internetu (strefa MOTW) nadal moze 
 
 Folder `bin/instalator` na D: bywa **Dropbox reparse**. Overlay Authenticode na koncu PE bywa obcinany (certRVA poza EOF → „nie jest prawidlowa aplikacja Win32”). Build podpisuje kopie w `%LOCALAPPDATA%\DAM-sign` i z niej robi GitHub Release.
 
+## Drugi podpis: wydanie Ed25519 (aktualizacje w aplikacji)
+
+Authenticode mowi Windowsowi, kto wydal plik. **Nie** mowi aplikacji, czy plik w wydaniu
+GitHub jest tym, ktory zbudowalismy. Repo i wydania sa publiczne, a kto podmieni
+`DAM-Setup.exe`, podmieni tez sume SHA-256 obok. Dlatego kazde wydanie ma osobny podpis
+Ed25519 (audyt 2026-09-17):
+
+```powershell
+python bin\scripts\ops\sign-release.py init                       # raz: nowa para kluczy
+python bin\scripts\ops\sign-release.py sign bin\instalator\DAM-Setup.exe --version 2.0.8
+python bin\scripts\ops\sign-release.py verify bin\instalator\DAM-Setup.exe
+```
+
+- `build-installer.ps1` wywoluje `sign` sam i przerywa build, gdy podpis sie nie uda.
+- Do wydania GitHub wgraj **oba** pliki: `DAM-Setup.exe` i `DAM-Setup.exe.sig`.
+  Bez `.sig` aplikacja odrzuci aktualizacje (`apps/desktop/release_verify.py`).
+- Klucz prywatny: `%USERPROFILE%\.dam\release-signing-key.pem` (albo `DAM_RELEASE_KEY`).
+  Nigdy w repo, nigdy w folderze synchronizowanym. Klucz publiczny jest przypiety
+  w `apps/desktop/release-pubkey.json`.
+- Utrata albo wyciek klucza: `bin/docs/SECURITY.md`, rozdzial 5.
+
+Te dwa podpisy sa niezalezne: Authenticode uspokaja SmartScreen, Ed25519 chroni
+aktualizacje instalowane przez sama aplikacje.
+
 ## Cert CA (zeby zniknelo „Nieznany wydawca” z internetu)
 
 1. Kup **Code Signing** na Inyfinn (OV minimum, **EV** szybciej). Certum / DigiCert / SSL.com. Dane z KRS.

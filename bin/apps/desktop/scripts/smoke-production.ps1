@@ -9,7 +9,11 @@
 param(
   [string]$Bridge = "http://127.0.0.1:8766",
   [string]$Ui = "http://127.0.0.1:8765",
-  [switch]$StrictPasswords
+  [switch]$StrictPasswords,
+  [string]$SeedEmail = "krzysztof.wieczorek@kubara.pl",
+  # Haslo do proby logowania. Nigdy w kodzie: zmienna DAM_SMOKE_WEAK_PASSWORD
+  # albo zapytanie przy uruchomieniu recznym. Puste = kontrola pominieta.
+  [string]$WeakPassword = ""
 )
 
 $ErrorActionPreference = "Continue"
@@ -121,24 +125,46 @@ if ($reg -and $reg.open -eq $false) {
   $warn++
 }
 
-# B6 weak seed password
-$weak = Post-Json "${Bridge}/auth/login" @{
-  email = "krzysztof.wieczorek@kubara.pl"
-  password = "test"
-  device_id = "smoke-prod"
-  machine_id = "smoke-prod"
-}
-if ($weak -and $weak.ok -eq $true) {
-  $msg = "konto admin nadal przyjmuje haslo 'test' - uruchom set-all-passwords.py"
-  if ($StrictPasswords) {
-    Write-Check "seed password rotated" "FAIL" $msg
-    $fail++
-  } else {
-    Write-Check "seed password rotated" "WARN" $msg
-    $warn++
+# B6 stare haslo seed nie moze juz dzialac (haslo podaje operator, nie ten plik)
+$probe = $WeakPassword
+if (-not $probe) { $probe = [string]$env:DAM_SMOKE_WEAK_PASSWORD }
+if (-not $probe -and [Environment]::UserInteractive) {
+  $sec = Read-Host "Stare haslo seed do sprawdzenia (Enter = pomin)" -AsSecureString
+  if ($sec -and $sec.Length -gt 0) {
+    $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec)
+    try {
+      $probe = [Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+    } finally {
+      [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+    }
   }
+}
+if (-not $probe) {
+  Write-Check "seed password rotated" "WARN" "pominieto - podaj DAM_SMOKE_WEAK_PASSWORD albo -WeakPassword"
+  $warn++
 } else {
-  Write-Check "seed password rotated" "PASS" "haslo 'test' odrzucone (lub konto niedostepne)"
+  $weak = Post-Json "${Bridge}/auth/login" @{
+    email = $SeedEmail
+    password = $probe
+    device_id = "smoke-prod"
+    machine_id = "smoke-prod"
+  }
+  $probe = $null
+  if ($weak -and $weak.ok -eq $true) {
+    $msg = "konto $SeedEmail nadal przyjmuje podane haslo - uruchom set-all-passwords.py"
+    if ($StrictPasswords) {
+      Write-Check "seed password rotated" "FAIL" $msg
+      $fail++
+    } else {
+      Write-Check "seed password rotated" "WARN" $msg
+      $warn++
+    }
+  } elseif ($weak -and $weak.error -eq "password_change_required") {
+    Write-Check "seed password rotated" "WARN" "haslo dziala, ale polityka wymusza zmiane przy logowaniu"
+    $warn++
+  } else {
+    Write-Check "seed password rotated" "PASS" "podane haslo odrzucone (lub konto niedostepne)"
+  }
 }
 
 # B7 UI (curl.exe - unikamy quirkow Invoke-WebRequest przy HTML)

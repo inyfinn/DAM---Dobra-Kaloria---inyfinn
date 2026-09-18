@@ -394,7 +394,7 @@ Lustro operacyjne: `bin/memory.md` (ten sam wpis).
     - Stary blad `.dam-eta` na X: migracja do `dam-local.sqlite`, katalog usuniety.
     - Postgres/Docker tylko opcjonalnie pod Laravel (profil `dev-postgres`), nigdy w instrukcji dla marketingu.
     - ADR: `docs/ADR/ADR-007-local-sqlite.md`.
-    - Seed Kubara: `python apps/desktop/seed_kubara_users.py` (haslo `test`, bez maili). Awatary plciowe: `avatar-female.svg` / `avatar-male.svg` w shell.
+    - Seed Kubara: `python apps/desktop/seed_kubara_users.py` (haslo z DAM_SEED_PASSWORD, bez maili). Awatary plciowe: `avatar-female.svg` / `avatar-male.svg` w shell.
 
 41b. **Zakres zapisu agenta (KRYTYCZNE):**
     - Domyslnie tylko repo DAM. Zero samowolnych folderow na `X:\` / `D:\Marketing` / udzialach.
@@ -1101,8 +1101,8 @@ ole=admin.
 ## 2026-07-18 - Go-Live produkcja (klient)
 
 25. **Nazwa procesu:** Production Readiness Review (PRR) + Go-Live. Dokument: `GO_LIVE.md`.
-26. **Smoke:** `apps/desktop/scripts/smoke-production.ps1` przed oddaniem. `-StrictPasswords` = FAIL gdy haslo `test` dziala.
-27. **Hasla:** zakaz seed `test`. Wymagaj `DAM_SEED_PASSWORD` (min 8). Rotacja: `set-all-passwords.py` / `set-user-password.py`. Gate C bez rotacji = nie oddawac.
+26. **Smoke:** `apps/desktop/scripts/smoke-production.ps1` przed oddaniem. `-StrictPasswords` = FAIL gdy stare haslo seed nadal dziala (podaj je w DAM_SMOKE_WEAK_PASSWORD).
+27. **Hasla:** zakaz slabych hasel seed. Wymagaj `DAM_SEED_PASSWORD` (min 8). Rotacja: `set-all-passwords.py` / `set-user-password.py`. Gate C bez rotacji = nie oddawac.
 28. **Rejestracja UI:** ukryta gdy `users > 0`; endpoint `GET /auth/registration-open`. Nowe konta = admin.
 29. **Branding produktu (HARD):** `DAM - Dobra Kaloria - Inyfinn` (krotko `DAM`). Zakaz w UI/manifest/title/subtitle: `ETA`, `DAM ETA`, `ETA Innovations`. Eksplorer subtitle: `Pelna struktura produktow Dobra Kaloria i Good Calories`. (ETYKIETA = typ opakowania - OK.)
 29b. **Wersja programu:** start `1.00`, kolejne `1.01`... Zawsze w sidebar footer obok `inyfinn.art (c) ...` jako `v1.00`. Zrodla (ten sam string): `apps/web/version.json`, `apps/web/assets/js/dam-version.js`, `apps/desktop/runtime_config.py` (`APP_VERSION`).
@@ -1442,5 +1442,5 @@ ode bin/scripts/qa/dam-pakiet-cdp-smoke.js
 
 - UI statyczne: `/volume1/web/Panel-DAM/` (Web Station). Auth API: nginx `/dam-api/` → `local_bridge` `:8766`.
 - Skrypty ops: `bin/scripts/ops/synology/` (start bridge, dam-git, nginx proxy). Deploy UI: `deploy-panel-dam-synology.ps1` (Windows → `W:\web\Panel-DAM`).
-- Konta @kubara.pl: seed `seed_kubara_users.py`; haslo dev `test` (min 4 znaki). Rejestracja: email + haslo, bez imienia/nazwiska.
+- Konta @kubara.pl: seed `seed_kubara_users.py`; haslo z env DAM_SEED_PASSWORD (min 10 znakow). Rejestracja: email + haslo, bez imienia/nazwiska.
 

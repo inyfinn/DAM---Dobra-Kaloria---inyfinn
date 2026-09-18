@@ -5903,7 +5903,7 @@ Czy baza dziala; Odswiez vs Wczytaj; tagi Autor + 12-24; global search na Projek
 
 ### Log/Status
 1. Baza OK: `X:\Marketing\.dam-eta\dam-shared.sqlite` - 18 userow po seed.
-2. Seed: `seed_kubara_users.py`, haslo `test`, login Agata/KW zweryfikowany.
+2. Seed: `seed_kubara_users.py` (haslo z env), login Agata/KW zweryfikowany.
 3. Odswiez = reload z indeksu; Wczytaj z dysku = ingest/skan (tooltips).
 4. `enrich-search-tags.py`: smak 24, typ 22, opakowanie 14, autor 16 (Asana CSV).
 5. `dam-tag-bar.js` + collapse ~700px; wired explorer/projects/viz.
@@ -6242,25 +6242,25 @@ Brak - zmiany CSS/HTML/SVG nie destrukcyjne, cache-bust zapewnia odswiezenie u u
 
 ---
 
-## 2026-07-18 - Login: minlength=8 blokowal haslo seed "test"
+## 2026-07-18 - Login: minlength=8 blokowal krotkie haslo seed
 
 ### Komenda/Akcja
-User: nie moge sie zalogowac (admin); screen z tooltipem HTML5 "min 8 znakow" przy hasle `test` + stary komunikat invalid_credentials.
+User: nie moge sie zalogowac (admin); screen z tooltipem HTML5 "min 8 znakow" przy hasle seed (4 znaki) + stary komunikat invalid_credentials.
 
 ### Log/Status
-1. Baza OK; konto admin istnieje; bcrypt weryfikuje haslo seed `test` (True), haslo z poprzedniego screenu (False).
-2. Root cause UI: `signin.html` input hasla mial `minlength="8"`; seed Kubara = `test` (4 znaki) - przegl?darka blokuje submit.
+1. Baza OK; konto admin istnieje; bcrypt weryfikuje haslo seed (True), haslo z poprzedniego screenu (False).
+2. Root cause UI: `signin.html` input hasla mial `minlength="8"`; haslo seed Kubara mialo 4 znaki - przegl?darka blokuje submit.
 3. Fix: minlength=4 (jak auth_store.register min 4); komunikat dam-api "Haslo min. 4 znaki"; cache ?v=20260718auth3.
 
 ### Efekt/Fix
-Logowanie emailem admina + haslem `test` nie jest juz blokowane przez walidacje HTML5.
+Logowanie emailem admina + haslem seed nie jest juz blokowane przez walidacje HTML5.
 
 ### Test/Ewaluacja
-- Python: `_verify_password("test", hash)` True; `login(..., "test")` ok/admin.
-- UI: po restarcie skrotu DAM - zalogowac `krzysztof.wieczorek@kubara.pl` / `test`.
+- Python: `_verify_password(<haslo seed>, hash)` True; `login(...)` ok/admin.
+- UI: po restarcie skrotu DAM - zalogowac `krzysztof.wieczorek@kubara.pl` haslem seed.
 
 ### Zrodla
-- apps/desktop/seed_kubara_users.py PASSWORD=test
+- apps/desktop/seed_kubara_users.py (haslo z env DAM_SEED_PASSWORD)
 - apps/desktop/auth_store.py password min 4
 - HTML constraint validation (minlength przed eventem submit)
 
@@ -8475,7 +8475,7 @@ User: aplikacja jutro do klienta - przebadaj, znajdz luki, zalataj, zbuduj plan 
 6. Restart `local_bridge` z nowym endpointem; pliki/db/meta online; media 401.
 
 ### Efekt/Fix
-- Gate B smoke: FAIL=0 WARN=1 (haslo `test` nadal aktywne - BLOKADA Gate C).
+- Gate B smoke: FAIL=0 WARN=1 (stare haslo seed nadal aktywne - BLOKADA Gate C).
 - UI signin: Witaj w DAM, brak zakladki Utworz konto, footer admin-only.
 
 ### Test/Ewaluacja
@@ -8501,7 +8501,7 @@ Domkniecie luk z Prod readiness codebase scan po GO_LIVE.
 5. dam-api cache-bust 20260719golive1; komunikat hasla min 8 + admin_required
 
 ### Test/Ewaluacja
-POST machine-config 401; logout bound clear OK; smoke FAIL=0 WARN=1 (haslo test).
+POST machine-config 401; logout bound clear OK; smoke FAIL=0 WARN=1 (stare haslo seed).
 
 ### Zrodla
 - auth_store.py, local_bridge.py, dam-api.js, install-desktop-shortcut.ps1

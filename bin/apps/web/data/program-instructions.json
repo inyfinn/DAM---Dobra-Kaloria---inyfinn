@@ -1,7 +1,7 @@
 {
-  "version": 24,
+  "version": 25,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-09-16T09:41:00+02:00",
+  "updated_at": "2026-09-17T18:00:00+02:00",
   "instructions": [
     {
       "id": "preview.cache.offline_browse",
@@ -1997,6 +1997,175 @@
         "scripts/ops/build-installer.ps1",
         "installer/DAM-Setup.iss",
         ".cursor/rules/dam-ship-github-release.mdc"
+      ]
+    },
+    {
+      "id": "security.sealed_db_config_activation_code",
+      "must": [
+        "Instalator zawiera wylacznie data/pg-config.sealed.json (Fernet, klucz z scrypt(kod aktywacyjny)). Kod NIE jest w repo, w Setupie ani w wydaniu GitHub.",
+        "Kod aktywacyjny lezy na maszynie budujacej: %USERPROFILE%\\.dam\\activation-code.txt (albo zmienna DAM_ACTIVATION_CODE). Administrator dyktuje go uzytkownikowi (telefon, SMS).",
+        "Po aktywacji konfiguracja lezy w data/pg-config.dpapi (Windows DPAPI, konto tego uzytkownika). Jawny data/pg-config.json zostaje tylko w drzewie deweloperskim (gitignored) jako zrodlo dla builda.",
+        "build-installer.ps1 przerywa build, gdy pieczetowanie sie nie powiedzie albo gdy w staging zostalo jawne haslo.",
+        "Ekran logowania (dam-activation.js + POST /db/activate) prosi o kod, gdy pg_db.activation_required(). Bez kodu program dziala w trybie offline (lokalny SQLite)."
+      ],
+      "body_pl": "HARD 2026-09-17 (audyt): instalator z jawnym haslem do Postgresa byl publicznie do pobrania. Setup wozi tylko szyfrogram; haslo odblokowuje kod aktywacyjny przekazany poza aplikacja.",
+      "category": "security",
+      "must_not": [
+        "Wkladac pg-config.json z haslem do DAM-Setup.exe, do repo ani do wydania.",
+        "Wysylac kod aktywacyjny ta sama droga co instalator (mail z linkiem, publiczny kanal).",
+        "Trzymac kod aktywacyjny w repo, w program-instructions ani w logach."
+      ],
+      "priority": "critical",
+      "title_pl": "Kod aktywacyjny i zapieczetowana konfiguracja bazy",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-09-17",
+      "related_code": [
+        "apps/desktop/pg_seal.py",
+        "apps/desktop/pg_db.py",
+        "scripts/ops/seal-pg-config.py",
+        "scripts/ops/build-installer.ps1",
+        "apps/web/assets/js/dam-activation.js"
+      ]
+    },
+    {
+      "id": "security.signed_releases_ed25519",
+      "must": [
+        "Kazde wydanie ma dwa pliki: DAM-Setup.exe i DAM-Setup.exe.sig (sign-release.py sign <exe> --version <wersja>).",
+        "Klucz prywatny tylko na maszynie budujacej: %USERPROFILE%\\.dam\\release-signing-key.pem (albo DAM_RELEASE_KEY). Nigdy w repo ani w folderze synchronizowanym.",
+        "Aplikacja przed instalacja aktualizacji sprawdza podpis kluczem publicznym z apps/desktop/release-pubkey.json (release_verify.py, app_updates.py).",
+        "Utrata klucza prywatnego = nowa para kluczy, nowy wpis w release-pubkey.json i wydanie instalowane recznie przez uzytkownikow."
+      ],
+      "body_pl": "HARD 2026-09-17: repo i wydania sa publiczne, wiec aktualizacje chroni podpis Ed25519, nie suma SHA-256 (kto podmieni plik w wydaniu, podmieni tez sume).",
+      "category": "security",
+      "must_not": [
+        "Publikowac wydanie bez pliku .sig (aplikacja odrzuci taka aktualizacje).",
+        "Trzymac klucz prywatny w repo, na dysku Marketing albo w Synology Drive.",
+        "Zastepowac podpis sama suma SHA-256 z GitHuba."
+      ],
+      "priority": "critical",
+      "title_pl": "Wydanie = DAM-Setup.exe I DAM-Setup.exe.sig",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-09-17",
+      "related_code": [
+        "apps/desktop/release_verify.py",
+        "apps/desktop/release-pubkey.json",
+        "apps/desktop/app_updates.py",
+        "scripts/ops/sign-release.py",
+        "scripts/ops/build-installer.ps1"
+      ]
+    },
+    {
+      "id": "security.bridge_public_mode",
+      "must": [
+        "Tryb publiczny wlacza DAM_PUBLIC_MODE=1 albo DAM_UI_ORIGIN spoza loopback. Most odpowiada tylko na Host z loopback albo z PUBLIC_HOSTS.",
+        "Bez sesji dostepne sa wylacznie sciezki z PUBLIC_ANON_PATHS (m.in. /health, /auth/login, /auth/change-password, /db/status). Kazda inna wymaga waznej sesji.",
+        "Funkcje komputera uzytkownika sa w trybie publicznym wylaczone (PUBLIC_FORBIDDEN_PATHS): /open, /reveal, /pick-folder, /detect-marketing-bases, /preflight, /db/activate, /telemetry/tail, /debug/self-test, /app-update/*.",
+        "Anonimowe /health zwraca tylko {ok, service} - bez sciezek, wersji tras i stanu watchera.",
+        "Po git pull na NAS trzeba zrestartowac most, inaczej dziala stary kod."
+      ],
+      "body_pl": "HARD 2026-09-17: most stoi tez na Synology za nginx (/dam-api/) i jest osiagalny z internetu. Tam obowiazuje inny zestaw regul niz na komputerze uzytkownika.",
+      "category": "security",
+      "must_not": [
+        "Wystawiac w trybie publicznym endpointow operujacych na dysku i na plikach lokalnych.",
+        "Dodawac nowa trase do PUBLIC_ANON_PATHS bez potrzeby logowania sie do niej z internetu.",
+        "Zakladac, ze nginx sam odfiltruje sciezki."
+      ],
+      "priority": "critical",
+      "title_pl": "Tryb publiczny mostu na NAS",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-09-17",
+      "related_code": [
+        "apps/desktop/local_bridge.py",
+        "apps/desktop/dam_ui_http.py",
+        "scripts/ops/synology/start-dam-bridge.sh"
+      ]
+    },
+    {
+      "id": "security.ip_block_3_in_999",
+      "must": [
+        "ip_guard: MAX_FAILURES = 3, okno 999 minut, stan w bazie (Postgres albo SQLite), wiec blok przezywa restart mostu.",
+        "Biala lista: 89.25.208.179 (biuro) plus adresy ze zmiennej DAM_IP_ALLOWLIST.",
+        "Blokada dotyczy trybu publicznego (prawdziwy adres z X-Real-IP od nginx). W trybie pulpitowym klient to 127.0.0.1 i pracuje limit prob per konto w auth_store.",
+        "Admin odblokowuje w Ustawieniach -> Zablokowane adresy IP (GET /auth/ip-blocks, POST /auth/ip-unblock).",
+        "Blad modulu blokady nie moze wylaczyc logowania wszystkim (fail-open z logiem), ale zapisany blok zawsze obowiazuje."
+      ],
+      "body_pl": "HARD 2026-09-17 (decyzja uzytkownika): 3 nieudane logowania z jednego adresu IP w 999 minut = blokada, ktora zdejmuje wylacznie administrator. Biuro wychodzi jednym adresem, wiec jest na bialej liscie.",
+      "category": "security",
+      "must_not": [
+        "Odblokowywac IP z poziomu zwyklego konta (tylko rola admin).",
+        "Kasowac blokady przy restarcie mostu albo trzymac je w pamieci procesu.",
+        "Dodawac do bialej listy adresow domowych uzytkownikow (od tego jest odblokowanie przez admina)."
+      ],
+      "priority": "critical",
+      "title_pl": "Blokada IP: 3 bledne logowania w 999 minut",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-09-17",
+      "related_code": [
+        "apps/desktop/ip_guard.py",
+        "apps/desktop/local_bridge.py",
+        "apps/web/assets/js/dam-ip-blocks.js",
+        "apps/web/settings.html"
+      ]
+    },
+    {
+      "id": "security.password_policy_min10",
+      "must": [
+        "Minimum 10 znakow (auth_store.MIN_PASSWORD_LEN). Odrzucane sa hasla z listy slabych, haslo rowne czesci adresu e-mail i hasla o mniej niz 4 roznych znakach.",
+        "Logowanie poprawnym, ale slabym haslem zwraca password_change_required. UI (dam-password-change.js) od razu prosi o nowe haslo.",
+        "Zmiana hasla (POST /auth/change-password) wymaga starego hasla i uniewaznia sesje konta.",
+        "Nowe konta i reset hasla przechodza ten sam test polityki."
+      ],
+      "body_pl": "HARD 2026-09-17: konta seed mialy haslo znane z publicznego repo. Poprawne, ale slabe haslo nie daje sesji, tylko prawo do zmiany hasla.",
+      "category": "security",
+      "must_not": [
+        "Zakladac kont z haslem tymczasowym typu test / 12345678.",
+        "Wpisywac hasla uzytkownikow do repo, do komunikatow commitow i do dokumentacji.",
+        "Wydawac sesje kontu, ktore ma slabe haslo."
+      ],
+      "priority": "critical",
+      "title_pl": "Polityka hasel: min. 10 znakow, slabe haslo wymusza zmiane",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-09-17",
+      "related_code": [
+        "apps/desktop/auth_store.py",
+        "apps/desktop/local_bridge.py",
+        "apps/web/assets/js/dam-password-change.js",
+        "apps/web/signin.html"
+      ]
+    },
+    {
+      "id": "security.no_company_data_in_public_www",
+      "must": [
+        "Synchronizacja panelu (dam-sync-panel-web.sh, deploy-panel-dam-synology.ps1) wyklucza dane firmowe: faktury, koszty, inbox, dane osobowe, konfiguracje i pliki runtime.",
+        "Publiczny katalog WWW zawiera HTML, CSS, JS i grafike interfejsu. Dane pobiera zalogowany uzytkownik przez most.",
+        "Po kazdej zmianie listy wykluczen sprawdz, co realnie lezy w katalogu na NAS."
+      ],
+      "body_pl": "HARD 2026-09-17: panel DAM na Synology jest dostepny z internetu. Do katalogu WWW ida tylko pliki interfejsu.",
+      "category": "security",
+      "must_not": [
+        "Kopiowac apps/web/data/* do katalogu publikowanego przez nginx.",
+        "Publikowac pg-config, dam-runtime, dam-identity, logow ani baz SQLite.",
+        "Zakladac, ze katalog chroni sam link, ktorego nikt nie zna."
+      ],
+      "priority": "critical",
+      "title_pl": "Zero danych firmowych w publicznym katalogu WWW na NAS",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-09-17",
+      "related_code": [
+        "scripts/ops/synology/dam-sync-panel-web.sh",
+        "scripts/ops/deploy-panel-dam-synology.ps1"
       ]
     }
   ],
