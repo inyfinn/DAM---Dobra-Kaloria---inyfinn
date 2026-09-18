@@ -3288,7 +3288,7 @@
     // Wersja + aktualizacje (takze przed logowaniem na signin)
     if (!window.DamAppUpdate) {
       var upd = document.createElement("script");
-      upd.src = "assets/js/dam-app-update.js?v=1.8.9";
+      upd.src = "assets/js/dam-app-update.js?v=2.1.1";
       document.head.appendChild(upd);
     }
 

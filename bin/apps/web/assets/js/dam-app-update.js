@@ -1,6 +1,7 @@
 /**
  * DAM — aktualizacje aplikacji, wzorzec Inyfinn Photo Resizer.
- * Spokojny dymek stanu w lewym dolnym rogu (bez paska na górze 21 stron).
+ * Stan aktualizacji w sidebarze pod "Wyloguj" (fallback: lewy dolny rog, gdy sidebar
+ * schowany), Dobrokalorius z megafonem 5 s przy gotowej wersji. Bez paska na gorze.
  * Zero innerHTML dla danych zmiennych - tylko textContent/createElement.
  */
 (function (global) {
@@ -11,7 +12,6 @@
   var SPINNER_FRAMES = ["◐", "◓", "◑", "◒"];
   var SPINNER_TICK_MS = 180;
 
-  var SS_TOAST_LATER = "dam_update_toast_later";
   var SS_TOAST_SHOWN = "dam_update_toast_shown_ready";
   var SS_SUCCESS_CHECKED = "dam_update_success_checked";
   var RELOAD_KEY = "dam_version_reload_ts";
@@ -183,8 +183,50 @@
     return el;
   }
 
+  /*
+   * Chip mieszka w sidebarze tuz pod "Wyloguj" (prosba usera 2026-09-18: w rogu byl
+   * niewidoczny "na pierwszy rzut oka"). Gdy sidebara nie ma albo jest schowany
+   * (mobile off-canvas, signin) - zostaje fixed w lewym dolnym rogu jak dotad.
+   */
+  var SIDEBAR_CHIP_ROOM_PX = 96; /* wysokosc karty "Gotowa aktualizacja" + odstep */
+
+  function sidebarLogoutItem() {
+    /* Zwiniety sidebar (72px, dol zajety przez logo) nie ma miejsca na karte -
+       wtedy karta obok sidebara na dole, jak dotad. */
+    if (document.body && document.body.classList.contains("dam-sidebar-collapsed")) return null;
+    var link = document.getElementById("damShellLogout");
+    var li = link && link.closest ? link.closest("li") : null;
+    if (!li || !li.parentNode) return null;
+    var r = li.getBoundingClientRect();
+    if (!r.width || !r.height) return null;
+    /* niskie okno: karta pod "Wyloguj" bylaby ucieta dolna krawedzia */
+    if (r.bottom + SIDEBAR_CHIP_ROOM_PX > global.innerHeight) return null;
+    return li;
+  }
+
+  function placeChip(el) {
+    var li = sidebarLogoutItem();
+    if (li) {
+      var slot = document.getElementById("damUpdateSidebarSlot");
+      if (!slot) {
+        slot = document.createElement("li");
+        slot.id = "damUpdateSidebarSlot";
+        slot.className = "geex-sidebar__menu__item dam-nav-update";
+      }
+      if (slot.parentNode !== li.parentNode || slot.previousElementSibling !== li) {
+        li.parentNode.insertBefore(slot, li.nextSibling);
+      }
+      if (el.parentNode !== slot) slot.appendChild(el);
+      el.classList.add("dam-update-chip--sidebar");
+    } else {
+      if (el.parentNode !== document.body) document.body.appendChild(el);
+      el.classList.remove("dam-update-chip--sidebar");
+    }
+  }
+
   function chipParts() {
     var el = ensureChip();
+    placeChip(el);
     return {
       root: el,
       spinner: el.querySelector(".dam-update-chip__spinner"),
@@ -283,7 +325,20 @@
     var btn = document.createElement("button");
     btn.type = "button";
     btn.className = "dam-update-chip__btn" + (variant ? " dam-update-chip__btn--" + variant : "");
-    btn.textContent = text;
+    if (variant === "install") {
+      /* ikona zostaje w zwinietym sidebarze (72px), tekst chowa CSS */
+      var ico = document.createElement("i");
+      ico.className = "uil uil-arrow-circle-down";
+      ico.setAttribute("aria-hidden", "true");
+      var txt = document.createElement("span");
+      txt.className = "dam-update-chip__btn-text";
+      txt.textContent = text;
+      btn.appendChild(ico);
+      btn.appendChild(txt);
+      btn.setAttribute("title", text);
+    } else {
+      btn.textContent = text;
+    }
     if (ariaLabel) btn.setAttribute("aria-label", ariaLabel);
     btn.addEventListener("click", onClick);
     return btn;
@@ -405,30 +460,108 @@
     return btn;
   }
 
-  function showReadyToast(state) {
-    if (safeSessionGet(SS_TOAST_LATER) === "1") return;
+  /* ------------------------------------------------------------------ */
+  /* Dobrokalorius z megafonem: 5 s "aktualizacja gotowa", obok chipa    */
+  /* w sidebarze. Raz na wersje w sesji. Zastepuje dymek w rogu.          */
+  /* ------------------------------------------------------------------ */
+
+  var MASCOT_MS = 5000;
+  var mascotTimer = null;
+
+  function hideMascot() {
+    if (mascotTimer) {
+      clearTimeout(mascotTimer);
+      mascotTimer = null;
+    }
+    var el = document.getElementById("damUpdateMascot");
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+  }
+
+  function positionMascot(box) {
+    var chip = document.getElementById("damUpdateChip");
+    var inSidebar = chip && !chip.hidden && chip.classList.contains("dam-update-chip--sidebar");
+    var r = inSidebar ? chip.getBoundingClientRect() : null;
+    if (r && r.width) {
+      var h = box.offsetHeight || 150;
+      var top = Math.max(12, Math.min(window.innerHeight - h - 12, r.top + r.height / 2 - h / 2));
+      box.style.left = Math.round(r.right + 16) + "px";
+      box.style.top = Math.round(top) + "px";
+      box.style.bottom = "auto";
+      box.classList.add("dam-update-mascot--beside");
+      var arrowY = Math.max(24, Math.min(h - 24, r.top + r.height / 2 - top));
+      box.style.setProperty("--dam-update-mascot-arrow-y", Math.round(arrowY) + "px");
+    } else {
+      box.classList.remove("dam-update-mascot--beside");
+      var cr = chip && !chip.hidden ? chip.getBoundingClientRect() : null;
+      box.style.left = Math.round(cr && cr.width ? cr.left : 16) + "px";
+      box.style.top = "auto";
+      box.style.bottom = Math.round(cr && cr.height ? global.innerHeight - cr.top + 12 : 16) + "px";
+    }
+  }
+
+  function announceReady(state) {
     if (safeSessionGet(SS_TOAST_SHOWN) === String(state.target || "")) return;
     safeSessionSet(SS_TOAST_SHOWN, String(state.target || ""));
+    hideMascot();
 
-    var parts = buildToastShell(tr("update.toast_title", "Aktualizacja do nowej wersji"));
-    parts.body.textContent = tr(
-      "update.toast_body",
-      "Nowa wersja {target} jest pobrana i gotowa do instalacji. Zainstalować teraz?",
+    var box = document.createElement("div");
+    box.id = "damUpdateMascot";
+    box.className = "dam-update-mascot" + (prefersReducedMotion() ? "" : " is-enter");
+    box.setAttribute("role", "status");
+    box.setAttribute("aria-live", "polite");
+
+    var pic = document.createElement("span");
+    pic.className = "dam-update-mascot__pic";
+    pic.setAttribute("aria-hidden", "true");
+    var img = document.createElement("img");
+    img.src = "assets/img/maskotka/pose-megaphone.png";
+    img.alt = "";
+    pic.appendChild(img);
+
+    var body = document.createElement("div");
+    body.className = "dam-update-mascot__body";
+    var text = document.createElement("p");
+    text.className = "dam-update-mascot__text";
+    text.textContent = tr(
+      "update.mascot_ready",
+      "Hej! Wersja {target} jest gotowa do zainstalowania.",
       { target: state.target || "?" }
     );
-    parts.actions.appendChild(
-      makeToastButton(tr("update.install_btn", "Zainstaluj"), "primary", function (ev) {
-        hideToast();
-        openConfirmDialog(state, ev.currentTarget);
-      })
-    );
-    parts.actions.appendChild(
-      makeToastButton(tr("update.later_btn", "Później"), "ghost", function () {
-        safeSessionSet(SS_TOAST_LATER, "1");
-        hideToast();
-      })
-    );
-    repositionToast();
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "dam-update-mascot__btn";
+    btn.textContent = tr("update.install_btn", "Zainstaluj");
+    btn.addEventListener("click", function (ev) {
+      hideMascot();
+      openConfirmDialog(state, ev.currentTarget);
+    });
+    body.appendChild(text);
+    body.appendChild(btn);
+
+    var close = document.createElement("button");
+    close.type = "button";
+    close.className = "dam-update-mascot__x";
+    close.setAttribute("aria-label", tr("update.close", "Zamknij"));
+    close.textContent = "×";
+    close.addEventListener("click", hideMascot);
+
+    box.appendChild(pic);
+    box.appendChild(body);
+    box.appendChild(close);
+    document.body.appendChild(box);
+    positionMascot(box);
+
+    /* 5 s na ekranie; najechanie kursorem wstrzymuje znikanie */
+    var arm = function () {
+      if (mascotTimer) clearTimeout(mascotTimer);
+      mascotTimer = setTimeout(hideMascot, MASCOT_MS);
+    };
+    box.addEventListener("mouseenter", function () {
+      if (mascotTimer) clearTimeout(mascotTimer);
+      mascotTimer = null;
+    });
+    box.addEventListener("mouseleave", arm);
+    arm();
   }
 
   function showSuccessToast(version) {
@@ -662,7 +795,7 @@
         break;
       case "ready":
         renderChipReady(state);
-        showReadyToast(state);
+        announceReady(state);
         schedulePoll(POLL_IDLE_MS);
         break;
       case "error":
@@ -828,7 +961,24 @@
       startPolling();
       maybeShowSuccessToast();
     });
-    global.addEventListener("resize", repositionToast);
+    var replace = function () {
+      var chip = document.getElementById("damUpdateChip");
+      if (chip) placeChip(chip);
+      var mascot = document.getElementById("damUpdateMascot");
+      if (mascot) positionMascot(mascot);
+      repositionToast();
+    };
+    global.addEventListener("resize", replace);
+    /* zwiniecie/rozwiniecie sidebara zmienia klase body - karta od razu na swoje miejsce */
+    if (global.MutationObserver && document.body) {
+      var wasCollapsed = document.body.classList.contains("dam-sidebar-collapsed");
+      new MutationObserver(function () {
+        var now = document.body.classList.contains("dam-sidebar-collapsed");
+        if (now === wasCollapsed) return;
+        wasCollapsed = now;
+        replace();
+      }).observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    }
   }
 
   if (document.readyState === "loading") {

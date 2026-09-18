@@ -8,12 +8,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-function Remove-TreeForce([string]$Path) {
-  if (-not (Test-Path -LiteralPath $Path)) { return }
-  $full = (Resolve-Path -LiteralPath $Path).Path
-  $long = if ($full.StartsWith('\\?\')) { $full } else { "\\?\$full" }
-  cmd /c "rmdir /s /q `"$long`"" | Out-Null
-}
+# Build NIE kasuje rekurencyjnie (zasada 0 w ~/.claude/CLAUDE.md, 2026-09-18): kazdy build
+# dostaje nowy katalog staging. Stare katalogi DAM-build\staging\DAM-install-* usuwa czlowiek.
 
 function Invoke-Robo([string]$src, [string]$dst, [string[]]$xd, [string[]]$xf) {
   if (-not (Test-Path -LiteralPath $src)) { return }
@@ -112,10 +108,19 @@ if ($SkipExeBuild -and (Test-Path (Join-Path $GitRoot "DAM.exe"))) {
   & (Join-Path $BinRoot "scripts\ops\build-dam-root-exe.ps1")
 }
 
-$stageRoot = Join-Path $env:LOCALAPPDATA "DAM-build\staging\DAM-install"
-Write-Host "STAGE_ROOT=$stageRoot (poza Dropbox — bez FeRp reparse)"
-Remove-TreeForce $stageRoot
-New-Item -ItemType Directory -Force -Path $stageRoot | Out-Null
+if (-not $env:LOCALAPPDATA -or -not [System.IO.Path]::IsPathRooted($env:LOCALAPPDATA)) {
+  throw "LOCALAPPDATA puste albo wzgledne - przerywam (staging musi miec sciezke bezwzgledna)."
+}
+$stageStamp = Get-Date -Format "yyyyMMdd-HHmmss"
+$stageRoot = Join-Path $env:LOCALAPPDATA "DAM-build\staging\DAM-install-$Version-$stageStamp"
+Write-Host "STAGE_ROOT=$stageRoot (poza Dropbox, nowy katalog na kazdy build - bez kasowania)"
+if (Test-Path -LiteralPath $stageRoot) { throw "Katalog staging juz istnieje: $stageRoot" }
+New-Item -ItemType Directory -Path $stageRoot | Out-Null
+$oldStages = @(Get-ChildItem -LiteralPath (Split-Path $stageRoot -Parent) -Directory -ErrorAction SilentlyContinue |
+  Where-Object { $_.FullName -ne $stageRoot })
+if ($oldStages.Count) {
+  Write-Host ("Stare katalogi staging do recznego usuniecia: " + (($oldStages | ForEach-Object { $_.FullName }) -join "; "))
+}
 $damSrc = Join-Path $GitRoot "DAM.exe"
 $damDst = Join-Path $stageRoot "DAM.exe"
 $damReadable = $false

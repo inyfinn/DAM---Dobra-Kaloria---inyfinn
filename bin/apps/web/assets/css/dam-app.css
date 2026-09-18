@@ -1786,6 +1786,202 @@ i.uil.uil-folder.dam-folder-item__icon {
   min-width: 24px;
 }
 
+.dam-update-chip__btn--install {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.dam-update-chip__btn--install .uil {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* Gotowa wersja (jest przycisk Zainstaluj) = zielony akcent tez w rogu, nie tylko w sidebarze */
+.dam-update-chip:has(.dam-update-chip__btn--install) {
+  background: color-mix(in srgb, var(--dam-primary) 8%, var(--dam-surface));
+  border-color: color-mix(in srgb, var(--dam-primary) 35%, var(--dam-border));
+}
+
+/* --- Chip w sidebarze, tuz pod "Wyloguj" (widoczny na pierwszy rzut oka) --- */
+.dam-nav-update {
+  list-style: none;
+  margin-top: 8px;
+}
+
+.dam-nav-update:has(> .dam-update-chip[hidden]) {
+  display: none;
+}
+
+.dam-update-chip.dam-update-chip--sidebar {
+  position: static;
+  left: auto;
+  bottom: auto;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+  gap: 8px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--dam-primary) 8%, var(--dam-surface));
+  border: 1px solid color-mix(in srgb, var(--dam-primary) 35%, var(--dam-border));
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.dam-update-chip--sidebar .dam-update-chip__label {
+  flex: 1 1 120px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.dam-update-chip--sidebar .dam-update-chip__actions:has(.dam-update-chip__btn--install) {
+  flex: 1 1 100%;
+}
+
+.dam-update-chip--sidebar .dam-update-chip__btn--install {
+  width: 100%;
+  min-height: 36px;
+  font-size: 13px;
+}
+
+/* Zwiniety sidebar (72px): sama ikona instalacji, bez tekstu */
+body.dam-sidebar-collapsed .dam-update-chip--sidebar {
+  justify-content: center;
+  padding: 6px;
+}
+
+body.dam-sidebar-collapsed .dam-update-chip--sidebar .dam-update-chip__label,
+body.dam-sidebar-collapsed .dam-update-chip--sidebar .dam-update-chip__btn-text {
+  display: none;
+}
+
+body.dam-sidebar-collapsed .dam-update-chip--sidebar .dam-update-chip__btn--install {
+  padding: 6px;
+}
+
+/* --- Dobrokalorius z megafonem: 5 s "wersja gotowa", obok chipa --- */
+.dam-update-mascot {
+  position: fixed;
+  z-index: 2460;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: min(340px, calc(100vw - 32px));
+  box-sizing: border-box;
+  padding: 16px 44px 16px 16px;
+  color: var(--dam-text);
+  background: var(--dam-surface);
+  border: 1px solid var(--dam-border);
+  border-radius: 16px;
+  box-shadow: var(--dam-shadow, 0 14px 36px rgba(23, 22, 30, 0.18));
+  font-family: var(--dam-font, "Jost", system-ui, sans-serif);
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.dam-update-mascot--beside::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: calc(var(--dam-update-mascot-arrow-y, 50%) - 7px);
+  width: 14px;
+  height: 14px;
+  background: var(--dam-surface);
+  border-left: 1px solid var(--dam-border);
+  border-bottom: 1px solid var(--dam-border);
+  transform: rotate(45deg);
+}
+
+.dam-update-mascot__pic {
+  flex: 0 0 72px;
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: end center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--dam-primary) 10%, var(--dam-surface));
+}
+
+.dam-update-mascot__pic img {
+  width: 86px;
+  height: 86px;
+  object-fit: contain;
+  margin-bottom: -2px;
+}
+
+.dam-update-mascot__text {
+  margin: 0 0 10px;
+  font-weight: 500;
+}
+
+.dam-update-mascot__btn {
+  min-height: 36px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  background: var(--dam-primary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dam-update-mascot__btn:hover,
+.dam-update-mascot__btn:focus-visible {
+  background: var(--dam-primary-hover, color-mix(in srgb, var(--dam-primary) 88%, black));
+}
+
+.dam-update-mascot__btn:focus-visible,
+.dam-update-mascot__x:focus-visible {
+  outline: 2px solid var(--dam-primary);
+  outline-offset: 2px;
+}
+
+.dam-update-mascot__x {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--dam-text-muted);
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.dam-update-mascot__x:hover {
+  color: var(--dam-danger);
+  background: color-mix(in srgb, var(--dam-danger) 12%, transparent);
+}
+
+.dam-update-mascot.is-enter {
+  animation: damUpdateMascotIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes damUpdateMascotIn {
+  from {
+    opacity: 0;
+    transform: translateX(-14px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dam-update-mascot.is-enter {
+    animation: none;
+  }
+}
+
 /* --- Toast: "Zainstaluj / Później" i komunikat sukcesu --- */
 .dam-update-toast {
   bottom: 16px;
