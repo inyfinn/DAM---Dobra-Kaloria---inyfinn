@@ -1,3 +1,22 @@
+## 2026-09-18 - v2.0.8 audyt bezpieczenstwa: koniec hasla w instalatorze, podpisane wydania
+
+**Komenda/Akcja:** User: wejdz w role atakujacego, zalatw wszystkie luki, napraw czysta instalacje, commit + push + build + release. Repo i wydania zostaja PUBLICZNE (ludzie musza moc pobrac aktualizacje).
+
+**Log/Status:**
+- Atak od strony obcego: publiczny `DAM-Setup.exe` wiozl `data/pg-config.json` z haslem do Postgresa na Synology; `bin/DATABASE/users-seed.sqlite` w repo mial 18 kont z haslem "test" (commit `1ba2598` mowil to wprost); porty 5433/5022/5000/5001 odpowiadaja z internetu; `app_updates.py` uruchamial pobrany Setup bez weryfikacji; most `:8766` nie sprawdzal naglowka Host; panel na NAS oddawal publicznie `data/product-people.json`.
+- Sekrety: `pg_seal.py` (Fernet + scrypt(kod aktywacyjny) -> `pg-config.sealed.json`, po aktywacji DPAPI), `seal-pg-config.py` w buildzie, straznik w `build-installer.ps1` przerywa build, gdy w staging jest jawne haslo. Sprawdzone na v2.0.8: 0 plikow z haslem w staging, brak hasla w `DAM-Setup.exe`.
+- Aktualizacje: `release_verify.py` + przypiety klucz `release-pubkey.json`, `sign-release.py` (klucz prywatny w `%USERPROFILE%\.dam`, poza repo). Bez `DAM-Setup.exe.sig` w wydaniu aktualizacja nie rusza; anty-downgrade po wersji z podpisu.
+- Konta: polityka hasel min. 10 znakow, slabe haslo = `password_change_required` (sesji brak, tylko zmiana hasla), limit prob per konto, hashe w `users-seed.sqlite` zablokowane.
+- Most: kontrola `Host` (DNS rebinding) w moscie i serwerze UI, odrzucanie `Sec-Fetch-Site: cross-site`, logowanie dla `/open`, `/reveal`, `/open-image-resizer`, `/telemetry/tail`, `/debug/self-test`, czarna lista rozszerzen wykonywalnych w `/open`, tryb publiczny (`PUBLIC_MODE`) z biala lista sciezek i `ip_guard` (3 bledy / 999 min = staly blok IP, biale IP biura, odblokowanie w Ustawieniach).
+- Czysta instalacja: `marketing_discovery.py` (dysk Marketing pod dowolna litera, limit 2 s na zawieszony udzial), watcher odporny na uszkodzony `index-watcher-status.json` (`ValueError` + kwarantanna `.corrupt` + backoff restartu), `GET /preflight` + pasek stanu w UI, `dam-file-index.js` (jeden wspolny loader zamiast 11 pobran 9,5 MB), `sandbox-smoke.wsb`.
+- Publiczny katalog WWW NAS: skrypty wdrozenia nie kopiuja juz faktur, kosztow, skrzynki ani listy osob i kasuja stare kopie.
+- Historia gita przepisana w kopii lustrzanej (bez hasel w komunikatach, bez `users-seed.sqlite`, bez zrzutow bazy, IP jako symbole) - NIE wypchnieta: user wybral zwykly push. Mirror: scratchpad sesji, `history-rewrite/r.git`.
+- Testy: `unittest discover` w `bin/apps/desktop` 178 testow, jedyny FAIL to znany wczesniej `test_brand_folder_context::test_linked_product_id_derived_from_variant` (nie ruszany).
+
+**Efekt/Fix:** v2.0.8 (licznik 208). Release: https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v2.0.8 (`DAM-Setup.exe` 88 244 880 B + `DAM-Setup.exe.sig`). Instalatory usuniete z 36 starszych wydan (wiozly haslo do bazy). **ZOSTAJE DLA USERA:** zmiana hasla Postgresa na Synology i hasel 18 kont - podpis i pieczec nie uniewazniaja tego, co juz wyciekło; po zmianie hasla kazdy komputer wymaga ponownej aktywacji (patrz `bin/docs/SECURITY.md`).
+
+**Zrodla:** `bin/docs/SECURITY.md`, `pg_seal.py`, `release_verify.py`, `ip_guard.py`, `preflight.py`, `marketing_discovery.py`.
+
 ## 2026-09-16 - v2.0.0 instalator: koniec PowerShell Bypass, build poza Synology Drive
 
 **Komenda/Akcja:** User: agent od 12:00 nie rozwiazal instalatora (1.9.0-1.9.9). Bitdefender: Heur.BZC.PZQ.Boxter w `D:\--- INYFINN - PROJEKTY\.SynologyWorkingDirectory\Temp`. Pull, napraw, commit, push, build, Release.
