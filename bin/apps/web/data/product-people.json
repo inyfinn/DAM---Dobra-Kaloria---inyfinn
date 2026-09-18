@@ -56,7 +56,8 @@
     ],
     "mix-tuba-30-szt-xmas-mixy": [
       "Krzysztof",
-      "Szymon"
+      "Szymon",
+      "Hubert"
     ],
     "owies-czekolada-sniadanie": [
       "Krzysztof"
@@ -138,9 +139,19 @@
     "Display Rossmann 6300787: Krzysztof (siatka) — indeks w by_index; produkt moze nie istnieć w file-index.",
     "Karton export GC traysealer: Sylwia (Asana) — brak jednoznacznego product_id w indeksie.",
     "Chrupkulki / nowe shoty z Asany 10.07: Krzysztof — mapowane na shot-* gdy istnieja.",
-    "Nie renderowac imion jako glosnych badge na kartach; tylko search_blob + tag_groups.autor + by_tag."
+    "Nie renderowac imion jako glosnych badge na kartach; tylko search_blob + tag_groups.autor + by_tag.",
+    "Mail hints merge 2026-09-13: +2 indeksow (apply-mail-author-hints.py).",
+    "Mail hints merge 2026-09-13: +76 indeksow (apply-mail-author-hints.py).",
+    "Mail hints merge 2026-09-13: +25 indeksow (apply-mail-author-hints.py).",
+    "Mail hints merge 2026-09-13: +1 indeksow (apply-mail-author-hints.py)."
   ],
   "people": {
+    "Hubert": {
+      "full": "Hubert",
+      "aliases": [
+        "hubert"
+      ]
+    },
     "Sylwia": {
       "full": "Sylwia Zarychta",
       "aliases": [
@@ -165,24 +176,68 @@
   },
   "version": 1,
   "by_index": {
+    "6300006": [
+      "Szymon"
+    ],
+    "6300337": [
+      "Szymon"
+    ],
     "6300381": [
       "Sylwia",
       "Szymon"
     ],
+    "6300389": [
+      "Szymon"
+    ],
     "6300406": [
-      "Sylwia"
+      "Sylwia",
+      "Szymon"
+    ],
+    "6300448": [
+      "Szymon"
+    ],
+    "6300449": [
+      "Szymon"
+    ],
+    "6300531": [
+      "Szymon"
+    ],
+    "6300532": [
+      "Sylwia",
+      "Krzysztof",
+      "Szymon"
+    ],
+    "6300539": [
+      "Sylwia",
+      "Szymon"
+    ],
+    "6300542": [
+      "Szymon"
     ],
     "6300578": [
-      "Krzysztof"
+      "Krzysztof",
+      "Sylwia",
+      "Szymon"
+    ],
+    "6300584": [
+      "Szymon"
     ],
     "6300602": [
-      "Sylwia"
+      "Sylwia",
+      "Szymon"
     ],
     "6300603": [
       "Sylwia"
     ],
+    "6300609": [
+      "Szymon"
+    ],
     "6300610": [
-      "Krzysztof"
+      "Krzysztof",
+      "Szymon"
+    ],
+    "6300635": [
+      "Szymon"
     ],
     "6300651": [
       "Sylwia",
@@ -191,14 +246,193 @@
     "6300653": [
       "Sylwia"
     ],
-    "6300757": [
+    "6300656": [
+      "Sylwia"
+    ],
+    "6300657": [
+      "Szymon"
+    ],
+    "6300674": [
+      "Szymon"
+    ],
+    "6300678": [
+      "Szymon"
+    ],
+    "6300679": [
+      "Szymon"
+    ],
+    "6300680": [
+      "Szymon"
+    ],
+    "6300681": [
       "Krzysztof"
+    ],
+    "6300682": [
+      "Szymon"
+    ],
+    "6300684": [
+      "Sylwia"
+    ],
+    "6300685": [
+      "Szymon"
+    ],
+    "6300686": [
+      "Szymon",
+      "Krzysztof"
+    ],
+    "6300687": [
+      "Krzysztof",
+      "Szymon"
+    ],
+    "6300688": [
+      "Szymon"
+    ],
+    "6300690": [
+      "Szymon"
+    ],
+    "6300699": [
+      "Krzysztof",
+      "Szymon"
+    ],
+    "6300700": [
+      "Krzysztof",
+      "Szymon"
+    ],
+    "6300701": [
+      "Krzysztof",
+      "Szymon"
+    ],
+    "6300702": [
+      "Szymon"
+    ],
+    "6300703": [
+      "Szymon"
+    ],
+    "6300707": [
+      "Szymon"
+    ],
+    "6300708": [
+      "Szymon"
+    ],
+    "6300710": [
+      "Szymon"
+    ],
+    "6300711": [
+      "Szymon",
+      "Krzysztof"
+    ],
+    "6300716": [
+      "Szymon"
+    ],
+    "6300717": [
+      "Szymon"
+    ],
+    "6300719": [
+      "Szymon",
+      "Krzysztof"
+    ],
+    "6300726": [
+      "Szymon",
+      "Krzysztof"
+    ],
+    "6300727": [
+      "Krzysztof",
+      "Szymon"
+    ],
+    "6300728": [
+      "Krzysztof"
+    ],
+    "6300729": [
+      "Krzysztof",
+      "Szymon"
+    ],
+    "6300739": [
+      "Szymon"
+    ],
+    "6300740": [
+      "Sylwia",
+      "Szymon"
+    ],
+    "6300744": [
+      "Szymon"
+    ],
+    "6300745": [
+      "Szymon"
+    ],
+    "6300746": [
+      "Szymon",
+      "Krzysztof"
+    ],
+    "6300747": [
+      "Szymon",
+      "Sylwia"
+    ],
+    "6300753": [
+      "Szymon",
+      "Krzysztof"
+    ],
+    "6300754": [
+      "Krzysztof"
+    ],
+    "6300755": [
+      "Szymon",
+      "Krzysztof"
+    ],
+    "6300757": [
+      "Krzysztof",
+      "Szymon"
+    ],
+    "6300759": [
+      "Szymon",
+      "Krzysztof"
+    ],
+    "6300760": [
+      "Szymon"
+    ],
+    "6300761": [
+      "Szymon"
+    ],
+    "6300762": [
+      "Szymon"
+    ],
+    "6300763": [
+      "Krzysztof"
+    ],
+    "6300764": [
+      "Szymon"
+    ],
+    "6300765": [
+      "Szymon",
+      "Krzysztof"
+    ],
+    "6300767": [
+      "Krzysztof",
+      "Szymon"
+    ],
+    "6300768": [
+      "Sylwia",
+      "Krzysztof"
+    ],
+    "6300770": [
+      "Sylwia"
+    ],
+    "6300775": [
+      "Szymon"
+    ],
+    "6300777": [
+      "Szymon"
+    ],
+    "6300779": [
+      "Szymon"
     ],
     "6300782": [
-      "Krzysztof"
+      "Krzysztof",
+      "Sylwia",
+      "Szymon"
     ],
     "6300783": [
-      "Krzysztof"
+      "Krzysztof",
+      "Szymon"
     ],
     "6300784": [
       "Krzysztof"
@@ -206,8 +440,58 @@
     "6300785": [
       "Krzysztof"
     ],
+    "6300786": [
+      "Sylwia"
+    ],
     "6300787": [
+      "Krzysztof",
+      "Szymon"
+    ],
+    "6300793": [
+      "Szymon",
+      "Krzysztof",
+      "Hubert"
+    ],
+    "6300794": [
+      "Szymon"
+    ],
+    "6300798": [
+      "Szymon"
+    ],
+    "6300806": [
+      "Szymon"
+    ],
+    "6300808": [
+      "Szymon"
+    ],
+    "6300809": [
+      "Szymon",
       "Krzysztof"
+    ],
+    "6300810": [
+      "Szymon"
+    ],
+    "6300811": [
+      "Szymon"
+    ],
+    "6300812": [
+      "Szymon"
+    ],
+    "6300815": [
+      "Szymon"
+    ],
+    "6300817": [
+      "Szymon"
+    ],
+    "6300818": [
+      "Sylwia",
+      "Szymon"
+    ],
+    "6300824": [
+      "Szymon"
+    ],
+    "6300840": [
+      "Szymon"
     ]
   },
   "source_pl": "Status Sylwii (kartony/mielone/kalendarz/datesy) + spis Szymona + dziennik KW 29.06–10.07. Cel: wyszukiwanie po imieniu, bez widocznych badge TAG na kartach.",

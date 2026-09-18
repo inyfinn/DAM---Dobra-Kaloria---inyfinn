@@ -1,9 +1,9 @@
 {
-  "source": "synology",
-  "synced_at": "2026-09-15T09:17:09Z",
-  "file_count": 12937,
-  "last_mtime": "2026-09-15T08:55:04Z",
-  "total_bytes": 102921212,
-  "generated_at": "2026-09-15T09:17:10Z",
-  "last_mtime_unix": 1789462504.5820093
+  "source": "local",
+  "synced_at": "2026-09-17T10:40:36Z",
+  "file_count": 12968,
+  "last_mtime": "2026-09-17T10:40:32Z",
+  "total_bytes": 103243309,
+  "generated_at": "2026-09-17T10:40:36Z",
+  "last_mtime_unix": 1789641632.005547
 }

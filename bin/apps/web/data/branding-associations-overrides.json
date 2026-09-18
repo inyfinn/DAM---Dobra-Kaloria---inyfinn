@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-09-10T11:31:50Z",
+  "updated_at": "2026-09-18T12:24:39Z",
   "assets": {
     "M-SHOP405237-05-22": {
       "linked_product_ids": [],
@@ -166,6 +166,16 @@
       "folder_group_id": "d:/marketing/- polska/06 - strony www - internet/01 - strona dobra kaloria/06 - slidery na główną/babka cytrynowa",
       "updated_by": "krzysztof.wieczorek@kubara.pl",
       "updated_at": "2026-09-10T11:31:50Z"
+    },
+    "br-004028": {
+      "linked_product_ids": [
+        "burger-plant-based",
+        "burger-chicken-plant-based"
+      ],
+      "linked_variant_ids": [],
+      "folder_group_id": "",
+      "updated_by": "krzysztof.wieczorek@kubara.pl",
+      "updated_at": "2026-09-18T12:24:39Z"
     }
   },
   "folder_groups": {

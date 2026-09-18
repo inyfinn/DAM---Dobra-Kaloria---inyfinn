@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-11T16:33:30",
-  "product_count": 193,
+  "generated_at": "2026-09-17T12:05:29",
+  "product_count": 194,
   "by_prefix": {
     "0000": [
       "chrupiacy-orzech-daktylowy",
@@ -4770,6 +4770,9 @@
     "1F · 6×1": [
       "mix-6x-mini-batoniki-mixy"
     ],
+    "2F · 12×2": [
+      "figa-z-makiem-owocowe"
+    ],
     "banoffee": [
       "banoffee-kakao-deserowe",
       "gi-banoffee-bars-protein",
@@ -5001,6 +5004,7 @@
       "klopsiki-klasyczne-niemiesne",
       "klopsy-niemiesne",
       "kulki-z-kreatyna-kreatyna",
+      "kulki-z-kreatyna-kreatyna-d",
       "lemon-cheesecake-daktyle",
       "malina-owocowe",
       "marakuja-daktyle",
@@ -5084,6 +5088,9 @@
       "gyros-pszenica-niemiesne",
       "gyros-wheat-plant-based"
     ],
+    "hubert": [
+      "mix-tuba-30-szt-mixy"
+    ],
     "jaglanka": [
       "bio-jaglanka-z-miodem-sniadaniowe",
       "jaglanka-jab-ko-cynamon-sniadaniowe"
@@ -5161,7 +5168,8 @@
       "kotlety-mielone-niemiesne"
     ],
     "kreatyna": [
-      "kulki-z-kreatyna-kreatyna"
+      "kulki-z-kreatyna-kreatyna",
+      "kulki-z-kreatyna-kreatyna-d"
     ],
     "krem": [
       "krem-orzechowy-karmel-proteinowy",
@@ -5172,7 +5180,7 @@
       "proteina-lemon-cheesecake-krem-orzechowy"
     ],
     "krzysztof": [
-      "babka-cytrynowa-nerkowcowy",
+      "banoffee-kakao-deserowe",
       "blueberry-muffin-cashews",
       "burger-buraczany-niemiesne",
       "burger-klasyczny-niemiesne",
@@ -5184,10 +5192,8 @@
       "cornflakes-peanuts-honey-balls-crispy",
       "crunchy-peanuts-date",
       "cynamonka-nerkowcowy",
-      "daktyl-limonka-raw",
+      "czarna-porzeczka-owocowe",
       "daktyl-pomarancza-raw",
-      "daktyl-wisnia-raw",
-      "date-cherry-balls-raw",
       "date-lime-balls-raw",
       "date-orange-balls-raw",
       "dk-doy-datesy-karmel-100-g-x",
@@ -5196,12 +5202,19 @@
       "dk-doy-datesy-yuzu-100-g-x",
       "energy-bars-functional",
       "falafel-niemiesne",
-      "hazelnut-chocolate-date",
+      "gyros-groch-niemiesne",
+      "jab-ko-cynamon-daktylowy",
+      "kaszanka-niemiesne",
+      "kielbaska-wegierska-niemiesne",
+      "kofta-niemiesne",
       "krem-orzechowy-karmel-proteinowy",
       "krem-orzechowy-sol-proteinowy",
       "krem-orzechowy-wanilia-proteinowy",
       "lemon-bundt-cake-cashews",
+      "malina-owocowe",
       "matcha-lemon-nerkowcowy",
+      "mix-tuba-30-szt-mixy",
+      "mix-zestaw-mix-ciast-1-mixy",
       "muffin-jagodowy-nerkowcowy",
       "nuggets-niemiesne",
       "nuggets-plant-based",
@@ -5211,6 +5224,8 @@
       "orzeszki-miod-sniadanie",
       "owies-czekolada-sniadanie",
       "owies-czekolada-sniadaniowe",
+      "paczek-rozany-nerkowcowy",
+      "piernik-korzenny-nerkowcowy",
       "proteina-banoffee-ig",
       "proteina-banoffee-krem-orzechowy",
       "proteina-karmel-krem-orzechowy",
@@ -5219,12 +5234,14 @@
       "proteina-lemon-cheesecake-ig",
       "proteina-lemon-cheesecake-krem-orzechowy",
       "raspberry-tart-cashews",
+      "sernik-waniliowy-nerkowcowy",
       "shot-funkcjonalne",
       "sznycel-niemiesne",
-      "sznycel-plant-based"
+      "sznycel-plant-based",
+      "tiramisu-czekolada-kakao-deserowe"
     ],
     "krzysztof wieczorek": [
-      "babka-cytrynowa-nerkowcowy",
+      "banoffee-kakao-deserowe",
       "blueberry-muffin-cashews",
       "burger-buraczany-niemiesne",
       "burger-klasyczny-niemiesne",
@@ -5236,10 +5253,8 @@
       "cornflakes-peanuts-honey-balls-crispy",
       "crunchy-peanuts-date",
       "cynamonka-nerkowcowy",
-      "daktyl-limonka-raw",
+      "czarna-porzeczka-owocowe",
       "daktyl-pomarancza-raw",
-      "daktyl-wisnia-raw",
-      "date-cherry-balls-raw",
       "date-lime-balls-raw",
       "date-orange-balls-raw",
       "dk-doy-datesy-karmel-100-g-x",
@@ -5248,12 +5263,19 @@
       "dk-doy-datesy-yuzu-100-g-x",
       "energy-bars-functional",
       "falafel-niemiesne",
-      "hazelnut-chocolate-date",
+      "gyros-groch-niemiesne",
+      "jab-ko-cynamon-daktylowy",
+      "kaszanka-niemiesne",
+      "kielbaska-wegierska-niemiesne",
+      "kofta-niemiesne",
       "krem-orzechowy-karmel-proteinowy",
       "krem-orzechowy-sol-proteinowy",
       "krem-orzechowy-wanilia-proteinowy",
       "lemon-bundt-cake-cashews",
+      "malina-owocowe",
       "matcha-lemon-nerkowcowy",
+      "mix-tuba-30-szt-mixy",
+      "mix-zestaw-mix-ciast-1-mixy",
       "muffin-jagodowy-nerkowcowy",
       "nuggets-niemiesne",
       "nuggets-plant-based",
@@ -5263,6 +5285,8 @@
       "orzeszki-miod-sniadanie",
       "owies-czekolada-sniadanie",
       "owies-czekolada-sniadaniowe",
+      "paczek-rozany-nerkowcowy",
+      "piernik-korzenny-nerkowcowy",
       "proteina-banoffee-ig",
       "proteina-banoffee-krem-orzechowy",
       "proteina-karmel-krem-orzechowy",
@@ -5271,9 +5295,11 @@
       "proteina-lemon-cheesecake-ig",
       "proteina-lemon-cheesecake-krem-orzechowy",
       "raspberry-tart-cashews",
+      "sernik-waniliowy-nerkowcowy",
       "shot-funkcjonalne",
       "sznycel-niemiesne",
-      "sznycel-plant-based"
+      "sznycel-plant-based",
+      "tiramisu-czekolada-kakao-deserowe"
     ],
     "kulki": [
       "banoffee-kakao-deserowe",
@@ -5285,6 +5311,7 @@
       "kokos-ananas-ziomki",
       "kokos-truskawka-ziomki",
       "kulki-z-kreatyna-kreatyna",
+      "kulki-z-kreatyna-kreatyna-d",
       "malina-owocowe",
       "orzeszki-kukurydza-miod-sniadanie",
       "orzeszki-miod-sniadanie",
@@ -5668,7 +5695,60 @@
       "wedlina-niemiesne"
     ],
     "ryngwelski": [
-      "mix-kalendarz-adwentowy-mixy"
+      "burger-buraczany-niemiesne",
+      "burger-klasyczny-niemiesne",
+      "burger-wolowy-niemiesne",
+      "chrupiacy-orzech-daktylowy",
+      "cornflakes-peanuts-honey-balls-crispy",
+      "cynamonka-nerkowcowy",
+      "czarna-porzeczka-owocowe",
+      "daktyl-limonka-raw",
+      "daktyl-pomarancza-raw",
+      "daktyl-wisnia-raw",
+      "date-cherry-balls-raw",
+      "energia-funkcjonalny",
+      "falafel-niemiesne",
+      "figa-z-makiem-owocowe",
+      "gi-banoffee-bars-protein",
+      "gyros-groch-niemiesne",
+      "gyros-pea-plant-based",
+      "hazelnut-chocolate-date",
+      "kaszanka-niemiesne",
+      "kielbaska-wegierska-niemiesne",
+      "kofta-niemiesne",
+      "malina-owocowe",
+      "mango-lassi-nerkowcowy",
+      "matcha-lemon-nerkowcowy",
+      "mielone-wolowe-niemiesne",
+      "mix-12x-xmas-mixy",
+      "mix-kalendarz-adwentowy-mixy",
+      "mix-tuba-30-szt-mixy",
+      "mix-zestaw-mix-ciast-1-mixy",
+      "mix-zestaw-mix-ciast-2-mixy",
+      "nerkowce-kokos-daktylowy",
+      "nuggets-plant-based",
+      "oats-chocolate-balls-crispy",
+      "orzeszki-kukurydza-miod-sniadanie",
+      "orzeszki-miod-sniadanie",
+      "owies-czekolada-sniadanie",
+      "paczek-rozany-nerkowcowy",
+      "parowka-roslinna-niemiesne",
+      "piernik-korzenny-nerkowcowy",
+      "pina-colada-nerkowcowy",
+      "prebiotyk-funkcjonalny",
+      "proteina-banoffee-ig",
+      "proteina-banoffee-krem-orzechowy",
+      "proteina-karmel-krem-orzechowy",
+      "proteina-karmel-mct-funkcjonalny",
+      "proteina-karmel-z-mct-ig",
+      "proteina-lemon-cheesecake-ig",
+      "proteina-lemon-cheesecake-krem-orzechowy",
+      "rogal-poznanski-nerkowcowy",
+      "roladka-wo-owa-niemiesne",
+      "sernik-waniliowy-nerkowcowy",
+      "sznycel-niemiesne",
+      "tarta-malinowa-nerkowcowy",
+      "tiramisu-czekolada-kakao-deserowe"
     ],
     "shot": [
       "shot-funkcjonalne"
@@ -5698,19 +5778,28 @@
       "quinoa-z-czekolada-i-truskawkami-sniadaniowe"
     ],
     "sylwia": [
+      "babka-cytrynowa-nerkowcowy",
+      "burger-buraczany-niemiesne",
+      "cynamonka-nerkowcowy",
       "dk-doy-datesy-karmel-100-g-x",
       "dk-doy-datesy-lemoncheesecake-100-g-x",
       "dk-doy-datesy-marakuja-100-g-x",
       "dk-doy-datesy-yuzu-100-g-x",
       "energia-funkcjonalny",
+      "gi-banoffee-bars-protein",
+      "jab-ko-cynamon-daktylowy",
+      "kaszanka-niemiesne",
       "kielbaska-wegierska-niemiesne",
       "krem-orzechowy-karmel-proteinowy",
       "krem-orzechowy-sol-proteinowy",
       "krem-orzechowy-wanilia-proteinowy",
       "mielone-wolowe-niemiesne",
       "mielone-wolowe-xxl-niemiesne",
+      "minced-plant-based",
       "mix-kalendarz-adwentowy-mixy",
+      "mix-zestaw-mix-ciast-2-mixy",
       "odpornosc-funkcjonalny",
+      "piernik-korzenny-nerkowcowy",
       "prebiotyk-funkcjonalny",
       "proteina-banoffee-ig",
       "proteina-banoffee-krem-orzechowy",
@@ -5720,22 +5809,33 @@
       "proteina-lemon-cheesecake-ig",
       "proteina-lemon-cheesecake-krem-orzechowy",
       "roladki-szpinakowe-niemiesne",
-      "sousages-spicy-plant-based"
+      "sernik-waniliowy-nerkowcowy",
+      "sousages-spicy-plant-based",
+      "tarta-malinowa-nerkowcowy"
     ],
     "sylwia zarychta": [
+      "babka-cytrynowa-nerkowcowy",
+      "burger-buraczany-niemiesne",
+      "cynamonka-nerkowcowy",
       "dk-doy-datesy-karmel-100-g-x",
       "dk-doy-datesy-lemoncheesecake-100-g-x",
       "dk-doy-datesy-marakuja-100-g-x",
       "dk-doy-datesy-yuzu-100-g-x",
       "energia-funkcjonalny",
+      "gi-banoffee-bars-protein",
+      "jab-ko-cynamon-daktylowy",
+      "kaszanka-niemiesne",
       "kielbaska-wegierska-niemiesne",
       "krem-orzechowy-karmel-proteinowy",
       "krem-orzechowy-sol-proteinowy",
       "krem-orzechowy-wanilia-proteinowy",
       "mielone-wolowe-niemiesne",
       "mielone-wolowe-xxl-niemiesne",
+      "minced-plant-based",
       "mix-kalendarz-adwentowy-mixy",
+      "mix-zestaw-mix-ciast-2-mixy",
       "odpornosc-funkcjonalny",
+      "piernik-korzenny-nerkowcowy",
       "prebiotyk-funkcjonalny",
       "proteina-banoffee-ig",
       "proteina-banoffee-krem-orzechowy",
@@ -5745,7 +5845,9 @@
       "proteina-lemon-cheesecake-ig",
       "proteina-lemon-cheesecake-krem-orzechowy",
       "roladki-szpinakowe-niemiesne",
-      "sousages-spicy-plant-based"
+      "sernik-waniliowy-nerkowcowy",
+      "sousages-spicy-plant-based",
+      "tarta-malinowa-nerkowcowy"
     ],
     "sypkie": [
       "balans-boosty",
@@ -5764,10 +5866,116 @@
       "quinoa-z-czekolada-i-truskawkami-sniadaniowe"
     ],
     "szymon": [
-      "mix-kalendarz-adwentowy-mixy"
+      "burger-buraczany-niemiesne",
+      "burger-klasyczny-niemiesne",
+      "burger-wolowy-niemiesne",
+      "chrupiacy-orzech-daktylowy",
+      "cornflakes-peanuts-honey-balls-crispy",
+      "cynamonka-nerkowcowy",
+      "czarna-porzeczka-owocowe",
+      "daktyl-limonka-raw",
+      "daktyl-pomarancza-raw",
+      "daktyl-wisnia-raw",
+      "date-cherry-balls-raw",
+      "energia-funkcjonalny",
+      "falafel-niemiesne",
+      "figa-z-makiem-owocowe",
+      "gi-banoffee-bars-protein",
+      "gyros-groch-niemiesne",
+      "gyros-pea-plant-based",
+      "hazelnut-chocolate-date",
+      "kaszanka-niemiesne",
+      "kielbaska-wegierska-niemiesne",
+      "kofta-niemiesne",
+      "malina-owocowe",
+      "mango-lassi-nerkowcowy",
+      "matcha-lemon-nerkowcowy",
+      "mielone-wolowe-niemiesne",
+      "mix-12x-xmas-mixy",
+      "mix-kalendarz-adwentowy-mixy",
+      "mix-tuba-30-szt-mixy",
+      "mix-zestaw-mix-ciast-1-mixy",
+      "mix-zestaw-mix-ciast-2-mixy",
+      "nerkowce-kokos-daktylowy",
+      "nuggets-plant-based",
+      "oats-chocolate-balls-crispy",
+      "orzeszki-kukurydza-miod-sniadanie",
+      "orzeszki-miod-sniadanie",
+      "owies-czekolada-sniadanie",
+      "paczek-rozany-nerkowcowy",
+      "parowka-roslinna-niemiesne",
+      "piernik-korzenny-nerkowcowy",
+      "pina-colada-nerkowcowy",
+      "prebiotyk-funkcjonalny",
+      "proteina-banoffee-ig",
+      "proteina-banoffee-krem-orzechowy",
+      "proteina-karmel-krem-orzechowy",
+      "proteina-karmel-mct-funkcjonalny",
+      "proteina-karmel-z-mct-ig",
+      "proteina-lemon-cheesecake-ig",
+      "proteina-lemon-cheesecake-krem-orzechowy",
+      "rogal-poznanski-nerkowcowy",
+      "roladka-wo-owa-niemiesne",
+      "sernik-waniliowy-nerkowcowy",
+      "sznycel-niemiesne",
+      "tarta-malinowa-nerkowcowy",
+      "tiramisu-czekolada-kakao-deserowe"
     ],
     "szymon ryngwelski": [
-      "mix-kalendarz-adwentowy-mixy"
+      "burger-buraczany-niemiesne",
+      "burger-klasyczny-niemiesne",
+      "burger-wolowy-niemiesne",
+      "chrupiacy-orzech-daktylowy",
+      "cornflakes-peanuts-honey-balls-crispy",
+      "cynamonka-nerkowcowy",
+      "czarna-porzeczka-owocowe",
+      "daktyl-limonka-raw",
+      "daktyl-pomarancza-raw",
+      "daktyl-wisnia-raw",
+      "date-cherry-balls-raw",
+      "energia-funkcjonalny",
+      "falafel-niemiesne",
+      "figa-z-makiem-owocowe",
+      "gi-banoffee-bars-protein",
+      "gyros-groch-niemiesne",
+      "gyros-pea-plant-based",
+      "hazelnut-chocolate-date",
+      "kaszanka-niemiesne",
+      "kielbaska-wegierska-niemiesne",
+      "kofta-niemiesne",
+      "malina-owocowe",
+      "mango-lassi-nerkowcowy",
+      "matcha-lemon-nerkowcowy",
+      "mielone-wolowe-niemiesne",
+      "mix-12x-xmas-mixy",
+      "mix-kalendarz-adwentowy-mixy",
+      "mix-tuba-30-szt-mixy",
+      "mix-zestaw-mix-ciast-1-mixy",
+      "mix-zestaw-mix-ciast-2-mixy",
+      "nerkowce-kokos-daktylowy",
+      "nuggets-plant-based",
+      "oats-chocolate-balls-crispy",
+      "orzeszki-kukurydza-miod-sniadanie",
+      "orzeszki-miod-sniadanie",
+      "owies-czekolada-sniadanie",
+      "paczek-rozany-nerkowcowy",
+      "parowka-roslinna-niemiesne",
+      "piernik-korzenny-nerkowcowy",
+      "pina-colada-nerkowcowy",
+      "prebiotyk-funkcjonalny",
+      "proteina-banoffee-ig",
+      "proteina-banoffee-krem-orzechowy",
+      "proteina-karmel-krem-orzechowy",
+      "proteina-karmel-mct-funkcjonalny",
+      "proteina-karmel-z-mct-ig",
+      "proteina-lemon-cheesecake-ig",
+      "proteina-lemon-cheesecake-krem-orzechowy",
+      "rogal-poznanski-nerkowcowy",
+      "roladka-wo-owa-niemiesne",
+      "sernik-waniliowy-nerkowcowy",
+      "sznycel-niemiesne",
+      "tarta-malinowa-nerkowcowy",
+      "tiramisu-czekolada-kakao-deserowe"
     ],
     "tarta": [
       "raspberry-tart-cashews",
@@ -5787,7 +5995,7 @@
       "krem-orzechowy-wanilia-proteinowy"
     ],
     "wieczorek": [
-      "babka-cytrynowa-nerkowcowy",
+      "banoffee-kakao-deserowe",
       "blueberry-muffin-cashews",
       "burger-buraczany-niemiesne",
       "burger-klasyczny-niemiesne",
@@ -5799,10 +6007,8 @@
       "cornflakes-peanuts-honey-balls-crispy",
       "crunchy-peanuts-date",
       "cynamonka-nerkowcowy",
-      "daktyl-limonka-raw",
+      "czarna-porzeczka-owocowe",
       "daktyl-pomarancza-raw",
-      "daktyl-wisnia-raw",
-      "date-cherry-balls-raw",
       "date-lime-balls-raw",
       "date-orange-balls-raw",
       "dk-doy-datesy-karmel-100-g-x",
@@ -5811,12 +6017,19 @@
       "dk-doy-datesy-yuzu-100-g-x",
       "energy-bars-functional",
       "falafel-niemiesne",
-      "hazelnut-chocolate-date",
+      "gyros-groch-niemiesne",
+      "jab-ko-cynamon-daktylowy",
+      "kaszanka-niemiesne",
+      "kielbaska-wegierska-niemiesne",
+      "kofta-niemiesne",
       "krem-orzechowy-karmel-proteinowy",
       "krem-orzechowy-sol-proteinowy",
       "krem-orzechowy-wanilia-proteinowy",
       "lemon-bundt-cake-cashews",
+      "malina-owocowe",
       "matcha-lemon-nerkowcowy",
+      "mix-tuba-30-szt-mixy",
+      "mix-zestaw-mix-ciast-1-mixy",
       "muffin-jagodowy-nerkowcowy",
       "nuggets-niemiesne",
       "nuggets-plant-based",
@@ -5826,6 +6039,8 @@
       "orzeszki-miod-sniadanie",
       "owies-czekolada-sniadanie",
       "owies-czekolada-sniadaniowe",
+      "paczek-rozany-nerkowcowy",
+      "piernik-korzenny-nerkowcowy",
       "proteina-banoffee-ig",
       "proteina-banoffee-krem-orzechowy",
       "proteina-karmel-krem-orzechowy",
@@ -5834,24 +6049,35 @@
       "proteina-lemon-cheesecake-ig",
       "proteina-lemon-cheesecake-krem-orzechowy",
       "raspberry-tart-cashews",
+      "sernik-waniliowy-nerkowcowy",
       "shot-funkcjonalne",
       "sznycel-niemiesne",
-      "sznycel-plant-based"
+      "sznycel-plant-based",
+      "tiramisu-czekolada-kakao-deserowe"
     ],
     "zarychta": [
+      "babka-cytrynowa-nerkowcowy",
+      "burger-buraczany-niemiesne",
+      "cynamonka-nerkowcowy",
       "dk-doy-datesy-karmel-100-g-x",
       "dk-doy-datesy-lemoncheesecake-100-g-x",
       "dk-doy-datesy-marakuja-100-g-x",
       "dk-doy-datesy-yuzu-100-g-x",
       "energia-funkcjonalny",
+      "gi-banoffee-bars-protein",
+      "jab-ko-cynamon-daktylowy",
+      "kaszanka-niemiesne",
       "kielbaska-wegierska-niemiesne",
       "krem-orzechowy-karmel-proteinowy",
       "krem-orzechowy-sol-proteinowy",
       "krem-orzechowy-wanilia-proteinowy",
       "mielone-wolowe-niemiesne",
       "mielone-wolowe-xxl-niemiesne",
+      "minced-plant-based",
       "mix-kalendarz-adwentowy-mixy",
+      "mix-zestaw-mix-ciast-2-mixy",
       "odpornosc-funkcjonalny",
+      "piernik-korzenny-nerkowcowy",
       "prebiotyk-funkcjonalny",
       "proteina-banoffee-ig",
       "proteina-banoffee-krem-orzechowy",
@@ -5861,7 +6087,9 @@
       "proteina-lemon-cheesecake-ig",
       "proteina-lemon-cheesecake-krem-orzechowy",
       "roladki-szpinakowe-niemiesne",
-      "sousages-spicy-plant-based"
+      "sernik-waniliowy-nerkowcowy",
+      "sousages-spicy-plant-based",
+      "tarta-malinowa-nerkowcowy"
     ],
     "ziomki": [
       "kokos-ananas-ziomki",
@@ -9005,13 +9233,15 @@
       "Krzysztof",
       "Sylwia",
       "Szymon",
-      "Highlite"
+      "Highlite",
+      "Hubert"
     ],
     "osoba": [
       "Krzysztof",
       "Sylwia",
       "Szymon",
-      "Highlite"
+      "Highlite",
+      "Hubert"
     ],
     "inne": []
   },
@@ -9037,8 +9267,12 @@
           "baton",
           "mini baton"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Szymon"
+        ],
+        "osoba": [
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -9047,8 +9281,10 @@
       "index_bases": [
         "6300682"
       ],
-      "search_blob": "mix 12x xmas mix 12x xmas mixy baton mini baton mix mixy 6300682.00 mini 19.09.2025 6300682.00 d marketing polska 01 produkty dk 01 batony mix 12x xmas mixy mini 19.09.2025 6300682.00 6300682.00 mix 12x xmas baton mini baton mix mixy 6300682.00",
-      "authors": []
+      "search_blob": "mix 12x xmas mix 12x xmas mixy baton mini baton mix mixy szymon szymon ryngwelski szymon ryngwelski 6300682.00 mini 19.09.2025 6300682.00 d marketing polska 01 produkty dk 01 batony mix 12x xmas mixy mini 19.09.2025 6300682.00 6300682.00 mix 12x xmas baton mini baton mix mixy szymon szymon ryngwelski szymon ryngwelski 6300682.00",
+      "authors": [
+        "Szymon"
+      ]
     },
     {
       "id": "mix-6x-mini-batoniki-mixy",
@@ -9192,8 +9428,16 @@
           "mini baton",
           "tuba"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Hubert",
+          "Krzysztof",
+          "Szymon"
+        ],
+        "osoba": [
+          "Hubert",
+          "Krzysztof",
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -9202,8 +9446,12 @@
       "index_bases": [
         "6300793"
       ],
-      "search_blob": "mix tuba 30 szt mix tuba 30 szt mixy baton mini baton mix mixy tuba 6300793.00 tuba mini 28.02.2026 6300xxx.00 tuba mini duzo dobra 07.07.2026 6300793.00 d marketing polska 01 produkty dk 01 batony mix tuba 30 szt mixy tuba mini 28.02.2026 6300xxx.00 d marketing polska 01 produkty dk 01 batony mix tuba 30 szt mixy tuba mini duzo dobra 07.07.2026 6300793.00 6300xxx.00 6300793.00 mix tuba 30 szt baton mini baton mix mixy tuba 6300793.00",
-      "authors": []
+      "search_blob": "mix tuba 30 szt mix tuba 30 szt mixy baton mini baton mix mixy tuba szymon szymon ryngwelski szymon ryngwelski krzysztof krzysztof wieczorek krzysztof wieczorek hubert hubert 6300793.00 tuba mini 28.02.2026 6300xxx.00 tuba mini duzo dobra 07.07.2026 6300793.00 d marketing polska 01 produkty dk 01 batony mix tuba 30 szt mixy tuba mini 28.02.2026 6300xxx.00 d marketing polska 01 produkty dk 01 batony mix tuba 30 szt mixy tuba mini duzo dobra 07.07.2026 6300793.00 6300xxx.00 6300793.00 mix tuba 30 szt baton mini baton mix mixy tuba szymon szymon ryngwelski szymon ryngwelski krzysztof krzysztof wieczorek krzysztof wieczorek hubert hubert 6300793.00",
+      "authors": [
+        "Szymon",
+        "Krzysztof",
+        "Hubert"
+      ]
     },
     {
       "id": "mix-zestaw-15x-mini-batoniki-mixy",
@@ -9296,8 +9544,14 @@
           "baton",
           "karton"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Krzysztof",
+          "Szymon"
+        ],
+        "osoba": [
+          "Krzysztof",
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -9306,8 +9560,11 @@
       "index_bases": [
         "6300719"
       ],
-      "search_blob": "mix zestaw mix ciast 1 mix zestaw mix ciast 1 mixy baton karton mix mixy 6300719.00 kar 16.12.2025 6300719.00 d marketing polska 01 produkty dk 01 batony mix zestaw mix ciast 1 mixy kar 16.12.2025 6300719.00 6300719.00 mix zestaw mix ciast 1 baton karton mix mixy 6300719.00",
-      "authors": []
+      "search_blob": "mix zestaw mix ciast 1 mix zestaw mix ciast 1 mixy baton karton mix mixy szymon szymon ryngwelski szymon ryngwelski krzysztof krzysztof wieczorek krzysztof wieczorek 6300719.00 kar 16.12.2025 6300719.00 d marketing polska 01 produkty dk 01 batony mix zestaw mix ciast 1 mixy kar 16.12.2025 6300719.00 6300719.00 mix zestaw mix ciast 1 baton karton mix mixy szymon szymon ryngwelski szymon ryngwelski krzysztof krzysztof wieczorek krzysztof wieczorek 6300719.00",
+      "authors": [
+        "Szymon",
+        "Krzysztof"
+      ]
     },
     {
       "id": "mix-zestaw-mix-ciast-2-mixy",
@@ -9332,8 +9589,14 @@
           "karton 6x",
           "mini baton"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Sylwia",
+          "Szymon"
+        ],
+        "osoba": [
+          "Sylwia",
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -9342,8 +9605,11 @@
       "index_bases": [
         "6300740"
       ],
-      "search_blob": "mix zestaw mix ciast 2 mix zestaw mix ciast 2 mixy baton karton 6x mini baton mix mixy 6300740.00 kar6x 08 05 2026 6300740.00 mini 16.04.2026 6300740.00 d marketing polska 01 produkty dk 01 batony mix zestaw mix ciast 2 mixy kar6x 08 05 2026 6300740.00 d marketing polska 01 produkty dk 01 batony mix zestaw mix ciast 2 mixy mini 16.04.2026 6300740.00 6300740.00 6300740.00 mix zestaw mix ciast 2 baton karton 6x mini baton mix mixy 6300740.00",
-      "authors": []
+      "search_blob": "mix zestaw mix ciast 2 mix zestaw mix ciast 2 mixy baton karton 6x mini baton mix mixy sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 6300740.00 kar6x 08 05 2026 6300740.00 mini 16.04.2026 6300740.00 d marketing polska 01 produkty dk 01 batony mix zestaw mix ciast 2 mixy kar6x 08 05 2026 6300740.00 d marketing polska 01 produkty dk 01 batony mix zestaw mix ciast 2 mixy mini 16.04.2026 6300740.00 6300740.00 6300740.00 mix zestaw mix ciast 2 baton karton 6x mini baton mix mixy sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 6300740.00",
+      "authors": [
+        "Sylwia",
+        "Szymon"
+      ]
     },
     {
       "id": "mix-funkcjonalny-3x-batony-duzy",
@@ -9405,10 +9671,10 @@
           "mini baton"
         ],
         "autor": [
-          "Krzysztof"
+          "Sylwia"
         ],
         "osoba": [
-          "Krzysztof"
+          "Sylwia"
         ],
         "inne": []
       },
@@ -9423,9 +9689,9 @@
         "6300622",
         "6300684"
       ],
-      "search_blob": "babka cytrynowa babka cytrynowa nerkowcowy baton karton 6x mini baton nerkowcowy krzysztof krzysztof wieczorek krzysztof wieczorek 6300621.00 6300622.00 6300684.00 6300684.01 kar6x 05.05.2026 6300684.00 kar6x 07.05.2026 6300684.01 kar6x 13.02.2025 6300622.00 mini 24.01.2025 6300621.00 d marketing polska 01 produkty dk 01 batony babka cytrynowa nerkowcowy kar6x 05.05.2026 6300684.00 d marketing polska 01 produkty dk 01 batony babka cytrynowa nerkowcowy kar6x 07.05.2026 6300684.01 d marketing polska 01 produkty dk 01 batony babka cytrynowa nerkowcowy kar6x 13.02.2025 6300622.00 d marketing polska 01 produkty dk 01 batony babka cytrynowa nerkowcowy mini 24.01.2025 6300621.00 6300684.00 6300684.01 6300622.00 6300621.00 babka cytrynowa baton karton 6x mini baton nerkowcowy krzysztof krzysztof wieczorek krzysztof wieczorek 6300621.00 6300622.00 6300684.00 6300684.01 nerkowiec nerkowcowy cytryna cytrynowa babka babka cytrynowa nerkowiec cytryna",
+      "search_blob": "babka cytrynowa babka cytrynowa nerkowcowy baton karton 6x mini baton nerkowcowy sylwia sylwia zarychta sylwia zarychta 6300621.00 6300622.00 6300684.00 6300684.01 kar6x 05.05.2026 6300684.00 kar6x 07.05.2026 6300684.01 kar6x 13.02.2025 6300622.00 mini 24.01.2025 6300621.00 d marketing polska 01 produkty dk 01 batony babka cytrynowa nerkowcowy kar6x 05.05.2026 6300684.00 d marketing polska 01 produkty dk 01 batony babka cytrynowa nerkowcowy kar6x 07.05.2026 6300684.01 d marketing polska 01 produkty dk 01 batony babka cytrynowa nerkowcowy kar6x 13.02.2025 6300622.00 d marketing polska 01 produkty dk 01 batony babka cytrynowa nerkowcowy mini 24.01.2025 6300621.00 6300684.00 6300684.01 6300622.00 6300621.00 babka cytrynowa baton karton 6x mini baton nerkowcowy sylwia sylwia zarychta sylwia zarychta 6300621.00 6300622.00 6300684.00 6300684.01 nerkowiec nerkowcowy cytryna cytrynowa babka babka cytrynowa nerkowiec cytryna",
       "authors": [
-        "Krzysztof"
+        "Sylwia"
       ]
     },
     {
@@ -9452,8 +9718,12 @@
           "folia",
           "mini baton"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Szymon"
+        ],
+        "osoba": [
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -9472,8 +9742,10 @@
         "6300657",
         "6300761"
       ],
-      "search_blob": "chrupiacy orzech chrupiacy orzech daktylowy baton doy 6x folia mini baton orzech daktylowy 000096.00 6300427.00 6300454.00 6300515.00 6300657.00 6300761.00 bat 35 g 05.04.2022 fol000096.00 bat 35 g 17.06.2024 6300515.00 bat 35 g 27.06.2025 6300657.00 bat 35 g 28.06.2026 6300761 doy6x 30.11.2023 6300427.00 mini 23.02.2024 6300454.00 d marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy bat 35 g 05.04.2022 fol000096.00 d marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy bat 35 g 17.06.2024 6300515.00 d marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy bat 35 g 27.06.2025 6300657.00 d marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy bat 35 g 28.06.2026 6300761 d marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy doy6x 30.11.2023 6300427.00 d marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy mini 23.02.2024 6300454.00 000096.00 6300515.00 6300657.00 6300761.00 6300427.00 6300454.00 chrupiacy orzech baton doy 6x folia mini baton orzech daktylowy 000096.00 6300427.00 6300454.00 6300515.00 6300657.00 6300761.00 back to school chrupiacy orzech",
-      "authors": []
+      "search_blob": "chrupiacy orzech chrupiacy orzech daktylowy baton doy 6x folia mini baton orzech daktylowy szymon szymon ryngwelski szymon ryngwelski 000096.00 6300427.00 6300454.00 6300515.00 6300657.00 6300761.00 bat 35 g 05.04.2022 fol000096.00 bat 35 g 17.06.2024 6300515.00 bat 35 g 27.06.2025 6300657.00 bat 35 g 28.06.2026 6300761 doy6x 30.11.2023 6300427.00 mini 23.02.2024 6300454.00 d marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy bat 35 g 05.04.2022 fol000096.00 d marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy bat 35 g 17.06.2024 6300515.00 d marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy bat 35 g 27.06.2025 6300657.00 d marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy bat 35 g 28.06.2026 6300761 d marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy doy6x 30.11.2023 6300427.00 d marketing polska 01 produkty dk 01 batony chrupiacy orzech daktylowy mini 23.02.2024 6300454.00 000096.00 6300515.00 6300657.00 6300761.00 6300427.00 6300454.00 chrupiacy orzech baton doy 6x folia mini baton orzech daktylowy szymon szymon ryngwelski szymon ryngwelski 000096.00 6300427.00 6300454.00 6300515.00 6300657.00 6300761.00 back to school chrupiacy orzech",
+      "authors": [
+        "Szymon"
+      ]
     },
     {
       "id": "ciasto-marchewkowe-nerkowcowy",
@@ -9624,10 +9896,14 @@
           "mini baton"
         ],
         "autor": [
-          "Krzysztof"
+          "Krzysztof",
+          "Sylwia",
+          "Szymon"
         ],
         "osoba": [
-          "Krzysztof"
+          "Krzysztof",
+          "Sylwia",
+          "Szymon"
         ],
         "inne": []
       },
@@ -9639,9 +9915,11 @@
         "6300782",
         "6300783"
       ],
-      "search_blob": "cynamonka cynamonka nerkowcowy baton cynamon cynamonka karton 6x mini baton nerkowcowy krzysztof krzysztof wieczorek krzysztof wieczorek 6300782.00 6300783.00 kar6x 20.05.2026 pl en 6300783.00 f mini 18 06 2026 6300782.00 f d marketing polska 01 produkty dk 01 batony cynamonka nerkowcowy kar6x 20.05.2026 pl en 6300783.00 f d marketing polska 01 produkty dk 01 batony cynamonka nerkowcowy mini 18 06 2026 6300782.00 f 6300783.00 6300782.00 cynamonka baton cynamon cynamonka karton 6x mini baton nerkowcowy krzysztof krzysztof wieczorek krzysztof wieczorek 6300782.00 6300783.00",
+      "search_blob": "cynamonka cynamonka nerkowcowy baton cynamon cynamonka karton 6x mini baton nerkowcowy krzysztof krzysztof wieczorek krzysztof wieczorek sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 6300782.00 6300783.00 kar6x 20.05.2026 pl en 6300783.00 f mini 18 06 2026 6300782.00 f d marketing polska 01 produkty dk 01 batony cynamonka nerkowcowy kar6x 20.05.2026 pl en 6300783.00 f d marketing polska 01 produkty dk 01 batony cynamonka nerkowcowy mini 18 06 2026 6300782.00 f 6300783.00 6300782.00 cynamonka baton cynamon cynamonka karton 6x mini baton nerkowcowy krzysztof krzysztof wieczorek krzysztof wieczorek sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 6300782.00 6300783.00",
       "authors": [
-        "Krzysztof"
+        "Krzysztof",
+        "Sylwia",
+        "Szymon"
       ]
     },
     {
@@ -9738,10 +10016,12 @@
           "mini baton"
         ],
         "autor": [
-          "Sylwia"
+          "Sylwia",
+          "Szymon"
         ],
         "osoba": [
-          "Sylwia"
+          "Sylwia",
+          "Szymon"
         ],
         "inne": []
       },
@@ -9760,9 +10040,10 @@
         "6300602",
         "6300817"
       ],
-      "search_blob": "energia energia funkcjonalny baton funkcjonalny karton 6x mini baton sylwia sylwia zarychta sylwia zarychta 6300583.00 6300584.00 6300600.00 6300602.00 6300602.01 6300817.00 08.12.2024 6300583.00 baton 45g 31.07.2026 6300584 kar6x 13.12.2024 6300602.00 kar6x 2026 07 15 6300602.01 kar6x 2026 08 18 6300817 mini 09.12.2024 6300600.00 d marketing polska 01 produkty dk 01 batony energia funkcjonalny 08.12.2024 6300583.00 d marketing polska 01 produkty dk 01 batony energia funkcjonalny baton 45g 31.07.2026 6300584 d marketing polska 01 produkty dk 01 batony energia funkcjonalny kar6x 13.12.2024 6300602.00 d marketing polska 01 produkty dk 01 batony energia funkcjonalny kar6x 2026 07 15 6300602.01 d marketing polska 01 produkty dk 01 batony energia funkcjonalny kar6x 2026 08 18 6300817 d marketing polska 01 produkty dk 01 batony energia funkcjonalny mini 09.12.2024 6300600.00 6300583.00 6300584.00 6300602.00 6300602.01 6300817.00 6300600.00 energia baton funkcjonalny karton 6x mini baton sylwia sylwia zarychta sylwia zarychta 6300583.00 6300584.00 6300600.00 6300602.00 6300602.01 6300817.00",
+      "search_blob": "energia energia funkcjonalny baton funkcjonalny karton 6x mini baton sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 6300583.00 6300584.00 6300600.00 6300602.00 6300602.01 6300817.00 08.12.2024 6300583.00 baton 45g 31.07.2026 6300584 kar6x 13.12.2024 6300602.00 kar6x 2026 07 15 6300602.01 kar6x 2026 08 18 6300817 mini 09.12.2024 6300600.00 d marketing polska 01 produkty dk 01 batony energia funkcjonalny 08.12.2024 6300583.00 d marketing polska 01 produkty dk 01 batony energia funkcjonalny baton 45g 31.07.2026 6300584 d marketing polska 01 produkty dk 01 batony energia funkcjonalny kar6x 13.12.2024 6300602.00 d marketing polska 01 produkty dk 01 batony energia funkcjonalny kar6x 2026 07 15 6300602.01 d marketing polska 01 produkty dk 01 batony energia funkcjonalny kar6x 2026 08 18 6300817 d marketing polska 01 produkty dk 01 batony energia funkcjonalny mini 09.12.2024 6300600.00 6300583.00 6300584.00 6300602.00 6300602.01 6300817.00 6300600.00 energia baton funkcjonalny karton 6x mini baton sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 6300583.00 6300584.00 6300600.00 6300602.00 6300602.01 6300817.00",
       "authors": [
-        "Sylwia"
+        "Sylwia",
+        "Szymon"
       ]
     },
     {
@@ -9789,8 +10070,14 @@
           "folia",
           "mini baton"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Krzysztof",
+          "Sylwia"
+        ],
+        "osoba": [
+          "Krzysztof",
+          "Sylwia"
+        ],
         "inne": []
       },
       "indexes": [
@@ -9811,8 +10098,11 @@
         "6300763",
         "6300768"
       ],
-      "search_blob": "jab ko cynamon jab ko cynamon daktylowy baton cynamon doy 6x folia mini baton daktylowy 000091.00 5300658.00 6300384.00 6300428.00 6300455.00 6300763.00 6300768.00 02.09.2024 6300428.00 bat 35 g 14.05.2026 6300768 bat 35 g 15.05.2026 6300763 pl ua bat 35 g 24.03.2022 fol000091.00 bat 35 g 26.06.2025 5300658.00 bat 35 g 27.05.2026 6300768 doy6x 09.02.2024 6300384.00 mini 09.02.2024 6300455.00 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy 02.09.2024 6300428.00 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 14.05.2026 6300768 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 15.05.2026 6300763 pl ua d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 24.03.2022 fol000091.00 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 26.06.2025 5300658.00 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 27.05.2026 6300768 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy doy6x 09.02.2024 6300384.00 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy mini 09.02.2024 6300455.00 6300428.00 6300768.00 6300763.00 000091.00 5300658.00 6300768.00 6300384.00 6300455.00 jab ko cynamon baton cynamon doy 6x folia mini baton daktylowy 000091.00 5300658.00 6300384.00 6300428.00 6300455.00 6300763.00 6300768.00 jablko cynamon jabłko cynamon cynamon jablko",
-      "authors": []
+      "search_blob": "jab ko cynamon jab ko cynamon daktylowy baton cynamon doy 6x folia mini baton daktylowy krzysztof krzysztof wieczorek krzysztof wieczorek sylwia sylwia zarychta sylwia zarychta 000091.00 5300658.00 6300384.00 6300428.00 6300455.00 6300763.00 6300768.00 02.09.2024 6300428.00 bat 35 g 14.05.2026 6300768 bat 35 g 15.05.2026 6300763 pl ua bat 35 g 24.03.2022 fol000091.00 bat 35 g 26.06.2025 5300658.00 bat 35 g 27.05.2026 6300768 doy6x 09.02.2024 6300384.00 mini 09.02.2024 6300455.00 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy 02.09.2024 6300428.00 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 14.05.2026 6300768 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 15.05.2026 6300763 pl ua d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 24.03.2022 fol000091.00 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 26.06.2025 5300658.00 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy bat 35 g 27.05.2026 6300768 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy doy6x 09.02.2024 6300384.00 d marketing polska 01 produkty dk 01 batony jab ko cynamon daktylowy mini 09.02.2024 6300455.00 6300428.00 6300768.00 6300763.00 000091.00 5300658.00 6300768.00 6300384.00 6300455.00 jab ko cynamon baton cynamon doy 6x folia mini baton daktylowy krzysztof krzysztof wieczorek krzysztof wieczorek sylwia sylwia zarychta sylwia zarychta 000091.00 5300658.00 6300384.00 6300428.00 6300455.00 6300763.00 6300768.00 jablko cynamon jabłko cynamon cynamon jablko",
+      "authors": [
+        "Krzysztof",
+        "Sylwia"
+      ]
     },
     {
       "id": "kakao-orzech-daktylowy",
@@ -10167,8 +10457,12 @@
           "baton",
           "karton 6x"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Szymon"
+        ],
+        "osoba": [
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -10181,8 +10475,10 @@
         "6300452",
         "6300678"
       ],
-      "search_blob": "mango lassi mango lassi nerkowcowy baton karton 6x mango nerkowcowy 6300351.00 6300452.00 6300678.00 11.09.2025 6300678.00 17.01.2024 6300452.00 kar6x 28.04.2023 6300351.00 d marketing polska 01 produkty dk 01 batony mango lassi nerkowcowy 11.09.2025 6300678.00 d marketing polska 01 produkty dk 01 batony mango lassi nerkowcowy 17.01.2024 6300452.00 d marketing polska 01 produkty dk 01 batony mango lassi nerkowcowy kar6x 28.04.2023 6300351.00 6300678.00 6300452.00 6300351.00 mango lassi baton karton 6x mango nerkowcowy 6300351.00 6300452.00 6300678.00",
-      "authors": []
+      "search_blob": "mango lassi mango lassi nerkowcowy baton karton 6x mango nerkowcowy szymon szymon ryngwelski szymon ryngwelski 6300351.00 6300452.00 6300678.00 11.09.2025 6300678.00 17.01.2024 6300452.00 kar6x 28.04.2023 6300351.00 d marketing polska 01 produkty dk 01 batony mango lassi nerkowcowy 11.09.2025 6300678.00 d marketing polska 01 produkty dk 01 batony mango lassi nerkowcowy 17.01.2024 6300452.00 d marketing polska 01 produkty dk 01 batony mango lassi nerkowcowy kar6x 28.04.2023 6300351.00 6300678.00 6300452.00 6300351.00 mango lassi baton karton 6x mango nerkowcowy szymon szymon ryngwelski szymon ryngwelski 6300351.00 6300452.00 6300678.00",
+      "authors": [
+        "Szymon"
+      ]
     },
     {
       "id": "matcha-lemon-nerkowcowy",
@@ -10210,10 +10506,12 @@
           "mini baton"
         ],
         "autor": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "osoba": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "inne": []
       },
@@ -10227,8 +10525,9 @@
         "6300681",
         "6300700"
       ],
-      "search_blob": "matcha lemon matcha lemon nerkowcowy baton karton 6x lemon matcha mini baton nerkowcowy krzysztof krzysztof wieczorek krzysztof wieczorek 6300680.00 6300681.00 6300700.00 bat 35 g 20.10.2025 6300700.00 kar6x 10.09.2025 6300681.00 mini 23.10.2025 6300680.00 d marketing polska 01 produkty dk 01 batony matcha lemon nerkowcowy bat 35 g 20.10.2025 6300700.00 d marketing polska 01 produkty dk 01 batony matcha lemon nerkowcowy kar6x 10.09.2025 6300681.00 d marketing polska 01 produkty dk 01 batony matcha lemon nerkowcowy mini 23.10.2025 6300680.00 6300700.00 6300681.00 6300680.00 matcha lemon baton karton 6x lemon matcha mini baton nerkowcowy krzysztof krzysztof wieczorek krzysztof wieczorek 6300680.00 6300681.00 6300700.00",
+      "search_blob": "matcha lemon matcha lemon nerkowcowy baton karton 6x lemon matcha mini baton nerkowcowy szymon szymon ryngwelski szymon ryngwelski krzysztof krzysztof wieczorek krzysztof wieczorek 6300680.00 6300681.00 6300700.00 bat 35 g 20.10.2025 6300700.00 kar6x 10.09.2025 6300681.00 mini 23.10.2025 6300680.00 d marketing polska 01 produkty dk 01 batony matcha lemon nerkowcowy bat 35 g 20.10.2025 6300700.00 d marketing polska 01 produkty dk 01 batony matcha lemon nerkowcowy kar6x 10.09.2025 6300681.00 d marketing polska 01 produkty dk 01 batony matcha lemon nerkowcowy mini 23.10.2025 6300680.00 6300700.00 6300681.00 6300680.00 matcha lemon baton karton 6x lemon matcha mini baton nerkowcowy szymon szymon ryngwelski szymon ryngwelski krzysztof krzysztof wieczorek krzysztof wieczorek 6300680.00 6300681.00 6300700.00",
       "authors": [
+        "Szymon",
         "Krzysztof"
       ]
     },
@@ -10370,8 +10669,12 @@
         "opakowanie": [
           "baton"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Szymon"
+        ],
+        "osoba": [
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -10382,8 +10685,10 @@
         "6300389",
         "6300752"
       ],
-      "search_blob": "nerkowce kokos nerkowce kokos daktylowy baton kokos daktylowy 6300389.00 6300752.00 bat 35 g 17.07.2023 6300389.00 bat 35 g 27.05.2025 6300752 d marketing polska 01 produkty dk 01 batony nerkowce kokos daktylowy bat 35 g 17.07.2023 6300389.00 d marketing polska 01 produkty dk 01 batony nerkowce kokos daktylowy bat 35 g 27.05.2025 6300752 6300389.00 6300752.00 nerkowce kokos baton kokos daktylowy 6300389.00 6300752.00",
-      "authors": []
+      "search_blob": "nerkowce kokos nerkowce kokos daktylowy baton kokos daktylowy szymon szymon ryngwelski szymon ryngwelski 6300389.00 6300752.00 bat 35 g 17.07.2023 6300389.00 bat 35 g 27.05.2025 6300752 d marketing polska 01 produkty dk 01 batony nerkowce kokos daktylowy bat 35 g 17.07.2023 6300389.00 d marketing polska 01 produkty dk 01 batony nerkowce kokos daktylowy bat 35 g 27.05.2025 6300752 6300389.00 6300752.00 nerkowce kokos baton kokos daktylowy szymon szymon ryngwelski szymon ryngwelski 6300389.00 6300752.00",
+      "authors": [
+        "Szymon"
+      ]
     },
     {
       "id": "nerkowce-mango-ziomki",
@@ -10688,8 +10993,16 @@
           "karton 6x",
           "mini baton"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Krzysztof",
+          "Sylwia",
+          "Szymon"
+        ],
+        "osoba": [
+          "Krzysztof",
+          "Sylwia",
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -10704,8 +11017,12 @@
         "6300532",
         "6300544"
       ],
-      "search_blob": "piernik korzenny piernik korzenny nerkowcowy baton folia karton 6x mini baton nerkowcowy 000104.00 000113.00 6300532.00 6300544.00 kar6x 06.08.2022 kar000113.00 kar6x 23.07.2024 6300532.00 mini 03.08.2022 fol000104.00 mini 11.10.2024 6300544.00 d marketing polska 01 produkty dk 01 batony piernik korzenny nerkowcowy kar6x 06.08.2022 kar000113.00 d marketing polska 01 produkty dk 01 batony piernik korzenny nerkowcowy kar6x 23.07.2024 6300532.00 d marketing polska 01 produkty dk 01 batony piernik korzenny nerkowcowy mini 03.08.2022 fol000104.00 d marketing polska 01 produkty dk 01 batony piernik korzenny nerkowcowy mini 11.10.2024 6300544.00 000113.00 6300532.00 000104.00 6300544.00 piernik korzenny baton folia karton 6x mini baton nerkowcowy 000104.00 000113.00 6300532.00 6300544.00",
-      "authors": []
+      "search_blob": "piernik korzenny piernik korzenny nerkowcowy baton folia karton 6x mini baton nerkowcowy sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 000104.00 000113.00 6300532.00 6300544.00 kar6x 06.08.2022 kar000113.00 kar6x 23.07.2024 6300532.00 mini 03.08.2022 fol000104.00 mini 11.10.2024 6300544.00 d marketing polska 01 produkty dk 01 batony piernik korzenny nerkowcowy kar6x 06.08.2022 kar000113.00 d marketing polska 01 produkty dk 01 batony piernik korzenny nerkowcowy kar6x 23.07.2024 6300532.00 d marketing polska 01 produkty dk 01 batony piernik korzenny nerkowcowy mini 03.08.2022 fol000104.00 d marketing polska 01 produkty dk 01 batony piernik korzenny nerkowcowy mini 11.10.2024 6300544.00 000113.00 6300532.00 000104.00 6300544.00 piernik korzenny baton folia karton 6x mini baton nerkowcowy sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 000104.00 000113.00 6300532.00 6300544.00",
+      "authors": [
+        "Sylwia",
+        "Krzysztof",
+        "Szymon"
+      ]
     },
     {
       "id": "pina-colada-nerkowcowy",
@@ -10728,8 +11045,12 @@
           "karton 6x",
           "mini baton"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Szymon"
+        ],
+        "osoba": [
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -10740,8 +11061,10 @@
         "6300337",
         "6300444"
       ],
-      "search_blob": "pina colada pina colada nerkowcowy baton karton 6x mini baton nerkowcowy 6300337.00 6300444.00 kar6x 29.04.2023 6300337.00 mini 17.01.2024 6300444.00 d marketing polska 01 produkty dk 01 batony pina colada nerkowcowy kar6x 29.04.2023 6300337.00 d marketing polska 01 produkty dk 01 batony pina colada nerkowcowy mini 17.01.2024 6300444.00 6300337.00 6300444.00 pina colada baton karton 6x mini baton nerkowcowy 6300337.00 6300444.00",
-      "authors": []
+      "search_blob": "pina colada pina colada nerkowcowy baton karton 6x mini baton nerkowcowy szymon szymon ryngwelski szymon ryngwelski 6300337.00 6300444.00 kar6x 29.04.2023 6300337.00 mini 17.01.2024 6300444.00 d marketing polska 01 produkty dk 01 batony pina colada nerkowcowy kar6x 29.04.2023 6300337.00 d marketing polska 01 produkty dk 01 batony pina colada nerkowcowy mini 17.01.2024 6300444.00 6300337.00 6300444.00 pina colada baton karton 6x mini baton nerkowcowy szymon szymon ryngwelski szymon ryngwelski 6300337.00 6300444.00",
+      "authors": [
+        "Szymon"
+      ]
     },
     {
       "id": "prebiotyk-funkcjonalny",
@@ -10765,10 +11088,12 @@
           "mini baton"
         ],
         "autor": [
-          "Sylwia"
+          "Sylwia",
+          "Szymon"
         ],
         "osoba": [
-          "Sylwia"
+          "Sylwia",
+          "Szymon"
         ],
         "inne": []
       },
@@ -10785,9 +11110,10 @@
         "6300703",
         "6300815"
       ],
-      "search_blob": "prebiotyk prebiotyk funkcjonalny baton funkcjonalny karton 6x mini baton sylwia sylwia zarychta sylwia zarychta 6300652.00 6300653.00 6300653.01 6300703.00 6300815.00 bat 35 g 09.10.2025 6300703.00 kar6x 06.06.2025 6300653.00 kar6x 2026 07 10 6300653.01 kar6x 13.08.2026 6300815 mini 06.06.2025 6300652.00 d marketing polska 01 produkty dk 01 batony prebiotyk funkcjonalny bat 35 g 09.10.2025 6300703.00 d marketing polska 01 produkty dk 01 batony prebiotyk funkcjonalny kar6x 06.06.2025 6300653.00 d marketing polska 01 produkty dk 01 batony prebiotyk funkcjonalny kar6x 2026 07 10 6300653.01 d marketing polska 01 produkty dk 01 batony prebiotyk funkcjonalny kar6x 13.08.2026 6300815 d marketing polska 01 produkty dk 01 batony prebiotyk funkcjonalny mini 06.06.2025 6300652.00 6300703.00 6300653.00 6300653.01 6300815.00 6300652.00 prebiotyk baton funkcjonalny karton 6x mini baton sylwia sylwia zarychta sylwia zarychta 6300652.00 6300653.00 6300653.01 6300703.00 6300815.00",
+      "search_blob": "prebiotyk prebiotyk funkcjonalny baton funkcjonalny karton 6x mini baton sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 6300652.00 6300653.00 6300653.01 6300703.00 6300815.00 bat 35 g 09.10.2025 6300703.00 kar6x 06.06.2025 6300653.00 kar6x 2026 07 10 6300653.01 kar6x 13.08.2026 6300815 mini 06.06.2025 6300652.00 d marketing polska 01 produkty dk 01 batony prebiotyk funkcjonalny bat 35 g 09.10.2025 6300703.00 d marketing polska 01 produkty dk 01 batony prebiotyk funkcjonalny kar6x 06.06.2025 6300653.00 d marketing polska 01 produkty dk 01 batony prebiotyk funkcjonalny kar6x 2026 07 10 6300653.01 d marketing polska 01 produkty dk 01 batony prebiotyk funkcjonalny kar6x 13.08.2026 6300815 d marketing polska 01 produkty dk 01 batony prebiotyk funkcjonalny mini 06.06.2025 6300652.00 6300703.00 6300653.00 6300653.01 6300815.00 6300652.00 prebiotyk baton funkcjonalny karton 6x mini baton sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 6300652.00 6300653.00 6300653.01 6300703.00 6300815.00",
       "authors": [
-        "Sylwia"
+        "Sylwia",
+        "Szymon"
       ]
     },
     {
@@ -10815,11 +11141,13 @@
         ],
         "autor": [
           "Krzysztof",
-          "Sylwia"
+          "Sylwia",
+          "Szymon"
         ],
         "osoba": [
           "Krzysztof",
-          "Sylwia"
+          "Sylwia",
+          "Szymon"
         ],
         "inne": []
       },
@@ -10833,10 +11161,11 @@
         "6300710",
         "6300738"
       ],
-      "search_blob": "proteina banoffee proteina banoffee ig banoffee baton karton 6x mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300707.00 6300710.00 6300738.00 bat 45 g 06.02.2026 6300738.00 kar6x 20.11.2025 6300707.00 mini 07.11.2025 6300710.00 d marketing polska 01 produkty dk 01 batony proteina banoffee ig bat 45 g 06.02.2026 6300738.00 d marketing polska 01 produkty dk 01 batony proteina banoffee ig kar6x 20.11.2025 6300707.00 d marketing polska 01 produkty dk 01 batony proteina banoffee ig mini 07.11.2025 6300710.00 6300738.00 6300707.00 6300710.00 proteina banoffee banoffee baton karton 6x mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300707.00 6300710.00 6300738.00",
+      "search_blob": "proteina banoffee proteina banoffee ig banoffee baton karton 6x mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300707.00 6300710.00 6300738.00 bat 45 g 06.02.2026 6300738.00 kar6x 20.11.2025 6300707.00 mini 07.11.2025 6300710.00 d marketing polska 01 produkty dk 01 batony proteina banoffee ig bat 45 g 06.02.2026 6300738.00 d marketing polska 01 produkty dk 01 batony proteina banoffee ig kar6x 20.11.2025 6300707.00 d marketing polska 01 produkty dk 01 batony proteina banoffee ig mini 07.11.2025 6300710.00 6300738.00 6300707.00 6300710.00 proteina banoffee banoffee baton karton 6x mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300707.00 6300710.00 6300738.00",
       "authors": [
         "Sylwia",
-        "Krzysztof"
+        "Krzysztof",
+        "Szymon"
       ]
     },
     {
@@ -10866,11 +11195,13 @@
         ],
         "autor": [
           "Krzysztof",
-          "Sylwia"
+          "Sylwia",
+          "Szymon"
         ],
         "osoba": [
           "Krzysztof",
-          "Sylwia"
+          "Sylwia",
+          "Szymon"
         ],
         "inne": []
       },
@@ -10886,10 +11217,11 @@
         "6300702",
         "6300711"
       ],
-      "search_blob": "proteina karmel z mct proteina karmel z mct ig baton karton 6x karmel mct mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300654.00 6300655.00 6300702.00 6300711.00 bat 45 g 22.10.2025 6300702.00 kar6x 12.06.2025 6300655.00 kar6x bez ig 20.11.2025 6300711.00 mini 29.07.2025 6300654.00 mini bez ig 04.06.2025 6300654.00 d marketing polska 01 produkty dk 01 batony proteina karmel z mct ig bat 45 g 22.10.2025 6300702.00 d marketing polska 01 produkty dk 01 batony proteina karmel z mct ig kar6x 12.06.2025 6300655.00 d marketing polska 01 produkty dk 01 batony proteina karmel z mct ig kar6x bez ig 20.11.2025 6300711.00 d marketing polska 01 produkty dk 01 batony proteina karmel z mct ig mini 29.07.2025 6300654.00 d marketing polska 01 produkty dk 01 batony proteina karmel z mct ig mini bez ig 04.06.2025 6300654.00 6300702.00 6300655.00 6300711.00 6300654.00 6300654.00 proteina karmel z mct baton karton 6x karmel mct mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300654.00 6300655.00 6300702.00 6300711.00",
+      "search_blob": "proteina karmel z mct proteina karmel z mct ig baton karton 6x karmel mct mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300654.00 6300655.00 6300702.00 6300711.00 bat 45 g 22.10.2025 6300702.00 kar6x 12.06.2025 6300655.00 kar6x bez ig 20.11.2025 6300711.00 mini 29.07.2025 6300654.00 mini bez ig 04.06.2025 6300654.00 d marketing polska 01 produkty dk 01 batony proteina karmel z mct ig bat 45 g 22.10.2025 6300702.00 d marketing polska 01 produkty dk 01 batony proteina karmel z mct ig kar6x 12.06.2025 6300655.00 d marketing polska 01 produkty dk 01 batony proteina karmel z mct ig kar6x bez ig 20.11.2025 6300711.00 d marketing polska 01 produkty dk 01 batony proteina karmel z mct ig mini 29.07.2025 6300654.00 d marketing polska 01 produkty dk 01 batony proteina karmel z mct ig mini bez ig 04.06.2025 6300654.00 6300702.00 6300655.00 6300711.00 6300654.00 6300654.00 proteina karmel z mct baton karton 6x karmel mct mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300654.00 6300655.00 6300702.00 6300711.00",
       "authors": [
         "Sylwia",
-        "Krzysztof"
+        "Krzysztof",
+        "Szymon"
       ]
     },
     {
@@ -10917,11 +11249,13 @@
         ],
         "autor": [
           "Krzysztof",
-          "Sylwia"
+          "Sylwia",
+          "Szymon"
         ],
         "osoba": [
           "Krzysztof",
-          "Sylwia"
+          "Sylwia",
+          "Szymon"
         ],
         "inne": []
       },
@@ -10935,10 +11269,11 @@
         "6300709",
         "6300739"
       ],
-      "search_blob": "proteina lemon cheesecake proteina lemon cheesecake ig baton karton 6x lemon mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300708.00 6300709.00 6300739.00 bat 45 g 06.02.2026 6300739.00 kar6x 20.11.2025 6300708.00 mini 07.11.2025 6300709.00 d marketing polska 01 produkty dk 01 batony proteina lemon cheesecake ig bat 45 g 06.02.2026 6300739.00 d marketing polska 01 produkty dk 01 batony proteina lemon cheesecake ig kar6x 20.11.2025 6300708.00 d marketing polska 01 produkty dk 01 batony proteina lemon cheesecake ig mini 07.11.2025 6300709.00 6300739.00 6300708.00 6300709.00 proteina lemon cheesecake baton karton 6x lemon mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300708.00 6300709.00 6300739.00",
+      "search_blob": "proteina lemon cheesecake proteina lemon cheesecake ig baton karton 6x lemon mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300708.00 6300709.00 6300739.00 bat 45 g 06.02.2026 6300739.00 kar6x 20.11.2025 6300708.00 mini 07.11.2025 6300709.00 d marketing polska 01 produkty dk 01 batony proteina lemon cheesecake ig bat 45 g 06.02.2026 6300739.00 d marketing polska 01 produkty dk 01 batony proteina lemon cheesecake ig kar6x 20.11.2025 6300708.00 d marketing polska 01 produkty dk 01 batony proteina lemon cheesecake ig mini 07.11.2025 6300709.00 6300739.00 6300708.00 6300709.00 proteina lemon cheesecake baton karton 6x lemon mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300708.00 6300709.00 6300739.00",
       "authors": [
         "Sylwia",
-        "Krzysztof"
+        "Krzysztof",
+        "Szymon"
       ]
     },
     {
@@ -10998,8 +11333,14 @@
           "karton 6x",
           "mini baton"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Krzysztof",
+          "Szymon"
+        ],
+        "osoba": [
+          "Krzysztof",
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -11010,8 +11351,11 @@
         "6300686",
         "6300687"
       ],
-      "search_blob": "paczek rozany paczek rozany nerkowcowy baton karton 6x mini baton nerkowcowy 6300686.00 6300687.00 kar6x 28.11.2025 6300687.00 f mini 27.11.2025 6300686.00 f d marketing polska 01 produkty dk 01 batony paczek rozany nerkowcowy kar6x 28.11.2025 6300687.00 f d marketing polska 01 produkty dk 01 batony paczek rozany nerkowcowy mini 27.11.2025 6300686.00 f 6300687.00 6300686.00 paczek rozany baton karton 6x mini baton nerkowcowy 6300686.00 6300687.00 paczek rozany paczek rozany paczek roz",
-      "authors": []
+      "search_blob": "paczek rozany paczek rozany nerkowcowy baton karton 6x mini baton nerkowcowy szymon szymon ryngwelski szymon ryngwelski krzysztof krzysztof wieczorek krzysztof wieczorek 6300686.00 6300687.00 kar6x 28.11.2025 6300687.00 f mini 27.11.2025 6300686.00 f d marketing polska 01 produkty dk 01 batony paczek rozany nerkowcowy kar6x 28.11.2025 6300687.00 f d marketing polska 01 produkty dk 01 batony paczek rozany nerkowcowy mini 27.11.2025 6300686.00 f 6300687.00 6300686.00 paczek rozany baton karton 6x mini baton nerkowcowy szymon szymon ryngwelski szymon ryngwelski krzysztof krzysztof wieczorek krzysztof wieczorek 6300686.00 6300687.00 paczek rozany paczek rozany paczek roz",
+      "authors": [
+        "Szymon",
+        "Krzysztof"
+      ]
     },
     {
       "id": "rogal-poznanski-nerkowcowy",
@@ -11034,8 +11378,12 @@
           "karton 6x",
           "mini baton"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Szymon"
+        ],
+        "osoba": [
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -11046,8 +11394,10 @@
         "6300679",
         "6300682"
       ],
-      "search_blob": "rogal poznanski rogal poznanski nerkowcowy baton karton 6x mini baton nerkowcowy 6300679.00 6300682.00 kar6x 30.12.2025 6300682.00 f mini 19.09.2025 6300679.00 f d marketing polska 01 produkty dk 01 batony rogal poznanski nerkowcowy kar6x 30.12.2025 6300682.00 f d marketing polska 01 produkty dk 01 batony rogal poznanski nerkowcowy mini 19.09.2025 6300679.00 f 6300682.00 6300679.00 rogal poznanski baton karton 6x mini baton nerkowcowy 6300679.00 6300682.00 rogal poznanski rogal poznanski rogal",
-      "authors": []
+      "search_blob": "rogal poznanski rogal poznanski nerkowcowy baton karton 6x mini baton nerkowcowy szymon szymon ryngwelski szymon ryngwelski 6300679.00 6300682.00 kar6x 30.12.2025 6300682.00 f mini 19.09.2025 6300679.00 f d marketing polska 01 produkty dk 01 batony rogal poznanski nerkowcowy kar6x 30.12.2025 6300682.00 f d marketing polska 01 produkty dk 01 batony rogal poznanski nerkowcowy mini 19.09.2025 6300679.00 f 6300682.00 6300679.00 rogal poznanski baton karton 6x mini baton nerkowcowy szymon szymon ryngwelski szymon ryngwelski 6300679.00 6300682.00 rogal poznanski rogal poznanski rogal",
+      "authors": [
+        "Szymon"
+      ]
     },
     {
       "id": "serce-funkcjonalny",
@@ -11140,8 +11490,16 @@
           "folia",
           "karton 6x"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Krzysztof",
+          "Sylwia",
+          "Szymon"
+        ],
+        "osoba": [
+          "Krzysztof",
+          "Sylwia",
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -11158,8 +11516,12 @@
         "6300079",
         "6300532"
       ],
-      "search_blob": "sernik waniliowy sernik waniliowy nerkowcowy baton folia karton 6x nerkowcowy 000107.00 000116.00 6300046.01 6300079.00 6300532.01 04.10.2023 6300079.00 bat 35 g 18.07.2022 fol000107.00 bat 35 g 25.05.2026 6300046.01 kar6x 05.05.2026 6300532.01 kar6x 30.05.2022 kar000116.00 d marketing polska 01 produkty dk 01 batony sernik waniliowy nerkowcowy 04.10.2023 6300079.00 d marketing polska 01 produkty dk 01 batony sernik waniliowy nerkowcowy bat 35 g 18.07.2022 fol000107.00 d marketing polska 01 produkty dk 01 batony sernik waniliowy nerkowcowy bat 35 g 25.05.2026 6300046.01 d marketing polska 01 produkty dk 01 batony sernik waniliowy nerkowcowy kar6x 05.05.2026 6300532.01 d marketing polska 01 produkty dk 01 batony sernik waniliowy nerkowcowy kar6x 30.05.2022 kar000116.00 6300079.00 000107.00 6300046.01 6300532.01 000116.00 sernik waniliowy baton folia karton 6x nerkowcowy 000107.00 000116.00 6300046.01 6300079.00 6300532.01 sernik waniliowy waniliowy sernik wanilia",
-      "authors": []
+      "search_blob": "sernik waniliowy sernik waniliowy nerkowcowy baton folia karton 6x nerkowcowy sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 000107.00 000116.00 6300046.01 6300079.00 6300532.01 04.10.2023 6300079.00 bat 35 g 18.07.2022 fol000107.00 bat 35 g 25.05.2026 6300046.01 kar6x 05.05.2026 6300532.01 kar6x 30.05.2022 kar000116.00 d marketing polska 01 produkty dk 01 batony sernik waniliowy nerkowcowy 04.10.2023 6300079.00 d marketing polska 01 produkty dk 01 batony sernik waniliowy nerkowcowy bat 35 g 18.07.2022 fol000107.00 d marketing polska 01 produkty dk 01 batony sernik waniliowy nerkowcowy bat 35 g 25.05.2026 6300046.01 d marketing polska 01 produkty dk 01 batony sernik waniliowy nerkowcowy kar6x 05.05.2026 6300532.01 d marketing polska 01 produkty dk 01 batony sernik waniliowy nerkowcowy kar6x 30.05.2022 kar000116.00 6300079.00 000107.00 6300046.01 6300532.01 000116.00 sernik waniliowy baton folia karton 6x nerkowcowy sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 000107.00 000116.00 6300046.01 6300079.00 6300532.01 sernik waniliowy waniliowy sernik wanilia",
+      "authors": [
+        "Sylwia",
+        "Krzysztof",
+        "Szymon"
+      ]
     },
     {
       "id": "solony-orzech-daktylowy",
@@ -11283,8 +11645,14 @@
           "karton 6x",
           "mini baton"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Sylwia",
+          "Szymon"
+        ],
+        "osoba": [
+          "Sylwia",
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -11303,8 +11671,11 @@
         "6300539",
         "6300540"
       ],
-      "search_blob": "tarta malinowa tarta malinowa nerkowcowy baton folia karton 6x malinowa mini baton nerkowcowy tarta 000108.00 000117.00 6300084.00 6300539.00 6300539.01 6300540.00 6300540.01 01.06.2022 kar000117.00 bat 35 g 05.07.2022 fol000108.00 bat 35 g 16.09.2024 6300540.00 bat 35 g 26.05.2026 6300540.01 kar6x 05 05 2026 6300539.00 kar6x 05.05.2026 6300539.01 mini 10.10.2023 6300084.00 d marketing polska 01 produkty dk 01 batony tarta malinowa nerkowcowy 01.06.2022 kar000117.00 d marketing polska 01 produkty dk 01 batony tarta malinowa nerkowcowy bat 35 g 05.07.2022 fol000108.00 d marketing polska 01 produkty dk 01 batony tarta malinowa nerkowcowy bat 35 g 16.09.2024 6300540.00 d marketing polska 01 produkty dk 01 batony tarta malinowa nerkowcowy bat 35 g 26.05.2026 6300540.01 d marketing polska 01 produkty dk 01 batony tarta malinowa nerkowcowy kar6x 05 05 2026 6300539.00 d marketing polska 01 produkty dk 01 batony tarta malinowa nerkowcowy kar6x 05.05.2026 6300539.01 d marketing polska 01 produkty dk 01 batony tarta malinowa nerkowcowy mini 10.10.2023 6300084.00 000117.00 000108.00 6300540.00 6300540.01 6300539.00 6300539.01 6300084.00 tarta malinowa baton folia karton 6x malinowa mini baton nerkowcowy tarta 000108.00 000117.00 6300084.00 6300539.00 6300539.01 6300540.00 6300540.01 tarta malinowa malinowa tarta malina",
-      "authors": []
+      "search_blob": "tarta malinowa tarta malinowa nerkowcowy baton folia karton 6x malinowa mini baton nerkowcowy tarta sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 000108.00 000117.00 6300084.00 6300539.00 6300539.01 6300540.00 6300540.01 01.06.2022 kar000117.00 bat 35 g 05.07.2022 fol000108.00 bat 35 g 16.09.2024 6300540.00 bat 35 g 26.05.2026 6300540.01 kar6x 05 05 2026 6300539.00 kar6x 05.05.2026 6300539.01 mini 10.10.2023 6300084.00 d marketing polska 01 produkty dk 01 batony tarta malinowa nerkowcowy 01.06.2022 kar000117.00 d marketing polska 01 produkty dk 01 batony tarta malinowa nerkowcowy bat 35 g 05.07.2022 fol000108.00 d marketing polska 01 produkty dk 01 batony tarta malinowa nerkowcowy bat 35 g 16.09.2024 6300540.00 d marketing polska 01 produkty dk 01 batony tarta malinowa nerkowcowy bat 35 g 26.05.2026 6300540.01 d marketing polska 01 produkty dk 01 batony tarta malinowa nerkowcowy kar6x 05 05 2026 6300539.00 d marketing polska 01 produkty dk 01 batony tarta malinowa nerkowcowy kar6x 05.05.2026 6300539.01 d marketing polska 01 produkty dk 01 batony tarta malinowa nerkowcowy mini 10.10.2023 6300084.00 000117.00 000108.00 6300540.00 6300540.01 6300539.00 6300539.01 6300084.00 tarta malinowa baton folia karton 6x malinowa mini baton nerkowcowy tarta sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 000108.00 000117.00 6300084.00 6300539.00 6300539.01 6300540.00 6300540.01 tarta malinowa malinowa tarta malina",
+      "authors": [
+        "Sylwia",
+        "Szymon"
+      ]
     },
     {
       "id": "proteina-karmel-mct-funkcjonalny",
@@ -11336,11 +11707,13 @@
         ],
         "autor": [
           "Krzysztof",
-          "Sylwia"
+          "Sylwia",
+          "Szymon"
         ],
         "osoba": [
           "Krzysztof",
-          "Sylwia"
+          "Sylwia",
+          "Szymon"
         ],
         "inne": []
       },
@@ -11354,10 +11727,11 @@
         "6300655",
         "6300702"
       ],
-      "search_blob": "proteina karmel mct proteina karmel mct funkcjonalny baton funkcjonalny karton 6x karmel mct mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300654.00 6300655.00 6300702.00 bat 35 g 22.10.2025 6300702.00 kar6x 12.06.2025 6300655.00 mini 29.07.2025 6300654.00 d marketing polska 01 produkty dk 01 batony archiwum proteina karmel mct funkcjonalny bat 35 g 22.10.2025 6300702.00 d marketing polska 01 produkty dk 01 batony archiwum proteina karmel mct funkcjonalny kar6x 12.06.2025 6300655.00 d marketing polska 01 produkty dk 01 batony archiwum proteina karmel mct funkcjonalny mini 29.07.2025 6300654.00 6300702.00 6300655.00 6300654.00 proteina karmel mct baton funkcjonalny karton 6x karmel mct mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300654.00 6300655.00 6300702.00",
+      "search_blob": "proteina karmel mct proteina karmel mct funkcjonalny baton funkcjonalny karton 6x karmel mct mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300654.00 6300655.00 6300702.00 bat 35 g 22.10.2025 6300702.00 kar6x 12.06.2025 6300655.00 mini 29.07.2025 6300654.00 d marketing polska 01 produkty dk 01 batony archiwum proteina karmel mct funkcjonalny bat 35 g 22.10.2025 6300702.00 d marketing polska 01 produkty dk 01 batony archiwum proteina karmel mct funkcjonalny kar6x 12.06.2025 6300655.00 d marketing polska 01 produkty dk 01 batony archiwum proteina karmel mct funkcjonalny mini 29.07.2025 6300654.00 6300702.00 6300655.00 6300654.00 proteina karmel mct baton funkcjonalny karton 6x karmel mct mini baton proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300654.00 6300655.00 6300702.00",
       "authors": [
         "Sylwia",
-        "Krzysztof"
+        "Krzysztof",
+        "Szymon"
       ]
     },
     {
@@ -11384,8 +11758,12 @@
         "opakowanie": [
           "doypack"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Krzysztof"
+        ],
+        "osoba": [
+          "Krzysztof"
+        ],
         "inne": []
       },
       "indexes": [
@@ -11396,8 +11774,10 @@
         "6300728",
         "6300838"
       ],
-      "search_blob": "banoffee kakao banoffee kakao deserowe banoffee deserowe doypack kakao kulki 6300728.00 6300838.00 doy 65 g 24.03.2026 6300728.00 doy 65g 04.09.2026 6300838 d marketing polska 01 produkty dk 02 kulki banoffee kakao deserowe doy 65 g 24.03.2026 6300728.00 d marketing polska 01 produkty dk 02 kulki banoffee kakao deserowe doy 65g 04.09.2026 6300838 6300728.00 6300838.00 banoffee kakao banoffee deserowe doypack kakao kulki 6300728.00 6300838.00 banoffee banoffee kakao deser",
-      "authors": []
+      "search_blob": "banoffee kakao banoffee kakao deserowe banoffee deserowe doypack kakao kulki krzysztof krzysztof wieczorek krzysztof wieczorek 6300728.00 6300838.00 doy 65 g 24.03.2026 6300728.00 doy 65g 04.09.2026 6300838 d marketing polska 01 produkty dk 02 kulki banoffee kakao deserowe doy 65 g 24.03.2026 6300728.00 d marketing polska 01 produkty dk 02 kulki banoffee kakao deserowe doy 65g 04.09.2026 6300838 6300728.00 6300838.00 banoffee kakao banoffee deserowe doypack kakao kulki krzysztof krzysztof wieczorek krzysztof wieczorek 6300728.00 6300838.00 banoffee banoffee kakao deser",
+      "authors": [
+        "Krzysztof"
+      ]
     },
     {
       "id": "czarna-porzeczka-owocowe",
@@ -11421,8 +11801,14 @@
         "opakowanie": [
           "doypack"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Krzysztof",
+          "Szymon"
+        ],
+        "osoba": [
+          "Krzysztof",
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -11433,8 +11819,11 @@
         "6300726",
         "6300753"
       ],
-      "search_blob": "czarna porzeczka czarna porzeczka owocowe doypack kulki owocowe porzeczka 6300726.00 6300753.00 doy 65 g 24.02.2026 6300726.00 doy magnez zelazo 65 g 24.02.2026 6300753.00 d marketing polska 01 produkty dk 02 kulki czarna porzeczka owocowe doy 65 g 24.02.2026 6300726.00 d marketing polska 01 produkty dk 02 kulki czarna porzeczka owocowe doy magnez zelazo 65 g 24.02.2026 6300753.00 6300726.00 6300753.00 czarna porzeczka doypack kulki owocowe porzeczka 6300726.00 6300753.00",
-      "authors": []
+      "search_blob": "czarna porzeczka czarna porzeczka owocowe doypack kulki owocowe porzeczka szymon szymon ryngwelski szymon ryngwelski krzysztof krzysztof wieczorek krzysztof wieczorek 6300726.00 6300753.00 doy 65 g 24.02.2026 6300726.00 doy magnez zelazo 65 g 24.02.2026 6300753.00 d marketing polska 01 produkty dk 02 kulki czarna porzeczka owocowe doy 65 g 24.02.2026 6300726.00 d marketing polska 01 produkty dk 02 kulki czarna porzeczka owocowe doy magnez zelazo 65 g 24.02.2026 6300753.00 6300726.00 6300753.00 czarna porzeczka doypack kulki owocowe porzeczka szymon szymon ryngwelski szymon ryngwelski krzysztof krzysztof wieczorek krzysztof wieczorek 6300726.00 6300753.00",
+      "authors": [
+        "Szymon",
+        "Krzysztof"
+      ]
     },
     {
       "id": "daktyl-limonka-raw",
@@ -11455,10 +11844,10 @@
           "doypack"
         ],
         "autor": [
-          "Krzysztof"
+          "Szymon"
         ],
         "osoba": [
-          "Krzysztof"
+          "Szymon"
         ],
         "inne": []
       },
@@ -11470,9 +11859,9 @@
         "6300447",
         "6300760"
       ],
-      "search_blob": "daktyl limonka daktyl limonka raw doypack kulki raw krzysztof krzysztof wieczorek krzysztof wieczorek 6300447.00 6300760.00 doy 02.02.2024 6300447.00 doy 23.06.2026 6300760 d marketing polska 01 produkty dk 02 kulki daktyl limonka raw doy 02.02.2024 6300447.00 d marketing polska 01 produkty dk 02 kulki daktyl limonka raw doy 23.06.2026 6300760 6300447.00 6300760.00 daktyl limonka doypack kulki raw krzysztof krzysztof wieczorek krzysztof wieczorek 6300447.00 6300760.00",
+      "search_blob": "daktyl limonka daktyl limonka raw doypack kulki raw szymon szymon ryngwelski szymon ryngwelski 6300447.00 6300760.00 doy 02.02.2024 6300447.00 doy 23.06.2026 6300760 d marketing polska 01 produkty dk 02 kulki daktyl limonka raw doy 02.02.2024 6300447.00 d marketing polska 01 produkty dk 02 kulki daktyl limonka raw doy 23.06.2026 6300760 6300447.00 6300760.00 daktyl limonka doypack kulki raw szymon szymon ryngwelski szymon ryngwelski 6300447.00 6300760.00",
       "authors": [
-        "Krzysztof"
+        "Szymon"
       ]
     },
     {
@@ -11494,10 +11883,12 @@
           "doypack"
         ],
         "autor": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "osoba": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "inne": []
       },
@@ -11509,8 +11900,9 @@
         "6300448",
         "6300759"
       ],
-      "search_blob": "daktyl pomarancza daktyl pomarancza raw doypack kulki raw krzysztof krzysztof wieczorek krzysztof wieczorek 6300448.00 6300759.00 02.02.2024 6300448.00 doy 15.05.2026 6300759 d marketing polska 01 produkty dk 02 kulki daktyl pomarancza raw 02.02.2024 6300448.00 d marketing polska 01 produkty dk 02 kulki daktyl pomarancza raw doy 15.05.2026 6300759 6300448.00 6300759.00 daktyl pomarancza doypack kulki raw krzysztof krzysztof wieczorek krzysztof wieczorek 6300448.00 6300759.00",
+      "search_blob": "daktyl pomarancza daktyl pomarancza raw doypack kulki raw szymon szymon ryngwelski szymon ryngwelski krzysztof krzysztof wieczorek krzysztof wieczorek 6300448.00 6300759.00 02.02.2024 6300448.00 doy 15.05.2026 6300759 d marketing polska 01 produkty dk 02 kulki daktyl pomarancza raw 02.02.2024 6300448.00 d marketing polska 01 produkty dk 02 kulki daktyl pomarancza raw doy 15.05.2026 6300759 6300448.00 6300759.00 daktyl pomarancza doypack kulki raw szymon szymon ryngwelski szymon ryngwelski krzysztof krzysztof wieczorek krzysztof wieczorek 6300448.00 6300759.00",
       "authors": [
+        "Szymon",
         "Krzysztof"
       ]
     },
@@ -11533,10 +11925,10 @@
           "doypack"
         ],
         "autor": [
-          "Krzysztof"
+          "Szymon"
         ],
         "osoba": [
-          "Krzysztof"
+          "Szymon"
         ],
         "inne": []
       },
@@ -11548,9 +11940,9 @@
         "6300449",
         "6300758"
       ],
-      "search_blob": "daktyl wisnia daktyl wisnia raw doypack kulki raw krzysztof krzysztof wieczorek krzysztof wieczorek 6300449.00 6300758.00 doy 01.02.2024 6300449 doy 15.05.2026 6300758 f d marketing polska 01 produkty dk 02 kulki daktyl wisnia raw doy 01.02.2024 6300449 d marketing polska 01 produkty dk 02 kulki daktyl wisnia raw doy 15.05.2026 6300758 f 6300449.00 6300758.00 daktyl wisnia doypack kulki raw krzysztof krzysztof wieczorek krzysztof wieczorek 6300449.00 6300758.00 daktyl wisnia kakao wisnia kulki raw kakao raw kakao wisnia wisnia kakao",
+      "search_blob": "daktyl wisnia daktyl wisnia raw doypack kulki raw szymon szymon ryngwelski szymon ryngwelski 6300449.00 6300758.00 doy 01.02.2024 6300449 doy 15.05.2026 6300758 f d marketing polska 01 produkty dk 02 kulki daktyl wisnia raw doy 01.02.2024 6300449 d marketing polska 01 produkty dk 02 kulki daktyl wisnia raw doy 15.05.2026 6300758 f 6300449.00 6300758.00 daktyl wisnia doypack kulki raw szymon szymon ryngwelski szymon ryngwelski 6300449.00 6300758.00 daktyl wisnia kakao wisnia kulki raw kakao raw kakao wisnia wisnia kakao",
       "authors": [
-        "Krzysztof"
+        "Szymon"
       ]
     },
     {
@@ -11561,7 +11953,8 @@
       "tags": [
         "doypack",
         "kulki",
-        "owocowe"
+        "owocowe",
+        "2F · 12×2"
       ],
       "tag_groups": {
         "smak": [
@@ -11573,9 +11966,16 @@
         "opakowanie": [
           "doypack"
         ],
-        "autor": [],
-        "osoba": [],
-        "inne": []
+        "autor": [
+          "Szymon"
+        ],
+        "osoba": [
+          "Szymon"
+        ],
+        "inne": [],
+        "pakowanie": [
+          "2F · 12×2"
+        ]
       },
       "indexes": [
         "6300808.00"
@@ -11583,8 +11983,10 @@
       "index_bases": [
         "6300808"
       ],
-      "search_blob": "figa z makiem figa z makiem owocowe doypack kulki owocowe 6300808.00 doy 65g 2026 08 31 6300808 d marketing polska 01 produkty dk 02 kulki figa z makiem owocowe doy 65g 2026 08 31 6300808 6300808.00 figa z makiem doypack kulki owocowe 6300808.00",
-      "authors": []
+      "search_blob": "figa z makiem figa z makiem owocowe doypack kulki owocowe 2f 12 2 szymon szymon ryngwelski szymon ryngwelski 6300808.00 doy 65g 2026 08 31 6300808 d marketing polska 01 produkty dk 02 kulki figa z makiem owocowe doy 65g 2026 08 31 6300808 6300808.00 figa z makiem doypack kulki owocowe 2f 12 2 szymon szymon ryngwelski szymon ryngwelski 6300808.00",
+      "authors": [
+        "Szymon"
+      ]
     },
     {
       "id": "kokos-ananas-ziomki",
@@ -11680,7 +12082,34 @@
       },
       "indexes": [],
       "index_bases": [],
-      "search_blob": "kulki z kreatyna kulki z kreatyna kreatyna doypack kulki kreatyna doy 00 g 09 09 2026 6300xxx.00 doy 00 g dd mm rrrr 6300xxx.00 d marketing polska 01 produkty dk 02 kulki kulki z kreatyna kreatyna doy 00 g 09 09 2026 6300xxx.00 d marketing polska 01 produkty dk 02 kulki kulki z kreatyna kreatyna doy 00 g dd mm rrrr 6300xxx.00 6300xxx.00 6300xxx.00 kulki z kreatyna doypack kulki kreatyna",
+      "search_blob": "kulki z kreatyna kulki z kreatyna kreatyna doypack kulki kreatyna doy 65 g 16.09.2026 6300xxx d marketing polska 01 produkty dk 02 kulki kulki z kreatyna kreatyna doy 65 g 16.09.2026 6300xxx 6300xxx kulki z kreatyna doypack kulki kreatyna",
+      "authors": []
+    },
+    {
+      "id": "kulki-z-kreatyna-kreatyna-d",
+      "name": "Kulki Z Kreatyną",
+      "display_name": "Kulki Z Kreatyną",
+      "category": "02 - KULKI",
+      "tags": [
+        "doypack",
+        "kulki",
+        "kreatyna"
+      ],
+      "tag_groups": {
+        "smak": [],
+        "typ": [
+          "kulki"
+        ],
+        "opakowanie": [
+          "doypack"
+        ],
+        "autor": [],
+        "osoba": [],
+        "inne": []
+      },
+      "indexes": [],
+      "index_bases": [],
+      "search_blob": "kulki z kreatyna kulki z kreatyna kreatyna d doypack kulki kreatyna doy 65 g 16.09.2026 6300xxx d d marketing polska 01 produkty dk 02 kulki kulki z kreatyna kreatyna d doy 65 g 16.09.2026 6300xxx d 6300xxx kulki z kreatyna doypack kulki kreatyna",
       "authors": []
     },
     {
@@ -11705,8 +12134,14 @@
         "opakowanie": [
           "doypack"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Krzysztof",
+          "Szymon"
+        ],
+        "osoba": [
+          "Krzysztof",
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -11717,8 +12152,11 @@
         "6300727",
         "6300754"
       ],
-      "search_blob": "malina malina owocowe doypack kulki malina owocowe 6300727.00 6300754.00 doy 65 g 24.02.2026 6300727.00 f doy magnez zelazo 65 g 24.02.2026 6300754.00 f d marketing polska 01 produkty dk 02 kulki malina owocowe doy 65 g 24.02.2026 6300727.00 f d marketing polska 01 produkty dk 02 kulki malina owocowe doy magnez zelazo 65 g 24.02.2026 6300754.00 f 6300727.00 6300754.00 malina doypack kulki malina owocowe 6300727.00 6300754.00",
-      "authors": []
+      "search_blob": "malina malina owocowe doypack kulki malina owocowe krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300727.00 6300754.00 doy 65 g 24.02.2026 6300727.00 f doy magnez zelazo 65 g 24.02.2026 6300754.00 f d marketing polska 01 produkty dk 02 kulki malina owocowe doy 65 g 24.02.2026 6300727.00 f d marketing polska 01 produkty dk 02 kulki malina owocowe doy magnez zelazo 65 g 24.02.2026 6300754.00 f 6300727.00 6300754.00 malina doypack kulki malina owocowe krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300727.00 6300754.00",
+      "authors": [
+        "Krzysztof",
+        "Szymon"
+      ]
     },
     {
       "id": "orzeszki-kukurydza-miod-sniadanie",
@@ -11744,10 +12182,12 @@
           "folia"
         ],
         "autor": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "osoba": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "inne": []
       },
@@ -11764,9 +12204,10 @@
         "6300699",
         "6300767"
       ],
-      "search_blob": "orzeszki kukurydza miod orzeszki kukurydza miod sniadanie doypack folia kulki miod sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek 6300450.00 6300524.00 6300699.00 6300699.01 6300767.00 09.02.2024 6300450.00 30.07.2025 6300524.00 31.10.2025 6300699.00 doy 3.07.2026 pl ua 6300699.01 doy 31.10.2025 6300699.00 folia 09.02.2024 6300450.00 folia 26.06.2024 6300524.00 folia 3.07.2026 pl ua 6300767 f folia 30.07.2025 6300524.00 d marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie 09.02.2024 6300450.00 d marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie 30.07.2025 6300524.00 d marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie 31.10.2025 6300699.00 d marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie doy 3.07.2026 pl ua 6300699.01 d marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie doy 31.10.2025 6300699.00 d marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie folia 09.02.2024 6300450.00 d marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie folia 26.06.2024 6300524.00 d marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie folia 3.07.2026 pl ua 6300767 f d marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie folia 30.07.2025 6300524.00 6300450.00 6300524.00 6300699.00 6300699.01 6300699.00 6300450.00 6300524.00 6300767.00 6300524.00 orzeszki kukurydza miod doypack folia kulki miod sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek 6300450.00 6300524.00 6300699.00 6300699.01 6300767.00",
+      "search_blob": "orzeszki kukurydza miod orzeszki kukurydza miod sniadanie doypack folia kulki miod sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300450.00 6300524.00 6300699.00 6300699.01 6300767.00 09.02.2024 6300450.00 30.07.2025 6300524.00 31.10.2025 6300699.00 doy 3.07.2026 pl ua 6300699.01 doy 31.10.2025 6300699.00 folia 09.02.2024 6300450.00 folia 26.06.2024 6300524.00 folia 3.07.2026 pl ua 6300767 f folia 30.07.2025 6300524.00 d marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie 09.02.2024 6300450.00 d marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie 30.07.2025 6300524.00 d marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie 31.10.2025 6300699.00 d marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie doy 3.07.2026 pl ua 6300699.01 d marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie doy 31.10.2025 6300699.00 d marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie folia 09.02.2024 6300450.00 d marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie folia 26.06.2024 6300524.00 d marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie folia 3.07.2026 pl ua 6300767 f d marketing polska 01 produkty dk 02 kulki orzeszki kukurydza miod sniadanie folia 30.07.2025 6300524.00 6300450.00 6300524.00 6300699.00 6300699.01 6300699.00 6300450.00 6300524.00 6300767.00 6300524.00 orzeszki kukurydza miod doypack folia kulki miod sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300450.00 6300524.00 6300699.00 6300699.01 6300767.00",
       "authors": [
-        "Krzysztof"
+        "Krzysztof",
+        "Szymon"
       ]
     },
     {
@@ -11795,10 +12236,12 @@
           "folia"
         ],
         "autor": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "osoba": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "inne": []
       },
@@ -11814,9 +12257,10 @@
         "6300701",
         "6300766"
       ],
-      "search_blob": "owies czekolada owies czekolada sniadanie czekolada doypack folia kulki owies sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek 6300451.00 6300520.00 6300701.00 6300766.00 doy 02.07.2026 pl ua 6300766 doy 31.10.2025 6300701.00 folia 09.02.2024 6300451.00 folia 20.06.2024 6300520.00 d marketing polska 01 produkty dk 02 kulki owies czekolada sniadanie doy 02.07.2026 pl ua 6300766 d marketing polska 01 produkty dk 02 kulki owies czekolada sniadanie doy 31.10.2025 6300701.00 d marketing polska 01 produkty dk 02 kulki owies czekolada sniadanie folia 09.02.2024 6300451.00 d marketing polska 01 produkty dk 02 kulki owies czekolada sniadanie folia 20.06.2024 6300520.00 6300766.00 6300701.00 6300451.00 6300520.00 owies czekolada czekolada doypack folia kulki owies sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek 6300451.00 6300520.00 6300701.00 6300766.00",
+      "search_blob": "owies czekolada owies czekolada sniadanie czekolada doypack folia kulki owies sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300451.00 6300520.00 6300701.00 6300766.00 doy 02.07.2026 pl ua 6300766 doy 31.10.2025 6300701.00 folia 09.02.2024 6300451.00 folia 20.06.2024 6300520.00 d marketing polska 01 produkty dk 02 kulki owies czekolada sniadanie doy 02.07.2026 pl ua 6300766 d marketing polska 01 produkty dk 02 kulki owies czekolada sniadanie doy 31.10.2025 6300701.00 d marketing polska 01 produkty dk 02 kulki owies czekolada sniadanie folia 09.02.2024 6300451.00 d marketing polska 01 produkty dk 02 kulki owies czekolada sniadanie folia 20.06.2024 6300520.00 6300766.00 6300701.00 6300451.00 6300520.00 owies czekolada czekolada doypack folia kulki owies sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300451.00 6300520.00 6300701.00 6300766.00",
       "authors": [
-        "Krzysztof"
+        "Krzysztof",
+        "Szymon"
       ]
     },
     {
@@ -11845,8 +12289,14 @@
         "opakowanie": [
           "doypack"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Krzysztof",
+          "Szymon"
+        ],
+        "osoba": [
+          "Krzysztof",
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -11857,8 +12307,11 @@
         "6300729",
         "6300837"
       ],
-      "search_blob": "tiramisu czekolada kakao tiramisu czekolada kakao deserowe czekolada deserowe doypack kakao kulki tiramisu 6300729.00 6300837.00 doy 65 g 24.03.2026 6300729.00 doy 65g 07.09.2026 6300837 d marketing polska 01 produkty dk 02 kulki tiramisu czekolada kakao deserowe doy 65 g 24.03.2026 6300729.00 d marketing polska 01 produkty dk 02 kulki tiramisu czekolada kakao deserowe doy 65g 07.09.2026 6300837 6300729.00 6300837.00 tiramisu czekolada kakao czekolada deserowe doypack kakao kulki tiramisu 6300729.00 6300837.00 tiramisu tiramisu czekolada deser",
-      "authors": []
+      "search_blob": "tiramisu czekolada kakao tiramisu czekolada kakao deserowe czekolada deserowe doypack kakao kulki tiramisu krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300729.00 6300837.00 doy 65 g 24.03.2026 6300729.00 doy 65g 07.09.2026 6300837 d marketing polska 01 produkty dk 02 kulki tiramisu czekolada kakao deserowe doy 65 g 24.03.2026 6300729.00 d marketing polska 01 produkty dk 02 kulki tiramisu czekolada kakao deserowe doy 65g 07.09.2026 6300837 6300729.00 6300837.00 tiramisu czekolada kakao czekolada deserowe doypack kakao kulki tiramisu krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300729.00 6300837.00 tiramisu tiramisu czekolada deser",
+      "authors": [
+        "Krzysztof",
+        "Szymon"
+      ]
     },
     {
       "id": "orzeszki-miod-sniadanie",
@@ -11882,10 +12335,12 @@
           "doypack"
         ],
         "autor": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "osoba": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "inne": []
       },
@@ -11897,9 +12352,10 @@
         "6300524",
         "6300699"
       ],
-      "search_blob": "orzeszki miod orzeszki miod sniadanie doypack kulki miod sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek 6300524.00 6300699.00 26.06.2024 6300524.00 doy 31.10.2025 6300699.00 d marketing polska 01 produkty dk 02 kulki archiwum orzeszki miod sniadanie 26.06.2024 6300524.00 d marketing polska 01 produkty dk 02 kulki archiwum orzeszki miod sniadanie doy 31.10.2025 6300699.00 6300524.00 6300699.00 orzeszki miod doypack kulki miod sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek 6300524.00 6300699.00",
+      "search_blob": "orzeszki miod orzeszki miod sniadanie doypack kulki miod sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300524.00 6300699.00 26.06.2024 6300524.00 doy 31.10.2025 6300699.00 d marketing polska 01 produkty dk 02 kulki archiwum orzeszki miod sniadanie 26.06.2024 6300524.00 d marketing polska 01 produkty dk 02 kulki archiwum orzeszki miod sniadanie doy 31.10.2025 6300699.00 6300524.00 6300699.00 orzeszki miod doypack kulki miod sniadanie krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300524.00 6300699.00",
       "authors": [
-        "Krzysztof"
+        "Krzysztof",
+        "Szymon"
       ]
     },
     {
@@ -11924,10 +12380,14 @@
           "rekaw"
         ],
         "autor": [
-          "Krzysztof"
+          "Krzysztof",
+          "Sylwia",
+          "Szymon"
         ],
         "osoba": [
-          "Krzysztof"
+          "Krzysztof",
+          "Sylwia",
+          "Szymon"
         ],
         "inne": []
       },
@@ -11941,9 +12401,11 @@
         "6300578",
         "6300757"
       ],
-      "search_blob": "burger buraczany burger buraczany niemiesne burger niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 000018.00 6300578.00 6300757.00 rekaw 03.07.2025 6300757.00 f rekaw 08.11.2024 6300578.00 rekaw 14.01.2025 6300578.00 rekaw 16.07.2021 karp000018.00 d marketing polska 01 produkty dk 03 roslinne burger buraczany niemiesne rekaw 03.07.2025 6300757.00 f d marketing polska 01 produkty dk 03 roslinne burger buraczany niemiesne rekaw 08.11.2024 6300578.00 d marketing polska 01 produkty dk 03 roslinne burger buraczany niemiesne rekaw 14.01.2025 6300578.00 d marketing polska 01 produkty dk 03 roslinne burger buraczany niemiesne rekaw 16.07.2021 karp000018.00 6300757.00 6300578.00 6300578.00 000018.00 burger buraczany burger niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 000018.00 6300578.00 6300757.00",
+      "search_blob": "burger buraczany burger buraczany niemiesne burger niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 000018.00 6300578.00 6300757.00 rekaw 03.07.2025 6300757.00 f rekaw 08.11.2024 6300578.00 rekaw 14.01.2025 6300578.00 rekaw 16.07.2021 karp000018.00 d marketing polska 01 produkty dk 03 roslinne burger buraczany niemiesne rekaw 03.07.2025 6300757.00 f d marketing polska 01 produkty dk 03 roslinne burger buraczany niemiesne rekaw 08.11.2024 6300578.00 d marketing polska 01 produkty dk 03 roslinne burger buraczany niemiesne rekaw 14.01.2025 6300578.00 d marketing polska 01 produkty dk 03 roslinne burger buraczany niemiesne rekaw 16.07.2021 karp000018.00 6300757.00 6300578.00 6300578.00 000018.00 burger buraczany burger niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 000018.00 6300578.00 6300757.00",
       "authors": [
-        "Krzysztof"
+        "Krzysztof",
+        "Sylwia",
+        "Szymon"
       ]
     },
     {
@@ -11968,10 +12430,12 @@
           "rekaw"
         ],
         "autor": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "osoba": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "inne": []
       },
@@ -11991,8 +12455,9 @@
         "6300755",
         "6300810"
       ],
-      "search_blob": "burger klasyczny burger klasyczny niemiesne burger niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 6300342.00 6300473.00 6300569.00 6300631.00 6300755.00 6300810.00 01.04.2025 6300631.00 02.04.2025 6300631.00 10.08.2026 6300810 15.10.2024 6300569.00 27.04.2023 6300342.00 29.04.2024 6300473.00 rekaw 03.04.2025 6300631.00 rekaw 25.05.2026 6300755 d marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 01.04.2025 6300631.00 d marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 02.04.2025 6300631.00 d marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 10.08.2026 6300810 d marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 15.10.2024 6300569.00 d marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 27.04.2023 6300342.00 d marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 29.04.2024 6300473.00 d marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne rekaw 03.04.2025 6300631.00 d marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne rekaw 25.05.2026 6300755 6300631.00 6300631.00 6300810.00 6300569.00 6300342.00 6300473.00 6300631.00 6300755.00 burger klasyczny burger niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 6300342.00 6300473.00 6300569.00 6300631.00 6300755.00 6300810.00 burger dzien bez miesa",
+      "search_blob": "burger klasyczny burger klasyczny niemiesne burger niemiesne rekaw roslinne szymon szymon ryngwelski szymon ryngwelski krzysztof krzysztof wieczorek krzysztof wieczorek 6300342.00 6300473.00 6300569.00 6300631.00 6300755.00 6300810.00 01.04.2025 6300631.00 02.04.2025 6300631.00 10.08.2026 6300810 15.10.2024 6300569.00 27.04.2023 6300342.00 29.04.2024 6300473.00 rekaw 03.04.2025 6300631.00 rekaw 25.05.2026 6300755 d marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 01.04.2025 6300631.00 d marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 02.04.2025 6300631.00 d marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 10.08.2026 6300810 d marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 15.10.2024 6300569.00 d marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 27.04.2023 6300342.00 d marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne 29.04.2024 6300473.00 d marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne rekaw 03.04.2025 6300631.00 d marketing polska 01 produkty dk 03 roslinne burger klasyczny niemiesne rekaw 25.05.2026 6300755 6300631.00 6300631.00 6300810.00 6300569.00 6300342.00 6300473.00 6300631.00 6300755.00 burger klasyczny burger niemiesne rekaw roslinne szymon szymon ryngwelski szymon ryngwelski krzysztof krzysztof wieczorek krzysztof wieczorek 6300342.00 6300473.00 6300569.00 6300631.00 6300755.00 6300810.00 burger dzien bez miesa",
       "authors": [
+        "Szymon",
         "Krzysztof"
       ]
     },
@@ -12055,8 +12520,12 @@
         "opakowanie": [
           "rekaw"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Szymon"
+        ],
+        "osoba": [
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -12075,8 +12544,10 @@
         "6300632",
         "6300811"
       ],
-      "search_blob": "burger wolowy burger wolowy niemiesne burger niemiesne rekaw roslinne 000137.00 6300154.00 6300560.00 6300612.00 6300632.00 6300811.00 11.10.2024 6300154.00 rekaw 03.04.2025 6300632.00 rekaw 11.10.2024 6300560.00 rekaw 13.08.2026 6300811 rekaw 18.02.2025 6300612.00 rekaw 26.09.2022 kar000137.00 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne 11.10.2024 6300154.00 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne rekaw 03.04.2025 6300632.00 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne rekaw 11.10.2024 6300560.00 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne rekaw 13.08.2026 6300811 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne rekaw 18.02.2025 6300612.00 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne rekaw 26.09.2022 kar000137.00 6300154.00 6300632.00 6300560.00 6300811.00 6300612.00 000137.00 burger wolowy burger niemiesne rekaw roslinne 000137.00 6300154.00 6300560.00 6300612.00 6300632.00 6300811.00",
-      "authors": []
+      "search_blob": "burger wolowy burger wolowy niemiesne burger niemiesne rekaw roslinne szymon szymon ryngwelski szymon ryngwelski 000137.00 6300154.00 6300560.00 6300612.00 6300632.00 6300811.00 11.10.2024 6300154.00 rekaw 03.04.2025 6300632.00 rekaw 11.10.2024 6300560.00 rekaw 13.08.2026 6300811 rekaw 18.02.2025 6300612.00 rekaw 26.09.2022 kar000137.00 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne 11.10.2024 6300154.00 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne rekaw 03.04.2025 6300632.00 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne rekaw 11.10.2024 6300560.00 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne rekaw 13.08.2026 6300811 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne rekaw 18.02.2025 6300612.00 d marketing polska 01 produkty dk 03 roslinne burger wolowy niemiesne rekaw 26.09.2022 kar000137.00 6300154.00 6300632.00 6300560.00 6300811.00 6300612.00 000137.00 burger wolowy burger niemiesne rekaw roslinne szymon szymon ryngwelski szymon ryngwelski 000137.00 6300154.00 6300560.00 6300612.00 6300632.00 6300811.00",
+      "authors": [
+        "Szymon"
+      ]
     },
     {
       "id": "dk-pasztet-sliwka-6300281-niemiesne",
@@ -12137,10 +12608,12 @@
           "rekaw"
         ],
         "autor": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "osoba": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "inne": []
       },
@@ -12150,9 +12623,10 @@
       "index_bases": [
         "6300745"
       ],
-      "search_blob": "falafel falafel niemiesne niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 6300745.00 rekaw 24.03.2026 6300745.00 d marketing polska 01 produkty dk 03 roslinne falafel niemiesne rekaw 24.03.2026 6300745.00 6300745.00 falafel niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 6300745.00 falafel kofta falafel",
+      "search_blob": "falafel falafel niemiesne niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300745.00 rekaw 24.03.2026 6300745.00 d marketing polska 01 produkty dk 03 roslinne falafel niemiesne rekaw 24.03.2026 6300745.00 6300745.00 falafel niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300745.00 falafel kofta falafel",
       "authors": [
-        "Krzysztof"
+        "Krzysztof",
+        "Szymon"
       ]
     },
     {
@@ -12176,8 +12650,14 @@
         "opakowanie": [
           "rekaw"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Krzysztof",
+          "Szymon"
+        ],
+        "osoba": [
+          "Krzysztof",
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -12190,8 +12670,11 @@
         "6300329",
         "6300809"
       ],
-      "search_blob": "gyros groch gyros groch niemiesne gyros niemiesne rekaw roslinne 000152.00 6300329.00 6300809.00 rekaw 18.08.2026 6300809 rekaw 14.12.2022 kar000152.00 rekaw 28.09.2023 6300329.00 d marketing polska 01 produkty dk 03 roslinne gyros groch niemiesne rekaw 18.08.2026 6300809 d marketing polska 01 produkty dk 03 roslinne gyros groch niemiesne rekaw 14.12.2022 kar000152.00 d marketing polska 01 produkty dk 03 roslinne gyros groch niemiesne rekaw 28.09.2023 6300329.00 6300809.00 000152.00 6300329.00 gyros groch gyros niemiesne rekaw roslinne 000152.00 6300329.00 6300809.00",
-      "authors": []
+      "search_blob": "gyros groch gyros groch niemiesne gyros niemiesne rekaw roslinne szymon szymon ryngwelski szymon ryngwelski krzysztof krzysztof wieczorek krzysztof wieczorek 000152.00 6300329.00 6300809.00 rekaw 18.08.2026 6300809 rekaw 14.12.2022 kar000152.00 rekaw 28.09.2023 6300329.00 d marketing polska 01 produkty dk 03 roslinne gyros groch niemiesne rekaw 18.08.2026 6300809 d marketing polska 01 produkty dk 03 roslinne gyros groch niemiesne rekaw 14.12.2022 kar000152.00 d marketing polska 01 produkty dk 03 roslinne gyros groch niemiesne rekaw 28.09.2023 6300329.00 6300809.00 000152.00 6300329.00 gyros groch gyros niemiesne rekaw roslinne szymon szymon ryngwelski szymon ryngwelski krzysztof krzysztof wieczorek krzysztof wieczorek 000152.00 6300329.00 6300809.00",
+      "authors": [
+        "Szymon",
+        "Krzysztof"
+      ]
     },
     {
       "id": "gyros-pszenica-niemiesne",
@@ -12248,8 +12731,16 @@
         "opakowanie": [
           "rekaw"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Krzysztof",
+          "Sylwia",
+          "Szymon"
+        ],
+        "osoba": [
+          "Krzysztof",
+          "Sylwia",
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -12269,8 +12760,12 @@
         "6300768",
         "6300812"
       ],
-      "search_blob": "kaszanka kaszanka niemiesne niemiesne rekaw roslinne 000100.00 6300345.00 6300474.00 6300633.00 6300768.00 6300768.01 6300812.00 01 archiwum 17.03.2022 kar000100.00 2026 04 24 22.04.2026 6300xxx.00 rekaw 03.04.2025 6300633.00 rekaw 07.08.2026 6300768.01 rekaw 12.08.2026 6300812 rekaw 22.04.2026 6300xxx.00 rekaw 23.04.2024 6300474.00 rekaw 26.04.2023 6300345.00 rekaw 28.05.2026 6300768.00 wariant 23.04.2024 6300474.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne 01 archiwum 17.03.2022 kar000100.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne 2026 04 24 22.04.2026 6300xxx.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 03.04.2025 6300633.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 07.08.2026 6300768.01 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 12.08.2026 6300812 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 22.04.2026 6300xxx.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 23.04.2024 6300474.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 26.04.2023 6300345.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 28.05.2026 6300768.00 d marketing polska 01 produkty dk 03 roslinne archiwum kaszanka niemiesne wariant 23.04.2024 6300474.00 000100.00 6300xxx.00 6300633.00 6300768.01 6300812.00 6300xxx.00 6300474.00 6300345.00 6300768.00 6300474.00 kaszanka niemiesne rekaw roslinne 000100.00 6300345.00 6300474.00 6300633.00 6300768.00 6300768.01 6300812.00",
-      "authors": []
+      "search_blob": "kaszanka kaszanka niemiesne niemiesne rekaw roslinne sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 000100.00 6300345.00 6300474.00 6300633.00 6300768.00 6300768.01 6300812.00 01 archiwum 17.03.2022 kar000100.00 2026 04 24 22.04.2026 6300xxx.00 rekaw 03.04.2025 6300633.00 rekaw 07.08.2026 6300768.01 rekaw 12.08.2026 6300812 rekaw 22.04.2026 6300xxx.00 rekaw 23.04.2024 6300474.00 rekaw 26.04.2023 6300345.00 rekaw 28.05.2026 6300768.00 wariant 23.04.2024 6300474.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne 01 archiwum 17.03.2022 kar000100.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne 2026 04 24 22.04.2026 6300xxx.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 03.04.2025 6300633.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 07.08.2026 6300768.01 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 12.08.2026 6300812 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 22.04.2026 6300xxx.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 23.04.2024 6300474.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 26.04.2023 6300345.00 d marketing polska 01 produkty dk 03 roslinne kaszanka niemiesne rekaw 28.05.2026 6300768.00 d marketing polska 01 produkty dk 03 roslinne archiwum kaszanka niemiesne wariant 23.04.2024 6300474.00 000100.00 6300xxx.00 6300633.00 6300768.01 6300812.00 6300xxx.00 6300474.00 6300345.00 6300768.00 6300474.00 kaszanka niemiesne rekaw roslinne sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 000100.00 6300345.00 6300474.00 6300633.00 6300768.00 6300768.01 6300812.00",
+      "authors": [
+        "Sylwia",
+        "Krzysztof",
+        "Szymon"
+      ]
     },
     {
       "id": "kielbasa-grill-niemiesne",
@@ -12524,10 +13019,14 @@
           "rekaw"
         ],
         "autor": [
-          "Sylwia"
+          "Krzysztof",
+          "Sylwia",
+          "Szymon"
         ],
         "osoba": [
-          "Sylwia"
+          "Krzysztof",
+          "Sylwia",
+          "Szymon"
         ],
         "inne": []
       },
@@ -12543,9 +13042,11 @@
         "6300746",
         "6300786"
       ],
-      "search_blob": "kielbaska wegierska kielbaska wegierska niemiesne niemiesne rekaw roslinne sylwia sylwia zarychta sylwia zarychta 000140.00 6300344.00 6300746.00 6300786.00 archiwum 09.05.2023 6300344.00 rekaw 07.01.2026 6300786 rekaw 26.09.2022 kar000140.00 rekaw 180 g 02.04.2026 6300746.00 d marketing polska 01 produkty dk 03 roslinne kielbaska wegierska niemiesne archiwum 09.05.2023 6300344.00 d marketing polska 01 produkty dk 03 roslinne kielbaska wegierska niemiesne rekaw 07.01.2026 6300786 d marketing polska 01 produkty dk 03 roslinne kielbaska wegierska niemiesne rekaw 26.09.2022 kar000140.00 d marketing polska 01 produkty dk 03 roslinne kielbaska wegierska niemiesne rekaw 180 g 02.04.2026 6300746.00 6300344.00 6300786.00 000140.00 6300746.00 kielbaska wegierska niemiesne rekaw roslinne sylwia sylwia zarychta sylwia zarychta 000140.00 6300344.00 6300746.00 6300786.00 kielbaska wegierska kielbaski wegierskie wegierska hot dog hot dog",
+      "search_blob": "kielbaska wegierska kielbaska wegierska niemiesne niemiesne rekaw roslinne sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski krzysztof krzysztof wieczorek krzysztof wieczorek 000140.00 6300344.00 6300746.00 6300786.00 archiwum 09.05.2023 6300344.00 rekaw 07.01.2026 6300786 rekaw 26.09.2022 kar000140.00 rekaw 180 g 02.04.2026 6300746.00 d marketing polska 01 produkty dk 03 roslinne kielbaska wegierska niemiesne archiwum 09.05.2023 6300344.00 d marketing polska 01 produkty dk 03 roslinne kielbaska wegierska niemiesne rekaw 07.01.2026 6300786 d marketing polska 01 produkty dk 03 roslinne kielbaska wegierska niemiesne rekaw 26.09.2022 kar000140.00 d marketing polska 01 produkty dk 03 roslinne kielbaska wegierska niemiesne rekaw 180 g 02.04.2026 6300746.00 6300344.00 6300786.00 000140.00 6300746.00 kielbaska wegierska niemiesne rekaw roslinne sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski krzysztof krzysztof wieczorek krzysztof wieczorek 000140.00 6300344.00 6300746.00 6300786.00 kielbaska wegierska kielbaski wegierskie wegierska hot dog hot dog",
       "authors": [
-        "Sylwia"
+        "Sylwia",
+        "Szymon",
+        "Krzysztof"
       ]
     },
     {
@@ -12735,8 +13236,14 @@
         "opakowanie": [
           "rekaw"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Krzysztof",
+          "Szymon"
+        ],
+        "osoba": [
+          "Krzysztof",
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -12749,8 +13256,11 @@
         "63007442",
         "6300765"
       ],
-      "search_blob": "kofta kofta niemiesne niemiesne rekaw roslinne 6300744.00 63007442.00 6300765.00 rekaw 200 g 12.08.2026 6300765 rekaw 200 g 27.03.2026 6300744 rekaw 200 g 27.03.2026 63007442 d marketing polska 01 produkty dk 03 roslinne kofta niemiesne rekaw 200 g 12.08.2026 6300765 d marketing polska 01 produkty dk 03 roslinne kofta niemiesne rekaw 200 g 27.03.2026 6300744 d marketing polska 01 produkty dk 03 roslinne kofta niemiesne rekaw 200 g 27.03.2026 63007442 6300765.00 6300744.00 63007442.00 kofta niemiesne rekaw roslinne 6300744.00 63007442.00 6300765.00",
-      "authors": []
+      "search_blob": "kofta kofta niemiesne niemiesne rekaw roslinne szymon szymon ryngwelski szymon ryngwelski krzysztof krzysztof wieczorek krzysztof wieczorek 6300744.00 63007442.00 6300765.00 rekaw 200 g 12.08.2026 6300765 rekaw 200 g 27.03.2026 6300744 rekaw 200 g 27.03.2026 63007442 d marketing polska 01 produkty dk 03 roslinne kofta niemiesne rekaw 200 g 12.08.2026 6300765 d marketing polska 01 produkty dk 03 roslinne kofta niemiesne rekaw 200 g 27.03.2026 6300744 d marketing polska 01 produkty dk 03 roslinne kofta niemiesne rekaw 200 g 27.03.2026 63007442 6300765.00 6300744.00 63007442.00 kofta niemiesne rekaw roslinne szymon szymon ryngwelski szymon ryngwelski krzysztof krzysztof wieczorek krzysztof wieczorek 6300744.00 63007442.00 6300765.00",
+      "authors": [
+        "Szymon",
+        "Krzysztof"
+      ]
     },
     {
       "id": "kotleciki-rybne-niemiesne",
@@ -12886,10 +13396,12 @@
           "rekaw"
         ],
         "autor": [
-          "Sylwia"
+          "Sylwia",
+          "Szymon"
         ],
         "osoba": [
-          "Sylwia"
+          "Sylwia",
+          "Szymon"
         ],
         "inne": []
       },
@@ -12904,9 +13416,10 @@
         "6300406",
         "6300798"
       ],
-      "search_blob": "mielone wolowe mielone wolowe niemiesne niemiesne rekaw roslinne sylwia sylwia zarychta sylwia zarychta 000138.00 6300406.00 6300406.01 6300798.00 archiwum 26.09.2022 kar000138.00 rekaw 23.08.2023 6300406.00 rekaw 2026 07 21 6300406.01 rekaw 2026 07 31 6300798 d marketing polska 01 produkty dk 03 roslinne mielone wolowe niemiesne archiwum 26.09.2022 kar000138.00 d marketing polska 01 produkty dk 03 roslinne mielone wolowe niemiesne rekaw 23.08.2023 6300406.00 d marketing polska 01 produkty dk 03 roslinne mielone wolowe niemiesne rekaw 2026 07 21 6300406.01 d marketing polska 01 produkty dk 03 roslinne mielone wolowe niemiesne rekaw 2026 07 31 6300798 000138.00 6300406.00 6300406.01 6300798.00 mielone wolowe niemiesne rekaw roslinne sylwia sylwia zarychta sylwia zarychta 000138.00 6300406.00 6300406.01 6300798.00",
+      "search_blob": "mielone wolowe mielone wolowe niemiesne niemiesne rekaw roslinne sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 000138.00 6300406.00 6300406.01 6300798.00 archiwum 26.09.2022 kar000138.00 rekaw 23.08.2023 6300406.00 rekaw 2026 07 21 6300406.01 rekaw 2026 07 31 6300798 d marketing polska 01 produkty dk 03 roslinne mielone wolowe niemiesne archiwum 26.09.2022 kar000138.00 d marketing polska 01 produkty dk 03 roslinne mielone wolowe niemiesne rekaw 23.08.2023 6300406.00 d marketing polska 01 produkty dk 03 roslinne mielone wolowe niemiesne rekaw 2026 07 21 6300406.01 d marketing polska 01 produkty dk 03 roslinne mielone wolowe niemiesne rekaw 2026 07 31 6300798 000138.00 6300406.00 6300406.01 6300798.00 mielone wolowe niemiesne rekaw roslinne sylwia sylwia zarychta sylwia zarychta szymon szymon ryngwelski szymon ryngwelski 000138.00 6300406.00 6300406.01 6300798.00",
       "authors": [
-        "Sylwia"
+        "Sylwia",
+        "Szymon"
       ]
     },
     {
@@ -13084,8 +13597,12 @@
         "opakowanie": [
           "rekaw"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Szymon"
+        ],
+        "osoba": [
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -13094,8 +13611,10 @@
       "index_bases": [
         "6300685"
       ],
-      "search_blob": "parowka roslinna parowka roslinna niemiesne niemiesne parow rekaw roslinne 6300685.00 rekaw 10.07.2025 6300685.00 d marketing polska 01 produkty dk 03 roslinne parowka roslinna niemiesne rekaw 10.07.2025 6300685.00 6300685.00 parowka roslinna niemiesne parow rekaw roslinne 6300685.00 parowka parowka parowki parowki",
-      "authors": []
+      "search_blob": "parowka roslinna parowka roslinna niemiesne niemiesne parow rekaw roslinne szymon szymon ryngwelski szymon ryngwelski 6300685.00 rekaw 10.07.2025 6300685.00 d marketing polska 01 produkty dk 03 roslinne parowka roslinna niemiesne rekaw 10.07.2025 6300685.00 6300685.00 parowka roslinna niemiesne parow rekaw roslinne szymon szymon ryngwelski szymon ryngwelski 6300685.00 parowka parowka parowki parowki",
+      "authors": [
+        "Szymon"
+      ]
     },
     {
       "id": "pasztet-pomidor-niemiesne",
@@ -13220,8 +13739,12 @@
         "opakowanie": [
           "rekaw"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Szymon"
+        ],
+        "osoba": [
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -13232,8 +13755,10 @@
         "6300697",
         "6300806"
       ],
-      "search_blob": "roladka wo owa roladka wo owa niemiesne niemiesne rekaw roslinne 6300697.00 6300806.00 rekaw 08.10.2025 6300697.00 rekaw 13.08.2026 6300806 d marketing polska 01 produkty dk 03 roslinne roladka wo owa niemiesne rekaw 08.10.2025 6300697.00 d marketing polska 01 produkty dk 03 roslinne roladka wo owa niemiesne rekaw 13.08.2026 6300806 6300697.00 6300806.00 roladka wo owa niemiesne rekaw roslinne 6300697.00 6300806.00 rolada roladka",
-      "authors": []
+      "search_blob": "roladka wo owa roladka wo owa niemiesne niemiesne rekaw roslinne szymon szymon ryngwelski szymon ryngwelski 6300697.00 6300806.00 rekaw 08.10.2025 6300697.00 rekaw 13.08.2026 6300806 d marketing polska 01 produkty dk 03 roslinne roladka wo owa niemiesne rekaw 08.10.2025 6300697.00 d marketing polska 01 produkty dk 03 roslinne roladka wo owa niemiesne rekaw 13.08.2026 6300806 6300697.00 6300806.00 roladka wo owa niemiesne rekaw roslinne szymon szymon ryngwelski szymon ryngwelski 6300697.00 6300806.00 rolada roladka",
+      "authors": [
+        "Szymon"
+      ]
     },
     {
       "id": "roladki-szpinakowe-niemiesne",
@@ -13291,10 +13816,12 @@
           "rekaw"
         ],
         "autor": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "osoba": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "inne": []
       },
@@ -13306,9 +13833,10 @@
         "6300635",
         "6300798"
       ],
-      "search_blob": "sznyce l sznycel niemiesne folia niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 6300635.00 6300798.00 rekaw 28.06.2026 6300798 rekaw 29.05.2025 6300635.00 untitled folder d marketing polska 01 produkty dk 03 roslinne sznycel niemiesne rekaw 28.06.2026 6300798 d marketing polska 01 produkty dk 03 roslinne sznycel niemiesne rekaw 29.05.2025 6300635.00 d marketing polska 01 produkty dk 03 roslinne sznycel niemiesne untitled folder 6300798.00 6300635.00 sznyce l folia niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek 6300635.00 6300798.00",
+      "search_blob": "sznyce l sznycel niemiesne folia niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300635.00 6300798.00 rekaw 28.06.2026 6300798 rekaw 29.05.2025 6300635.00 untitled folder d marketing polska 01 produkty dk 03 roslinne sznycel niemiesne rekaw 28.06.2026 6300798 d marketing polska 01 produkty dk 03 roslinne sznycel niemiesne rekaw 29.05.2025 6300635.00 d marketing polska 01 produkty dk 03 roslinne sznycel niemiesne untitled folder 6300798.00 6300635.00 sznyce l folia niemiesne rekaw roslinne krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300635.00 6300798.00",
       "authors": [
-        "Krzysztof"
+        "Krzysztof",
+        "Szymon"
       ]
     },
     {
@@ -14090,11 +14618,13 @@
         ],
         "autor": [
           "Krzysztof",
-          "Sylwia"
+          "Sylwia",
+          "Szymon"
         ],
         "osoba": [
           "Krzysztof",
-          "Sylwia"
+          "Sylwia",
+          "Szymon"
         ],
         "inne": []
       },
@@ -14104,10 +14634,11 @@
       "index_bases": [
         "6300707"
       ],
-      "search_blob": "proteina banoffee proteina banoffee krem orzechowy banoffee etykieta krem orzech proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300707.00 ety s o banoffee 200 g d marketing polska 01 produkty dk 06 przetwory proteina banoffee krem orzechowy ety s o banoffee 200 g 6300707.00 proteina banoffee banoffee etykieta krem orzech proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300707.00",
+      "search_blob": "proteina banoffee proteina banoffee krem orzechowy banoffee etykieta krem orzech proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300707.00 ety s o banoffee 200 g d marketing polska 01 produkty dk 06 przetwory proteina banoffee krem orzechowy ety s o banoffee 200 g 6300707.00 proteina banoffee banoffee etykieta krem orzech proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300707.00",
       "authors": [
         "Sylwia",
-        "Krzysztof"
+        "Krzysztof",
+        "Szymon"
       ]
     },
     {
@@ -14136,11 +14667,13 @@
         ],
         "autor": [
           "Krzysztof",
-          "Sylwia"
+          "Sylwia",
+          "Szymon"
         ],
         "osoba": [
           "Krzysztof",
-          "Sylwia"
+          "Sylwia",
+          "Szymon"
         ],
         "inne": []
       },
@@ -14150,10 +14683,11 @@
       "index_bases": [
         "6300711"
       ],
-      "search_blob": "proteina karmel proteina karmel krem orzechowy etykieta karmel krem orzech proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300711.00 ety s o karmel 200 g d marketing polska 01 produkty dk 06 przetwory proteina karmel krem orzechowy ety s o karmel 200 g 6300711.00 proteina karmel etykieta karmel krem orzech proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300711.00",
+      "search_blob": "proteina karmel proteina karmel krem orzechowy etykieta karmel krem orzech proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300711.00 ety s o karmel 200 g d marketing polska 01 produkty dk 06 przetwory proteina karmel krem orzechowy ety s o karmel 200 g 6300711.00 proteina karmel etykieta karmel krem orzech proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300711.00",
       "authors": [
         "Sylwia",
-        "Krzysztof"
+        "Krzysztof",
+        "Szymon"
       ]
     },
     {
@@ -14182,11 +14716,13 @@
         ],
         "autor": [
           "Krzysztof",
-          "Sylwia"
+          "Sylwia",
+          "Szymon"
         ],
         "osoba": [
           "Krzysztof",
-          "Sylwia"
+          "Sylwia",
+          "Szymon"
         ],
         "inne": []
       },
@@ -14196,10 +14732,11 @@
       "index_bases": [
         "6300708"
       ],
-      "search_blob": "proteina lemon cheesecake proteina lemon cheesecake krem orzechowy etykieta krem lemon orzech proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300708.00 ety s o lemon cheesecake 200 g d marketing polska 01 produkty dk 06 przetwory proteina lemon cheesecake krem orzechowy ety s o lemon cheesecake 200 g 6300708.00 proteina lemon cheesecake etykieta krem lemon orzech proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek 6300708.00",
+      "search_blob": "proteina lemon cheesecake proteina lemon cheesecake krem orzechowy etykieta krem lemon orzech proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300708.00 ety s o lemon cheesecake 200 g d marketing polska 01 produkty dk 06 przetwory proteina lemon cheesecake krem orzechowy ety s o lemon cheesecake 200 g 6300708.00 proteina lemon cheesecake etykieta krem lemon orzech proteina sylwia sylwia zarychta sylwia zarychta krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300708.00",
       "authors": [
         "Sylwia",
-        "Krzysztof"
+        "Krzysztof",
+        "Szymon"
       ]
     },
     {
@@ -15009,8 +15546,14 @@
           "doypack",
           "mini baton"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Sylwia",
+          "Szymon"
+        ],
+        "osoba": [
+          "Sylwia",
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -15021,8 +15564,11 @@
         "6300747",
         "6300749"
       ],
-      "search_blob": "gi banoffee gi banoffee bars protein banoffee baton doypack mini baton proteina 6300747.00 6300749.00 bar 20.02.2026 6300xxx.00 baton 45 g 27.04.2026 6300747.00 en cz sk baton 45 g 27.04.2026 6300749.00 gb hu doypack 6x mini 20.02.2026 6300xxx.00 d marketing eksport 01 products gc 01 bars gi banoffee bars protein bar 20.02.2026 6300xxx.00 d marketing eksport 01 products gc 01 bars gi banoffee bars protein baton 45 g 27.04.2026 6300747.00 en cz sk d marketing eksport 01 products gc 01 bars gi banoffee bars protein baton 45 g 27.04.2026 6300749.00 gb hu d marketing eksport 01 products gc 01 bars gi banoffee bars protein doypack 6x mini 20.02.2026 6300xxx.00 6300xxx.00 6300747.00 6300749.00 6300xxx.00 gi banoffee banoffee baton doypack mini baton proteina 6300747.00 6300749.00",
-      "authors": []
+      "search_blob": "gi banoffee gi banoffee bars protein banoffee baton doypack mini baton proteina szymon szymon ryngwelski szymon ryngwelski sylwia sylwia zarychta sylwia zarychta 6300747.00 6300749.00 bar 20.02.2026 6300xxx.00 baton 45 g 27.04.2026 6300747.00 en cz sk baton 45 g 27.04.2026 6300749.00 gb hu doypack 6x mini 20.02.2026 6300xxx.00 d marketing eksport 01 products gc 01 bars gi banoffee bars protein bar 20.02.2026 6300xxx.00 d marketing eksport 01 products gc 01 bars gi banoffee bars protein baton 45 g 27.04.2026 6300747.00 en cz sk d marketing eksport 01 products gc 01 bars gi banoffee bars protein baton 45 g 27.04.2026 6300749.00 gb hu d marketing eksport 01 products gc 01 bars gi banoffee bars protein doypack 6x mini 20.02.2026 6300xxx.00 6300xxx.00 6300747.00 6300749.00 6300xxx.00 gi banoffee banoffee baton doypack mini baton proteina szymon szymon ryngwelski szymon ryngwelski sylwia sylwia zarychta sylwia zarychta 6300747.00 6300749.00",
+      "authors": [
+        "Szymon",
+        "Sylwia"
+      ]
     },
     {
       "id": "gi-caramel-bars-protein",
@@ -15147,10 +15693,10 @@
           "doy 6x"
         ],
         "autor": [
-          "Krzysztof"
+          "Szymon"
         ],
         "osoba": [
-          "Krzysztof"
+          "Szymon"
         ],
         "inne": []
       },
@@ -15166,9 +15712,9 @@
         "6300641",
         "6300716"
       ],
-      "search_blob": "hazelnut chocolate hazelnut chocolate date baton dates doy 6x date krzysztof krzysztof wieczorek krzysztof wieczorek 6300607.00 6300609.00 6300641.00 6300716.00 bar 21.02.2025 6300607.00 gb cz sk hu doy6x 07.05.2025 6300641.00 gb lt lv ee doy6x 23.12.2024 6300609.00 gb cz sk hu hr doy6x 28.11.2025 6300716.00 gb cz sk hu hr d marketing eksport 01 products gc 01 bars hazelnut chocolate date bar 21.02.2025 6300607.00 gb cz sk hu d marketing eksport 01 products gc 01 bars hazelnut chocolate date doy6x 07.05.2025 6300641.00 gb lt lv ee d marketing eksport 01 products gc 01 bars hazelnut chocolate date doy6x 23.12.2024 6300609.00 gb cz sk hu hr d marketing eksport 01 products gc 01 bars hazelnut chocolate date doy6x 28.11.2025 6300716.00 gb cz sk hu hr 6300607.00 6300641.00 6300609.00 6300716.00 hazelnut chocolate baton dates doy 6x date krzysztof krzysztof wieczorek krzysztof wieczorek 6300607.00 6300609.00 6300641.00 6300716.00",
+      "search_blob": "hazelnut chocolate hazelnut chocolate date baton dates doy 6x date szymon szymon ryngwelski szymon ryngwelski 6300607.00 6300609.00 6300641.00 6300716.00 bar 21.02.2025 6300607.00 gb cz sk hu doy6x 07.05.2025 6300641.00 gb lt lv ee doy6x 23.12.2024 6300609.00 gb cz sk hu hr doy6x 28.11.2025 6300716.00 gb cz sk hu hr d marketing eksport 01 products gc 01 bars hazelnut chocolate date bar 21.02.2025 6300607.00 gb cz sk hu d marketing eksport 01 products gc 01 bars hazelnut chocolate date doy6x 07.05.2025 6300641.00 gb lt lv ee d marketing eksport 01 products gc 01 bars hazelnut chocolate date doy6x 23.12.2024 6300609.00 gb cz sk hu hr d marketing eksport 01 products gc 01 bars hazelnut chocolate date doy6x 28.11.2025 6300716.00 gb cz sk hu hr 6300607.00 6300641.00 6300609.00 6300716.00 hazelnut chocolate baton dates doy 6x date szymon szymon ryngwelski szymon ryngwelski 6300607.00 6300609.00 6300641.00 6300716.00",
       "authors": [
-        "Krzysztof"
+        "Szymon"
       ]
     },
     {
@@ -15543,10 +16089,12 @@
           "folia"
         ],
         "autor": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "osoba": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "inne": []
       },
@@ -15566,9 +16114,10 @@
         "6300478",
         "6300699"
       ],
-      "search_blob": "cornflakes peanuts honey cornflakes peanuts honey balls crispy folia krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300273.00 6300370.00 6300478.00 6300699.01 04.07.2023 6300370.00 gb de 06.02.2023 gb se fi dk de 000000.00 09.01.2023 6300273.00 gb ee lt lv ro 2025 10 30 6300699.01 gb de 27.01.2023 0000000.00 gb ar fr nl d folia 20.09.2024 6300478.00 gb ar d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 04.07.2023 6300370.00 gb de d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 06.02.2023 gb se fi dk de 000000.00 d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 09.01.2023 6300273.00 gb ee lt lv ro d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 2025 10 30 6300699.01 gb de d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 27.01.2023 0000000.00 gb ar fr nl d d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy folia 20.09.2024 6300478.00 gb ar 6300370.00 000000.00 6300273.00 6300699.01 0000000.00 6300478.00 cornflakes peanuts honey folia krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300273.00 6300370.00 6300478.00 6300699.01",
+      "search_blob": "cornflakes peanuts honey cornflakes peanuts honey balls crispy folia krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 000000.00 0000000.00 6300273.00 6300370.00 6300478.00 6300699.01 04.07.2023 6300370.00 gb de 06.02.2023 gb se fi dk de 000000.00 09.01.2023 6300273.00 gb ee lt lv ro 2025 10 30 6300699.01 gb de 27.01.2023 0000000.00 gb ar fr nl d folia 20.09.2024 6300478.00 gb ar d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 04.07.2023 6300370.00 gb de d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 06.02.2023 gb se fi dk de 000000.00 d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 09.01.2023 6300273.00 gb ee lt lv ro d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 2025 10 30 6300699.01 gb de d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy 27.01.2023 0000000.00 gb ar fr nl d d marketing eksport 01 products gc 02 balls cornflakes peanuts honey balls crispy folia 20.09.2024 6300478.00 gb ar 6300370.00 000000.00 6300273.00 6300699.01 0000000.00 6300478.00 cornflakes peanuts honey folia krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 000000.00 0000000.00 6300273.00 6300370.00 6300478.00 6300699.01",
       "authors": [
-        "Krzysztof"
+        "Krzysztof",
+        "Szymon"
       ]
     },
     {
@@ -15589,10 +16138,10 @@
           "doypack"
         ],
         "autor": [
-          "Krzysztof"
+          "Szymon"
         ],
         "osoba": [
-          "Krzysztof"
+          "Szymon"
         ],
         "inne": []
       },
@@ -15612,9 +16161,9 @@
         "6300488",
         "6300542"
       ],
-      "search_blob": "date cherry date cherry balls raw dates doypack krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300378.00 6300445.00 6300488.00 6300542.00 02.02.2024 6300445.00 gb ee lt lv ro 06.02.2023 gb se fi dk de 000000.00 15.01.2025 6300542.00 gb ee lt lv ro 27.01.2023 0000000.00 gb ar fr nl 29.11.2023 gb cz sk hu hr 6300378.00 gb cz sk hu hr doy 20.09.2024 6300488.00 gb ar d marketing eksport 01 products gc 02 balls date cherry balls raw 02.02.2024 6300445.00 gb ee lt lv ro d marketing eksport 01 products gc 02 balls date cherry balls raw 06.02.2023 gb se fi dk de 000000.00 d marketing eksport 01 products gc 02 balls date cherry balls raw 15.01.2025 6300542.00 gb ee lt lv ro d marketing eksport 01 products gc 02 balls date cherry balls raw 27.01.2023 0000000.00 gb ar fr nl d marketing eksport 01 products gc 02 balls date cherry balls raw 29.11.2023 gb cz sk hu hr 6300378.00 gb cz sk hu hr d marketing eksport 01 products gc 02 balls date cherry balls raw doy 20.09.2024 6300488.00 gb ar 6300445.00 000000.00 6300542.00 0000000.00 6300378.00 6300488.00 date cherry dates doypack krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300378.00 6300445.00 6300488.00 6300542.00",
+      "search_blob": "date cherry date cherry balls raw dates doypack szymon szymon ryngwelski szymon ryngwelski 000000.00 0000000.00 6300378.00 6300445.00 6300488.00 6300542.00 02.02.2024 6300445.00 gb ee lt lv ro 06.02.2023 gb se fi dk de 000000.00 15.01.2025 6300542.00 gb ee lt lv ro 27.01.2023 0000000.00 gb ar fr nl 29.11.2023 gb cz sk hu hr 6300378.00 gb cz sk hu hr doy 20.09.2024 6300488.00 gb ar d marketing eksport 01 products gc 02 balls date cherry balls raw 02.02.2024 6300445.00 gb ee lt lv ro d marketing eksport 01 products gc 02 balls date cherry balls raw 06.02.2023 gb se fi dk de 000000.00 d marketing eksport 01 products gc 02 balls date cherry balls raw 15.01.2025 6300542.00 gb ee lt lv ro d marketing eksport 01 products gc 02 balls date cherry balls raw 27.01.2023 0000000.00 gb ar fr nl d marketing eksport 01 products gc 02 balls date cherry balls raw 29.11.2023 gb cz sk hu hr 6300378.00 gb cz sk hu hr d marketing eksport 01 products gc 02 balls date cherry balls raw doy 20.09.2024 6300488.00 gb ar 6300445.00 000000.00 6300542.00 0000000.00 6300378.00 6300488.00 date cherry dates doypack szymon szymon ryngwelski szymon ryngwelski 000000.00 0000000.00 6300378.00 6300445.00 6300488.00 6300542.00",
       "authors": [
-        "Krzysztof"
+        "Szymon"
       ]
     },
     {
@@ -15721,10 +16270,12 @@
           "folia"
         ],
         "autor": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "osoba": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "inne": []
       },
@@ -15746,9 +16297,10 @@
         "6300701",
         "630369"
       ],
-      "search_blob": "oats chocolate oats chocolate balls crispy doypack folia krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300272.00 6300443.00 6300477.00 6300701.00 630369.00 doy 05.07.2024 6300701 fol 04.07.2023 gb de 630369 2 .00 fol 04.07.2023 gb de 630369.00 fol 06.02.2023 gb se fi dk de 000000.00 fol 09.01.2023 6300272.00 gb ee lt lv ro fol 16.02.2024 6300443.00 gb cz sk hu hr fol 20.09.2024 6300477.00 gb ar 2 fol 27.01.2023 0000000.00 gb ar fr nl d marketing eksport 01 products gc 02 balls oats chocolate balls crispy doy 05.07.2024 6300701 d marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 04.07.2023 gb de 630369 2 .00 d marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 04.07.2023 gb de 630369.00 d marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 06.02.2023 gb se fi dk de 000000.00 d marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 09.01.2023 6300272.00 gb ee lt lv ro d marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 16.02.2024 6300443.00 gb cz sk hu hr d marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 20.09.2024 6300477.00 gb ar 2 d marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 27.01.2023 0000000.00 gb ar fr nl 6300701.00 630369.00 630369.00 000000.00 6300272.00 6300443.00 6300477.00 0000000.00 oats chocolate doypack folia krzysztof krzysztof wieczorek krzysztof wieczorek 000000.00 0000000.00 6300272.00 6300443.00 6300477.00 6300701.00 630369.00",
+      "search_blob": "oats chocolate oats chocolate balls crispy doypack folia krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 000000.00 0000000.00 6300272.00 6300443.00 6300477.00 6300701.00 630369.00 doy 05.07.2024 6300701 fol 04.07.2023 gb de 630369 2 .00 fol 04.07.2023 gb de 630369.00 fol 06.02.2023 gb se fi dk de 000000.00 fol 09.01.2023 6300272.00 gb ee lt lv ro fol 16.02.2024 6300443.00 gb cz sk hu hr fol 20.09.2024 6300477.00 gb ar 2 fol 27.01.2023 0000000.00 gb ar fr nl d marketing eksport 01 products gc 02 balls oats chocolate balls crispy doy 05.07.2024 6300701 d marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 04.07.2023 gb de 630369 2 .00 d marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 04.07.2023 gb de 630369.00 d marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 06.02.2023 gb se fi dk de 000000.00 d marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 09.01.2023 6300272.00 gb ee lt lv ro d marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 16.02.2024 6300443.00 gb cz sk hu hr d marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 20.09.2024 6300477.00 gb ar 2 d marketing eksport 01 products gc 02 balls oats chocolate balls crispy fol 27.01.2023 0000000.00 gb ar fr nl 6300701.00 630369.00 630369.00 000000.00 6300272.00 6300443.00 6300477.00 0000000.00 oats chocolate doypack folia krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 000000.00 0000000.00 6300272.00 6300443.00 6300477.00 6300701.00 630369.00",
       "authors": [
-        "Krzysztof"
+        "Krzysztof",
+        "Szymon"
       ]
     },
     {
@@ -16003,8 +16555,12 @@
         "opakowanie": [
           "rekaw"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Szymon"
+        ],
+        "osoba": [
+          "Szymon"
+        ],
         "inne": []
       },
       "indexes": [
@@ -16017,8 +16573,10 @@
         "6300356",
         "6300531"
       ],
-      "search_blob": "gyros pea gyros pea plant based gyros rekaw 6300346.00 6300356.00 6300531.00 sleeve 03.06.2024 6300356.00 cz sleeve 04.09.2026 6300531 cz sk sleeve 22.12.2023 6300346.00 d marketing eksport 01 products gc 03 plant based gyros pea plant based sleeve 03.06.2024 6300356.00 cz d marketing eksport 01 products gc 03 plant based gyros pea plant based sleeve 04.09.2026 6300531 cz sk d marketing eksport 01 products gc 03 plant based gyros pea plant based sleeve 22.12.2023 6300346.00 6300356.00 6300531.00 6300346.00 gyros pea gyros rekaw 6300346.00 6300356.00 6300531.00",
-      "authors": []
+      "search_blob": "gyros pea gyros pea plant based gyros rekaw szymon szymon ryngwelski szymon ryngwelski 6300346.00 6300356.00 6300531.00 sleeve 03.06.2024 6300356.00 cz sleeve 04.09.2026 6300531 cz sk sleeve 22.12.2023 6300346.00 d marketing eksport 01 products gc 03 plant based gyros pea plant based sleeve 03.06.2024 6300356.00 cz d marketing eksport 01 products gc 03 plant based gyros pea plant based sleeve 04.09.2026 6300531 cz sk d marketing eksport 01 products gc 03 plant based gyros pea plant based sleeve 22.12.2023 6300346.00 6300356.00 6300531.00 6300346.00 gyros pea gyros rekaw szymon szymon ryngwelski szymon ryngwelski 6300346.00 6300356.00 6300531.00",
+      "authors": [
+        "Szymon"
+      ]
     },
     {
       "id": "gyros-wheat-plant-based",
@@ -16070,8 +16628,12 @@
         "opakowanie": [
           "rekaw"
         ],
-        "autor": [],
-        "osoba": [],
+        "autor": [
+          "Sylwia"
+        ],
+        "osoba": [
+          "Sylwia"
+        ],
         "inne": []
       },
       "indexes": [
@@ -16089,8 +16651,10 @@
         "6300476",
         "6300656"
       ],
-      "search_blob": "minced minced plant based rekaw 000164.00 6300298.00 6300361.00 6300476.00 6300656.00 6300656.01 sleeve 01.07.2026 6300656.01 sleeve 05.06.2024 6300476.00 sleeve 13.01.2023 6300298.00 sleeve 21.12.2022 kar000164.00 sleeve 27.10.2023 6300361.00 sleeve 29.05.2025 6300656.00 d marketing eksport 01 products gc 03 plant based minced plant based sleeve 01.07.2026 6300656.01 d marketing eksport 01 products gc 03 plant based minced plant based sleeve 05.06.2024 6300476.00 d marketing eksport 01 products gc 03 plant based minced plant based sleeve 13.01.2023 6300298.00 d marketing eksport 01 products gc 03 plant based minced plant based sleeve 21.12.2022 kar000164.00 d marketing eksport 01 products gc 03 plant based minced plant based sleeve 27.10.2023 6300361.00 d marketing eksport 01 products gc 03 plant based minced plant based sleeve 29.05.2025 6300656.00 6300656.01 6300476.00 6300298.00 000164.00 6300361.00 6300656.00 minced rekaw 000164.00 6300298.00 6300361.00 6300476.00 6300656.00 6300656.01",
-      "authors": []
+      "search_blob": "minced minced plant based rekaw sylwia sylwia zarychta sylwia zarychta 000164.00 6300298.00 6300361.00 6300476.00 6300656.00 6300656.01 sleeve 01.07.2026 6300656.01 sleeve 05.06.2024 6300476.00 sleeve 13.01.2023 6300298.00 sleeve 21.12.2022 kar000164.00 sleeve 27.10.2023 6300361.00 sleeve 29.05.2025 6300656.00 d marketing eksport 01 products gc 03 plant based minced plant based sleeve 01.07.2026 6300656.01 d marketing eksport 01 products gc 03 plant based minced plant based sleeve 05.06.2024 6300476.00 d marketing eksport 01 products gc 03 plant based minced plant based sleeve 13.01.2023 6300298.00 d marketing eksport 01 products gc 03 plant based minced plant based sleeve 21.12.2022 kar000164.00 d marketing eksport 01 products gc 03 plant based minced plant based sleeve 27.10.2023 6300361.00 d marketing eksport 01 products gc 03 plant based minced plant based sleeve 29.05.2025 6300656.00 6300656.01 6300476.00 6300298.00 000164.00 6300361.00 6300656.00 minced rekaw sylwia sylwia zarychta sylwia zarychta 000164.00 6300298.00 6300361.00 6300476.00 6300656.00 6300656.01",
+      "authors": [
+        "Sylwia"
+      ]
     },
     {
       "id": "nuggets-plant-based",
@@ -16110,10 +16674,12 @@
           "rekaw"
         ],
         "autor": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "osoba": [
-          "Krzysztof"
+          "Krzysztof",
+          "Szymon"
         ],
         "inne": []
       },
@@ -16129,9 +16695,10 @@
         "6300674",
         "6300771"
       ],
-      "search_blob": "nuggets nuggets plant based nuggets rekaw krzysztof krzysztof wieczorek krzysztof wieczorek 6300610.01 6300650.00 6300674.00 6300771.00 nuggets xxl 08.05.2025 6300650.00 sleeve cz sk 16.01.2025 6300610.01 sleeve cz sk 6300674 sleeve de 19.06.2025 6300771 d marketing eksport 01 products gc 03 plant based nuggets plant based nuggets xxl 08.05.2025 6300650.00 d marketing eksport 01 products gc 03 plant based nuggets plant based sleeve cz sk 16.01.2025 6300610.01 d marketing eksport 01 products gc 03 plant based nuggets plant based sleeve cz sk 6300674 d marketing eksport 01 products gc 03 plant based nuggets plant based sleeve de 19.06.2025 6300771 6300650.00 6300610.01 6300674.00 6300771.00 nuggets nuggets rekaw krzysztof krzysztof wieczorek krzysztof wieczorek 6300610.01 6300650.00 6300674.00 6300771.00",
+      "search_blob": "nuggets nuggets plant based nuggets rekaw krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300610.01 6300650.00 6300674.00 6300771.00 nuggets xxl 08.05.2025 6300650.00 sleeve cz sk 16.01.2025 6300610.01 sleeve cz sk 6300674 sleeve de 19.06.2025 6300771 d marketing eksport 01 products gc 03 plant based nuggets plant based nuggets xxl 08.05.2025 6300650.00 d marketing eksport 01 products gc 03 plant based nuggets plant based sleeve cz sk 16.01.2025 6300610.01 d marketing eksport 01 products gc 03 plant based nuggets plant based sleeve cz sk 6300674 d marketing eksport 01 products gc 03 plant based nuggets plant based sleeve de 19.06.2025 6300771 6300650.00 6300610.01 6300674.00 6300771.00 nuggets nuggets rekaw krzysztof krzysztof wieczorek krzysztof wieczorek szymon szymon ryngwelski szymon ryngwelski 6300610.01 6300650.00 6300674.00 6300771.00",
       "authors": [
-        "Krzysztof"
+        "Krzysztof",
+        "Szymon"
       ]
     },
     {
@@ -16657,6 +17224,7 @@
     "749x225": [],
     "1067x461": [],
     "1055x408": [],
-    "1208x481": []
+    "1208x481": [],
+    "12x2": []
   }
 }

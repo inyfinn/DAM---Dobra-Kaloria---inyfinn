@@ -50508,6 +50508,1617 @@
       ],
       "drift_count": 279,
       "product_id_filter": ""
+    },
+    {
+      "id": "lc_1789263327011",
+      "ts": "2026-09-13T01:35:27.011337+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "lifecycle_pull_from_disk",
+      "drifts": [
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - 12X XMAS — [ mixy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:32:27+00:00",
+          "in_archive": false,
+          "product_id": "mix-12x-xmas-mixy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - 6X MINI BATONIKI — [ mixy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:32:27+00:00",
+          "in_archive": false,
+          "product_id": "mix-6x-mini-batoniki-mixy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - BOMBONIERKA 11 SZT MINI — [ mixy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-17T14:15:10+00:00",
+          "in_archive": false,
+          "product_id": "mix-bombonierka-11-szt-mini-mixy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - KALENDARZ ADWENTOWY — [ mixy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-29T05:07:17+00:00",
+          "in_archive": false,
+          "product_id": "mix-kalendarz-adwentowy-mixy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - KALENDARZ ADWENTOWY — [ mixy ]\\29.04.2026 - 6300779",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": null,
+          "disk_mtime": "2026-09-03T10:11:41.042512+00:00",
+          "in_archive": false,
+          "product_id": "mix-kalendarz-adwentowy-mixy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300779.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - TUBA 30 SZT XMAS — [ mixy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-08-03T11:16:19+00:00",
+          "in_archive": false,
+          "product_id": "mix-tuba-30-szt-xmas-mixy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - TUBA 30 SZT XMAS — [ mixy ]\\TUBA MINI - DUŻO DOBRA - 07.07.2026 - 6300793.00",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": null,
+          "disk_mtime": "2026-07-07T08:36:19+00:00",
+          "in_archive": false,
+          "product_id": "mix-tuba-30-szt-xmas-mixy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300793.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - ZESTAW 15X MINI BATONIKI — [ mixy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:32:27+00:00",
+          "in_archive": false,
+          "product_id": "mix-zestaw-15x-mini-batoniki-mixy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - ZESTAW MAKOWIEC X ROGAL X PIERNIK — [ mixy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:14:26+00:00",
+          "in_archive": false,
+          "product_id": "mix-zestaw-makowiec-x-rogal-x-piernik-mixy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - ZESTAW MIX CIAST 1 — [ mixy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:14:27+00:00",
+          "in_archive": false,
+          "product_id": "mix-zestaw-mix-ciast-1-mixy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - ZESTAW MIX CIAST 2 — [ mixy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-11T06:42:09+00:00",
+          "in_archive": false,
+          "product_id": "mix-zestaw-mix-ciast-2-mixy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX- Funkcjonalny - 3x batony_duzy",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-09-03T10:19:23.324090+00:00",
+          "in_archive": false,
+          "product_id": "mix-funkcjonalny-3x-batony-duzy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX- Funkcjonalny - 3x batony_duzy\\DK_karton_funkc_szkic1_2026_08_16_6300813_Folder",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": null,
+          "disk_mtime": "2026-09-03T10:39:07.304141+00:00",
+          "in_archive": false,
+          "product_id": "mix-funkcjonalny-3x-batony-duzy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300813.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX- Funkcjonalny - 3x batony_duzy\\KAR6X - 21 08 2026 - 6300813",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": null,
+          "disk_mtime": "2026-09-03T10:39:08.612081+00:00",
+          "in_archive": false,
+          "product_id": "mix-funkcjonalny-3x-batony-duzy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300813.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\BABKA CYTRYNOWA — [ nerkowcowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-17T14:15:11+00:00",
+          "in_archive": false,
+          "product_id": "babka-cytrynowa-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CHRUPIĄCY ORZECH — [ daktylowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-30T02:09:38+00:00",
+          "in_archive": false,
+          "product_id": "chrupiacy-orzech-daktylowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO MARCHEWKOWE — [ nerkowcowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:32:27+00:00",
+          "in_archive": false,
+          "product_id": "ciasto-marchewkowe-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO PORZECZKOWE — [ nerkowcowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:32:27+00:00",
+          "in_archive": false,
+          "product_id": "ciasto-porzeczkowe-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO ŚLIWKOWE — [ nerkowcowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-21T12:10:20+00:00",
+          "in_archive": false,
+          "product_id": "ciasto-sliwkowe-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-28T23:28:27.110111+00:00",
+          "disk_mtime": "2026-06-22T14:21:25+00:00",
+          "in_archive": false,
+          "product_id": "cynamonka-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CZEKOLADA BANAN — [ orzechowe ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:14:27+00:00",
+          "in_archive": false,
+          "product_id": "czekolada-banan-orzechowe",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\DLA SERCA— [ funkcjonalny ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:32:27+00:00",
+          "in_archive": false,
+          "product_id": "dla-serca-funkcjonalny",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\ENERGIA — [ funkcjonalny ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-09-03T10:11:37.274307+00:00",
+          "in_archive": false,
+          "product_id": "energia-funkcjonalny",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\ENERGIA — [ funkcjonalny ]\\Baton_45g - 31.07.2026 - 6300584",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": null,
+          "disk_mtime": "2026-09-03T10:11:47.822540+00:00",
+          "in_archive": false,
+          "product_id": "energia-funkcjonalny",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300584.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\ENERGIA — [ funkcjonalny ]\\KAR6X - 2026-08-18 - 6300817",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": null,
+          "disk_mtime": "2026-09-03T10:19:37.090205+00:00",
+          "in_archive": false,
+          "product_id": "energia-funkcjonalny",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300817.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\JABŁKO CYNAMON — [ daktylowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-09-04T12:13:00.288683+00:00",
+          "in_archive": false,
+          "product_id": "jab-ko-cynamon-daktylowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\JABŁKO CYNAMON — [ daktylowy ]\\BAT - 35 g - 15.05.2026 – 6300763 - PL UA",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "disk_mtime": "2026-09-04T12:13:39.274426+00:00",
+          "in_archive": false,
+          "product_id": "jab-ko-cynamon-daktylowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300763.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\KAKAO ORZECH — [ daktylowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:14:27+00:00",
+          "in_archive": false,
+          "product_id": "kakao-orzech-daktylowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\KOKOS CZEKOLADA — [ daktylowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:32:27+00:00",
+          "in_archive": false,
+          "product_id": "kokos-czekolada-daktylowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\KOKOS POMARAŃCZA — [ daktylowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:14:27+00:00",
+          "in_archive": false,
+          "product_id": "kokos-pomarancza-daktylowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\KREM ORZECHOWY KARMEL — [ proteinowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-17T14:15:11+00:00",
+          "in_archive": false,
+          "product_id": "krem-orzechowy-karmel-proteinowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\KREM ORZECHOWY SOL — [ proteinowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-17T14:15:11+00:00",
+          "in_archive": false,
+          "product_id": "krem-orzechowy-sol-proteinowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\KREM ORZECHOWY WANILIA — [ proteinowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-17T14:15:12+00:00",
+          "in_archive": false,
+          "product_id": "krem-orzechowy-wanilia-proteinowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\LATTE WANILIOWE — [ nerkowcowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:32:27+00:00",
+          "in_archive": false,
+          "product_id": "latte-waniliowe-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MAKOWIEC — [ nerkowcowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:32:27+00:00",
+          "in_archive": false,
+          "product_id": "makowiec-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MANGO LASSI — [ nerkowcowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-17T14:15:13+00:00",
+          "in_archive": false,
+          "product_id": "mango-lassi-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MATCHA LEMON — [ nerkowcowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:32:27+00:00",
+          "in_archive": false,
+          "product_id": "matcha-lemon-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\MUFFIN JAGODOWY — [ nerkowcowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-17T14:15:13+00:00",
+          "in_archive": false,
+          "product_id": "muffin-jagodowy-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\NERKOWCE BANAN — [ ziomki ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-17T14:15:13+00:00",
+          "in_archive": false,
+          "product_id": "nerkowce-banan-ziomki",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\NERKOWCE KAWA — [ daktylowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:14:28+00:00",
+          "in_archive": false,
+          "product_id": "nerkowce-kawa-daktylowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\NERKOWCE KOKOS — [ daktylowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-30T02:13:59+00:00",
+          "in_archive": false,
+          "product_id": "nerkowce-kokos-daktylowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\NERKOWCE MANGO — [ ziomki ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-17T14:15:14+00:00",
+          "in_archive": false,
+          "product_id": "nerkowce-mango-ziomki",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\ODPORNOŚĆ — [ funkcjonalny ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-17T14:15:14+00:00",
+          "in_archive": false,
+          "product_id": "odpornosc-funkcjonalny",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\ORZECH CZEKOLADA — [ daktylowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:32:27+00:00",
+          "in_archive": false,
+          "product_id": "orzech-czekolada-daktylowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\ORZECH LASKOWY MIGDAŁ — [ orzechowe ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:14:28+00:00",
+          "in_archive": false,
+          "product_id": "orzech-laskowy-migda-orzechowe",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\ORZECH LASKOWY — [ daktylowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:32:27+00:00",
+          "in_archive": false,
+          "product_id": "orzech-laskowy-daktylowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\OWIES CZEKOLADA — [ sniadaniowe ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:14:28+00:00",
+          "in_archive": false,
+          "product_id": "owies-czekolada-sniadaniowe",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\OWIES MIOD — [ sniadaniowe ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:14:28+00:00",
+          "in_archive": false,
+          "product_id": "owies-miod-sniadaniowe",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PIERNIK KORZENNY — [ nerkowcowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:32:27+00:00",
+          "in_archive": false,
+          "product_id": "piernik-korzenny-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PINA COLADA — [ nerkowcowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:32:27+00:00",
+          "in_archive": false,
+          "product_id": "pina-colada-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PREBIOTYK — [ funkcjonalny ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-09-03T10:11:37.274307+00:00",
+          "in_archive": false,
+          "product_id": "prebiotyk-funkcjonalny",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PREBIOTYK — [ funkcjonalny ]\\KAR6x – 13.08.2026 - 6300815",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": null,
+          "disk_mtime": "2026-09-03T10:19:25.633986+00:00",
+          "in_archive": false,
+          "product_id": "prebiotyk-funkcjonalny",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300815.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PROTEINA BANOFFEE — [ IG ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:32:27+00:00",
+          "in_archive": false,
+          "product_id": "proteina-banoffee-ig",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PROTEINA KARMEL Z MCT — [ IG ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-08T09:32:29+00:00",
+          "in_archive": false,
+          "product_id": "proteina-karmel-z-mct-ig",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PROTEINA LEMON CHEESECAKE — [ IG ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:32:27+00:00",
+          "in_archive": false,
+          "product_id": "proteina-lemon-cheesecake-ig",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PUMPKIN SPICE LATTE — [ nerkowcowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:32:27+00:00",
+          "in_archive": false,
+          "product_id": "pumpkin-spice-latte-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PĄCZEK RÓŻANY — [ nerkowcowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:32:27+00:00",
+          "in_archive": false,
+          "product_id": "paczek-rozany-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\ROGAL POZNAŃSKI — [ nerkowcowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:32:27+00:00",
+          "in_archive": false,
+          "product_id": "rogal-poznanski-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\SERCE — [ funkcjonalny ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-16T11:04:21+00:00",
+          "in_archive": false,
+          "product_id": "serce-funkcjonalny",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\SERNIK CYTRYNOWY — [ nerkowcowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:32:27+00:00",
+          "in_archive": false,
+          "product_id": "sernik-cytrynowy-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\SERNIK WANILIOWY — [ nerkowcowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-17T14:15:14+00:00",
+          "in_archive": false,
+          "product_id": "sernik-waniliowy-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\SOLONY ORZECH — [ daktylowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:14:30+00:00",
+          "in_archive": false,
+          "product_id": "solony-orzech-daktylowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\STARTER PACK — [ funkcjonalny ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:14:30+00:00",
+          "in_archive": false,
+          "product_id": "starter-pack-funkcjonalny",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\SZARLOTKA CYNAMON — [ nerkowcowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-17T14:15:14+00:00",
+          "in_archive": false,
+          "product_id": "szarlotka-cynamon-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TARTA MALINOWA — [ nerkowcowy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-17T14:15:14+00:00",
+          "in_archive": false,
+          "product_id": "tarta-malinowa-nerkowcowy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\PROTEINA - KARMEL MCT — [ funkcjonalny ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-16T11:03:52+00:00",
+          "in_archive": true,
+          "product_id": "proteina-karmel-mct-funkcjonalny",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\BANOFFEE KAKAO — [ deserowe ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-05-07T13:14:30+00:00",
+          "in_archive": false,
+          "product_id": "banoffee-kakao-deserowe",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\CZARNA PORZECZKA — [ owocowe ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-16T11:40:44+00:00",
+          "in_archive": false,
+          "product_id": "czarna-porzeczka-owocowe",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\CZARNA PORZECZKA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300726.00",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": null,
+          "disk_mtime": "2026-09-03T10:11:47.822540+00:00",
+          "in_archive": false,
+          "product_id": "czarna-porzeczka-owocowe",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300726.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\DAKTYL LIMONKA — [ raw ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-17T14:15:15+00:00",
+          "in_archive": false,
+          "product_id": "daktyl-limonka-raw",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\DAKTYL POMARAŃCZA — [ raw ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-17T14:15:15+00:00",
+          "in_archive": false,
+          "product_id": "daktyl-pomarancza-raw",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\DAKTYL WIŚNIA — [ raw ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-08-04T07:47:03+00:00",
+          "in_archive": false,
+          "product_id": "daktyl-wisnia-raw",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\DAKTYL WIŚNIA — [ raw ]\\DOY - 01.02.2024 - 6300449",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-18T22:13:18.708094+00:00",
+          "disk_mtime": "2026-05-18T06:41:43+00:00",
+          "in_archive": false,
+          "product_id": "daktyl-wisnia-raw",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300449.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\DAKTYL WIŚNIA — [ raw ]\\DOY - 15.05.2026 - 6300758 - F",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-07-19T01:27:16.938489+00:00",
+          "disk_mtime": "2026-08-05T09:44:46+00:00",
+          "in_archive": false,
+          "product_id": "daktyl-wisnia-raw",
+          "disk_letter": "F",
+          "disk_status": "aktualne",
+          "revision_index": "6300758.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\FIGA Z MAKIEM — [ owocowe ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-09-04T12:13:00.288683+00:00",
+          "in_archive": false,
+          "product_id": "figa-z-makiem-owocowe",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\FIGA Z MAKIEM — [ owocowe ]\\doy_65g_2026_08_31 - 6300808",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": null,
+          "disk_mtime": "2026-09-04T12:13:00.422292+00:00",
+          "in_archive": false,
+          "product_id": "figa-z-makiem-owocowe",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300808.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\FIGA Z MAKIEM — [ owocowe ]\\SZABLONY FODERÓW",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": null,
+          "disk_mtime": "2026-09-04T12:13:38.214438+00:00",
+          "in_archive": false,
+          "product_id": "figa-z-makiem-owocowe",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KOKOS ANANAS — [ ziomki ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-17T14:15:15+00:00",
+          "in_archive": false,
+          "product_id": "kokos-ananas-ziomki",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KOKOS TRUSKAWKA — [ ziomki ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-07-17T14:15:15+00:00",
+          "in_archive": false,
+          "product_id": "kokos-truskawka-ziomki",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-10T11:17:43.404539+00:00",
+          "disk_mtime": "2026-09-04T09:24:02.252640+00:00",
+          "in_archive": false,
+          "product_id": "kulki-z-kreatyna-kreatyna",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        }
+      ],
+      "drift_count": 277,
+      "product_id_filter": ""
+    },
+    {
+      "id": "lc_1789551798798",
+      "ts": "2026-09-16T09:43:18.798085+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "lifecycle_pull_from_disk",
+      "drifts": [
+        {
+          "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - TUBA 30 SZT — [ mixy ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": null,
+          "disk_mtime": "2026-08-03T11:16:18.848558+00:00",
+          "in_archive": false,
+          "product_id": "mix-tuba-30-szt-mixy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - TUBA 30 SZT — [ mixy ]\\TUBA MINI - 28.02.2026 - 6300XXX.00",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": null,
+          "disk_mtime": "2026-09-02T12:14:59.531500+00:00",
+          "in_archive": false,
+          "product_id": "mix-tuba-30-szt-mixy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - TUBA 30 SZT — [ mixy ]\\TUBA MINI - DUŻO DOBRA - 07.07.2026 - 6300793.00",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": null,
+          "disk_mtime": "2026-09-15T14:13:28.213193+00:00",
+          "in_archive": false,
+          "product_id": "mix-tuba-30-szt-mixy",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "6300793.00",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        }
+      ],
+      "drift_count": 3,
+      "product_id_filter": ""
+    },
+    {
+      "id": "lc_1789551854859",
+      "ts": "2026-09-16T09:44:14.859203+00:00",
+      "ops": [
+        {
+          "op": "rename",
+          "to": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+          "from": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+          "kind": "variant",
+          "new_name": "KULKI Z KREATYNĄ — [ kreatyna ] - D",
+          "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+          "previous_name": "KULKI Z KREATYNĄ — [ kreatyna ]",
+          "previous_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]"
+        }
+      ],
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "D",
+      "status": "demo",
+      "product_id": "kulki-z-kreatyna-kreatyna",
+      "product_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+      "revision_index": ""
+    },
+    {
+      "id": "lc_1789551897061",
+      "ts": "2026-09-16T09:44:57.061349+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "lifecycle_pull_from_disk",
+      "drifts": [
+        {
+          "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": null,
+          "disk_mtime": "2026-09-16T09:12:19.442513+00:00",
+          "in_archive": false,
+          "product_id": "kulki-z-kreatyna-kreatyna-d",
+          "disk_letter": "D",
+          "disk_status": "demo",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D\\DOY - 65 g - 16.09.2026 - 6300XXX",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": null,
+          "disk_mtime": "2026-09-04T10:03:22+00:00",
+          "in_archive": false,
+          "product_id": "kulki-z-kreatyna-kreatyna-d",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        }
+      ],
+      "drift_count": 2,
+      "product_id_filter": ""
+    },
+    {
+      "id": "lc_1789551898267",
+      "ts": "2026-09-16T09:44:58.267007+00:00",
+      "ops": [
+        {
+          "op": "rename",
+          "to": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D\\DOY - 65 g - 16.09.2026 - 6300XXX - D",
+          "from": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D\\DOY - 65 g - 16.09.2026 - 6300XXX",
+          "kind": "variant_cascade",
+          "new_name": "DOY - 65 g - 16.09.2026 - 6300XXX - D",
+          "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D\\DOY - 65 g - 16.09.2026 - 6300XXX - D",
+          "previous_name": "DOY - 65 g - 16.09.2026 - 6300XXX",
+          "previous_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D\\DOY - 65 g - 16.09.2026 - 6300XXX"
+        }
+      ],
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "product",
+      "action": "lifecycle_status",
+      "letter": "D",
+      "status": "demo",
+      "product_id": "kulki-z-kreatyna-kreatyna",
+      "product_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+      "revision_index": ""
+    },
+    {
+      "id": "lc_1789551899800",
+      "ts": "2026-09-16T09:44:59.800128+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "lifecycle_pull_from_disk",
+      "drifts": [
+        {
+          "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D\\DOY - 65 g - 16.09.2026 - 6300XXX - D",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-16T09:44:56.895421+00:00",
+          "disk_mtime": "2026-09-04T10:03:22+00:00",
+          "in_archive": false,
+          "product_id": "kulki-z-kreatyna-kreatyna-d",
+          "disk_letter": "D",
+          "disk_status": "demo",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        }
+      ],
+      "drift_count": 1,
+      "product_id_filter": ""
+    },
+    {
+      "id": "lc_1789551904738",
+      "ts": "2026-09-16T09:45:04.738429+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "lifecycle_pull_from_disk",
+      "drifts": [
+        {
+          "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D\\DOY - 65 g - 16.09.2026 - 6300XXX - D",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": null,
+          "disk_mtime": "2026-09-04T10:03:22+00:00",
+          "in_archive": false,
+          "product_id": "kulki-z-kreatyna-kreatyna-d",
+          "disk_letter": "D",
+          "disk_status": "demo",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        }
+      ],
+      "drift_count": 1,
+      "product_id_filter": ""
+    },
+    {
+      "id": "lc_1789551905740",
+      "ts": "2026-09-16T09:45:05.740507+00:00",
+      "ops": [
+        {
+          "op": "rename",
+          "to": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+          "from": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+          "kind": "variant",
+          "new_name": "KULKI Z KREATYNĄ — [ kreatyna ]",
+          "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+          "previous_name": "KULKI Z KREATYNĄ — [ kreatyna ] - D",
+          "previous_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D"
+        }
+      ],
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": null,
+      "status": "clear",
+      "product_id": "kulki-z-kreatyna-kreatyna",
+      "product_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+      "revision_index": ""
+    },
+    {
+      "id": "lc_1789551910743",
+      "ts": "2026-09-16T09:45:10.743096+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "lifecycle_pull_from_disk",
+      "drifts": [
+        {
+          "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-16T09:44:56.895421+00:00",
+          "disk_mtime": "2026-09-16T09:44:58.245988+00:00",
+          "in_archive": false,
+          "product_id": "kulki-z-kreatyna-kreatyna-d",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": "D",
+          "previous_status": "demo",
+          "needs_archive_move": false
+        }
+      ],
+      "drift_count": 1,
+      "product_id_filter": ""
+    },
+    {
+      "id": "lc_1789551911867",
+      "ts": "2026-09-16T09:45:11.867249+00:00",
+      "ops": [
+        {
+          "op": "rename",
+          "to": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]\\DOY - 65 g - 16.09.2026 - 6300XXX",
+          "from": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]\\DOY - 65 g - 16.09.2026 - 6300XXX - D",
+          "kind": "variant_cascade",
+          "new_name": "DOY - 65 g - 16.09.2026 - 6300XXX",
+          "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]\\DOY - 65 g - 16.09.2026 - 6300XXX",
+          "previous_name": "DOY - 65 g - 16.09.2026 - 6300XXX - D",
+          "previous_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]\\DOY - 65 g - 16.09.2026 - 6300XXX - D"
+        },
+        {
+          "op": "rename",
+          "to": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+          "from": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+          "kind": "product",
+          "new_name": "KULKI Z KREATYNĄ — [ kreatyna ] - D",
+          "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+          "previous_name": "KULKI Z KREATYNĄ — [ kreatyna ]",
+          "previous_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]"
+        }
+      ],
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "product",
+      "action": "lifecycle_status",
+      "letter": null,
+      "status": "clear",
+      "product_id": "kulki-z-kreatyna-kreatyna",
+      "product_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+      "revision_index": ""
+    },
+    {
+      "id": "lc_1789551916504",
+      "ts": "2026-09-16T09:45:16.504567+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "lifecycle_pull_from_disk",
+      "drifts": [
+        {
+          "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-16T09:45:10.671528+00:00",
+          "disk_mtime": "2026-09-16T09:45:11.816696+00:00",
+          "in_archive": false,
+          "product_id": "kulki-z-kreatyna-kreatyna-d",
+          "disk_letter": "D",
+          "disk_status": "demo",
+          "revision_index": "",
+          "previous_letter": null,
+          "previous_status": "clear",
+          "needs_archive_move": false
+        },
+        {
+          "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D\\DOY - 65 g - 16.09.2026 - 6300XXX",
+          "scope": "variant",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-16T09:44:59.705326+00:00",
+          "disk_mtime": "2026-09-04T10:03:22+00:00",
+          "in_archive": false,
+          "product_id": "kulki-z-kreatyna-kreatyna-d",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": "D",
+          "previous_status": "demo",
+          "needs_archive_move": false
+        }
+      ],
+      "drift_count": 2,
+      "product_id_filter": ""
+    },
+    {
+      "id": "lc_1789551917557",
+      "ts": "2026-09-16T09:45:17.557290+00:00",
+      "ops": [
+        {
+          "op": "rename",
+          "to": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+          "from": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+          "kind": "variant",
+          "new_name": "KULKI Z KREATYNĄ — [ kreatyna ]",
+          "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+          "previous_name": "KULKI Z KREATYNĄ — [ kreatyna ] - D",
+          "previous_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D"
+        }
+      ],
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": null,
+      "status": "clear",
+      "product_id": "kulki-z-kreatyna-kreatyna",
+      "product_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+      "revision_index": ""
+    },
+    {
+      "id": "lc_1789551921967",
+      "ts": "2026-09-16T09:45:21.967734+00:00",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "action": "lifecycle_pull_from_disk",
+      "drifts": [
+        {
+          "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+          "scope": "product",
+          "direction": "disk_to_program",
+          "applied_at": "2026-09-16T09:45:16.470028+00:00",
+          "disk_mtime": "2026-09-16T09:45:11.816696+00:00",
+          "in_archive": false,
+          "product_id": "kulki-z-kreatyna-kreatyna-d",
+          "disk_letter": null,
+          "disk_status": "clear",
+          "revision_index": "",
+          "previous_letter": "D",
+          "previous_status": "demo",
+          "needs_archive_move": false
+        }
+      ],
+      "drift_count": 1,
+      "product_id_filter": ""
+    },
+    {
+      "id": "lc_1789551923071",
+      "ts": "2026-09-16T09:45:23.071078+00:00",
+      "ops": [
+        {
+          "op": "rename",
+          "to": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+          "from": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+          "kind": "variant",
+          "new_name": "KULKI Z KREATYNĄ — [ kreatyna ] - D",
+          "new_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+          "previous_name": "KULKI Z KREATYNĄ — [ kreatyna ]",
+          "previous_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]"
+        }
+      ],
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+      "actor": "krzysztof.wieczorek@kubara.pl",
+      "notes": [],
+      "scope": "variant",
+      "action": "lifecycle_status",
+      "letter": "D",
+      "status": "demo",
+      "product_id": "kulki-z-kreatyna-kreatyna",
+      "product_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+      "revision_index": "curr"
     }
   ],
   "products": {
@@ -50973,6 +52584,16 @@
       "synced_by": "krzysztof.wieczorek@kubara.pl",
       "disk_mtime": "2026-05-07T13:14:33+00:00",
       "updated_at": "2026-09-10T11:17:43.404539+00:00",
+      "synced_from_disk": true
+    },
+    "mix-tuba-30-szt-mixy": {
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - TUBA 30 SZT — [ mixy ]",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-08-03T11:16:18.848558+00:00",
+      "updated_at": "2026-09-16T09:43:18.740530+00:00",
       "synced_from_disk": true
     },
     "owies-miod-sniadanie": {
@@ -51681,8 +53302,12 @@
       "source": "disk",
       "status": "clear",
       "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "applied_at": "2026-09-16T09:45:11.867249+00:00",
       "disk_mtime": "2026-09-09T08:47:17.248718+00:00",
       "updated_at": "2026-09-10T11:17:43.404539+00:00",
+      "updated_by": "krzysztof.wieczorek@kubara.pl",
+      "previous_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+      "previous_letter": null,
       "synced_from_disk": true
     },
     "mix-6x-mini-batoniki-mixy": {
@@ -51964,6 +53589,16 @@
       "synced_by": "krzysztof.wieczorek@kubara.pl",
       "disk_mtime": "2026-07-17T14:20:28.512368+00:00",
       "updated_at": "2026-09-10T11:17:43.404539+00:00",
+      "synced_from_disk": true
+    },
+    "kulki-z-kreatyna-kreatyna-d": {
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-16T09:45:11.816696+00:00",
+      "updated_at": "2026-09-16T09:45:21.900665+00:00",
       "synced_from_disk": true
     },
     "mct-caramel-bars-functional": {
@@ -56420,6 +58055,19 @@
       "updated_at": "2026-09-10T11:17:43.404539+00:00",
       "synced_from_disk": true
     },
+    "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]": {
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+      "letter": null,
+      "source": "program",
+      "status": "clear",
+      "applied_at": "2026-09-16T09:45:17.557290+00:00",
+      "product_id": "kulki-z-kreatyna-kreatyna",
+      "updated_at": "2026-09-16T09:45:17.557290+00:00",
+      "updated_by": "krzysztof.wieczorek@kubara.pl",
+      "previous_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+      "previous_letter": null,
+      "synced_from_product": true
+    },
     "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\SZNYCEL — [ niemięsne ]\\untitled folder": {
       "path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\SZNYCEL — [ niemięsne ]\\untitled folder",
       "letter": null,
@@ -56430,6 +58078,20 @@
       "product_id": "sznycel-niemiesne",
       "updated_at": "2026-08-04T06:43:13.500182+00:00",
       "synced_from_disk": true
+    },
+    "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D": {
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D",
+      "letter": "D",
+      "source": "program",
+      "status": "demo",
+      "applied_at": "2026-09-16T09:45:23.071078+00:00",
+      "product_id": "kulki-z-kreatyna-kreatyna",
+      "updated_at": "2026-09-16T09:45:23.071078+00:00",
+      "updated_by": "krzysztof.wieczorek@kubara.pl",
+      "previous_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]",
+      "revision_index": "curr",
+      "previous_letter": null,
+      "synced_from_product": true
     },
     "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\DAKTYL WIŚNIA — [ raw ]\\01.02.2024 - 6300449.00": {
       "path": "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\DAKTYL WIŚNIA — [ raw ]\\01.02.2024 - 6300449.00",
@@ -56462,6 +58124,17 @@
       "disk_mtime": "2026-07-17T14:13:40.239182+00:00",
       "product_id": "date-lime-balls-raw",
       "updated_at": "2026-08-04T06:43:13.500182+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE COCONUT — [ date ]\\0 - ARCHIVE": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE COCONUT — [ date ]\\0 - ARCHIVE",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:06.354760+00:00",
+      "product_id": "chocolate-coconut-date",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\ENERGIA — [ funkcjonalny ]\\08.12.2024 - 6300583.00": {
@@ -56583,6 +58256,17 @@
       "disk_mtime": "2026-07-16T11:21:33.780550+00:00",
       "product_id": "mango-lassi-nerkowcowy",
       "updated_at": "2026-08-04T06:43:13.500182+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\SZNYCEL — [ niemięsne ]\\untitled folder": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\SZNYCEL — [ niemięsne ]\\untitled folder",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-07-31T09:25:23+00:00",
+      "product_id": "sznycel-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "M:\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\NERKOWCE BANAN — [ ziomki ]\\27.06.2022 - FOL000103.00": {
@@ -56715,6 +58399,17 @@
       "disk_mtime": "2026-05-14T06:38:42.196603+00:00",
       "product_id": "bio-orkisz-sniadaniowe",
       "updated_at": "2026-08-04T06:43:13.500182+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\FIGA Z MAKIEM — [ owocowe ]\\SZABLONY FODERÓW": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\FIGA Z MAKIEM — [ owocowe ]\\SZABLONY FODERÓW",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-04T12:13:38.214438+00:00",
+      "product_id": "figa-z-makiem-owocowe",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "M:\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\3PACK OAT — [ bars_mix ]\\21.06.2024 - 6300518.00 - GB PL": {
@@ -57564,6 +59259,17 @@
       "disk_mtime": "2026-05-18T06:48:10+00:00",
       "product_id": "energia-funkcjonalny",
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\DAKTYL WIŚNIA — [ raw ]\\DOY - 01.02.2024 - 6300449": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\DAKTYL WIŚNIA — [ raw ]\\DOY - 01.02.2024 - 6300449",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-05-18T06:41:43+00:00",
+      "product_id": "daktyl-wisnia-raw",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\DAKTYL WIŚNIA — [ raw ]\\DOY - 15.05.2026 - 6300758": {
@@ -58833,6 +60539,17 @@
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\DAKTYL WIŚNIA — [ raw ]\\DOY - 15.05.2026 - 6300758 - F": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\DAKTYL WIŚNIA — [ raw ]\\DOY - 15.05.2026 - 6300758 - F",
+      "letter": "F",
+      "source": "disk",
+      "status": "aktualne",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-08-05T09:44:46+00:00",
+      "product_id": "daktyl-wisnia-raw",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\3PACK OAT — [ bars_mix ]\\21.06.2024 - 6300518.00 - GB PL": {
       "path": "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\3PACK OAT — [ bars_mix ]\\21.06.2024 - 6300518.00 - GB PL",
       "letter": null,
@@ -59284,6 +61001,28 @@
       "updated_at": "2026-08-04T06:43:13.500182+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\ENERGIA — [ funkcjonalny ]\\KAR6X - 2026-08-18 - 6300817": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\ENERGIA — [ funkcjonalny ]\\KAR6X - 2026-08-18 - 6300817",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:37.090205+00:00",
+      "product_id": "energia-funkcjonalny",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\FIGA Z MAKIEM — [ owocowe ]\\doy_65g_2026_08_31 - 6300808": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\FIGA Z MAKIEM — [ owocowe ]\\doy_65g_2026_08_31 - 6300808",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-04T12:13:00.422292+00:00",
+      "product_id": "figa-z-makiem-owocowe",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\07 - DATESY\\DK-DOY-DATESY - KARMEL 100 g\\DK-DOY-DATESY - KARMEL 100 g": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\07 - DATESY\\DK-DOY-DATESY - KARMEL 100 g\\DK-DOY-DATESY - KARMEL 100 g",
       "letter": null,
@@ -59656,6 +61395,28 @@
       "disk_mtime": "2026-07-16T11:49:59.660942+00:00",
       "product_id": "shot-funkcjonalny",
       "updated_at": "2026-08-04T06:43:13.500182+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\NUGGETS — [ niemięsne ]\\RĘKAW - 19.08.2026 - 6300807": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\NUGGETS — [ niemięsne ]\\RĘKAW - 19.08.2026 - 6300807",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:25.931517+00:00",
+      "product_id": "nuggets-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\SZNYCEL — [ niemięsne ]\\RĘKAW - 28.06.2026 - 6300798": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\SZNYCEL — [ niemięsne ]\\RĘKAW - 28.06.2026 - 6300798",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:11:49.485071+00:00",
+      "product_id": "sznycel-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\05 - NAPOJE\\ENERGIA — [ funkcjonalne ]\\ETY - DD MM RRRR - 6300XXX.00": {
@@ -60717,6 +62478,17 @@
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\BURGER KLASYCZNY — [ niemięsne ]\\10.08.2026 – 6300810": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\BURGER KLASYCZNY — [ niemięsne ]\\10.08.2026 – 6300810",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:25.173368+00:00",
+      "product_id": "burger-klasyczny-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\APPLE CINNAMON — [ date ]\\BAR - 30.09.2024 - 6300479.00 - GB": {
       "path": "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\APPLE CINNAMON — [ date ]\\BAR - 30.09.2024 - 6300479.00 - GB",
       "letter": null,
@@ -61212,6 +62984,17 @@
       "updated_at": "2026-08-04T06:43:13.500182+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\APPLE CINNAMON — [ date ]\\BAR - 30.09.2024 - 6300479.00 - GB": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\APPLE CINNAMON — [ date ]\\BAR - 30.09.2024 - 6300479.00 - GB",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:57.319024+00:00",
+      "product_id": "apple-cinnamon-date",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\GI BANOFFEE — [ bars_protein ]\\BAR - 20.02.2026 - 6300XXX.00": {
       "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\GI BANOFFEE — [ bars_protein ]\\BAR - 20.02.2026 - 6300XXX.00",
       "letter": null,
@@ -61223,6 +63006,17 @@
       "updated_at": "2026-07-18T22:13:18.708094+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - KALENDARZ ADWENTOWY — [ mixy ]\\29.04.2026 - 6300779": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - KALENDARZ ADWENTOWY — [ mixy ]\\29.04.2026 - 6300779",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:11:41.042512+00:00",
+      "product_id": "mix-kalendarz-adwentowy-mixy",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\DLA SERCA— [ funkcjonalny ]\\KAR6X - 06.06.2025 - 6300659.00": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\DLA SERCA— [ funkcjonalny ]\\KAR6X - 06.06.2025 - 6300659.00",
       "letter": null,
@@ -61232,6 +63026,28 @@
       "disk_mtime": "2026-05-14T06:38:39+00:00",
       "product_id": "dla-serca-funkcjonalny",
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\ENERGIA — [ funkcjonalny ]\\Baton_45g - 31.07.2026 - 6300584": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\ENERGIA — [ funkcjonalny ]\\Baton_45g - 31.07.2026 - 6300584",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:11:47.822540+00:00",
+      "product_id": "energia-funkcjonalny",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PREBIOTYK — [ funkcjonalny ]\\KAR6x – 13.08.2026 - 6300815": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\PREBIOTYK — [ funkcjonalny ]\\KAR6x – 13.08.2026 - 6300815",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:25.633986+00:00",
+      "product_id": "prebiotyk-funkcjonalny",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\BURGER KLASYCZNY — [ niemięsne ]\\01.04.2025 - 6300631.00": {
@@ -61254,6 +63070,39 @@
       "disk_mtime": "2026-07-16T11:50:22+00:00",
       "product_id": "burger-klasyczny-niemiesne",
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\GYROS GROCH — [ niemięsne ]\\REKAW - 18.08.2026 - 6300809": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\GYROS GROCH — [ niemięsne ]\\REKAW - 18.08.2026 - 6300809",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:25.173368+00:00",
+      "product_id": "gyros-groch-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\KASZANKA — [ niemięsne ]\\RĘKAW - 12.08.2026 – 6300812": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\KASZANKA — [ niemięsne ]\\RĘKAW - 12.08.2026 – 6300812",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:25.174370+00:00",
+      "product_id": "kaszanka-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\MIELONE WOLOWE — [ niemięsne ]\\RĘKAW_2026_07_31_6300798": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\MIELONE WOLOWE — [ niemięsne ]\\RĘKAW_2026_07_31_6300798",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:11:49.453067+00:00",
+      "product_id": "mielone-wolowe-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\07 - DATESY\\DK-DOY-DATESY - MARAKUJA 100 g\\DK-DOY-DATESY - MARAKUJA 100 g": {
@@ -61718,6 +63567,28 @@
       "updated_at": "2026-08-04T06:43:13.500182+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\03 - PLANT BASED\\BURGER — [ plant based ]\\SLEEVE - 21.08.2026 - 6300796": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\03 - PLANT BASED\\BURGER — [ plant based ]\\SLEEVE - 21.08.2026 - 6300796",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:25.629986+00:00",
+      "product_id": "burger-plant-based",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300727.00 - F": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300727.00 - F",
+      "letter": "F",
+      "source": "disk",
+      "status": "aktualne",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:11:47.835537+00:00",
+      "product_id": "malina-owocowe",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\OWIES CZEKOLADA — [ sniadanie ]\\DOY - 31.10.2025 - 6300701.00": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\OWIES CZEKOLADA — [ sniadanie ]\\DOY - 31.10.2025 - 6300701.00",
       "letter": null,
@@ -61729,6 +63600,17 @@
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\KASZANKA — [ niemięsne ]\\RĘKAW - 07.08.2026 - 6300768.01": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\KASZANKA — [ niemięsne ]\\RĘKAW - 07.08.2026 - 6300768.01",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:12:47.991558+00:00",
+      "product_id": "kaszanka-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\KASZANKA — [ niemięsne ]\\RĘKAW - 22.04.2026 - 6300XXX.00": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\KASZANKA — [ niemięsne ]\\RĘKAW - 22.04.2026 - 6300XXX.00",
       "letter": null,
@@ -61738,6 +63620,39 @@
       "disk_mtime": "2026-05-29T11:02:57+00:00",
       "product_id": "kaszanka-niemiesne",
       "updated_at": "2026-07-18T22:13:18.708094+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\KOFTA — [ niemięsne ]\\RĘKAW 200 g - 12.08.2026 - 6300765": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\KOFTA — [ niemięsne ]\\RĘKAW 200 g - 12.08.2026 - 6300765",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:25.173368+00:00",
+      "product_id": "kofta-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\KOFTA — [ niemięsne ]\\RĘKAW 200 g - 27.03.2026 - 6300744": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\KOFTA — [ niemięsne ]\\RĘKAW 200 g - 27.03.2026 - 6300744",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:26.203694+00:00",
+      "product_id": "kofta-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\07 - DATESY\\YUZU - [ daktyle ]\\DOY - YUZU 100 g - 04.08.2026 - BEZ INDEKSU": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\07 - DATESY\\YUZU - [ daktyle ]\\DOY - YUZU 100 g - 04.08.2026 - BEZ INDEKSU",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-08-04T13:47:36+00:00",
+      "product_id": "yuzu-daktyle",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHEESECAKE — [ cashews ]\\BAR - 05.07.2023 - 6300368.00 - GB DE": {
@@ -62125,6 +64040,17 @@
       "disk_mtime": "2026-07-17T21:52:47.083629+00:00",
       "product_id": "starter-pack-funkcjonalny",
       "updated_at": "2026-07-18T22:13:18.708094+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\KOFTA — [ niemięsne ]\\RĘKAW 200 g - 27.03.2026 - 63007442": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\KOFTA — [ niemięsne ]\\RĘKAW 200 g - 27.03.2026 - 63007442",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:25.174370+00:00",
+      "product_id": "kofta-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\APPLE CINNAMON — [ date ]\\BAR - 03.07.2023 - 6300373.00 - GB DE": {
@@ -62578,6 +64504,17 @@
       "updated_at": "2026-08-04T06:43:13.500182+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\APPLE CINNAMON — [ date ]\\BAR - 03.07.2023 - 6300373.00 - GB DE": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\APPLE CINNAMON — [ date ]\\BAR - 03.07.2023 - 6300373.00 - GB DE",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:07.516090+00:00",
+      "product_id": "apple-cinnamon-date",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHEESECAKE — [ cashews ]\\MINI - 18.10.2022 - GB_0000000.00 - GB": {
       "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHEESECAKE — [ cashews ]\\MINI - 18.10.2022 - GB_0000000.00 - GB",
       "letter": null,
@@ -62587,6 +64524,17 @@
       "disk_mtime": "2026-07-17T21:17:38.275102+00:00",
       "product_id": "cheesecake-cashews",
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE PEANUTS — [ date ]\\BAR - 30.09.2024 - 6300483.00 - GB": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE PEANUTS — [ date ]\\BAR - 30.09.2024 - 6300483.00 - GB",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:25.493641+00:00",
+      "product_id": "chocolate-peanuts-date",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - KALENDARZ ADWENTOWY — [ mixy ]\\15.07.2026 - 6300XXX.00": {
@@ -62642,6 +64590,17 @@
       "disk_mtime": "2026-07-16T11:48:36+00:00",
       "product_id": "orzeszki-kukurydza-miod-sniadanie",
       "updated_at": "2026-07-25T19:31:51.715589+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\BURGER WOLOWY — [ niemięsne ]\\RĘKAW - 13.08.2026 - 6300811": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\BURGER WOLOWY — [ niemięsne ]\\RĘKAW - 13.08.2026 - 6300811",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:20:46.029109+00:00",
+      "product_id": "burger-wolowy-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\MIELONE WOLOWE — [ niemięsne ]\\RĘKAW_2026_07_21-6300406.01": {
@@ -63282,6 +65241,28 @@
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX- Funkcjonalny - 3x batony_duzy\\KAR6X - 21 08 2026 - 6300813": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX- Funkcjonalny - 3x batony_duzy\\KAR6X - 21 08 2026 - 6300813",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:08.612081+00:00",
+      "product_id": "mix-funkcjonalny-3x-batony-duzy",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\GYROS GROCH — [ niemięsne ]\\RĘKAW - 28.09.2023 - 6300329.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\GYROS GROCH — [ niemięsne ]\\RĘKAW - 28.09.2023 - 6300329.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:26.100173+00:00",
+      "product_id": "gyros-groch-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\NUGGETS XXL — [ niemięsne ]\\RĘKAW - 08.05.2025 - 6300650.00": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\NUGGETS XXL — [ niemięsne ]\\RĘKAW - 08.05.2025 - 6300650.00",
       "letter": null,
@@ -63658,6 +65639,39 @@
       "updated_at": "2026-08-04T06:43:13.500182+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE COCONUT — [ date ]\\BAR - 35 g - 04.03.2025 - 6300606.00": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE COCONUT — [ date ]\\BAR - 35 g - 04.03.2025 - 6300606.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:09.395630+00:00",
+      "product_id": "chocolate-coconut-date",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE COCONUT — [ date ]\\DOY6X - 16.05.2024 - 6300500.00 - GB": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE COCONUT — [ date ]\\DOY6X - 16.05.2024 - 6300500.00 - GB",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:12.412705+00:00",
+      "product_id": "chocolate-coconut-date",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE PEANUTS — [ date ]\\DOY6X - 30.09.2024 - 6300496.00 - GB": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE PEANUTS — [ date ]\\DOY6X - 30.09.2024 - 6300496.00 - GB",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:45.923552+00:00",
+      "product_id": "chocolate-peanuts-date",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\BABKA CYTRYNOWA — [ nerkowcowy ]\\KAR6X - 13.02.2025 - 6300622.00": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\BABKA CYTRYNOWA — [ nerkowcowy ]\\KAR6X - 13.02.2025 - 6300622.00",
       "letter": null,
@@ -63704,6 +65718,28 @@
       "updated_at": "2026-07-18T22:13:18.708094+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\POLĘDWICZKA — [ niemięsne ]\\RĘKAW - 24.02.2026 - 6300XXX.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\POLĘDWICZKA — [ niemięsne ]\\RĘKAW - 24.02.2026 - 6300XXX.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-05-14T06:38:42+00:00",
+      "product_id": "poledwiczka-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\ROLADKA WOŁOWA — [ niemięsne ]\\RĘKAW - 13.08.2026 - 6300806": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\ROLADKA WOŁOWA — [ niemięsne ]\\RĘKAW - 13.08.2026 - 6300806",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:25.631984+00:00",
+      "product_id": "roladka-wo-owa-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\05 - NAPOJE\\CHIA — [ postbiotyk ]\\ETY-BUT - 200 ml - 30.04.2026 - 6300XXX.00": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\05 - NAPOJE\\CHIA — [ postbiotyk ]\\ETY-BUT - 200 ml - 30.04.2026 - 6300XXX.00",
       "letter": null,
@@ -63713,6 +65749,17 @@
       "disk_mtime": "2026-07-17T21:53:28.339030+00:00",
       "product_id": "chia-postbiotyk",
       "updated_at": "2026-07-18T22:13:18.708094+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\07 - DATESY\\KARMEL - [ daktyle ]\\DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\07 - DATESY\\KARMEL - [ daktyle ]\\DOY - KARMEL 100 g - 04.08.2026 - BEZ INDEKSU",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-08-04T13:47:36+00:00",
+      "product_id": "karmel-daktyle",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\BLUEBERRY MUFFIN — [ cashews ]\\MINI - 13.01.2023 - 6300277.00 - GB": {
@@ -64155,6 +66202,17 @@
       "updated_at": "2026-08-04T06:43:13.500182+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\BLUEBERRY MUFFIN — [ cashews ]\\MINI - 13.01.2023 - 6300277.00 - GB": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\BLUEBERRY MUFFIN — [ cashews ]\\MINI - 13.01.2023 - 6300277.00 - GB",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:40:00.410546+00:00",
+      "product_id": "blueberry-muffin-cashews",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE CHERRY — [ balls_raw ]\\06.02.2023 - GB_SE_FI_DK_DE_000000.00": {
       "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\DATE CHERRY — [ balls_raw ]\\06.02.2023 - GB_SE_FI_DK_DE_000000.00",
       "letter": null,
@@ -64362,6 +66420,17 @@
       "disk_mtime": "2026-07-16T11:09:10.374959+00:00",
       "product_id": "mix-bombonierka-11-szt-mini-mixy",
       "updated_at": "2026-08-03T10:32:16.054817+00:00",
+      "synced_from_disk": true
+    },
+    "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - TUBA 30 SZT — [ mixy ]\\TUBA MINI - 28.02.2026 - 6300XXX.00": {
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - TUBA 30 SZT — [ mixy ]\\TUBA MINI - 28.02.2026 - 6300XXX.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-02T12:14:59.531500+00:00",
+      "product_id": "mix-tuba-30-szt-mixy",
+      "updated_at": "2026-09-16T09:43:18.740530+00:00",
       "synced_from_disk": true
     },
     "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO MARCHEWKOWE — [ nerkowcowy ]\\MINI - 19.08.2024 - 6300550.00": {
@@ -64694,6 +66763,17 @@
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\CZARNA PORZECZKA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300726.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\CZARNA PORZECZKA — [ owocowe ]\\DOY - 65 g - 24.02.2026 - 6300726.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:11:47.822540+00:00",
+      "product_id": "czarna-porzeczka-owocowe",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\DAKTYL WIŚNIA — [ raw ]\\WIŚNIA - TRUFLE - 02.03.2026 - 6300729.00": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\DAKTYL WIŚNIA — [ raw ]\\WIŚNIA - TRUFLE - 02.03.2026 - 6300729.00",
       "letter": null,
@@ -64714,6 +66794,17 @@
       "disk_mtime": "2026-05-18T06:50:04+00:00",
       "product_id": "gyros-pszenica-niemiesne",
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\PASZTET POMIDOR — [ niemięsne ]\\KARTON – 17.08.2026 - 6300814": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\PASZTET POMIDOR — [ niemięsne ]\\KARTON – 17.08.2026 - 6300814",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:20:11.186983+00:00",
+      "product_id": "pasztet-pomidor-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\05 - NAPOJE\\SHOT — [ funkcjonalne ]\\ETY-BUT - 100 ml - 30.04.2026 - 6300XXX.00": {
@@ -65200,6 +67291,17 @@
       "updated_at": "2026-08-04T06:43:13.500182+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE PEANUTS — [ date ]\\DOY6X - 23.10.2024 - 6300496.00 - GB AR": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE PEANUTS — [ date ]\\DOY6X - 23.10.2024 - 6300496.00 - GB AR",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:39.321735+00:00",
+      "product_id": "chocolate-peanuts-date",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\GI LEMON CHEESECAKE — [ bars_protein ]\\BAR - 20.02.2026 - 6300XXX.00": {
       "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\GI LEMON CHEESECAKE — [ bars_protein ]\\BAR - 20.02.2026 - 6300XXX.00",
       "letter": null,
@@ -65209,6 +67311,17 @@
       "disk_mtime": "2026-05-08T10:02:36+00:00",
       "product_id": "gi-lemon-cheesecake-bars-protein",
       "updated_at": "2026-07-18T22:13:18.708094+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\MANGO CASHEWS — [ date ]\\BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\MANGO CASHEWS — [ date ]\\BAR - 20.09.2024 - GB_AR_6300484.00 - GB AR",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:07.920251+00:00",
+      "product_id": "mango-cashews-date",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00": {
@@ -65621,7 +67734,10 @@
       "disk_mtime": "2026-09-09T08:49:22+00:00",
       "product_id": "kulki-z-kreatyna-kreatyna",
       "updated_at": "2026-09-10T11:17:43.404539+00:00",
-      "synced_from_disk": true
+      "updated_by": "krzysztof.wieczorek@kubara.pl",
+      "previous_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]\\DOY - 00 g - 09 09 2026 - 6300XXX.00",
+      "synced_from_disk": true,
+      "synced_from_product": true
     },
     "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]\\DOY - 00 g - DD MM RRRR - 6300XXX.00": {
       "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]\\DOY - 00 g - DD MM RRRR - 6300XXX.00",
@@ -65632,7 +67748,10 @@
       "disk_mtime": "2026-09-04T10:03:22+00:00",
       "product_id": "kulki-z-kreatyna-kreatyna",
       "updated_at": "2026-09-10T11:17:43.404539+00:00",
-      "synced_from_disk": true
+      "updated_by": "krzysztof.wieczorek@kubara.pl",
+      "previous_path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]\\DOY - 00 g - DD MM RRRR - 6300XXX.00",
+      "synced_from_disk": true,
+      "synced_from_product": true
     },
     "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\DOY - 31.10.2025 - 6300699.00": {
       "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\DOY - 31.10.2025 - 6300699.00",
@@ -65799,6 +67918,39 @@
       "updated_at": "2026-08-04T06:43:13.500182+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\APPLE CINNAMON — [ date ]\\BAR - 06.02.2023 - GB_SE_FI_DK_DE_000000.00": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\APPLE CINNAMON — [ date ]\\BAR - 06.02.2023 - GB_SE_FI_DK_DE_000000.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:09.249845+00:00",
+      "product_id": "apple-cinnamon-date",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\APPLE CINNAMON — [ date ]\\BAR - 20.09.2024 - GB_AR_6300479.00 - GB AR": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\APPLE CINNAMON — [ date ]\\BAR - 20.09.2024 - GB_AR_6300479.00 - GB AR",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:15.790516+00:00",
+      "product_id": "apple-cinnamon-date",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\APPLE CINNAMON — [ date ]\\BAR - 27.01.2023 - 0000000.00 - GB AR FR NL": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\APPLE CINNAMON — [ date ]\\BAR - 27.01.2023 - 0000000.00 - GB AR FR NL",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:52.673655+00:00",
+      "product_id": "apple-cinnamon-date",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\COCONUT ORANGE — [ date ]\\BAR - 09.01.2023 - GB_EE_LT_LV_RO_000000.00": {
       "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\COCONUT ORANGE — [ date ]\\BAR - 09.01.2023 - GB_EE_LT_LV_RO_000000.00",
       "letter": null,
@@ -65841,6 +67993,17 @@
       "disk_mtime": "2026-05-14T06:31:18+00:00",
       "product_id": "salty-nut-bars-date",
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\03 - PLANT BASED\\BURGER — [ plant based ]\\SLEEVE - 31.07.2024 - 6300514.00 - CZ": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\03 - PLANT BASED\\BURGER — [ plant based ]\\SLEEVE - 31.07.2024 - 6300514.00 - CZ",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:25.633986+00:00",
+      "product_id": "burger-plant-based",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\03 - PLANT BASED\\GYROS WHEAT — [ plant based ]\\SLEEVE - 03.06.2023 - 6300356.00": {
@@ -65930,6 +68093,20 @@
       "synced_from_disk": true,
       "synced_from_product": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]\\DOY - 00 g - DD MM RRRR - 6300XXX.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]\\DOY - 00 g - DD MM RRRR - 6300XXX.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-04T10:03:22.716780+00:00",
+      "product_id": "kulki-z-kreatyna-kreatyna",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "updated_by": "krzysztof.wieczorek@kubara.pl",
+      "previous_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ]\\DOY - 00 g - DD MM RRRR - 6300XXX.00",
+      "synced_from_disk": true,
+      "synced_from_product": true
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\DOY - 31.10.2025 - 6300699.00": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\DOY - 31.10.2025 - 6300699.00",
       "letter": null,
@@ -65950,6 +68127,28 @@
       "disk_mtime": "2026-05-18T06:44:08+00:00",
       "product_id": "burger-buraczany-niemiesne",
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\07 - DATESY\\MARAKUJA - [ daktyle ]\\DOY - MARAKUJA 100 g - 04.08.2026 - BEZ INDEKSU": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\07 - DATESY\\MARAKUJA - [ daktyle ]\\DOY - MARAKUJA 100 g - 04.08.2026 - BEZ INDEKSU",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-08-04T13:47:36+00:00",
+      "product_id": "marakuja-daktyle",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\07 - DATESY\\— ARCHIWUM\\DK-DOY-DATESY - YUZU 100 g - X\\DK-DOY-DATESY - YUZU 100 g": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\07 - DATESY\\— ARCHIWUM\\DK-DOY-DATESY - YUZU 100 g - X\\DK-DOY-DATESY - YUZU 100 g",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:17:02.474915+00:00",
+      "product_id": "dk-doy-datesy-yuzu-100-g-x",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\BLUEBERRY MUFFIN — [ cashews ]\\DOY6X - 30.09.2024 - 6300493.00 - GB AR": {
@@ -66128,6 +68327,17 @@
       "updated_at": "2026-08-03T10:32:16.054817+00:00",
       "synced_from_disk": true
     },
+    "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D\\DOY - 65 g - 16.09.2026 - 6300XXX": {
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D\\DOY - 65 g - 16.09.2026 - 6300XXX",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-04T10:03:22+00:00",
+      "product_id": "kulki-z-kreatyna-kreatyna-d",
+      "updated_at": "2026-09-16T09:45:16.470028+00:00",
+      "synced_from_disk": true
+    },
     "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\KIELBASKA BIALA — [ niemięsne ]\\RĘKAW - 23.09.2021 - KAR000078.00": {
       "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\KIELBASKA BIALA — [ niemięsne ]\\RĘKAW - 23.09.2021 - KAR000078.00",
       "letter": null,
@@ -66262,6 +68472,17 @@
       "updated_at": "2026-08-04T06:43:13.500182+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\BLUEBERRY MUFFIN — [ cashews ]\\DOY6X - 30.09.2024 - 6300493.00 - GB AR": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\BLUEBERRY MUFFIN — [ cashews ]\\DOY6X - 30.09.2024 - 6300493.00 - GB AR",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:50.350231+00:00",
+      "product_id": "blueberry-muffin-cashews",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHEESECAKE — [ cashews ]\\DOY6X - 06.02.2023 - GB_SE_FI_DK_DE_000000.00": {
       "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHEESECAKE — [ cashews ]\\DOY6X - 06.02.2023 - GB_SE_FI_DK_DE_000000.00",
       "letter": null,
@@ -66382,6 +68603,17 @@
       "disk_mtime": "2026-07-17T21:52:42.217917+00:00",
       "product_id": "rogal-poznanski-nerkowcowy",
       "updated_at": "2026-07-25T19:31:51.715589+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\KIELBASKA WEGIERSKA — [ niemięsne ]\\REKAW – 07.01.2026 - 6300786": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\KIELBASKA WEGIERSKA — [ niemięsne ]\\REKAW – 07.01.2026 - 6300786",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:25.632985+00:00",
+      "product_id": "kielbaska-wegierska-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\GI CARAMEL — [ bars_protein ]\\DOYPACK 6x MINI - 20.02.2026 - 6300XXX.00": {
@@ -66725,6 +68957,17 @@
       "updated_at": "2026-07-18T22:13:18.708094+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\PEANUT CREAM CARAMEL — [ bars_protein ]\\20.09.2024 - 6300487.00 - GB AR": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\PEANUT CREAM CARAMEL — [ bars_protein ]\\20.09.2024 - 6300487.00 - GB AR",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:25.050132+00:00",
+      "product_id": "peanut-cream-caramel-bars-protein",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\FOLIA - 09.02.2024 - 6300450.00": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\FOLIA - 09.02.2024 - 6300450.00",
       "letter": null,
@@ -66756,6 +68999,17 @@
       "disk_mtime": "2026-06-18T11:05:37+00:00",
       "product_id": "orzeszki-kukurydza-miod-sniadanie",
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\ROLADKI SZPINAKOWE — [ niemięsne ]\\RĘKAW - 14.04.2026 - 6300XXX.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\ROLADKI SZPINAKOWE — [ niemięsne ]\\RĘKAW - 14.04.2026 - 6300XXX.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:25.907514+00:00",
+      "product_id": "roladki-szpinakowe-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\APPLE CINNAMON — [ date ]\\BAR - 22.02.2024 - 6300460.00 - GB EE LT LV RO": {
@@ -67077,6 +69331,39 @@
       "updated_at": "2026-08-04T06:43:13.500182+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\APPLE CINNAMON — [ date ]\\BAR - 22.02.2024 - 6300460.00 - GB EE LT LV RO": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\APPLE CINNAMON — [ date ]\\BAR - 22.02.2024 - 6300460.00 - GB EE LT LV RO",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:28.449187+00:00",
+      "product_id": "apple-cinnamon-date",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\APPLE CINNAMON — [ date ]\\BAR - 23.02.2024 - 6300460.01 - GB CZ SK HU HK": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\APPLE CINNAMON — [ date ]\\BAR - 23.02.2024 - 6300460.01 - GB CZ SK HU HK",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:37.964601+00:00",
+      "product_id": "apple-cinnamon-date",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE PEANUTS — [ date ]\\BAR - 20.09.2024 - GB_AR_6300483.00 - GB AR": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE PEANUTS — [ date ]\\BAR - 20.09.2024 - GB_AR_6300483.00 - GB AR",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:14.678799+00:00",
+      "product_id": "chocolate-peanuts-date",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CRUNCHY PEANUTS — [ date ]\\DOY6X - 07.05.2025 - 6300641.00 - LT LV EE RO": {
       "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CRUNCHY PEANUTS — [ date ]\\DOY6X - 07.05.2025 - 6300641.00 - LT LV EE RO",
       "letter": null,
@@ -67108,6 +69395,17 @@
       "disk_mtime": "2026-05-14T06:31:19+00:00",
       "product_id": "burger-chicken-plant-based",
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\03 - PLANT BASED\\GYROS PEA — [ plant based ]\\SLEEVE - 03.06.2024 - 6300356.00 - CZ": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\03 - PLANT BASED\\GYROS PEA — [ plant based ]\\SLEEVE - 03.06.2024 - 6300356.00 - CZ",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:28.525813+00:00",
+      "product_id": "gyros-pea-plant-based",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\03 - PLANT BASED\\SOUSAGES SPICY — [ plant based ]\\SLEEVE - 03.06.2023 - 6300357.00": {
@@ -67494,6 +69792,17 @@
       "updated_at": "2026-07-28T23:27:54.604723+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\07 - DATESY\\— ARCHIWUM\\DK-DOY-DATESY - KARMEL 100 g - X\\DK-DOY-DATESY - KARMEL 100 g": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\07 - DATESY\\— ARCHIWUM\\DK-DOY-DATESY - KARMEL 100 g - X\\DK-DOY-DATESY - KARMEL 100 g",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:16:56.648322+00:00",
+      "product_id": "dk-doy-datesy-karmel-100-g-x",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\GINGERBREAD — [ cashews ]\\DOY6X - 18.03.2023 - 6300334.00 - GB CZ SK HU HR": {
       "path": "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\GINGERBREAD — [ cashews ]\\DOY6X - 18.03.2023 - 6300334.00 - GB CZ SK HU HR",
       "letter": null,
@@ -67615,6 +69924,17 @@
       "updated_at": "2026-08-03T10:32:16.054817+00:00",
       "synced_from_disk": true
     },
+    "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D\\DOY - 65 g - 16.09.2026 - 6300XXX - D": {
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\KULKI Z KREATYNĄ — [ kreatyna ] - D\\DOY - 65 g - 16.09.2026 - 6300XXX - D",
+      "letter": "D",
+      "source": "disk",
+      "status": "demo",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-04T10:03:22+00:00",
+      "product_id": "kulki-z-kreatyna-kreatyna-d",
+      "updated_at": "2026-09-16T09:45:04.657849+00:00",
+      "synced_from_disk": true
+    },
     "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\BURGER KURCZAK — [ niemięsne ]\\01 ARCHIWUM - 28.02.2026 - KAR000133.00": {
       "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\BURGER KURCZAK — [ niemięsne ]\\01 ARCHIWUM - 28.02.2026 - KAR000133.00",
       "letter": null,
@@ -67734,6 +70054,17 @@
       "disk_mtime": "2026-05-19T14:49:00.939566+00:00",
       "product_id": "proteina-lemon-cheesecake-krem-orzechowy",
       "updated_at": "2026-08-04T06:43:13.500182+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\HAZELNUT CHOCOLATE — [ date ]\\BAR - 21.02.2025 - 6300607.00 -  GB_CZ_SK_HU": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\HAZELNUT CHOCOLATE — [ date ]\\BAR - 21.02.2025 - 6300607.00 -  GB_CZ_SK_HU",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:25.931517+00:00",
+      "product_id": "hazelnut-chocolate-date",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\PEANUT CREAM SALT — [ bars_protein ]\\06.02.2023 - GB_SE_FI_DK_DE_000000.00": {
@@ -67923,6 +70254,39 @@
       "updated_at": "2026-08-04T06:43:13.500182+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE PEANUTS — [ date ]\\BAR - 14.02.2025 - 6300470.00 - GB LT LV EE RV": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE PEANUTS — [ date ]\\BAR - 14.02.2025 - 6300470.00 - GB LT LV EE RV",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:07.503307+00:00",
+      "product_id": "chocolate-peanuts-date",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE PEANUTS — [ date ]\\BAR - 19.04.2024 - 6300470.00 - GB EE LT LV RO": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE PEANUTS — [ date ]\\BAR - 19.04.2024 - 6300470.00 - GB EE LT LV RO",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:09.904268+00:00",
+      "product_id": "chocolate-peanuts-date",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\— ARCHIWUM\\KASZANKA — [ niemięsne ]\\WARIANT - 23.04.2024 - 6300474.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\— ARCHIWUM\\KASZANKA — [ niemięsne ]\\WARIANT - 23.04.2024 - 6300474.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-05-07T08:17:01+00:00",
+      "product_id": "kaszanka-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\BLUEBERRY MUFFIN — [ cashews ]\\DOY6X - 27.01.2023 - 0000000.00 - GB AR FR NL": {
       "path": "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\BLUEBERRY MUFFIN — [ cashews ]\\DOY6X - 27.01.2023 - 0000000.00 - GB AR FR NL",
       "letter": null,
@@ -68066,6 +70430,28 @@
       "updated_at": "2026-08-04T06:43:13.500182+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\BLUEBERRY MUFFIN — [ cashews ]\\DOY6X - 27.01.2023 - 0000000.00 - GB AR FR NL": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\BLUEBERRY MUFFIN — [ cashews ]\\DOY6X - 27.01.2023 - 0000000.00 - GB AR FR NL",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:39.322736+00:00",
+      "product_id": "blueberry-muffin-cashews",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\CORNFLAKES PEANUTS HONEY — [ balls_crispy ]\\2025 10 30 - 6300699.01 - GB DE": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\CORNFLAKES PEANUTS HONEY — [ balls_crispy ]\\2025 10 30 - 6300699.01 - GB DE",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:25.960957+00:00",
+      "product_id": "cornflakes-peanuts-honey-balls-crispy",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300783.00",
       "letter": null,
@@ -68079,6 +70465,17 @@
       "previous_path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CYNAMONKA — [ nerkowcowy ] - F\\KAR6X - 20.05.2026  - PL EN - 6300783.00 - F",
       "synced_from_disk": true,
       "synced_from_product": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\JABŁKO CYNAMON — [ daktylowy ]\\BAT - 35 g - 15.05.2026 – 6300763 - PL UA": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\JABŁKO CYNAMON — [ daktylowy ]\\BAT - 35 g - 15.05.2026 – 6300763 - PL UA",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-04T12:13:39.274426+00:00",
+      "product_id": "jab-ko-cynamon-daktylowy",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
     },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\DOY - 3.07.2026 - PL UA - 6300699.01": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\ORZESZKI KUKURYDZA MIOD — [ sniadanie ]\\DOY - 3.07.2026 - PL UA - 6300699.01",
@@ -68245,6 +70642,39 @@
       "updated_at": "2026-08-04T06:43:13.500182+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE COCONUT — [ date ]\\DOY6X - 16.05.2024 - 6300500.00 - GB LT LV EE RO": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE COCONUT — [ date ]\\DOY6X - 16.05.2024 - 6300500.00 - GB LT LV EE RO",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:27.813811+00:00",
+      "product_id": "chocolate-coconut-date",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE COCONUT — [ date ]\\DOY6X - 23.12.2024 - 6300608.00 - GB CZ SK HU HR": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\CHOCOLATE COCONUT — [ date ]\\DOY6X - 23.12.2024 - 6300608.00 - GB CZ SK HU HR",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:40.261795+00:00",
+      "product_id": "chocolate-coconut-date",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\PEANUT CREAM CARAMEL — [ bars_protein ]\\12.06.2025 - 6300666.00 - GB ES PT FR": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\PEANUT CREAM CARAMEL — [ bars_protein ]\\12.06.2025 - 6300666.00 - GB ES PT FR",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:25.060131+00:00",
+      "product_id": "peanut-cream-caramel-bars-protein",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\PEANUT CREAM VANILLA — [ bars_protein ]\\27.01.2023 - 0000000.00 - GB AR FR NL": {
       "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\PEANUT CREAM VANILLA — [ bars_protein ]\\27.01.2023 - 0000000.00 - GB AR FR NL",
       "letter": null,
@@ -68254,6 +70684,39 @@
       "disk_mtime": "2026-05-14T06:31:17+00:00",
       "product_id": "peanut-cream-vanilla-bars-protein",
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\RASPBERRY TART — [ cashews ]\\DOY6X - 05.06.2024 - 6300501.00 - GB LT LV EE RO": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\RASPBERRY TART — [ cashews ]\\DOY6X - 05.06.2024 - 6300501.00 - GB LT LV EE RO",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:25.060131+00:00",
+      "product_id": "raspberry-tart-cashews",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\03 - PLANT BASED\\BURGER CHICKEN — [ plant based ]\\SLEEVE - 16.10.2024 - 6300579.00 - CZ": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\03 - PLANT BASED\\BURGER CHICKEN — [ plant based ]\\SLEEVE - 16.10.2024 - 6300579.00 - CZ",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:19:28.913584+00:00",
+      "product_id": "burger-chicken-plant-based",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\07 - DATESY\\— ARCHIWUM\\DK-DOY-DATESY - MARAKUJA 100 g - X\\DK-DOY-DATESY - MARAKUJA 100 g": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\07 - DATESY\\— ARCHIWUM\\DK-DOY-DATESY - MARAKUJA 100 g - X\\DK-DOY-DATESY - MARAKUJA 100 g",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:17:02.474915+00:00",
+      "product_id": "dk-doy-datesy-marakuja-100-g-x",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\GI BANOFFEE — [ bars_protein ]\\BATON 45 g - 27.04.2026 - 6300747.00 - EN CZ SK": {
@@ -68499,6 +70962,39 @@
       "updated_at": "2026-08-03T10:32:16.054817+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\BLUEBERRY MUFFIN — [ cashews ]\\DOY6X - 02.04.2024 - 6300472.00 - GB CZ SK HU HR": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\BLUEBERRY MUFFIN — [ cashews ]\\DOY6X - 02.04.2024 - 6300472.00 - GB CZ SK HU HR",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:07.661007+00:00",
+      "product_id": "blueberry-muffin-cashews",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\BLUEBERRY MUFFIN — [ cashews ]\\DOY6X - 14.03.2023 - 6300333.00 - GB CZ SK HU HR": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\BLUEBERRY MUFFIN — [ cashews ]\\DOY6X - 14.03.2023 - 6300333.00 - GB CZ SK HU HR",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:15.766975+00:00",
+      "product_id": "blueberry-muffin-cashews",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\BLUEBERRY MUFFIN — [ cashews ]\\DOY6X - 24.01.2023 - 6300308.00 - GB LT LV EE RO": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\BLUEBERRY MUFFIN — [ cashews ]\\DOY6X - 24.01.2023 - 6300308.00 - GB LT LV EE RO",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:28.873185+00:00",
+      "product_id": "blueberry-muffin-cashews",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO ŚLIWKOWE — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300785.00 - F": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\CIASTO ŚLIWKOWE — [ nerkowcowy ]\\KAR6X - 20.05.2026  - PL EN - 6300785.00 - F",
       "letter": "F",
@@ -68587,6 +71083,17 @@
       "updated_at": "2026-07-18T22:13:18.708094+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00 - F": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\02 - KULKI\\MALINA — [ owocowe ]\\DOY - MAGNEZ & ŻELAZO - 65 g - 24.02.2026 - 6300754.00 - F",
+      "letter": "F",
+      "source": "disk",
+      "status": "aktualne",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-05-18T06:44:37+00:00",
+      "product_id": "malina-owocowe",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\- ARCHIWUM\\02 KABANOS KLAS — [ niemięsne ]\\WARIANT - 06.05.2021 - 6300XXX.00": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\- ARCHIWUM\\02 KABANOS KLAS — [ niemięsne ]\\WARIANT - 06.05.2021 - 6300XXX.00",
       "letter": null,
@@ -68629,6 +71136,17 @@
       "disk_mtime": "2026-05-14T06:31:19+00:00",
       "product_id": "oats-chocolate-balls-crispy",
       "updated_at": "2026-08-03T10:32:16.054817+00:00",
+      "synced_from_disk": true
+    },
+    "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - TUBA 30 SZT — [ mixy ]\\TUBA MINI - DUŻO DOBRA - 07.07.2026 - 6300793.00": {
+      "path": "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - TUBA 30 SZT — [ mixy ]\\TUBA MINI - DUŻO DOBRA - 07.07.2026 - 6300793.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-15T14:13:28.213193+00:00",
+      "product_id": "mix-tuba-30-szt-mixy",
+      "updated_at": "2026-09-16T09:43:18.740530+00:00",
       "synced_from_disk": true
     },
     "D:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\- ARCHIWUM\\KLOPSY — [ niemięsne ]\\(DOYPACK) 180 g - 26.09.2022 - KAR000141.00": {
@@ -68741,6 +71259,17 @@
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\— ARCHIWUM\\01 KABANOS BBQ — [ niemięsne ]\\WARIANT - 06.05.2021 - 6300XXX.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\— ARCHIWUM\\01 KABANOS BBQ — [ niemięsne ]\\WARIANT - 06.05.2021 - 6300XXX.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:15:39.340935+00:00",
+      "product_id": "01-kabanos-bbq-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\CORNFLAKES PEANUTS HONEY — [ balls_crispy ]\\06.02.2023 - GB_SE_FI_DK_DE_000000.00": {
       "path": "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\CORNFLAKES PEANUTS HONEY — [ balls_crispy ]\\06.02.2023 - GB_SE_FI_DK_DE_000000.00",
       "letter": null,
@@ -68851,6 +71380,39 @@
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\— ARCHIWUM\\02 KABANOS KLAS — [ niemięsne ]\\WARIANT - 06.05.2021 - 6300XXX.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\— ARCHIWUM\\02 KABANOS KLAS — [ niemięsne ]\\WARIANT - 06.05.2021 - 6300XXX.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:15:48.535750+00:00",
+      "product_id": "02-kabanos-klas-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\— ARCHIWUM\\KIELBASKA BBQ — [ niemięsne ]\\WARIANT - 24.03.2022 - KAR000103.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\— ARCHIWUM\\KIELBASKA BBQ — [ niemięsne ]\\WARIANT - 24.03.2022 - KAR000103.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-05-07T08:16:45+00:00",
+      "product_id": "kielbaska-bbq-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\— ARCHIWUM\\KOTLECIKI RYBNE — [ niemięsne ]\\WARIANT - 27.02.2023 - 6300322.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\— ARCHIWUM\\KOTLECIKI RYBNE — [ niemięsne ]\\WARIANT - 27.02.2023 - 6300322.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-05-07T08:16:47+00:00",
+      "product_id": "kotleciki-rybne-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\03 - PLANT BASED\\BURGER CHICKEN — [ plant based ]\\WIZUALIZACJE - 16.10.2024 - 6300579.00 - CZ": {
       "path": "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\03 - PLANT BASED\\BURGER CHICKEN — [ plant based ]\\WIZUALIZACJE - 16.10.2024 - 6300579.00 - CZ",
       "letter": null,
@@ -68882,6 +71444,17 @@
       "disk_mtime": "2026-08-11T12:21:48.837455+00:00",
       "product_id": "klopsy-niemiesne",
       "updated_at": "2026-09-10T11:17:43.404539+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\— ARCHIWUM\\KLOPSY — [ niemięsne ]\\(DOYPACK) 180 g - 26.09.2022 - KAR000141.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\— ARCHIWUM\\KLOPSY — [ niemięsne ]\\(DOYPACK) 180 g - 26.09.2022 - KAR000141.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:15:49.474505+00:00",
+      "product_id": "klopsy-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\GI LEMON CHEESECAKE — [ bars_protein ]\\BAR 45 g - 24.04.2026 - 6300748.00 - EN CZ SK": {
@@ -68972,6 +71545,28 @@
       "updated_at": "2026-07-19T03:41:03.198968+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX- Funkcjonalny - 3x batony_duzy\\DK_karton_funkc_szkic1_2026_08_16_6300813_Folder": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX- Funkcjonalny - 3x batony_duzy\\DK_karton_funkc_szkic1_2026_08_16_6300813_Folder",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:07.304141+00:00",
+      "product_id": "mix-funkcjonalny-3x-batony-duzy",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\— ARCHIWUM\\PASZTET ŚLIWKA — [ niemięsne ]\\WARIANT - 04.11.2022 - KAR000147.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\— ARCHIWUM\\PASZTET ŚLIWKA — [ niemięsne ]\\WARIANT - 04.11.2022 - KAR000147.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:34.883490+00:00",
+      "product_id": "pasztet-sliwka-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\CORNFLAKES PEANUTS HONEY — [ balls_crispy ]\\09.01.2023 - 6300273.00 - GB EE LT LV RO": {
       "path": "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\CORNFLAKES PEANUTS HONEY — [ balls_crispy ]\\09.01.2023 - 6300273.00 - GB EE LT LV RO",
       "letter": null,
@@ -69025,6 +71620,17 @@
       "disk_mtime": "2026-07-16T11:04:07+00:00",
       "product_id": "proteina-karmel-mct-funkcjonalny",
       "updated_at": "2026-07-28T11:49:41.004640+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\07 - DATESY\\LEMON CHEESECAKE - [ daktyle ]\\DOY - LEMON CHEESECAKE 100 g - 04.08.2026 - BEZ INDEKSU": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\07 - DATESY\\LEMON CHEESECAKE - [ daktyle ]\\DOY - LEMON CHEESECAKE 100 g - 04.08.2026 - BEZ INDEKSU",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-08-04T13:47:36+00:00",
+      "product_id": "lemon-cheesecake-daktyle",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\02 - BALLS\\CORNFLAKES PEANUTS HONEY — [ balls_crispy ]\\27.01.2023 - 0000000.00 - GB AR FR NL - D": {
@@ -69091,6 +71697,17 @@
       "disk_mtime": "2026-07-27T16:44:49.714386+00:00",
       "product_id": "cornflakes-peanuts-honey-balls-crispy",
       "updated_at": "2026-07-28T11:49:41.004640+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - TUBA 30 SZT XMAS — [ mixy ]\\TUBA MINI - DUŻO DOBRA - 07.07.2026 - 6300793.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\- MIX - TUBA 30 SZT XMAS — [ mixy ]\\TUBA MINI - DUŻO DOBRA - 07.07.2026 - 6300793.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-07-07T08:36:19+00:00",
+      "product_id": "mix-tuba-30-szt-xmas-mixy",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\MUFFIN JAGODOWY — [ nerkowcowy ] - X\\KAR6X - 20.03.2025 - 6300525.00 - X": {
@@ -69165,6 +71782,17 @@
       "previous_letter": null,
       "synced_from_disk": true,
       "synced_from_product": true
+    },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\— ARCHIWUM\\BURGER KLASYCZNY XXL — [ niemięsne ]\\BIGPAK - 02.03.2021 - FOLP000015.00": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\03 - ROSLINNE\\— ARCHIWUM\\BURGER KLASYCZNY XXL — [ niemięsne ]\\BIGPAK - 02.03.2021 - FOLP000015.00",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:15:49.224611+00:00",
+      "product_id": "burger-klasyczny-xxl-niemiesne",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
     },
     "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\— ARCHIWUM\\TEST LIFECYCLE — [ nerkowcowy ] - X\\DOY - 35 g - 18.07.2026 - TEST-TEST2 - D": {
       "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\01 - BATONY\\TEST LIFECYCLE — [ nerkowcowy ]\\DOY - 35 g - 18.07.2026 - TEST-TEST2 - D",
@@ -69283,6 +71911,17 @@
       "updated_at": "2026-07-28T11:49:41.004640+00:00",
       "synced_from_disk": true
     },
+    "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\07 - DATESY\\— ARCHIWUM\\DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X\\DK-DOY-DATESY - LEMONCHEESECAKE 100 g": {
+      "path": "X:\\Marketing\\- POLSKA\\01 - PRODUKTY\\- DK\\07 - DATESY\\— ARCHIWUM\\DK-DOY-DATESY - LEMONCHEESECAKE 100 g - X\\DK-DOY-DATESY - LEMONCHEESECAKE 100 g",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:16:57.656591+00:00",
+      "product_id": "dk-doy-datesy-lemoncheesecake-100-g-x",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
+      "synced_from_disk": true
+    },
     "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\BLUEBERRY MUFFIN — [ cashews ]\\DOY6X - 06.02.2023 - GB_SE_FI_DK_DE_0000000.00 - GB SE FI DK DE": {
       "path": "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\BLUEBERRY MUFFIN — [ cashews ]\\DOY6X - 06.02.2023 - GB_SE_FI_DK_DE_0000000.00 - GB SE FI DK DE",
       "letter": null,
@@ -69292,6 +71931,17 @@
       "disk_mtime": "2026-09-02T12:14:59.358293+00:00",
       "product_id": "blueberry-muffin-cashews",
       "updated_at": "2026-09-10T11:17:43.404539+00:00",
+      "synced_from_disk": true
+    },
+    "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\BLUEBERRY MUFFIN — [ cashews ]\\DOY6X - 06.02.2023 - GB_SE_FI_DK_DE_0000000.00 - GB SE FI DK DE": {
+      "path": "X:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\BLUEBERRY MUFFIN — [ cashews ]\\DOY6X - 06.02.2023 - GB_SE_FI_DK_DE_0000000.00 - GB SE FI DK DE",
+      "letter": null,
+      "source": "disk",
+      "status": "clear",
+      "synced_by": "krzysztof.wieczorek@kubara.pl",
+      "disk_mtime": "2026-09-03T10:39:09.396638+00:00",
+      "product_id": "blueberry-muffin-cashews",
+      "updated_at": "2026-09-13T01:35:26.140831+00:00",
       "synced_from_disk": true
     },
     "D:\\Marketing\\- EKSPORT\\01 - PRODUCTS\\- GC\\01 - BARS\\PEANUT CREAM VANILLA — [ bars_protein ]\\06.02.2023 - GB_SE_FI_DK_DE_0000000.00 - GB SE FI DK DE": {

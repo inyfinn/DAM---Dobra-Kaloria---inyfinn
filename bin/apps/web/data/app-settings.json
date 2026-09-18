@@ -9,8 +9,8 @@
   "version": 2,
   "updated_at": "2026-07-18",
   "instructions": {
-    "count": 80,
-    "version": 22,
+    "count": 82,
+    "version": 24,
     "source_kv": "program-instructions",
     "critical_ids": [
       "preview.cache.offline_browse",
@@ -58,7 +58,9 @@
       "explorer.demo_index_rules",
       "ui.tutorial_dobrokalorius_hard",
       "paths.marketing_root_m_drive",
-      "branding.assoc_adequate_not_keyword"
+      "branding.assoc_adequate_not_keyword",
+      "cache.nas_seed_and_hourly_index",
+      "ops.ship_github_release"
     ],
     "settings_anchor": "settings.html#damProgramInstructions"
   }
