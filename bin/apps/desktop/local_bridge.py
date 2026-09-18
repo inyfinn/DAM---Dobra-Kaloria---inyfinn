@@ -301,8 +301,11 @@ PUBLIC_FORBIDDEN_PATHS = frozenset(
         "/auth/identity",
         "/debug/self-test",
         "/telemetry/tail",
-        "/app-update/install",
-        "/app-update/download",
+        "/app-update/apply",
+        "/app-update/check",
+        "/app-update/status",
+        "/app-update/prefs",
+        "/app-update/success",
     }
 )
 # Kolejnosc: M: (komputer zrodlowy Synology) -> X:/Marketing -> staging D: -> inne wykryte.
@@ -3042,6 +3045,15 @@ def _set_schtask_enabled(name: str, enabled: bool) -> dict:
 
 
 def _start_bg_job_hidden(job_id: str) -> dict:
+    if job_id == "db-git-sync":
+        # sync-database-backups-to-git.py = ssh syno + git. Dev/build machine only.
+        if app_updates is None:
+            return {"ok": False, "error": "app_updates_missing"}
+        try:
+            if not app_updates.is_portable_repo():
+                return {"ok": False, "error": "not_dev_tree", "portable": False}
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": False, "error": f"portable_check_error:{exc}"}
     wrapper = DESKTOP_DIR.parent.parent / "scripts" / "ops" / "run-dam-bg-job.ps1"
     if not wrapper.is_file():
         return {"ok": False, "error": f"missing_wrapper:{wrapper}"}
@@ -3627,18 +3639,30 @@ def _load_json(path: Path, default):
         return default
 
 
-def _save_json(path: Path, data, *, expected_updated_at: str | None = None, updated_by: str = "local_bridge") -> str | None:
+def _save_json(
+    path: Path,
+    data,
+    *,
+    expected_updated_at: str | None = None,
+    updated_by: str = "local_bridge",
+    push_to_pg: bool = True,
+) -> str | None:
     """Zapis lokalnego cache + (gdy PG skonfigurowany) upsert do dam_kv_store.
 
     expected_updated_at podany (POST /db/kv): slepy upsert + StaleKvVersion / 409.
     expected_updated_at is None i path w KV_STORE_KEYS: scalenie merge_document.
     Pozostale pliki (indeksy, finanse): slepy zapis na dysk, bez PG.
     Lokalny JSON i cache - po commicie, wynikiem scalenia.
+
+    push_to_pg=False: zapisz TYLKO lokalnie, bez dotykania Postgresa (uzywane
+    przy startowym seedowaniu polityki/nazewnictwa - patrz
+    pg_db.should_seed_kv_from_local - zeby zainstalowana kopia / most
+    publiczny nie scalily build-time snapshotu web/data z baza).
     """
     store_key = _path_to_store_key(path)
     new_ts = None
     to_write = data
-    if store_key and _pg_available():
+    if push_to_pg and store_key and _pg_available():
         try:
             import pg_db
 
@@ -4446,8 +4470,28 @@ def _pull_kv_cache_from_postgres() -> int:
     return n
 
 
+def _seed_kv_push_allowed(store_key: str) -> bool:
+    """Wrapper: pg_db.should_seed_kv_from_local + PUBLIC_MODE tego procesu."""
+    try:
+        import pg_db
+
+        return pg_db.should_seed_kv_from_local(store_key, public_mode=PUBLIC_MODE)
+    except Exception:
+        return False
+
+
 def _seed_naming_policy_to_postgres() -> None:
-    """Wypchnij naming-dictionary + app-settings + program-instructions do dam_kv_store."""
+    """Wypchnij naming-dictionary + app-settings + program-instructions do dam_kv_store.
+
+    Dev-tree-only (HARD), PUBLIC_MODE wykluczony (patrz pg_db.should_seed_kv_from_local):
+    instalator wiezie web/data z maszyny budujacej - zainstalowana kopia i
+    most na NAS (moze serwowac przestarzala kopie Panel-DAM) NIE moga scalac
+    tych plikow z baza przy KAZDYM starcie, to nadpisaloby nowsze dane z
+    innego stanowiska. Wyjatek per-klucz: swiezy wiersz w dam_kv_store nie
+    istnieje jeszcze - bootstrap wtedy nie ma czego nadpisac.
+    Lokalny plik na dysku jest zawsze odswiezany (nieszkodliwe), pchniecie do
+    Postgresa idzie tylko gdy _seed_kv_push_allowed(store_key) zwroci True.
+    """
     naming: dict = {}
     if NAMING_DICTIONARY_FILE.is_file():
         try:
@@ -4490,12 +4534,20 @@ def _seed_naming_policy_to_postgres() -> None:
         or (instructions.get("updated_at") if instructions else "")
         or "",
     }
-    _save_json(APP_SETTINGS_FILE, app_settings)
+    _save_json(APP_SETTINGS_FILE, app_settings, push_to_pg=_seed_kv_push_allowed("app-settings"))
     if naming:
-        _save_json(NAMING_DICTIONARY_FILE, naming)
+        _save_json(
+            NAMING_DICTIONARY_FILE,
+            naming,
+            push_to_pg=_seed_kv_push_allowed("naming-dictionary"),
+        )
     if instructions:
-        _save_json(PROGRAM_INSTRUCTIONS_FILE, instructions)
-    # Historia operacji / statusow / slownik EN->PL - tez do KV
+        _save_json(
+            PROGRAM_INSTRUCTIONS_FILE,
+            instructions,
+            push_to_pg=_seed_kv_push_allowed("program-instructions"),
+        )
+    # Historia operacji / statusow / slownik EN->PL - tez do KV (o ile wolno)
     name_pl_file = WEB_ROOT / "data" / "product-name-pl.json"
     people_file = WEB_ROOT / "data" / "product-people.json"
     for path in (
@@ -4507,7 +4559,9 @@ def _seed_naming_policy_to_postgres() -> None:
     ):
         if path.is_file():
             try:
-                _save_json(path, _load_json(path, {}))
+                store_key = _path_to_store_key(path)
+                allow_push = _seed_kv_push_allowed(store_key) if store_key else False
+                _save_json(path, _load_json(path, {}), push_to_pg=allow_push)
             except Exception as exc:  # noqa: BLE001
                 print(f"kv seed skip {path.name}:", exc)
     reload_naming_policy_from_disk()
@@ -8470,6 +8524,15 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(200, {"ok": True, "prefs": app_updates.load_prefs(), "config": app_updates.load_update_config()})
             return
+        if parsed.path == "/app-update/success":
+            if app_updates is None:
+                self._json(500, {"ok": False, "error": "app_updates_missing"})
+                return
+            if hasattr(app_updates, "consume_success_marker"):
+                self._json(200, app_updates.consume_success_marker())
+            else:
+                self._json(200, {"ok": True, "version": None})
+            return
         if parsed.path == "/db/prefer":
             if not dam_db:
                 self._json(500, {"ok": False, "error": "dam_db_missing"})
@@ -10501,6 +10564,14 @@ class Handler(BaseHTTPRequestHandler):
                 return
             url = str((data or {}).get("download_url") or "").strip()
             action = str((data or {}).get("action") or "apply").strip().lower()
+            if hasattr(app_updates, "apply_action") and action in (
+                "download",
+                "install",
+                "apply",
+                "cancel",
+            ):
+                self._json(200, app_updates.apply_action(action, url))
+                return
             if action == "download":
                 self._json(200, app_updates.start_background_download(url))
                 return
@@ -10588,7 +10659,18 @@ def _pg_backup_log(msg: str) -> None:
 
 
 def run_hourly_pg_backup() -> dict:
-    """Zrzut godzinowy z procesu mostu (watek, nie blokuje HTTP)."""
+    """Zrzut godzinowy z procesu mostu (watek, nie blokuje HTTP).
+
+    Dev-tree-only (HARD): zawiera tabele users - blokada tez na manualne
+    "Uruchom teraz" z panelu Zadania w tle, nie tylko na petle watchera."""
+    if app_updates is not None:
+        try:
+            if not app_updates.is_portable_repo():
+                return {"ok": False, "error": "not_dev_tree", "portable": False}
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": False, "error": f"portable_check_error:{exc}"}
+    else:
+        return {"ok": False, "error": "app_updates_missing"}
     try:
         import pg_db
 
@@ -10644,7 +10726,22 @@ def _pg_backup_git_sync() -> None:
 def _pg_backup_watcher() -> None:
     """Co godzine (albo DAM_PG_BACKUP_INTERVAL_S). Watek mostu, nie supervisor UI.
     Git sync w osobnym watku, nigdy nie wywala mostu.
-    Zimny start: pierwszy zrzut nie ginie po cichu - log skip/ok jest zawsze."""
+    Zimny start: pierwszy zrzut nie ginie po cichu - log skip/ok jest zawsze.
+
+    Dev-tree-only (HARD): zrzut zawiera tabele users - nie moze ladowac na
+    kazdym kliencie. Instalacja bez .git (is_portable_repo()==False) nie
+    odpala tej petli w ogole (zero zrzutu do bin\\DATABASE, zero git sync)."""
+    if app_updates is not None:
+        try:
+            if not app_updates.is_portable_repo():
+                _pg_backup_log("skip not_dev_tree (installed copy)")
+                return
+        except Exception as exc:  # noqa: BLE001
+            _pg_backup_log(f"portable_check_error {exc}")
+            return
+    else:
+        _pg_backup_log("skip app_updates_missing (cannot verify dev tree)")
+        return
     interval = _pg_backup_interval_s()
     _pg_backup_log(f"watcher_start interval_s={interval}")
     time.sleep(min(8.0, max(2.0, interval)))

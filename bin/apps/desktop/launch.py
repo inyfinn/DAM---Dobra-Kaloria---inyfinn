@@ -739,10 +739,14 @@ def main() -> None:
     db_sync_stop: threading.Event | None = None
     try:
         from dam_sync import clear_running_lock, start_periodic_sync, write_running_lock
+        from app_updates import is_portable_repo
 
         write_running_lock()
-        db_sync_stop = threading.Event()
-        start_periodic_sync(db_sync_stop)
+        # sync-database-backups-to-git.py spawns ssh + git; an installed copy
+        # (no .git) must never run this - it is a dev/build-machine job only.
+        if is_portable_repo():
+            db_sync_stop = threading.Event()
+            start_periodic_sync(db_sync_stop)
     except Exception:
         db_sync_stop = None
 

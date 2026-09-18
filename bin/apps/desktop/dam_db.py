@@ -793,9 +793,29 @@ def pull_database_dump_now() -> dict[str, Any]:
 
     Sukces = po probie istnieje lokalny dam_eta_*.sql.gz (offline fallback).
     Gdy SSH/NAS pada, zachowany lokalny dump nadal liczy sie jako ok.
+
+    Dev-tree-only (HARD): skrypt uzywa ssh + git. Instalacja bez .git nie
+    odpala ani jednego, ani drugiego procesu - lokalny dump (jesli byl)
+    nadal liczy sie jako ok (offline fallback), zero SSH/git na kliencie.
     """
     before = latest_database_dump()
     result: dict[str, Any] = {"ok": False}
+
+    try:
+        import app_updates
+
+        is_dev_tree = app_updates.is_portable_repo()
+    except Exception:
+        is_dev_tree = False
+    if not is_dev_tree:
+        dump = latest_database_dump()
+        return {
+            "ok": bool(dump),
+            "skipped": True,
+            "error": "not_dev_tree",
+            "dump": str(dump) if dump else "",
+            "note": "local_retained" if dump else "no_local_dump_installed_copy",
+        }
 
     try:
         from dam_sync import run_sync_blocking

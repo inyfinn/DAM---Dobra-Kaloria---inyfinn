@@ -1000,7 +1000,21 @@ def persist_cache_state(*, source: str, synced: bool = True) -> dict:
     try:
         import pg_db
 
-        pg_db.upsert_thumb_cache_manifest(payload, updated_by="dam-cache")
+        public_mode = False
+        try:
+            import local_bridge
+
+            public_mode = bool(getattr(local_bridge, "PUBLIC_MODE", False))
+        except Exception:
+            public_mode = False
+        # Boot-time manifest push (ensure_boot_sync -> start_cache_download):
+        # opisuje LOKALNY stan cache tej maszyny w chwili startu. Zainstalowana
+        # kopia i most publiczny (moze serwowac przestarzala kopie panelu) nie
+        # moga nadpisywac tym baze przy kazdym starcie - patrz
+        # pg_db.should_seed_kv_from_local. Jawna publikacja nowych miniatur
+        # (_record_publish / publish_new_thumbs) to inna sciezka i zostaje.
+        if pg_db.should_seed_kv_from_local("thumb-cache-manifest", public_mode=public_mode):
+            pg_db.upsert_thumb_cache_manifest(payload, updated_by="dam-cache")
     except Exception:
         pass
     return payload
@@ -1050,7 +1064,7 @@ def _ssh_run(host: str, remote: str, stdin: bytes | None = None) -> subprocess.C
         "-o",
         "BatchMode=yes",
         "-o",
-        "ConnectTimeout=20",
+        "ConnectTimeout=5",
         host,
         remote,
     ]
@@ -1142,7 +1156,7 @@ def _pull_ssh_rels(rels: list[str]) -> int:
             "-o",
             "BatchMode=yes",
             "-o",
-            "ConnectTimeout=20",
+            "ConnectTimeout=5",
             nas_ssh_host(),
             f"tar -cf - -C {dest!r} -T -",
         ],
@@ -1178,7 +1192,7 @@ def _pull_ssh_full() -> int:
             "-o",
             "BatchMode=yes",
             "-o",
-            "ConnectTimeout=20",
+            "ConnectTimeout=5",
             nas_ssh_host(),
             f"tar -cf - -C {dest!r} {excludes} .",
         ],
@@ -1987,7 +2001,7 @@ def _publish_via_ssh(files: list[Path], publisher: str) -> dict:
                 "-o",
                 "BatchMode=yes",
                 "-o",
-                "ConnectTimeout=20",
+                "ConnectTimeout=5",
                 host,
                 f"mkdir -p {dest!r} && tar -xf - -C {dest!r}",
             ],

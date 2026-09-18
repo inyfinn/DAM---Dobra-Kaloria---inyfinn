@@ -270,9 +270,12 @@ def _pg_config_looks_ready(path: Path) -> bool:
 
 
 def _pg_config_candidates() -> list[Path]:
-    """Staged Setup file, bundled copy, then installed Programs\\DAM (dummy user never copies)."""
-    local = os.environ.get("LOCALAPPDATA") or ""
-    install_desktop = Path(local) / "Programs" / "DAM" / "bin" / "apps" / "desktop"
+    """Explicit env, then own DESKTOP_DIR sources. A DIFFERENT install's plaintext
+    config (%LOCALAPPDATA%\\Programs\\DAM\\...) is only ever considered on a
+    dev/build machine (git working tree - see _is_dev_tree()). An installed
+    copy (no .git) must never adopt a stranger's password from another
+    install on the same PC - that is exactly the "imitation of a real
+    install" crutch this function must not provide."""
     env_path = (os.environ.get("DAM_PG_CONFIG") or "").strip()
     out: list[Path] = []
     if env_path:
@@ -283,12 +286,20 @@ def _pg_config_candidates() -> list[Path]:
             DESKTOP_DIR / "data" / "pg-config.json",
             DESKTOP_DIR / "data" / "pg-config.json.off",
             DESKTOP_DIR / "data" / "pg-config.bundled.json",
-            install_desktop / "data" / "pg-config.json",
-            install_desktop / "pg-config.json",
-            install_desktop / "data" / "pg-config.json.off",
-            install_desktop / "data" / "pg-config.bundled.json",
         ]
     )
+    if _is_dev_tree():
+        local = os.environ.get("LOCALAPPDATA") or ""
+        if local:
+            install_desktop = Path(local) / "Programs" / "DAM" / "bin" / "apps" / "desktop"
+            out.extend(
+                [
+                    install_desktop / "data" / "pg-config.json",
+                    install_desktop / "pg-config.json",
+                    install_desktop / "data" / "pg-config.json.off",
+                    install_desktop / "data" / "pg-config.bundled.json",
+                ]
+            )
     return out
 
 
@@ -328,6 +339,31 @@ def ensure_pg_config_ready() -> None:
     except OSError:
         pass
     ensure_pg_config_example_in_data()
+
+
+def should_seed_kv_from_local(store_key: str, *, public_mode: bool = False) -> bool:
+    """True = ten proces WOLNO wypchnac lokalny plik/stan do dam_kv_store PRZY STARCIE.
+
+    Instalator wiezie web/data z maszyny budujacej (build-time snapshot). Kazdy
+    start zainstalowanej kopii (brak .git - patrz _is_dev_tree()) scalilby te
+    (potencjalnie starsze) pliki z baza na kazdym komputerze uzytkownika - to
+    ten sam blad co dla pg-config.json, tylko dla polityki/nazewnictwa.
+    PUBLIC_MODE (most na NAS za nginx) rowniez wykluczony: moze serwowac
+    przestarzala kopie panelu (DAM_WEB_ROOT). Zainstalowana kopia i most
+    publiczny maja tylko POBIERAC te magazyny z bazy (kv cache watcher).
+
+    Wyjatek: swiezy Postgres bez wiersza dla danego store_key. Wtedy nie ma
+    czego nadpisac - bootstrap jednorazowy jest dozwolony nawet poza drzewem
+    deweloperskim, inaczej swiezo wdrozona baza nigdy nie dostalaby startowej
+    polityki/nazewnictwa."""
+    if not public_mode and _is_dev_tree():
+        return True
+    try:
+        return kv_get_meta(store_key) is None
+    except Exception:
+        # Baza nieosiagalna - bezpieczniej NIE zgadywac zapisu niz ryzykowac
+        # nadpisanie nowszych danych, gdy polaczenie akurat wroci w trakcie.
+        return False
 
 
 def is_configured() -> bool:
