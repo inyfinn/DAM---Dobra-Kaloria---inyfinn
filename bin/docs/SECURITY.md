@@ -53,7 +53,7 @@ NAS oraz haseł, które użytkownik sam komuś poda.
 
 ## 3. Wydanie nowej wersji krok po kroku
 
-Na maszynie budującej (ta, która ma `%USERPROFILE%\.dam`):
+Na maszynie budującej, czyli każdej, która ma folder roboczy z `bin\secrets`:
 
 1. **Wersja.** Podbij w czterech miejscach naraz: `apps/web/version.json`,
    `apps/web/assets/js/dam-version.js`, `apps/desktop/runtime_config.py` (`APP_VERSION`),
@@ -87,8 +87,11 @@ Na maszynie budującej (ta, która ma `%USERPROFILE%\.dam`):
 
 ## 4. Kod aktywacyjny
 
-* Kod leży na maszynie budującej w `%USERPROFILE%\.dam\activation-code.txt` (tworzony
-  automatycznie przy pierwszym pieczętowaniu) albo w zmiennej `DAM_ACTIVATION_CODE`.
+* Kod leży w folderze roboczym w `bin\secrets\activation-code.txt` (decyzja użytkownika
+  z 2026-09-18) albo w zmiennej `DAM_ACTIVATION_CODE`. Stara lokalizacja
+  `%USERPROFILE%\.dam\activation-code.txt` jest czytana tylko jako zapas. Nowy kod powstaje
+  wyłącznie wtedy, gdy nie ma go w żadnym z tych miejsc, bo zmiana kodu wymusza ponowną
+  aktywację wszystkich komputerów.
 * Format: 25 znaków base32 w pięciu grupach, np. `ABCDE-FGHIJ-KLMNP-QRSTU-VWXYZ`.
   Przy wpisywaniu wielkość liter, spacje i myślniki nie mają znaczenia.
 * Kod przekazuje się **inną drogą niż instalator**: telefonicznie albo SMS-em. Nigdy
@@ -107,8 +110,16 @@ Kopia zapasowa kodu: trzymaj ją poza repozytorium i poza folderem synchronizowa
 
 ## 5. Klucz podpisujący wydania
 
-* Klucz prywatny: `%USERPROFILE%\.dam\release-signing-key.pem` (albo ścieżka z
-  `DAM_RELEASE_KEY`). Nigdy w repozytorium, nigdy w Synology Drive ani w Dropbox.
+* Klucz prywatny: `bin\secrets\release-signing-key.pem` w folderze roboczym (albo ścieżka
+  z `DAM_RELEASE_KEY`; zapasowo stara lokalizacja `%USERPROFILE%\.dam`). Nigdy w
+  repozytorium: `bin\secrets` wykluczają dwie reguły `.gitignore` (`/bin/*` i `**/*secret*`),
+  a build przerywa się, jeśli `*.pem` albo `activation-code.txt` trafi do paczki.
+* **Świadome ryzyko (decyzja użytkownika 2026-09-18):** folder roboczy na `D:` synchronizuje
+  się przez Synology Drive z **firmowym** NAS-em (administratorkubara), do którego użytkownik
+  nie ma dostępu administracyjnego. Administratorzy IT firmy mogą więc odczytać klucz
+  podpisujący i kod aktywacyjny. Zysk: build i podpis działają z każdego komputera z tym
+  folderem. Gdy aplikacja stanie się produkcyjna, przenieś oba pliki poza folder
+  synchronizowany i wskaż je zmiennymi `DAM_RELEASE_KEY` i `DAM_ACTIVATION_CODE`.
 * Klucz publiczny jest przypięty w `apps/desktop/release-pubkey.json` i jedzie z aplikacją.
 * Kopia zapasowa: zaszyfrowany nośnik trzymany poza biurem albo menedżer haseł. Sam plik
   PEM wystarczy do podpisywania, więc traktuj go jak hasło do wszystkich komputerów.

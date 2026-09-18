@@ -281,6 +281,13 @@ if ($leaks.Count -gt 0) {
   throw ("Haslo bazy w staging (jawnie): " + (($leaks | ForEach-Object { $_.FullName }) -join "; "))
 }
 Remove-Variable pgSecret
+# Klucz podpisujacy i kod aktywacyjny leza w bin\secrets (folder roboczy, 2026-09-18).
+# Nigdy nie moga trafic do Setupu - sprawdzamy staging po nazwie i rozszerzeniu.
+$secretLeaks = @(Get-ChildItem -LiteralPath $stageRoot -Recurse -File -Force -ErrorAction SilentlyContinue |
+  Where-Object { $_.Extension -eq ".pem" -or $_.Name -eq "activation-code.txt" -or $_.FullName -match '\\secrets\\' })
+if ($secretLeaks.Count -gt 0) {
+  throw ("Sekret w staging: " + (($secretLeaks | ForEach-Object { $_.FullName }) -join "; "))
+}
 Write-Host "Sealed pg-config (kod aktywacyjny poza Setupem). Jawnego hasla w staging brak."
 New-Item -ItemType Directory -Force -Path (Join-Path $binDst "DATABASE") | Out-Null
 $usersSeedSrc = Join-Path $BinRoot "DATABASE\users-seed.sqlite"

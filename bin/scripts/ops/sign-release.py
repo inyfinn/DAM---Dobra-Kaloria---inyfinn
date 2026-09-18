@@ -2,7 +2,8 @@
 """
 Podpis wydania DAM (Ed25519). Para do apps/desktop/release_verify.py.
 
-Klucz prywatny: %USERPROFILE%\\.dam\\release-signing-key.pem (albo DAM_RELEASE_KEY).
+Klucz prywatny: bin/secrets/release-signing-key.pem w folderze roboczym (albo DAM_RELEASE_KEY;
+zapasowo stara lokalizacja %USERPROFILE%/.dam).
 NIGDY w repo, NIGDY w folderze synchronizowanym (Synology Drive / Dropbox).
 Utrata klucza = trzeba wydac wersje z nowym kluczem publicznym instalowana recznie.
 
@@ -32,11 +33,22 @@ from cryptography.hazmat.primitives import serialization  # noqa: E402
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey  # noqa: E402
 
 
+# Decyzja uzytkownika 2026-09-18: klucz lezy w folderze roboczym programu (bin/secrets),
+# zeby build i podpis dzialaly z kazdego komputera, na ktorym jest ten folder.
+# bin/secrets jest ignorowany przez git dwiema regulami (/bin/* i **/*secret*).
+# UWAGA: folder roboczy synchronizuje sie na firmowy NAS (administratorkubara).
+SECRETS_DIR = HERE.parent.parent / "secrets"
+LEGACY_KEY = Path(os.environ.get("USERPROFILE") or Path.home()) / ".dam" / "release-signing-key.pem"
+
+
 def key_path() -> Path:
     env = (os.environ.get("DAM_RELEASE_KEY") or "").strip()
     if env:
         return Path(env)
-    return Path(os.environ.get("USERPROFILE") or Path.home()) / ".dam" / "release-signing-key.pem"
+    primary = SECRETS_DIR / "release-signing-key.pem"
+    if not primary.is_file() and LEGACY_KEY.is_file():
+        return LEGACY_KEY
+    return primary
 
 
 def load_private() -> Ed25519PrivateKey:

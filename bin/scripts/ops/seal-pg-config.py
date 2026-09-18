@@ -5,7 +5,8 @@ Zapieczetuj pg-config.json do instalatora (para do apps/desktop/pg_seal.py).
   python seal-pg-config.py --in <pg-config.json> --out <pg-config.sealed.json>
 
 Kod aktywacyjny: zmienna DAM_ACTIVATION_CODE albo plik
-%USERPROFILE%/.dam/activation-code.txt (tworzony przy pierwszym uzyciu).
+bin/secrets/activation-code.txt w folderze roboczym (zapasowo %USERPROFILE%/.dam;
+nowy kod powstaje tylko, gdy nie ma go w zadnym z tych miejsc).
 Kod przekazujesz uzytkownikom POZA aplikacja. Nie trafia do repo ani do instalatora.
 Zmiana kodu = nowy build; juz aktywowane komputery dzialaja dalej (maja DPAPI).
 """
@@ -23,19 +24,28 @@ sys.path.insert(0, str(HERE.parent.parent / "apps" / "desktop"))
 import pg_seal  # noqa: E402
 
 
+# Decyzja uzytkownika 2026-09-18: kod lezy w folderze roboczym programu (bin/secrets).
+# Stara lokalizacja %USERPROFILE%/.dam jest tylko do odczytu jako zapas - nowy kod
+# powstaje WYLACZNIE, gdy nie ma go w zadnym miejscu (inaczej wszystkie komputery
+# musialyby aktywowac sie ponownie).
+SECRETS_DIR = HERE.parent.parent / "secrets"
+LEGACY_CODE = Path(os.environ.get("USERPROFILE") or Path.home()) / ".dam" / "activation-code.txt"
+
+
 def code_file() -> Path:
-    return Path(os.environ.get("USERPROFILE") or Path.home()) / ".dam" / "activation-code.txt"
+    return SECRETS_DIR / "activation-code.txt"
 
 
 def resolve_code() -> tuple[str, str]:
     env = (os.environ.get("DAM_ACTIVATION_CODE") or "").strip()
     if env:
         return env, "DAM_ACTIVATION_CODE"
+    for path in (code_file(), LEGACY_CODE):
+        if path.is_file():
+            code = path.read_text(encoding="utf-8").strip()
+            if code:
+                return code, str(path)
     path = code_file()
-    if path.is_file():
-        code = path.read_text(encoding="utf-8").strip()
-        if code:
-            return code, str(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     code = pg_seal.generate_code()
     path.write_text(code + "\n", encoding="utf-8")
