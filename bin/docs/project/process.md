@@ -1,3 +1,19 @@
+## 2026-09-18 - v2.0.9 / v2.1.0 / v2.1.1: aktualizacje w tle, czysta instalacja, koniec zamrazania UI
+
+**Komenda/Akcja:** User: zmien haslo bazy, klucze wydania w folderze roboczym, aktualizacje jak w Photo Resizerze (w tle, na dole), test jak nowy uzytkownik; potem: napraw zamrazanie, przeklikaj aplikacje, skojarzenia per wariant, poprawki Brandingu; aktualizacja ma byc widoczna w sidebarze pod "Wyloguj" + Dobrokalorius 5 s. Commit, push, build, release.
+
+**Log/Status:**
+- Haslo Postgresa `dam_eta` zmienione (ALTER USER jako sam dam_eta; nowe laczy, stare odrzucone). Klucz podpisu i kod aktywacyjny w `bin/secrets/` (gitignore; folder synchronizuje sie na firmowy NAS - ryzyko opisane w `bin/docs/SECURITY.md`).
+- 2.0.9 (bez wydania na GitHub): GitHub bez tokenu, sprawdzanie 20 s po starcie i co 6 h, pobieranie w tle (.sig, Range, SHA-256 z `digest`, podpis Ed25519), `/DAMRELAUNCH=1`, dane uzytkownika `onlyifdoesntexist`, zadania deweloperskie tylko w drzewie z `.git`. Test czystej instalacji w `%LOCALAPPDATA%\DAM-nowy-uzytkownik`: aktywacja, logowanie, wymuszona zmiana hasla, Marketing M:, Eksplorator; zero procesow ssh/git.
+- 2.1.0: petla MutationObserver samouczka (zamrozenie 1,8 GB przy Materialach), falszywe "Aktualizacja indeksu nie dziala" (wiek locka z heartbeat), nieatomowe zapisy statusu, instalator zamyka DAM z katalogu instalacji, skojarzenia per wariant materialu (zakres "Tylko ten plik"/"Wszystkie warianty", odznaczone = rejected), Branding (podglad ponawiany zamiast "niedostepny", karta grupy otwiera plik z tytulu, dymek indeksow + kopiowanie po przecinku, kopiowanie nazw prawym przyciskiem), Eksplorator (pliki w Materialach, Wstecz do rodzica, checklista bez wyscigu slim, ?q= z naglowka), Wiadomosci, Pomoc, Ustawienia (przywrocony uciety koniec `settings.html` od 248cc4d), Projekt bez HTTP 404. `?v=` takze w ladowaniu dynamicznym (dam-shortcuts -> dam-tutorial).
+- Test aktualizacji na zywej instalacji: 2.0.9 sama wykryla v2.1.0 bez tokenu, pobrala w tle, chip + dymek "Zainstaluj / Pozniej", potwierdzenie, instalacja 34 s, okno wrocilo samo na 2.1.0 z "Udalo sie zaktualizowac". Dane uzytkownika bez zmian (indeksy, pg-config.dpapi, konta - te same sumy). Preflight: wszystko zielone, "Aktualizacja indeksu dziala".
+- 2.1.1: stan aktualizacji jako karta w sidebarze pod "Wyloguj" (zwiniety sidebar / niskie okno / telefon: obok sidebara na dole), Dobrokalorius z megafonem 5 s. `build-installer.ps1` bez kasowania rekurencyjnego (nowy staging na build; stare katalogi `%LOCALAPPDATA%\DAM-build\staging\DAM-install*` usuwa czlowiek).
+- Testy: `unittest` 264, jedyny FAIL znany `test_brand_folder_context::test_linked_product_id_derived_from_variant`; dym 13 stron (0 wyjatkow JS, 0 bledow sieci); weryfikacja Brandingu 12/12; UI aktualizacji 375/768/1280, jasny/ciemny, rozwiniety/zwiniety.
+
+**Efekt/Fix:** Release https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v2.1.0 i https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v2.1.1 (Latest, `DAM-Setup.exe` 88 300 864 B + `.sig`). **ZOSTAJE DLA USERA:** uruchomic `bash bin/scripts/ops/synology/deploy-nas-bridge.sh` (most na NAS nieaktywny od 12:08); usunac stare katalogi staging; rejestr instalatora wskazuje `%LOCALAPPDATA%\DAM-nowy-uzytkownik` (stara 2.0.8 w `Programs\DAM`).
+
+**Zrodla:** `app_updates.py`, `dam-app-update.js`, `DAM-Setup.iss`, `rebuild_lock.py`, `dam-tutorial.js`, `dam-branding.js`, `dam-preview-truth.js`, `assoc_repo.py`, `build-installer.ps1`.
+
 ## 2026-09-18 - v2.0.8 audyt bezpieczenstwa: koniec hasla w instalatorze, podpisane wydania
 
 **Komenda/Akcja:** User: wejdz w role atakujacego, zalatw wszystkie luki, napraw czysta instalacje, commit + push + build + release. Repo i wydania zostaja PUBLICZNE (ludzie musza moc pobrac aktualizacje).
