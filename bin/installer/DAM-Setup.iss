@@ -1,6 +1,6 @@
 ﻿; DAM Windows installer - pelny kreator (licencja, sciezka, aktualizacja)
 #ifndef MyAppVersion
-  #define MyAppVersion "2.0.8"
+  #define MyAppVersion "2.0.9"
 #endif
 #ifndef StageDir
   #define StageDir "..\dist\staging\DAM-install"
@@ -120,8 +120,20 @@ Source: "{#StageDir}\README.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; Bez tego kazda aktualizacja kasowala uzytkownikowi juz-zeskanowany plik (9000+ pozycji,
 ; 15-30 min skanu dysku Marketing) z powrotem do zaslepki instalatora (assets:[]),
 ; wymuszajac pelny reskan i zerujac skojarzenia widoczne w Brandingu do czasu jego konca.
-Source: "{#StageDir}\bin\*"; DestDir: "{app}\bin"; Excludes: "apps\web\data\branding-index.json"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Ta sama zasada dla pozostalych plikow stanu uzytkownika (indeksy, ustawienia, kampanie,
+; statusy, osoby) i lokalnej bazy kont: cicha aktualizacja nie moze ich cofnac do wersji z builda.
+Source: "{#StageDir}\bin\*"; DestDir: "{app}\bin"; Excludes: "apps\web\data\branding-index.json,\apps\web\data\file-index.json,\apps\web\data\search-index.json,\apps\web\data\app-settings.json,\apps\web\data\campaigns.json,\apps\web\data\branding-grid-index.json,\apps\web\data\branding-grid-head.json,\apps\web\data\branding-search-index.json,\apps\web\data\lifecycle-status.json,\apps\web\data\product-people.json,\DATABASE\users-seed.sqlite"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#StageDir}\bin\apps\web\data\branding-index.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
+Source: "{#StageDir}\bin\apps\web\data\file-index.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
+Source: "{#StageDir}\bin\apps\web\data\search-index.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
+Source: "{#StageDir}\bin\apps\web\data\app-settings.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
+Source: "{#StageDir}\bin\apps\web\data\campaigns.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
+Source: "{#StageDir}\bin\apps\web\data\branding-grid-index.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
+Source: "{#StageDir}\bin\apps\web\data\branding-grid-head.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
+Source: "{#StageDir}\bin\apps\web\data\branding-search-index.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
+Source: "{#StageDir}\bin\apps\web\data\lifecycle-status.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
+Source: "{#StageDir}\bin\apps\web\data\product-people.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
+Source: "{#StageDir}\bin\DATABASE\users-seed.sqlite"; DestDir: "{app}\bin\DATABASE"; Flags: onlyifdoesntexist
 Source: "{#GitRoot}\bin\installer\redist\vc_redist.x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
 Source: "{#GitRoot}\bin\installer\redist\MicrosoftEdgeWebview2Setup.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
 Source: "{#GitRoot}\bin\installer\inyfinn-dam-codesign.cer"; DestDir: "{app}\bin\installer"; Flags: ignoreversion skipifsourcedoesntexist
@@ -137,6 +149,9 @@ Filename: "{tmp}\MicrosoftEdgeWebview2Setup.exe"; Parameters: "/silent /install"
 ; PAMIEC-PODRECZNA pobiera mostek przy starcie (dam_thumb_cache.ensure_boot_sync).
 Filename: "{sys}\certutil.exe"; Parameters: "-user -f -addstore TrustedPublisher ""{app}\bin\installer\inyfinn-dam-codesign.cer"""; StatusMsg: "Rejestracja wydawcy Inyfinn..."; Flags: runhidden waituntilterminated skipifdoesntexist
 Filename: "{app}\{#MyAppExeName}"; Description: "Uruchom DAM po zakonczeniu instalacji (startuje mostek)"; Flags: nowait postinstall skipifsilent
+; Cicha aktualizacja z aplikacji (app_updates.py: /VERYSILENT ... /DAMRELAUNCH=1): DAM wraca sam.
+; Wpis wyzej ma skipifsilent, a RestartApplications=no, wiec bez tego program po prostu znikal.
+Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Flags: nowait runasoriginaluser; Check: IsDamRelaunch
 
 [Registry]
 Root: HKCU; Subkey: "Software\Inyfinn\DAM"; ValueType: string; ValueName: "InstallPath"; ValueData: "{app}"; Flags: uninsdeletekey
@@ -299,6 +314,13 @@ function GetPrevVersion: String;
 begin
   if not RegQueryStringValue(HKCU, 'Software\Inyfinn\DAM', 'Version', Result) then
     Result := '';
+end;
+
+{ True tylko przy cichej aktualizacji z aplikacji z parametrem /DAMRELAUNCH=1.
+  WizardSilent: w trybie interaktywnym zostaje zwykly checkbox "Uruchom DAM" (bez podwojnego startu). }
+function IsDamRelaunch: Boolean;
+begin
+  Result := WizardSilent and (ExpandConstant('{param:DAMRELAUNCH|0}') = '1');
 end;
 
 function KillDamProcesses: Boolean;

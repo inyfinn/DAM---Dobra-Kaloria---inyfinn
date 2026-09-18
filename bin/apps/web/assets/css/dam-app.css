@@ -1669,49 +1669,274 @@ i.uil.uil-folder.dam-folder-item__icon {
 }
 
 /* ------------------------------------------------------------------ */
-/* Baner aktualizacji — w flow treści, nie fixed nad headerem          */
+/* Aktualizacje - spokojny dymek stanu w lewym dolnym rogu              */
+/* (wzorzec Inyfinn Photo Resizer: status bar + toast, bez paska na     */
+/* górze). Odsuniete o szerokosc sidebara na >=1200px, zeby nie          */
+/* zaslaniac stopki/etykiety wersji sidebara.                           */
 /* ------------------------------------------------------------------ */
-.dam-app-update-banner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: var(--dam-space-3, 12px);
-  width: 100%;
-  margin: 0 0 var(--dam-space-4, 16px);
-  padding: var(--dam-space-3, 12px) var(--dam-space-4, 16px);
-  font: 600 14px/1.4 var(--dam-font-body, Jost, system-ui, sans-serif);
-  text-align: center;
-  color: var(--dam-surface);
-  background: var(--dam-primary);
-  border-radius: var(--dam-radius-md, 10px);
-  box-shadow: var(--dam-shadow-sm, 0 2px 12px rgba(0, 0, 0, 0.12));
+.dam-update-chip,
+.dam-update-toast {
+  position: fixed;
+  left: 16px;
+  z-index: 2400;
+  font: 500 var(--dam-fs-md, 13px)/1.4 var(--dam-font, "Jost", system-ui, sans-serif);
 }
 
-.dam-app-update-banner[hidden] {
+@media (min-width: 1200px) {
+  .dam-update-chip,
+  .dam-update-toast {
+    left: calc(var(--dam-sidebar-w, 280px) + var(--dam-edge, 22px) + 16px);
+  }
+
+  body.dam-sidebar-collapsed .dam-update-chip,
+  body.dam-sidebar-collapsed .dam-update-toast {
+    left: calc(72px + var(--dam-edge, 22px) + 16px);
+  }
+}
+
+/* --- Chip stanu (checking / downloading / verifying / ready) --- */
+.dam-update-chip {
+  bottom: 16px;
+  z-index: 2400;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 6px 10px 6px 12px;
+  color: var(--dam-text);
+  background: var(--dam-surface);
+  border: 1px solid var(--dam-border);
+  border-radius: 10px;
+  box-shadow: var(--dam-shadow, 0 10px 30px rgba(23, 22, 30, 0.12));
+}
+
+.dam-update-chip[hidden] {
   display: none !important;
 }
 
-.dam-app-update-banner__msg {
-  flex: 1 1 12rem;
-}
-
-.dam-app-update-banner__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--dam-space-2, 8px);
-  align-items: center;
-  justify-content: center;
-}
-
-.dam-app-update-banner__btn {
-  min-height: 44px;
-  padding: 8px 14px;
-  border: 0;
-  background: var(--dam-surface);
+.dam-update-chip__spinner {
+  flex: 0 0 auto;
+  width: 14px;
+  text-align: center;
+  font-weight: 600;
   color: var(--dam-primary);
 }
 
-.dam-app-update-banner__btn--ghost {
-  background: color-mix(in srgb, var(--dam-surface) 88%, transparent);
+.dam-update-chip__spinner[hidden] {
+  display: none;
+}
+
+.dam-update-chip__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--dam-text);
+  word-break: break-word;
+}
+
+.dam-update-chip__actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dam-update-chip__actions:empty {
+  display: none;
+}
+
+.dam-update-chip__btn {
+  border: 0;
+  background: transparent;
+  color: var(--dam-text-muted);
+  font: inherit;
+  cursor: pointer;
+  border-radius: 8px;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 2px 8px;
+}
+
+.dam-update-chip__btn:hover,
+.dam-update-chip__btn:focus-visible {
+  color: var(--dam-danger);
+  background: color-mix(in srgb, var(--dam-danger) 12%, transparent);
+}
+
+.dam-update-chip__btn:focus-visible {
+  outline: 2px solid var(--dam-primary);
+  outline-offset: 1px;
+}
+
+.dam-update-chip__btn--install {
+  padding: 6px 14px;
+  color: #fff;
+  background: var(--dam-primary);
+  font-weight: 600;
+}
+
+.dam-update-chip__btn--install:hover,
+.dam-update-chip__btn--install:focus-visible {
+  background: color-mix(in srgb, var(--dam-primary) 88%, black);
+  color: #fff;
+}
+
+.dam-update-chip__btn--cancel {
+  min-width: 24px;
+}
+
+/* --- Toast: "Zainstaluj / Później" i komunikat sukcesu --- */
+.dam-update-toast {
+  bottom: 16px;
+  z-index: 2450;
+  width: clamp(280px, 92vw, 360px);
+  padding: 14px;
+  color: var(--dam-text);
+  background: var(--dam-surface);
+  border: 1px solid var(--dam-border);
+  border-radius: 16px;
+  box-shadow: var(--dam-shadow, 0 10px 30px rgba(23, 22, 30, 0.16));
+}
+
+.dam-update-toast[hidden] {
+  display: none !important;
+}
+
+.dam-update-toast__title {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dam-text);
+}
+
+.dam-update-toast__body {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--dam-text-muted);
+}
+
+.dam-update-toast__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dam-update-toast__btn {
+  min-height: 32px;
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 10px;
+  font: 600 12px/1 var(--dam-font, "Jost", system-ui, sans-serif);
+  cursor: pointer;
+}
+
+.dam-update-toast__btn--primary {
+  color: #fff;
+  background: var(--dam-primary);
+}
+
+.dam-update-toast__btn--primary:hover,
+.dam-update-toast__btn--primary:focus-visible {
+  background: color-mix(in srgb, var(--dam-primary) 88%, black);
+}
+
+.dam-update-toast__btn--ghost {
+  color: var(--dam-text-muted);
+  background: var(--dam-surface-muted);
+}
+
+.dam-update-toast__btn--ghost:hover,
+.dam-update-toast__btn--ghost:focus-visible {
+  color: var(--dam-text);
+  background: color-mix(in srgb, var(--dam-surface-muted) 80%, var(--dam-border));
+}
+
+.dam-update-toast__btn:focus-visible {
+  outline: 2px solid var(--dam-primary);
+  outline-offset: 1px;
+}
+
+/* --- Modal potwierdzenia instalacji --- */
+.dam-update-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: color-mix(in srgb, var(--dam-dark, #17161e) 55%, transparent);
+}
+
+.dam-update-confirm-dialog {
+  width: min(420px, 100%);
+  padding: 20px;
+  color: var(--dam-text);
+  background: var(--dam-surface);
+  border: 1px solid var(--dam-border);
+  border-radius: 16px;
+  box-shadow: var(--dam-shadow, 0 20px 50px rgba(23, 22, 30, 0.3));
+}
+
+.dam-update-confirm-dialog__title {
+  margin: 0 0 10px;
+  font: 600 var(--dam-fs-lg, 16px)/1.3 var(--dam-font, "Jost", system-ui, sans-serif);
+  color: var(--dam-text);
+}
+
+.dam-update-confirm-dialog__body {
+  margin: 0 0 18px;
+  font-size: var(--dam-fs-base, 14px);
+  line-height: 1.5;
+  color: var(--dam-text-muted);
+}
+
+.dam-update-confirm-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.dam-update-confirm-dialog__btn {
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: var(--dam-radius-btn-compact, 8px);
+  font: 600 13px/1 var(--dam-font, "Jost", system-ui, sans-serif);
+  cursor: pointer;
+}
+
+.dam-update-confirm-dialog__btn--primary {
+  color: #fff;
+  background: var(--dam-primary);
+}
+
+.dam-update-confirm-dialog__btn--primary:hover,
+.dam-update-confirm-dialog__btn--primary:focus-visible {
+  background: color-mix(in srgb, var(--dam-primary) 88%, black);
+}
+
+.dam-update-confirm-dialog__btn--ghost {
+  color: var(--dam-text-muted);
+  background: var(--dam-surface-muted);
+}
+
+.dam-update-confirm-dialog__btn--ghost:hover,
+.dam-update-confirm-dialog__btn--ghost:focus-visible {
+  color: var(--dam-text);
+  background: color-mix(in srgb, var(--dam-surface-muted) 80%, var(--dam-border));
+}
+
+.dam-update-confirm-dialog__btn:focus-visible {
+  outline: 2px solid var(--dam-primary);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dam-update-chip__spinner {
+    animation: none !important;
+  }
 }

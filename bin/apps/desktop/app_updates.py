@@ -1,22 +1,29 @@
 # -*- coding: utf-8 -*-
-"""Sprawdzanie aktualizacji DAM z GitHub Releases.
+"""Aktualizacje DAM z GitHub Releases (repo publiczne, token opcjonalny).
 
-Powiadomienie tylko gdy latest > current i jest prawdziwy DAM-Setup.exe.
-Repo prywatne wymaga tokenu z lokalnych sekretow (nigdy w JS / logach).
-Harmonogram: codziennie o 09:00 czasu lokalnego, nie co 5 godzin.
+Przeplyw (logika przeniesiona z Inyfinn Photo Resizer, bez Qt - watki):
+- sprawdzenie ok. 20 s po starcie harmonogramu, potem co 6 h (prefs auto_check),
+- nowsze wydanie z DAM-Setup.exe ORAZ DAM-Setup.exe.sig -> pobieranie w tle:
+  najpierw .sig (maly), potem instalator do .part ze wznawianiem (HTTP Range),
+  kontrola rozmiaru z API, SHA-256 z pola `digest` (gdy jest) i podpisu Ed25519,
+- gotowy instalator lezy w data/updates/<wersja>/ (najwyzej 2 wersje),
+- instalacja tylko na zadanie uzytkownika: ponowna weryfikacja podpisu bez cache,
+  znacznik pending_success.json, cichy instalator z /DAMRELAUNCH=1 (Inno uruchamia DAM).
+W drzewie gita (is_portable_repo) nic nie pobieramy i nic nie instalujemy.
+Token GitHub nigdy nie trafia do JS ani logow.
 """
 from __future__ import annotations
 
 import json
 import os
 import re
+import subprocess
 import sys
 import threading
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -32,22 +39,46 @@ INSTALLER_DIR = DESKTOP_DIR / "data" / "updates"
 DEFAULT_REPO = "inyfinn/DAM---Dobra-Kaloria---inyfinn"
 DEFAULT_ASSET = "DAM-Setup.exe"
 SIG_SUFFIX = ".sig"
+PART_SUFFIX = ".part"
 MAX_SIG_BYTES = 8192
-DAILY_CHECK_HOUR = 9
-DAILY_CHECK_MINUTE = 0
 TOKEN_KEYS = ("GITHUB_TOKEN", "GH_TOKEN", "DAM_GITHUB_TOKEN")
 MIN_INSTALLER_BYTES = 1_000_000
+USER_AGENT = "DAM-Updater/1"
+
+FIRST_CHECK_DELAY_SEC = 20.0
+CHECK_INTERVAL_SEC = 6 * 3600.0
+MAX_CACHED_VERSIONS = 2
+DOWNLOAD_CHUNK_BYTES = 256 * 1024
+PROGRESS_WRITE_INTERVAL_SEC = 0.5
+LOCK_STALE_SEC = 120.0
+STATUS_STALE_SEC = 120.0
+# Znacznik nowszej wersji mlodszy niz to = instalator moze jeszcze pracowac, nie kasuj.
+MARKER_GRACE_SEC = 600.0
+INSTALLER_ARGS = ("/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/DAMRELAUNCH=1")
 
 _LOCK = threading.Lock()
 _SCHEDULER_STARTED = False
 _DL_LOCK = threading.Lock()
 _DL_STATE: dict[str, Any] = {
     "status": "idle",
-    "path": "",
-    "error": "",
+    "target": "",
     "bytes": 0,
+    "total": 0,
+    "error": "",
+    "updated_at": 0.0,
 }
+_DL_THREAD: threading.Thread | None = None
+_CHECK_THREAD: threading.Thread | None = None
+_CANCEL = threading.Event()
+_LAST_STATUS_WRITE = 0.0
 _TOKEN_CACHE: str | None = None
+
+
+class _IntegrityError(Exception):
+    """Plik niezgodny z wydaniem - kasujemy go (nie zostawiamy do wznowienia)."""
+
+
+# --------------------------------------------------------------------------- wersje
 
 
 def _strip_v(raw: str) -> str:
@@ -119,6 +150,9 @@ def _parse_version(raw: str) -> tuple[int, ...]:
     return parse_version(raw)
 
 
+# --------------------------------------------------------------------------- pliki / sekrety
+
+
 def _load_json(path: Path, default: dict[str, Any]) -> dict[str, Any]:
     try:
         if path.is_file():
@@ -132,7 +166,9 @@ def _load_json(path: Path, default: dict[str, Any]) -> dict[str, Any]:
 
 def _save_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp.replace(path)
 
 
 def _load_dotenv_file(path: Path) -> None:
@@ -164,12 +200,10 @@ def _token_from_mapping(data: Any) -> str:
 
 
 def _load_secret_files() -> None:
-    sibling_env = (DESKTOP_DIR / "data" / "pg-config.json").with_name("pg-config.env")
     for path in (
         CONTENT_ROOT / ".env",
         DESKTOP_DIR / "dam-connection.env",
         DESKTOP_DIR / "data" / ".env",
-        sibling_env,
         DESKTOP_DIR / "data" / "pg-config.env",
     ):
         _load_dotenv_file(path)
@@ -178,14 +212,14 @@ def _load_secret_files() -> None:
 def _token_from_gh_cli() -> str:
     """Lokalny keyring `gh` (to samo konto co git). Nigdy nie loguje stdout."""
     try:
-        import subprocess
-
+        flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
         proc = subprocess.run(
             ["gh", "auth", "token"],
             capture_output=True,
             text=True,
             timeout=8,
             check=False,
+            creationflags=flags,
         )
         val = (proc.stdout or "").strip()
         if proc.returncode == 0 and val:
@@ -196,6 +230,7 @@ def _token_from_gh_cli() -> str:
 
 
 def _resolve_github_token() -> str:
+    """Opcjonalny token (repo jest publiczne). Pusty string = zapytania anonimowe."""
     global _TOKEN_CACHE
     if _TOKEN_CACHE is not None:
         return _TOKEN_CACHE
@@ -221,10 +256,11 @@ def _resolve_github_token() -> str:
 
 
 def load_update_config() -> dict[str, Any]:
-    cfg = {
+    cfg: dict[str, Any] = {
         "github_repo": DEFAULT_REPO,
         "asset_name": DEFAULT_ASSET,
-        "check_hour_local": DAILY_CHECK_HOUR,
+        "first_check_delay_sec": int(FIRST_CHECK_DELAY_SEC),
+        "check_interval_hours": int(CHECK_INTERVAL_SEC // 3600),
     }
     try:
         if VERSION_JSON.is_file():
@@ -264,31 +300,129 @@ def save_prefs(payload: dict[str, Any] | None) -> dict[str, Any]:
 
 
 def is_portable_repo() -> bool:
-    """DAM.exe + bin/ w jednym GIT_ROOT — bez instalatora, restart DAM.exe."""
+    """DAM.exe + bin/ w jednym GIT_ROOT - bez instalatora, restart DAM.exe."""
     try:
         return (GIT_ROOT / ".git").is_dir() or (GIT_ROOT / ".git").is_file()
     except OSError:
         return False
 
 
-def installer_path() -> Path:
-    return INSTALLER_DIR / DEFAULT_ASSET
+# --------------------------------------------------------------------------- cache wersji
 
 
-def sig_path() -> Path:
-    return INSTALLER_DIR / (DEFAULT_ASSET + SIG_SUFFIX)
+def version_dir(version: str) -> Path:
+    """data/updates/<wersja>. Tylko kanoniczna wersja (bez ../ i innych sztuczek)."""
+    v = _strip_v(version)
+    if not is_canonical_product_version(v):
+        raise ValueError("bad_version")
+    return INSTALLER_DIR / v
 
 
-_VERIFY_CACHE: dict[str, Any] = {"key": None, "ok": False, "reason": ""}
+def _cached_versions() -> list[str]:
+    """Wersje z folderami w cache, od najnowszej."""
+    out: list[str] = []
+    try:
+        for child in INSTALLER_DIR.iterdir():
+            if child.is_dir() and is_canonical_product_version(child.name):
+                out.append(child.name)
+    except OSError:
+        return []
+    out.sort(key=version_to_int, reverse=True)
+    return out
 
 
-def verify_downloaded_installer(*, use_cache: bool = True) -> tuple[bool, str]:
+def _state_target() -> str:
+    with _DL_LOCK:
+        return str(_DL_STATE.get("target") or "")
+
+
+def _default_version() -> str:
+    tgt = _state_target()
+    if tgt:
+        return tgt
+    cur = current_version()
+    for v in _cached_versions():
+        if is_newer(v, cur) and (version_dir(v) / DEFAULT_ASSET).is_file():
+            return v
+    return ""
+
+
+def installer_path(version: str | None = None) -> Path:
+    v = _strip_v(version) if version else _default_version()
+    if not v or not is_canonical_product_version(v):
+        return INSTALLER_DIR / DEFAULT_ASSET  # stara, plaska sciezka: nigdy nie uruchamiana
+    return version_dir(v) / DEFAULT_ASSET
+
+
+def sig_path(version: str | None = None) -> Path:
+    exe = installer_path(version)
+    return exe.with_name(exe.name + SIG_SUFFIX)
+
+
+def _part_path(version: str) -> Path:
+    exe = installer_path(version)
+    return exe.with_name(exe.name + PART_SUFFIX)
+
+
+def _remove_version_dir(version: str) -> None:
+    """Kasuje tylko znane pliki updatera i pusty folder (bez rekurencji)."""
+    try:
+        folder = version_dir(version)
+    except ValueError:
+        return
+    for name in (
+        DEFAULT_ASSET,
+        DEFAULT_ASSET + SIG_SUFFIX,
+        DEFAULT_ASSET + PART_SUFFIX,
+        DEFAULT_ASSET + SIG_SUFFIX + PART_SUFFIX,
+    ):
+        try:
+            (folder / name).unlink(missing_ok=True)
+        except OSError:
+            pass
+    try:
+        folder.rmdir()
+    except OSError:
+        pass
+    _VERIFY_CACHE.pop(str(folder), None)
+
+
+def _remove_legacy_flat_files() -> None:
+    for name in (DEFAULT_ASSET, DEFAULT_ASSET + SIG_SUFFIX, DEFAULT_ASSET + PART_SUFFIX):
+        try:
+            (INSTALLER_DIR / name).unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
+def _enforce_cache_limit(keep: str) -> None:
+    """Najwyzej MAX_CACHED_VERSIONS folderow; `keep` zostaje zawsze."""
+    keep = _strip_v(keep)
+    others = [v for v in _cached_versions() if v != keep]
+    room = MAX_CACHED_VERSIONS - (1 if keep else 0)
+    for v in others[max(room, 0):]:
+        _remove_version_dir(v)
+    _remove_legacy_flat_files()
+
+
+# --------------------------------------------------------------------------- weryfikacja
+
+_VERIFY_CACHE: dict[str, Any] = {}
+
+
+def verify_downloaded_installer(
+    version: str | None = None, *, use_cache: bool = True
+) -> tuple[bool, str]:
     """Podpis Ed25519 wydania (release_verify). Bez waznego podpisu instalator NIE rusza.
 
     Cache po (mtime, size) obu plikow - status w UI nie liczy SHA-256 z ~90 MB co sekunde.
     Start instalatora zawsze woła z use_cache=False (plik mogl zostac podmieniony).
+    Wersja w podpisie musi byc rowna nazwie folderu (brak mieszania wersji w cache).
     """
-    exe, sig = installer_path(), sig_path()
+    v = _strip_v(version) if version else _default_version()
+    if not v or not is_canonical_product_version(v):
+        return False, "installer_missing"
+    exe, sig = installer_path(v), sig_path(v)
     try:
         if not exe.is_file() or exe.stat().st_size < MIN_INSTALLER_BYTES:
             return False, "installer_missing"
@@ -296,33 +430,44 @@ def verify_downloaded_installer(*, use_cache: bool = True) -> tuple[bool, str]:
             return False, "signature_missing"
         es, ss = exe.stat(), sig.stat()
         key = (es.st_mtime_ns, es.st_size, ss.st_mtime_ns, ss.st_size)
-        if use_cache and _VERIFY_CACHE.get("key") == key:
-            return bool(_VERIFY_CACHE["ok"]), str(_VERIFY_CACHE["reason"])
+        ckey = str(exe.parent)
+        cached = _VERIFY_CACHE.get(ckey)
+        if use_cache and cached and cached[0] == key:
+            return bool(cached[1]), str(cached[2])
         import release_verify
 
+        sig_bytes = sig.read_bytes()
         ok, reason = release_verify.verify_installer(
             exe,
-            sig.read_bytes(),
+            sig_bytes,
             min_version_exclusive=parse_version(current_version()),
             parse_version=parse_version,
         )
-        _VERIFY_CACHE.update({"key": key, "ok": ok, "reason": reason})
+        if ok:
+            parsed = release_verify.parse_sig(sig_bytes) or {}
+            if _strip_v(str(parsed.get("version") or "")) != v:
+                ok, reason = False, "version_mismatch"
+        _VERIFY_CACHE[ckey] = (key, ok, reason)
         return ok, reason
     except Exception:  # noqa: BLE001
         return False, "verify_error"
 
 
-def _discard_download() -> None:
-    for path in (installer_path(), sig_path()):
-        try:
-            path.unlink(missing_ok=True)
-        except OSError:
-            pass
-
-
-def installer_ready() -> bool:
-    ok, _reason = verify_downloaded_installer()
+def installer_ready(version: str | None = None) -> bool:
+    ok, _reason = verify_downloaded_installer(version)
     return ok
+
+
+def _ready_version() -> str:
+    """Najnowsza wersja z cache, nowsza od biezacej i z poprawnym podpisem."""
+    cur = current_version()
+    for v in _cached_versions():
+        if is_newer(v, cur) and installer_ready(v):
+            return v
+    return ""
+
+
+# --------------------------------------------------------------------------- URL
 
 
 _GITHUB_HOSTS = ("github.com", "api.github.com", "objects.githubusercontent.com")
@@ -347,41 +492,30 @@ def _is_setup_download_url(url: str, asset_name: str = DEFAULT_ASSET) -> bool:
     return path.endswith("/" + name) and name.lower().endswith(".exe")
 
 
-def next_daily_run_at(now: datetime, last_check_ts: float | None) -> datetime:
-    """Kiedy odpalic auto-check (czas lokalny).
-
-    - last check wczoraj (albo brak) i now >= 09:00 -> natychmiast
-    - last check wczoraj i now < 09:00 -> dzisiaj 09:00
-    - last check dzisiaj -> jutro 09:00
-    """
-    today_nine = now.replace(
-        hour=DAILY_CHECK_HOUR,
-        minute=DAILY_CHECK_MINUTE,
-        second=0,
-        microsecond=0,
-    )
-    last_date = None
-    if last_check_ts:
-        try:
-            last_date = datetime.fromtimestamp(float(last_check_ts)).date()
-        except (OSError, OverflowError, ValueError, TypeError):
-            last_date = None
-    if last_date is None or last_date < now.date():
-        if now >= today_nine:
-            return now
-        return today_nine
-    tomorrow = now.date() + timedelta(days=1)
-    return datetime.combine(tomorrow, today_nine.time())
+def _is_api_asset_url(url: str) -> bool:
+    low = str(url or "").lower()
+    return "api.github.com" in low and "/releases/assets/" in low
 
 
-def seconds_until_next_daily_check(
-    now: datetime | None = None,
-    last_check_ts: float | None = None,
+# --------------------------------------------------------------------------- harmonogram
+
+
+def seconds_until_next_check(
+    now: float, started_at: float, last_check_at: float | None
 ) -> float:
-    current = now or datetime.now()
-    nxt = next_daily_run_at(current, last_check_ts)
-    delay = (nxt - current).total_seconds()
-    return 0.0 if delay < 1.0 else delay
+    """Czysta funkcja harmonogramu (zegar monotoniczny procesu).
+
+    - jeszcze nie sprawdzano w tym procesie -> started_at + 20 s
+    - potem -> ostatnie sprawdzenie + 6 h
+    """
+    if last_check_at is None:
+        due = float(started_at) + FIRST_CHECK_DELAY_SEC
+    else:
+        due = float(last_check_at) + CHECK_INTERVAL_SEC
+    return max(0.0, due - float(now))
+
+
+# --------------------------------------------------------------------------- sprawdzanie
 
 
 def _empty_result(error: str = "") -> dict[str, Any]:
@@ -397,7 +531,7 @@ def _empty_result(error: str = "") -> dict[str, Any]:
         "checked_at": time.time(),
         "portable": is_portable_repo(),
         "update_mode": "restart_exe" if is_portable_repo() else "installer",
-        "installer_ready": installer_ready(),
+        "installer_ready": bool(_ready_version()) if not is_portable_repo() else False,
         "auth_configured": bool(_resolve_github_token()),
     }
     if error:
@@ -411,8 +545,6 @@ def _git_origin_version() -> str:
     if not is_portable_repo():
         return ""
     try:
-        import subprocess
-
         flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
         proc = subprocess.run(
             ["git", "-C", str(GIT_ROOT), "show", "origin/main:bin/apps/web/version.json"],
@@ -466,11 +598,12 @@ def _public_result(data: dict[str, Any]) -> dict[str, Any]:
     ok = bool(data.get("ok", True)) and not err
     newer = is_newer(latest, cur)
     setup_ok = _is_setup_download_url(url) and latest_source == "github" and newer
+    portable = is_portable_repo()
     out = {
         "ok": ok,
         "current": cur,
         "latest": latest or cur,
-        "github_latest": latest if latest_source == "github" else latest,
+        "github_latest": latest,
         "git_latest": _consider_remote(git_ver, cur),
         "latest_source": latest_source,
         "update_available": bool(ok and newer and setup_ok),
@@ -478,9 +611,9 @@ def _public_result(data: dict[str, Any]) -> dict[str, Any]:
         "release_notes": str(data.get("release_notes") or "")[:4000],
         "published_at": str(data.get("published_at") or ""),
         "checked_at": data.get("checked_at") or time.time(),
-        "portable": is_portable_repo(),
-        "update_mode": "restart_exe" if is_portable_repo() else "installer",
-        "installer_ready": installer_ready(),
+        "portable": portable,
+        "update_mode": "restart_exe" if portable else "installer",
+        "installer_ready": bool(_ready_version()) if not portable else False,
         "auth_configured": bool(_resolve_github_token()),
     }
     if err:
@@ -493,6 +626,12 @@ def _public_result(data: dict[str, Any]) -> dict[str, Any]:
     if setup_ok:
         out["sig_url"] = str(data.get("sig_url") or "")
         out["sig_api_url"] = str(data.get("sig_api_url") or "")
+        try:
+            out["size"] = int(data.get("size") or 0)
+        except (TypeError, ValueError):
+            out["size"] = 0
+        sha = str(data.get("sha256") or "").strip().lower()
+        out["sha256"] = sha if re.fullmatch(r"[0-9a-f]{64}", sha) else ""
         if not _is_github_https(out["sig_url"]) and not _is_github_https(out["sig_api_url"]):
             out["update_available"] = False
             out["download_url"] = ""
@@ -511,15 +650,18 @@ def _persist_attempt(out: dict[str, Any]) -> None:
         "asset_api_url",
         "sig_url",
         "sig_api_url",
+        "size",
+        "sha256",
         "error",
         "published_at",
     )
     last_result = {k: out[k] for k in keep_keys if k in out}
-    nxt = next_daily_run_at(datetime.now(), float(out.get("checked_at") or time.time()))
+    checked = float(out.get("checked_at") or time.time())
+    state.pop("next_run", None)
     state.update(
         {
-            "last_check": out.get("checked_at") or time.time(),
-            "next_run": nxt.isoformat(timespec="seconds"),
+            "last_check": checked,
+            "next_check_after": checked + CHECK_INTERVAL_SEC,
             "last_result": last_result,
         }
     )
@@ -529,7 +671,7 @@ def _persist_attempt(out: dict[str, Any]) -> None:
 def _github_headers(token: str, *, download: bool = False) -> dict[str, str]:
     headers = {
         "Accept": "application/octet-stream" if download else "application/vnd.github+json",
-        "User-Agent": "DAM-Dobra-Kaloria-Updater",
+        "User-Agent": USER_AGENT,
         "X-GitHub-Api-Version": "2022-11-28",
     }
     if token:
@@ -542,8 +684,6 @@ def _github_get_json(url: str, token: str) -> Any:
     try:
         with urllib.request.urlopen(req, timeout=20) as resp:
             raw = resp.read().decode("utf-8")
-    except urllib.error.HTTPError as exc:
-        raise
     except TimeoutError as exc:
         raise TimeoutError("github_timeout") from exc
     try:
@@ -552,7 +692,17 @@ def _github_get_json(url: str, token: str) -> Any:
         raise ValueError("github_malformed") from exc
 
 
-def _pick_setup_asset(rel: dict[str, Any], asset_name: str) -> dict[str, str] | None:
+def _digest_sha256(asset: dict[str, Any]) -> str:
+    digest = str(asset.get("digest") or "").strip()
+    if digest.lower().startswith("sha256:"):
+        val = digest.split(":", 1)[1].strip().lower()
+        if re.fullmatch(r"[0-9a-f]{64}", val):
+            return val
+    return ""
+
+
+def _pick_setup_asset(rel: dict[str, Any], asset_name: str) -> dict[str, Any] | None:
+    """Wydanie jest aktualizacja tylko gdy ma OBA pliki: instalator i .sig."""
     assets = rel.get("assets") if isinstance(rel.get("assets"), list) else []
     sig_url = sig_api = ""
     for asset in assets:
@@ -572,20 +722,26 @@ def _pick_setup_asset(rel: dict[str, Any], asset_name: str) -> dict[str, str] | 
         api = str(asset.get("url") or "")
         if not _is_setup_download_url(url, asset_name):
             continue
+        try:
+            size = int(asset.get("size") or 0)
+        except (TypeError, ValueError):
+            size = 0
         return {
             "download_url": url,
             "asset_api_url": api,
             "sig_url": sig_url,
             "sig_api_url": sig_api,
+            "size": size,
+            "sha256": _digest_sha256(asset),
         }
     return None
 
 
 def _select_release(
     releases: list[Any], asset_name: str
-) -> tuple[dict[str, Any], dict[str, str]] | None:
-    stable: list[tuple[dict[str, Any], dict[str, str]]] = []
-    pre: list[tuple[dict[str, Any], dict[str, str]]] = []
+) -> tuple[dict[str, Any], dict[str, Any]] | None:
+    stable: list[tuple[dict[str, Any], dict[str, Any]]] = []
+    pre: list[tuple[dict[str, Any], dict[str, Any]]] = []
     for rel in releases:
         if not isinstance(rel, dict) or rel.get("draft"):
             continue
@@ -599,7 +755,8 @@ def _select_release(
             pre.append((rel, asset))
         else:
             stable.append((rel, asset))
-    def _semver_key(item: tuple[dict[str, Any], dict[str, str]]) -> tuple[int, ...]:
+
+    def _semver_key(item: tuple[dict[str, Any], dict[str, Any]]) -> tuple[int, ...]:
         rel, _asset = item
         return parse_version(str(rel.get("tag_name") or rel.get("name") or ""))
 
@@ -611,18 +768,20 @@ def _select_release(
 
 
 def _perform_github_check(token: str) -> dict[str, Any]:
+    """Repo publiczne: token opcjonalny. Zly token (401/403) -> ponow anonimowo."""
     out = _empty_result()
-    if not token:
-        out["ok"] = False
-        out["error"] = "github_auth_missing"
-        out["auth_configured"] = False
-        return out
     cfg = load_update_config()
     repo = str(cfg.get("github_repo") or DEFAULT_REPO)
     asset_name = str(cfg.get("asset_name") or DEFAULT_ASSET)
     url = f"https://api.github.com/repos/{repo}/releases?per_page=15"
     try:
-        payload = _github_get_json(url, token)
+        try:
+            payload = _github_get_json(url, token)
+        except urllib.error.HTTPError as exc:
+            if token and exc.code in (401, 403):
+                payload = _github_get_json(url, "")
+            else:
+                raise
     except urllib.error.HTTPError as exc:
         out["ok"] = False
         out["error"] = f"github_http_{exc.code}"
@@ -656,19 +815,19 @@ def _perform_github_check(token: str) -> dict[str, Any]:
     out["latest"] = tag or out["current"]
     out["release_notes"] = str(rel.get("body") or "")[:4000]
     out["published_at"] = str(rel.get("published_at") or "")
-    out["download_url"] = asset["download_url"]
-    out["asset_api_url"] = asset.get("asset_api_url") or ""
-    out["sig_url"] = asset.get("sig_url") or ""
-    out["sig_api_url"] = asset.get("sig_api_url") or ""
+    out.update(asset)
     out["ok"] = True
     return _public_result(out)
 
 
-def check_for_updates(force: bool = False, *, token: str | None = None) -> dict[str, Any]:
-    """force=True tylko z Ustawien albo dziennego schedulera.
+def check_for_updates(
+    force: bool = False, *, token: str | None = None, auto_download: bool = True
+) -> dict[str, Any]:
+    """force=True: harmonogram, Ustawienia, /app-update/check?force=1.
 
     Bez force: zwroc cache (przefiltrowany). Nigdy nie udawaj update.
-    token= None -> sekret z plikow; token="" -> test galezi bez auth.
+    token=None -> sekret z plikow (moze byc pusty); token="" -> anonimowo.
+    Nowsze podpisane wydanie + auto_download -> pobieranie w tle startuje samo.
     """
     if not force:
         state = _load_json(STATE_PATH, {})
@@ -681,196 +840,609 @@ def check_for_updates(force: bool = False, *, token: str | None = None) -> dict[
         empty["from_cache"] = True
         return empty
 
-    tok = _resolve_github_token() if token is None else str(token or "")
-    out = _perform_github_check(tok)
-    _persist_attempt(out)
+    portable = is_portable_repo()
+    if not portable:
+        _set_state_if_quiet(status="checking", error="")
+    try:
+        tok = _resolve_github_token() if token is None else str(token or "")
+        out = _perform_github_check(tok)
+        _persist_attempt(out)
+    finally:
+        if not portable:
+            _set_state_if_quiet(expect="checking", status="idle")
+    if not portable and auto_download and out.get("update_available"):
+        rel = _release_from_result(out)
+        if rel:
+            _start_download(rel)
     return out
 
 
+# --------------------------------------------------------------------------- stan pobierania
+
+
+def _status_file() -> Path:
+    return INSTALLER_DIR / "download-status.json"
+
+
+def _lock_file() -> Path:
+    return INSTALLER_DIR / ".download.lock"
+
+
+def _cancel_file() -> Path:
+    return INSTALLER_DIR / ".cancel"
+
+
+def _marker_path() -> Path:
+    return INSTALLER_DIR / "pending_success.json"
+
+
+def _write_status_file(snap: dict[str, Any]) -> None:
+    """Stan dzielony miedzy procesami (launch.py i mostek maja wlasne harmonogramy)."""
+    global _LAST_STATUS_WRITE
+    try:
+        payload = {k: snap.get(k) for k in ("status", "target", "bytes", "total", "error", "updated_at")}
+        payload["pid"] = os.getpid()
+        _save_json(_status_file(), payload)
+        _LAST_STATUS_WRITE = time.monotonic()
+    except Exception:
+        pass
+
+
+def _set_state(*, persist: bool = True, **kw: Any) -> None:
+    with _DL_LOCK:
+        _DL_STATE.update(kw)
+        _DL_STATE["updated_at"] = time.time()
+        snap = dict(_DL_STATE)
+    if persist:
+        _write_status_file(snap)
+
+
+def _set_state_if_quiet(*, expect: str | None = None, **kw: Any) -> None:
+    """Nie nadpisuj trwajacego pobierania statusem 'checking'/'idle'."""
+    with _DL_LOCK:
+        cur = str(_DL_STATE.get("status") or "idle")
+    if expect is not None and cur != expect:
+        return
+    if expect is None and cur in ("downloading", "verifying"):
+        return
+    _set_state(**kw)
+
+
+def _set_progress(received: int, total: int, *, force: bool = False) -> None:
+    with _DL_LOCK:
+        _DL_STATE["bytes"] = int(received)
+        _DL_STATE["total"] = int(total)
+        _DL_STATE["updated_at"] = time.time()
+        snap = dict(_DL_STATE)
+    if force or time.monotonic() - _LAST_STATUS_WRITE >= PROGRESS_WRITE_INTERVAL_SEC:
+        _write_status_file(snap)
+        _touch_lock()
+
+
+def _read_status_file() -> dict[str, Any] | None:
+    try:
+        data = json.loads(_status_file().read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else None
+    except Exception:
+        return None
+
+
 def download_status() -> dict[str, Any]:
+    """KONTRAKT dla UI (GET /app-update/status) - dokladnie te klucze."""
+    cur = current_version()
+    portable = is_portable_repo()
+    try:
+        auto_check = bool(load_prefs().get("auto_check", True))
+    except Exception:
+        auto_check = True
+    out: dict[str, Any] = {
+        "ok": True,
+        "status": "idle",
+        "current": cur,
+        "target": "",
+        "bytes": 0,
+        "total": 0,
+        "pct": 0,
+        "error": "",
+        "installer_ready": False,
+        "portable": portable,
+        "auto_check": auto_check,
+    }
+    if portable:
+        return out
     with _DL_LOCK:
         st = dict(_DL_STATE)
-    st["installer_ready"] = installer_ready()
-    st["path"] = str(installer_path()) if installer_ready() or st.get("path") else st.get("path") or ""
-    st["ok"] = st.get("status") not in ("error",)
-    st["portable"] = is_portable_repo()
-    return st
-
-
-def _download_file(url: str, token: str, dest: Path) -> None:
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    tmp = dest.with_suffix(dest.suffix + ".part")
-    download = "api.github.com" in url.lower() and "/releases/assets/" in url.lower()
-    req = urllib.request.Request(url, headers=_github_headers(token, download=download))
-    with urllib.request.urlopen(req, timeout=120) as resp, tmp.open("wb") as fh:
-        total = 0
-        while True:
-            chunk = resp.read(1024 * 256)
-            if not chunk:
-                break
-            fh.write(chunk)
-            total += len(chunk)
-            with _DL_LOCK:
-                _DL_STATE["bytes"] = total
-    if tmp.stat().st_size < MIN_INSTALLER_BYTES:
-        tmp.unlink(missing_ok=True)
-        raise OSError("installer_too_small")
-    tmp.replace(dest)
-
-
-def _download_signature(url: str, token: str, dest: Path) -> None:
-    if not _is_github_https(url):
-        raise OSError("bad_signature_url")
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    download = "api.github.com" in url.lower() and "/releases/assets/" in url.lower()
-    req = urllib.request.Request(url, headers=_github_headers(token, download=download))
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        data = resp.read(MAX_SIG_BYTES + 1)
-    if not data or len(data) > MAX_SIG_BYTES:
-        raise OSError("signature_size")
-    tmp = dest.with_suffix(dest.suffix + ".part")
-    tmp.write_bytes(data)
-    tmp.replace(dest)
-
-
-def _download_worker(url: str, sig_url: str = "") -> None:
-    token = _resolve_github_token()
-    dest = installer_path()
-    try:
-        _download_signature(sig_url, token, sig_path())
-        _download_file(url, token, dest)
-        ok, reason = verify_downloaded_installer(use_cache=False)
-        if not ok:
-            # Niepodpisany / podmieniony plik nie zostaje na dysku ani sekundy dluzej.
-            _discard_download()
-            with _DL_LOCK:
-                _DL_STATE.update(
-                    {"status": "error", "error": "signature_" + reason, "path": "", "bytes": 0}
-                )
-            return
-        with _DL_LOCK:
-            _DL_STATE.update(
-                {
-                    "status": "ready",
-                    "path": str(dest),
-                    "error": "",
-                    "bytes": dest.stat().st_size,
-                }
-            )
-    except Exception as exc:  # noqa: BLE001
-        with _DL_LOCK:
-            _DL_STATE.update({"status": "error", "error": "download_failed", "path": ""})
-        _ = str(exc)
-
-
-def start_background_download(download_url: str = "") -> dict[str, Any]:
-    if is_portable_repo():
-        return {"ok": False, "error": "portable_skip", "portable": True, "status": "idle"}
-    chk = check_for_updates(force=False)
-    if not chk.get("update_available"):
-        return {"ok": False, "error": "no_update", "update_available": False, "status": "idle"}
-    url = str(chk.get("asset_api_url") or chk.get("download_url") or download_url or "").strip()
-    if not url:
-        return {"ok": False, "error": "missing_download_url", "status": "idle"}
-    if not _is_github_https(url) or (
-        url.startswith("https://github.com/") and not _is_setup_download_url(url)
+    shared = _read_status_file()
+    if (
+        shared
+        and int(shared.get("pid") or 0) != os.getpid()
+        and float(shared.get("updated_at") or 0) > float(st.get("updated_at") or 0)
     ):
-        return {"ok": False, "error": "bad_download_url", "status": "idle"}
-    sig_url = str(chk.get("sig_api_url") or chk.get("sig_url") or "").strip()
-    if not _is_github_https(sig_url):
-        return {"ok": False, "error": "release_unsigned", "status": "idle"}
-    if installer_ready():
-        with _DL_LOCK:
-            _DL_STATE.update({"status": "ready", "path": str(installer_path()), "error": ""})
+        st = dict(shared)
+        if (
+            str(st.get("status")) in ("checking", "downloading", "verifying")
+            and time.time() - float(st.get("updated_at") or 0) > STATUS_STALE_SEC
+        ):
+            st = {"status": "idle"}  # proces, ktory pobieral, juz nie zyje
+    status = str(st.get("status") or "idle")
+    if status not in ("idle", "checking", "downloading", "verifying", "ready", "error"):
+        status = "idle"
+    target = _strip_v(str(st.get("target") or ""))
+    nbytes = int(st.get("bytes") or 0)
+    total = int(st.get("total") or 0)
+    error = str(st.get("error") or "")
+    ready_v = ""
+    if status in ("idle", "ready"):
+        ready_v = _ready_version()
+        if ready_v:
+            status, target = "ready", ready_v
+            try:
+                nbytes = total = installer_path(ready_v).stat().st_size
+            except OSError:
+                pass
+        elif status == "ready":
+            status, target, nbytes, total = "idle", "", 0, 0
+        if status == "idle":
+            error = ""
+    pct = int(nbytes * 100 / total) if total > 0 else 0
+    out.update(
+        {
+            "ok": status != "error",
+            "status": status,
+            "target": target if status != "idle" else "",
+            "bytes": nbytes if status != "idle" else 0,
+            "total": total if status != "idle" else 0,
+            "pct": max(0, min(100, pct)) if status != "idle" else 0,
+            "error": error if status == "error" else "",
+            "installer_ready": bool(ready_v),
+        }
+    )
+    return out
+
+
+# --------------------------------------------------------------------------- pobieranie
+
+
+def _acquire_lock() -> bool:
+    """Blokada miedzyprocesowa (O_EXCL). Martwa blokada (brak heartbeatu) jest przejmowana."""
+    path = _lock_file()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    for _ in range(2):
+        try:
+            fd = os.open(str(path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            try:
+                os.write(fd, str(os.getpid()).encode("ascii"))
+            finally:
+                os.close(fd)
+            return True
+        except FileExistsError:
+            try:
+                age = time.time() - path.stat().st_mtime
+            except OSError:
+                continue
+            if age <= LOCK_STALE_SEC:
+                return False
+            try:
+                path.unlink(missing_ok=True)
+            except OSError:
+                return False
+        except OSError:
+            return False
+    return False
+
+
+def _touch_lock() -> None:
+    try:
+        os.utime(str(_lock_file()), None)
+    except OSError:
+        pass
+
+
+def _release_lock() -> None:
+    try:
+        _lock_file().unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
+def _cancel_requested() -> bool:
+    if _CANCEL.is_set():
+        return True
+    try:
+        return _cancel_file().is_file()
+    except OSError:
+        return False
+
+
+def _release_from_result(chk: dict[str, Any]) -> dict[str, Any] | None:
+    """Tylko dane z odpowiedzi API (nigdy URL podany z UI)."""
+    if not chk.get("update_available"):
+        return None
+    v = _strip_v(str(chk.get("latest") or ""))
+    if not is_newer(v, current_version()):
+        return None
+    exe_url = str(chk.get("download_url") or "")
+    sig_url = str(chk.get("sig_url") or "")
+    if not _is_setup_download_url(exe_url) or not _is_github_https(sig_url):
+        return None
+    api = str(chk.get("asset_api_url") or "")
+    sig_api = str(chk.get("sig_api_url") or "")
+    try:
+        size = int(chk.get("size") or 0)
+    except (TypeError, ValueError):
+        size = 0
+    return {
+        "version": v,
+        "exe_url": exe_url,
+        "exe_api_url": api if _is_github_https(api) else "",
+        "sig_url": sig_url,
+        "sig_api_url": sig_api if _is_github_https(sig_api) else "",
+        "size": max(size, 0),
+        "sha256": str(chk.get("sha256") or "").lower(),
+    }
+
+
+def _candidates(public_url: str, api_url: str, token: str) -> list[tuple[str, str]]:
+    """Najpierw publiczny URL bez tokenu; API z tokenem tylko jako zapas."""
+    out: list[tuple[str, str]] = []
+    if _is_github_https(public_url):
+        out.append((public_url, ""))
+    if token and _is_github_https(api_url):
+        out.append((api_url, token))
+    return out
+
+
+def _download_signature(release: dict[str, Any], token: str, dest: Path) -> None:
+    last_exc: Exception | None = None
+    for url, tok in _candidates(release.get("sig_url", ""), release.get("sig_api_url", ""), token):
+        req = urllib.request.Request(
+            url, headers=_github_headers(tok, download=_is_api_asset_url(url))
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                data = resp.read(MAX_SIG_BYTES + 1)
+        except urllib.error.HTTPError as exc:
+            last_exc = exc
+            continue
+        if not data or len(data) > MAX_SIG_BYTES:
+            raise _IntegrityError("signature_size")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        tmp = dest.with_name(dest.name + PART_SUFFIX)
+        tmp.write_bytes(data)
+        tmp.replace(dest)
+        return
+    raise last_exc or OSError("bad_signature_url")
+
+
+def _stream_to_part(url: str, token: str, part: Path, size: int) -> bool:
+    """Jedno zadanie HTTP; dopisuje do .part (Range). False = anulowano."""
+    existing = part.stat().st_size if part.is_file() else 0
+    headers = _github_headers(token, download=_is_api_asset_url(url))
+    if existing > 0:
+        headers["Range"] = f"bytes={existing}-"
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req, timeout=60) as resp:
+        code = getattr(resp, "status", None) or 200
+        total = size
+        if code == 206:
+            content_range = str(resp.headers.get("Content-Range") or "")
+            tail = content_range.rsplit("/", 1)[-1] if "/" in content_range else ""
+            if tail.isdigit():
+                total = int(tail)
+        else:
+            existing = 0  # serwer zignorowal Range: zaczynamy od zera
+            length = str(resp.headers.get("Content-Length") or "")
+            if not total and length.isdigit():
+                total = int(length)
+        received = existing
+        _set_progress(received, total or received, force=True)
+        with part.open("ab" if existing > 0 else "wb") as fh:
+            while True:
+                if _cancel_requested():
+                    _set_progress(received, total or received, force=True)
+                    return False
+                chunk = resp.read(DOWNLOAD_CHUNK_BYTES)
+                if not chunk:
+                    break
+                fh.write(chunk)
+                received += len(chunk)
+                _set_progress(received, total or received)
+    _set_progress(received, total or received, force=True)
+    return True
+
+
+def _download_installer_part(release: dict[str, Any], token: str, part: Path) -> bool:
+    size = int(release.get("size") or 0)
+    existing = part.stat().st_size if part.is_file() else 0
+    if size and existing > size:
+        part.unlink(missing_ok=True)
+        existing = 0
+    if size and existing == size:
+        _set_progress(existing, size, force=True)
+        return True
+    last_exc: Exception | None = None
+    for url, tok in _candidates(release.get("exe_url", ""), release.get("exe_api_url", ""), token):
+        for _attempt in range(2):
+            try:
+                return _stream_to_part(url, tok, part, size)
+            except urllib.error.HTTPError as exc:
+                last_exc = exc
+                if exc.code == 416 and part.is_file():
+                    part.unlink(missing_ok=True)  # zly zakres: od nowa, raz
+                    continue
+                break
+    raise last_exc or OSError("bad_download_url")
+
+
+def _download_worker(release: dict[str, Any]) -> None:
+    import release_verify
+
+    v = str(release["version"])
+    if not _acquire_lock():
+        # Drugi proces juz pobiera - jego stan widac przez download-status.json.
+        _set_state(persist=False, status="idle", target="", bytes=0, total=0, error="")
+        return
+    try:
+        try:
+            _cancel_file().unlink(missing_ok=True)
+        except OSError:
+            pass
+        _set_state(status="downloading", target=v, error="")
+        folder = version_dir(v)
+        folder.mkdir(parents=True, exist_ok=True)
+        exe, sig, part = installer_path(v), sig_path(v), _part_path(v)
+        if exe.is_file() and verify_downloaded_installer(v, use_cache=False)[0]:
+            _set_state(status="ready", target=v, error="")
+            _enforce_cache_limit(v)
+            return
+        token = _resolve_github_token()
+        _download_signature(release, token, sig)
+        if _cancel_requested() or not _download_installer_part(release, token, part):
+            _set_state(status="idle", target="", bytes=0, total=0, error="")
+            return
+        _set_state(status="verifying")
+        _touch_lock()
+        actual = part.stat().st_size
+        size = int(release.get("size") or 0)
+        if size and actual != size:
+            raise _IntegrityError("size_mismatch")
+        if actual < MIN_INSTALLER_BYTES:
+            raise _IntegrityError("installer_too_small")
+        want = str(release.get("sha256") or "")
+        if want and release_verify.file_sha256(part).lower() != want:
+            raise _IntegrityError("sha256_mismatch")
+        _touch_lock()
+        part.replace(exe)
+        ok, reason = verify_downloaded_installer(v, use_cache=False)
+        if not ok:
+            raise _IntegrityError("signature_" + reason)
+        _set_state(status="ready", target=v, bytes=actual, total=actual, error="")
+        _enforce_cache_limit(v)
+    except _IntegrityError as exc:
+        # Podmieniony / uszkodzony plik nie zostaje na dysku ani sekundy dluzej.
+        _remove_version_dir(v)
+        _set_state(status="error", target=v, bytes=0, total=0, error=str(exc))
+    except Exception:  # noqa: BLE001
+        # Siec / dysk: .part zostaje do wznowienia przy nastepnej probie.
+        _set_state(status="error", target=v, error="download_failed")
+    finally:
+        _release_lock()
+
+
+def _start_download(release: dict[str, Any]) -> dict[str, Any]:
+    global _DL_THREAD
+    if is_portable_repo():
+        return download_status()
+    v = str(release.get("version") or "")
+    if not is_newer(v, current_version()):
         return download_status()
     with _DL_LOCK:
-        if _DL_STATE.get("status") == "downloading":
-            return dict(_DL_STATE)
-        _DL_STATE.update({"status": "downloading", "path": "", "error": "", "bytes": 0})
-    t = threading.Thread(
-        target=_download_worker, args=(url, sig_url), name="dam-update-dl", daemon=True
+        running = _DL_THREAD is not None and _DL_THREAD.is_alive()
+    if running:
+        return download_status()
+    if installer_ready(v):
+        _set_state(status="ready", target=v, error="")
+        return download_status()
+    _CANCEL.clear()
+    # persist=False: plik stanu dzielonego zapisuje dopiero watek po zdobyciu blokady.
+    _set_state(
+        persist=False, status="downloading", target=v, bytes=0, total=int(release.get("size") or 0), error=""
     )
+    t = threading.Thread(target=_download_worker, args=(release,), name="dam-update-dl", daemon=True)
+    with _DL_LOCK:
+        _DL_THREAD = t
     t.start()
     return download_status()
 
 
-def _launch_installer(path: Path) -> dict[str, Any]:
-    import subprocess
-    import sys
+def _background_check() -> None:
+    try:
+        check_for_updates(force=True)
+    except Exception:
+        _set_state_if_quiet(status="idle")
 
+
+def _action_download() -> dict[str, Any]:
+    global _CHECK_THREAD
+    rel = _release_from_result(check_for_updates(force=False))
+    if rel:
+        return _start_download(rel)
+    with _DL_LOCK:
+        busy = _CHECK_THREAD is not None and _CHECK_THREAD.is_alive()
+    if not busy:
+        _set_state_if_quiet(status="checking", error="")
+        t = threading.Thread(target=_background_check, name="dam-update-check-now", daemon=True)
+        with _DL_LOCK:
+            _CHECK_THREAD = t
+        t.start()
+    return download_status()
+
+
+def _action_cancel() -> dict[str, Any]:
+    _CANCEL.set()
+    shared = _read_status_file() or {}
+    if str(shared.get("status")) in ("downloading", "verifying") and int(shared.get("pid") or 0) != os.getpid():
+        try:
+            _cancel_file().parent.mkdir(parents=True, exist_ok=True)
+            _cancel_file().write_text("1", encoding="utf-8")
+        except OSError:
+            pass
+    return download_status()
+
+
+# --------------------------------------------------------------------------- instalacja
+
+
+def mark_pending_success(target_version: str) -> None:
+    _save_json(_marker_path(), {"target_version": _strip_v(target_version), "created_at": time.time()})
+
+
+def consume_success_marker() -> dict[str, Any]:
+    """{"ok": True, "version": "2.1.0"} dokladnie raz po udanej aktualizacji, inaczej version None.
+
+    Znacznik z inna wersja jest kasowany po cichu. Wyjatek: znacznik NOWSZEJ wersji mlodszy
+    niz MARKER_GRACE_SEC (instalator wlasnie pracuje, stary proces jeszcze zyje) zostaje.
+    """
+    path = _marker_path()
     if not path.is_file():
+        return {"ok": True, "version": None}
+    target = ""
+    created = 0.0
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+            target = _strip_v(str(data.get("target_version") or ""))
+            created = float(data.get("created_at") or 0)
+    except Exception:
+        target = ""
+    cur = current_version()
+    if target and is_newer(target, cur):
+        stamp = created or path.stat().st_mtime
+        if time.time() - stamp < MARKER_GRACE_SEC:
+            return {"ok": True, "version": None}
+    try:
+        path.unlink(missing_ok=True)
+    except OSError:
+        pass
+    if target and target == _strip_v(cur):
+        return {"ok": True, "version": target}
+    return {"ok": True, "version": None}
+
+
+def _launch_installer(path: Path) -> dict[str, Any]:
+    """Uruchamia TYLKO data/updates/<wersja>/DAM-Setup.exe z waznym podpisem (bez cache)."""
+    try:
+        resolved = Path(path).resolve()
+        root = INSTALLER_DIR.resolve()
+    except OSError:
+        return {"ok": False, "error": "installer_path_forbidden"}
+    v = resolved.parent.name
+    if (
+        resolved.name != DEFAULT_ASSET
+        or resolved.parent.parent != root
+        or not is_canonical_product_version(v)
+    ):
+        return {"ok": False, "error": "installer_path_forbidden"}
+    if not resolved.is_file():
         return {"ok": False, "error": "installer_missing"}
+    if not is_newer(v, current_version()):
+        return {"ok": False, "error": "version_not_newer"}
     # Swiezo liczone (bez cache): katalog data/updates jest zapisywalny dla usera,
     # wiec plik mogl zostac podmieniony miedzy pobraniem a kliknieciem "Zainstaluj".
-    if path.resolve() != installer_path().resolve():
-        return {"ok": False, "error": "installer_path_forbidden"}
-    ok, reason = verify_downloaded_installer(use_cache=False)
+    ok, reason = verify_downloaded_installer(v, use_cache=False)
     if not ok:
-        _discard_download()
+        _remove_version_dir(v)
+        _set_state(status="error", target=v, bytes=0, total=0, error="signature_" + reason)
         return {"ok": False, "error": "signature_" + reason}
-    args = [str(path), "/VERYSILENT", "/NORESTART"]
+    mark_pending_success(v)
+    args = [str(resolved), *INSTALLER_ARGS]
     try:
+        flags = 0
         if sys.platform == "win32":
-            flags = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
-            subprocess.Popen(args, creationflags=flags)
-        else:
-            subprocess.Popen([str(path)])
-        return {"ok": True, "path": str(path), "launched": True}
+            flags = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) | getattr(
+                subprocess, "CREATE_NEW_PROCESS_GROUP", 0x00000200
+            )
+        subprocess.Popen(
+            args,
+            cwd=str(resolved.parent),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=flags,
+            close_fds=True,
+        )
     except Exception as exc:  # noqa: BLE001
+        try:
+            _marker_path().unlink(missing_ok=True)
+        except OSError:
+            pass
         return {"ok": False, "error": "launch_failed", "detail": type(exc).__name__}
+    return {"ok": True, "launched": True, "target": v}
+
+
+def _action_install() -> dict[str, Any]:
+    v = ""
+    tgt = _state_target()
+    if tgt and is_newer(tgt, current_version()) and installer_path(tgt).is_file():
+        v = tgt
+    if not v:
+        v = _ready_version()
+    if not v:
+        return {"ok": False, "error": "not_ready"}
+    return _launch_installer(installer_path(v))
+
+
+def apply_action(action: str, download_url: str = "") -> dict[str, Any]:
+    """KONTRAKT dla mostka (POST /app-update/apply).
+
+    download -> pobieranie w tle (URL zawsze z odpowiedzi GitHub API, `download_url`
+                z UI jest ignorowany - zgodnosc wsteczna),
+    install / apply -> ponowna weryfikacja podpisu, znacznik, cichy instalator,
+    cancel -> przerwij pobieranie (.part zostaje do wznowienia), zwraca status.
+    """
+    _ = download_url
+    act = str(action or "").strip().lower()
+    if act == "cancel":
+        return _action_cancel()
+    if act not in ("download", "install", "apply"):
+        return {"ok": False, "error": "unknown_action"}
+    if is_portable_repo():
+        return {"ok": False, "error": "portable_skip", "portable": True, "status": "idle"}
+    if act == "download":
+        return _action_download()
+    return _action_install()
+
+
+# Zgodnosc wsteczna ze starszymi wywolaniami mostka.
+def start_background_download(download_url: str = "") -> dict[str, Any]:
+    return apply_action("download", download_url)
 
 
 def install_downloaded(download_url: str = "") -> dict[str, Any]:
-    if is_portable_repo():
-        return {"ok": False, "error": "portable_skip", "portable": True}
-    chk = check_for_updates(force=False)
-    if not chk.get("update_available") and not installer_ready():
-        return {"ok": False, "error": "no_update", "update_available": False}
-    if installer_ready():
-        return _launch_installer(installer_path())
-    started = start_background_download(download_url)
-    if not started.get("ok") and started.get("status") != "downloading":
-        return started
-    return {"ok": True, "status": "downloading", "error": "wait_for_download"}
+    return apply_action("install", download_url)
 
 
-def download_and_launch_installer(download_url: str) -> dict[str, Any]:
-    """Kompatybilnosc: pobierz w tle; jesli plik juz jest, odpal instalator."""
-    if is_portable_repo():
-        return {"ok": False, "error": "portable_skip", "portable": True}
-    if installer_ready():
-        return _launch_installer(installer_path())
-    return start_background_download(download_url)
+def download_and_launch_installer(download_url: str = "") -> dict[str, Any]:
+    if not is_portable_repo() and _ready_version():
+        return apply_action("install", download_url)
+    return apply_action("download", download_url)
 
 
-def check_on_startup() -> dict[str, Any]:
-    """Zachowane API: nie wymusza GitHub przed 09:00 i nie gdy juz sprawdzono dzis."""
-    try:
-        state = _load_json(STATE_PATH, {})
-        delay = seconds_until_next_daily_check(datetime.now(), state.get("last_check"))
-        if delay > 0:
-            cached = check_for_updates(force=False)
-            cached["deferred"] = True
-            return cached
-        return check_for_updates(force=True)
-    except Exception as exc:  # noqa: BLE001
-        out = _empty_result("github_error")
-        out["ok"] = False
-        _ = str(exc)
-        return out
+# --------------------------------------------------------------------------- watek harmonogramu
 
 
 def _scheduler_loop() -> None:
+    started = time.monotonic()
+    last_check: float | None = None
     while True:
-        prefs = load_prefs()
-        state = _load_json(STATE_PATH, {})
-        delay = seconds_until_next_daily_check(datetime.now(), state.get("last_check"))
+        delay = seconds_until_next_check(time.monotonic(), started, last_check)
         if delay > 0:
-            time.sleep(min(delay, 60.0))
+            time.sleep(min(delay, 30.0))
             continue
-        if not prefs.get("auto_check", True):
+        if not load_prefs().get("auto_check", True):
             time.sleep(60.0)
             continue
+        last_check = time.monotonic()
         try:
             check_for_updates(force=True)
         except Exception:
@@ -878,11 +1450,10 @@ def _scheduler_loop() -> None:
                 _persist_attempt(_empty_result("github_error"))
             except Exception:
                 pass
-        time.sleep(2.0)
 
 
 def ensure_scheduler_started() -> None:
-    """Jeden watek na proces. Dwa procesy nie dubluja GitHub: cache z dzisiaj wygrywa."""
+    """Jeden watek na proces. Dwa procesy nie pobieraja naraz: blokada .download.lock."""
     global _SCHEDULER_STARTED
     with _LOCK:
         if _SCHEDULER_STARTED:

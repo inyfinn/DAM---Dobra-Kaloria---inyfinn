@@ -54,6 +54,8 @@ bin/apps/desktop/data/backups*/
 bin/apps/desktop/data/bound-session.json
 bin/apps/desktop/data/webview2-profile/
 bin/apps/desktop/data/db-prefer.json
+# Pobrane aktualizacje (DAM-Setup.exe + .sig, .part, blokady) - nigdy do repo.
+bin/apps/desktop/data/updates/
 bin/apps/desktop/machine-config.json
 bin/apps/web/data/dam-runtime.json
 bin/apps/web/data/dam-identity.json
