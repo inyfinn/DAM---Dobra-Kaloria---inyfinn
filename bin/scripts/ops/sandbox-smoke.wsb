@@ -1,0 +1,40 @@
+<Configuration>
+  <!--
+    Test czystej instalacji DAM w Windows Sandbox.
+
+    PRZED URUCHOMIENIEM:
+      1. Wlacz funkcje Windows "Piaskownica systemu Windows" (Windows Sandbox).
+      2. Zbuduj instalator: bin\scripts\ops\build-installer.ps1
+      3. Utworz folder na wyniki:  mkdir C:\Temp\dam-sandbox-out
+      4. Sprawdz ponizsze HostFolder (musza istniec na tej maszynie).
+      5. Kliknij dwukrotnie ten plik. Sandbox sam zainstaluje DAM po cichu,
+         uruchomi DAM.exe i zapisze wyniki do C:\Temp\dam-sandbox-out
+         (summary.json, health.json, preflight.json, processes.txt, install.log).
+
+    Folder z instalatorem i folder skryptow sa TYLKO DO ODCZYTU: sandbox nie
+    moze nic zmienic w repozytorium. Zapis idzie wylacznie do folderu wynikow.
+  -->
+  <MappedFolders>
+    <MappedFolder>
+      <HostFolder>D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\instalator</HostFolder>
+      <SandboxFolder>C:\dam-setup</SandboxFolder>
+      <ReadOnly>true</ReadOnly>
+    </MappedFolder>
+    <MappedFolder>
+      <HostFolder>D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\scripts\ops</HostFolder>
+      <SandboxFolder>C:\dam-scripts</SandboxFolder>
+      <ReadOnly>true</ReadOnly>
+    </MappedFolder>
+    <MappedFolder>
+      <HostFolder>C:\Temp\dam-sandbox-out</HostFolder>
+      <SandboxFolder>C:\dam-results</SandboxFolder>
+      <ReadOnly>false</ReadOnly>
+    </MappedFolder>
+  </MappedFolders>
+  <LogonCommand>
+    <Command>powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\dam-scripts\sandbox-smoke.ps1 -SetupDir C:\dam-setup -OutDir C:\dam-results</Command>
+  </LogonCommand>
+  <Networking>Enable</Networking>
+  <vGPU>Disable</vGPU>
+  <MemoryInMB>8192</MemoryInMB>
+</Configuration>

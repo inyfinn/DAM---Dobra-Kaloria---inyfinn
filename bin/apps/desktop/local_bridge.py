@@ -215,6 +215,11 @@ try:
 except ImportError:
     marketing_discovery = None  # type: ignore
 
+try:
+    import preflight as dam_preflight
+except ImportError:
+    dam_preflight = None  # type: ignore
+
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("DAM_BRIDGE_PORT", "8766"))
 # Bump po nowych endpointach hub (smoke: GET /health -> api_version)
@@ -288,6 +293,7 @@ PUBLIC_FORBIDDEN_PATHS = frozenset(
         "/synology-share",
         "/validate-base",
         "/detect-marketing-bases",
+        "/preflight",
         "/db/activate",
         "/db/activation",
         "/db/path",
@@ -967,6 +973,74 @@ def _normalize_base_path(base_path: str) -> str:
     if re.match(r"^[A-Za-z]:\\?$", win):
         return win[0].upper() + ":\\"
     return win.rstrip("\\")
+
+
+def build_preflight_report() -> dict:
+    """GET /preflight: baza, folder Marketing, indeks, watcher, WebView2 (< 3 s, bez sesji)."""
+    if dam_preflight is None:
+        return {"ok": False, "error": "preflight_missing", "blocking": [], "items": []}
+
+    def pg_module():
+        try:
+            import pg_db as _pg
+        except Exception:  # noqa: BLE001
+            return None
+        return _pg
+
+    if marketing_discovery is not None:
+        path_key = marketing_discovery.path_key
+
+        def check_paths(paths):
+            return marketing_discovery.check_paths(
+                paths,
+                required=REQUIRED_ROOT_FOLDERS,
+                timeout=dam_preflight.DRIVE_CHECK_TIMEOUT_SEC,
+            )
+
+        def discover():
+            return marketing_discovery.discover_roots(
+                required=REQUIRED_ROOT_FOLDERS,
+                per_drive_timeout=dam_preflight.DRIVE_CHECK_TIMEOUT_SEC,
+                timeout=dam_preflight.DRIVE_CHECK_TIMEOUT_SEC,
+            )
+    else:
+        def path_key(p):
+            return str(p).replace("/", "\\").rstrip("\\").lower()
+
+        def check_paths(paths):
+            out = {}
+            for p in paths:
+                info = validate_base(str(p))
+                out[path_key(p)] = {
+                    "ok": bool(info.get("ok")),
+                    "exists": info.get("error") != "not_a_directory",
+                    "missing": info.get("missing") or [],
+                }
+            return out
+
+        def discover():
+            return [c for c in MARKETING_CANDIDATES if validate_base(str(c)).get("ok")]
+
+    def watcher_status():
+        import index_supervisor
+
+        return index_supervisor.public_status()
+
+    checks = [
+        ("database", lambda: dam_preflight.check_database(pg_module())),
+        (
+            "marketing",
+            lambda: dam_preflight.check_marketing(
+                read_machine_config().get("base_path") or "", check_paths, discover, path_key
+            ),
+        ),
+        ("index", lambda: dam_preflight.check_index(INDEX_FILE)),
+        ("watcher", lambda: dam_preflight.check_watcher(watcher_status)),
+        ("webview2", dam_preflight.check_webview2),
+    ]
+    report = dam_preflight.run_checks(checks)
+    report["api_version"] = BRIDGE_API_VERSION
+    return report
 
 
 def read_machine_config() -> dict:
@@ -7983,6 +8057,10 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/detect-marketing-bases":
             # Lokalny most 127.0.0.1 - status dysku bez Bearer (UI pyta przed / bez sesji)
             self._json(200, detect_marketing_bases())
+            return
+        if parsed.path == "/preflight":
+            # Tylko tryb pulpitowy (w publicznym blokuje _public_gate); bez sesji, < 3 s.
+            self._json(200, build_preflight_report())
             return
         if parsed.path == "/machine-config":
             self._json(200, read_machine_config())

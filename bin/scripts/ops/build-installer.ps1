@@ -424,5 +424,6 @@ if (-not $setupSig.SignerCertificate) {
 if ($setupSig.Status -ne "Valid") {
   Write-Warning "Status=$($setupSig.Status). Self-signed: SmartScreen przy pliku z GitHuba moze zostac, dopoki nie bedzie certu OV/EV (DAM_CODE_SIGN_PFX). CODE-SIGNING.md"
 }
+Write-Host "Przed wydaniem przetestuj czysta instalacje: bin\scripts\ops\sandbox-smoke.wsb (Windows Sandbox, wyniki w C:\Temp\dam-sandbox-out)."
 Write-Host ""
 
