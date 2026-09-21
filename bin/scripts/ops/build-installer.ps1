@@ -370,9 +370,11 @@ Write-Host "PAMIEC: $thumbCount miniatur w Setup, spis: $(Test-Path -LiteralPath
 # README na ostatniej stronie kreatora generujemy z version.json przy kazdym
 # buildzie. Wczesniej byl to plik pisany recznie i zostal na "DAM 6.0.2" -
 # instalator 2.1.5 pokazywal na koncu wersje 6 i nieaktualne kroki.
-$readmeNote = ""
-try { $readmeNote = [string]$vj.note } catch { $readmeNote = "" }
-if ($readmeNote.Length -gt 300) { $readmeNote = $readmeNote.Substring(0, 300) }
+# release_note, NIE note: note to rejestr licznika wersji (historia buildow),
+# ktory po obcieciu do 300 znakow czytal sie jak smiec na ekranie uzytkownika.
+$readmeNote = @()
+try { $readmeNote = @([string[]]($vj.release_note -split "`n")) } catch { $readmeNote = @() }
+$readmeNote = @($readmeNote | Where-Object { $_.Trim().Length -gt 0 })
 $readmeLines = @(
   "DAM $Version - Dobra Kaloria (Inyfinn)",
   "",
@@ -393,8 +395,8 @@ $readmeLines = @(
   "Aktualizacje: DAM sam sprawdza GitHub i pobiera najnowsze wydanie w tle.",
   "Recznie: menu profilu -> Sprawdz aktualizacje."
 )
-if ($readmeNote) {
-  $readmeLines += @("", "Co nowego w $Version:", $readmeNote)
+if ($readmeNote.Count -gt 0) {
+  $readmeLines += @("", "Co nowego w ${Version}:") + $readmeNote
 }
 $readmePath = Join-Path $stageRoot "README.txt"
 Set-Content -LiteralPath $readmePath -Value $readmeLines -Encoding UTF8
