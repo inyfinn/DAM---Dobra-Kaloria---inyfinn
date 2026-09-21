@@ -1002,10 +1002,24 @@
     return null;
   }
 
+  /* Literka cyklu zycia z konca nazwy folderu: F (final), D (demo), X (do archiwum).
+   *
+   * Tolerancyjnie, bo ludzie pisza to roznie: "- F", "-F", "--F", "_F", " F",
+   * z myslnikiem typograficznym albo ze spacja na koncu. Wczesniejszy wzorzec
+   * wymagal dokladnie " - F" i kazdy inny zapis byl po cichu ignorowany -
+   * folder oznaczony przez czlowieka jako gotowy nie liczyl sie wcale.
+   * Wymagamy separatora przed litera, zeby nie lapac slow konczacych sie na f/x/d. */
+  var LIFECYCLE_LETTER_RE = /[\s\-_\u2013\u2014]+([FXD])[\s.]*$/i;
+
   function letterFromFolderName(pathOrName) {
     var nm = String(pathOrName || "").split(/[/\\]/).pop() || "";
-    var m = nm.match(/\s-\s([FXD])$/i);
+    var m = nm.match(LIFECYCLE_LETTER_RE);
     return m ? m[1].toUpperCase() : "";
+  }
+
+  /** Nazwa bez literki cyklu zycia (do etykiet i porownan). */
+  function stripLifecycleLetter(name) {
+    return String(name || "").replace(LIFECYCLE_LETTER_RE, "").trim();
   }
 
   function statusFromLetter(lit) {
@@ -1570,9 +1584,10 @@
     if (!showAll) {
       /* F albo working (Bez statusu / latest) - nie chowaj czystego TEST-TEST */
       var currentOff = aktualne.length ? aktualne : getCurrentRevisions(all);
-      currentOff = currentOff.filter(function (r) {
-        return getRevisionStatus(r) !== "nieaktualne";
-      });
+      /* X zostaje widoczny. Litera X na folderze znaczy "do archiwum", ale ktos
+         ja tylko dopisal i nie przeniosl folderu. Chowanie takiego wariantu
+         zostawialo go na dysku na zawsze - teraz widac go z czerwona ramka
+         i przyciskiem, ktory faktycznie przenosi go do archiwum. */
       if (!currentOff.length) return null;
       return { current: currentOff, older: [] };
     }
@@ -2038,16 +2053,21 @@
     });
   }
 
+  /* Co pokazac, gdy "Pokaz wszystkie" jest wylaczone.
+   *
+   * Zasada z dysku, nie z domyslu:
+   *  - jest chociaz jeden folder z litera F -> tylko te (ktos dokonal wyboru),
+   *  - nie ma zadnego F -> POKAZ WSZYSTKIE, bo segregacji jeszcze nie zrobiono.
+   *
+   * Wczesniej przy braku F brano jeden rekord po is_latest i osiem rekawow
+   * Burgera Klasycznego kurczylo sie do jednego, bez zadnej informacji, czemu
+   * akurat tego. Milczace wybranie jednego z osmiu rownorzednych wariantow
+   * jest gorsze niz pokazanie wszystkich. */
   function getCurrentRevisions(revisions) {
-    var withStatus = revisions.filter(function (r) { return getRevisionStatus(r) === "aktualne"; });
-    if (withStatus.length > 0) return withStatus;
-    var latests = revisions.filter(function (r) { return r.is_latest; });
-    if (latests.length > 0) {
-      var sorted = sortRevsByIndex(latests);
-      return [sorted[0]]; // only one by default
-    }
-    var sorted2 = sortRevsByIndex(revisions);
-    return [sorted2[0]];
+    var all = revisions || [];
+    var finals = all.filter(function (r) { return getRevisionStatus(r) === "aktualne"; });
+    if (finals.length > 0) return finals;
+    return sortRevsByIndex(all);
   }
 
   function getOlderRevisions(revisions, currentRevs) {
@@ -3865,14 +3885,23 @@
     return out;
   }
 
+  /* Warstwa "Materialy marketingowe" renderuje sie w KAZDEJ karcie wariantu,
+     wiec przy osmiu wariantach jest osiem elementow z tym samym product.id.
+     querySelector obslugiwal tylko pierwszy i pozostale karty zostawaly z
+     napisem "Ładowanie skojarzonych materiałów…" na zawsze. Bezpiecznik 6 s
+     tez ich nie ratowal, bo funkcja wychodzila przed jego ustawieniem. */
   function hydrateExplorerMarketingMaterials(scope, product) {
     if (!scope || !product || !product.id) return;
-    var layer = scope.querySelector(
+    var layers = scope.querySelectorAll(
       '.dam-explorer-marketing-layer[data-explorer-marketing-product="' + product.id + '"]'
     );
+    for (var li = 0; li < layers.length; li += 1) {
+      hydrateOneMarketingLayer(layers[li], product);
+    }
+  }
+
+  function hydrateOneMarketingLayer(layer, product) {
     if (!layer) return;
-    var MP = window.DamMediaPreview;
-    if (!MP || typeof MP.explorerMarketingRows !== "function") return;
     var idx =
       (product.revisions && product.revisions[0] && product.revisions[0].index) ||
       (product.index_bases && product.index_bases[0]) ||
@@ -3882,10 +3911,14 @@
       '<div class="dam-file-layer__title">Materiały marketingowe</div>' +
       '<p class="dam-media-preview__assoc-empty">Brak skojarzonych materiałów.</p>' +
       '<p class="dam-marketing-hint">Ścieżki lokalne po mapowaniu bazy (Ustawienia). Kopiuj lub pokaż w Eksploratorze.</p>';
+    /* Bezpiecznik ustawiamy PRZED sprawdzeniem API: gdy podgladu nie ma,
+       napis i tak musi sam zniknac, zamiast wisiec w nieskonczonosc. */
     var loadingTimer = setTimeout(function () {
       if (!layer.isConnected) return;
       if (layer.querySelector(".dam-explorer-marketing-loading")) layer.innerHTML = emptyHtml;
     }, 6000);
+    var MP = window.DamMediaPreview;
+    if (!MP || typeof MP.explorerMarketingRows !== "function") return;
     MP.explorerMarketingRows({
       id: product.id,
       name: product.display_name || product.name || "",
@@ -3999,6 +4032,34 @@
    * Jedna prezentacja, dwa zrodla: z nazwy folderu (nic nie trzeba wpisywac)
    * albo z opisu dodanego w programie. Opis NIE zmienia nazwy folderu na dysku.
    * ------------------------------------------------------------------ */
+  /* Litera z folderu zamieniona na to, co widzi czlowiek.
+     D = wersja robocza (szaro, nie krzyczy).
+     X = ktos oznaczyl folder do archiwum, ale go nie przeniosl - czerwona
+         ramka + przycisk, ktory przenosi naprawde (jak klikniecie X). */
+  function variantFlagHtml(rev) {
+    var st = getRevisionStatus(rev);
+    if (st === "demo") {
+      return '<span class="dam-variant-flag dam-variant-flag--demo"' +
+        ' data-dam-tip="Wersja robocza (litera D w nazwie folderu)">DEMO</span>';
+    }
+    if (st === "nieaktualne") {
+      return '<span class="dam-variant-flag dam-variant-flag--x"' +
+        ' data-dam-tip="Litera X w nazwie folderu: oznaczone do archiwum, ale folder wciaz lezy w produkcie">' +
+        "DO ARCHIWUM</span>";
+    }
+    return "";
+  }
+
+  function variantArchiveBtnHtml(rev) {
+    if (getRevisionStatus(rev) !== "nieaktualne") return "";
+    return (
+      '<button type="button" class="dam-variant-archive"' +
+      ' data-variant-archive="' + esc(rev.path || "") + '"' +
+      ' data-dam-tip="Przenies ten wariant do — ARCHIWUM (to samo co ustawienie X)">' +
+      '<i class="uil uil-archive" aria-hidden="true"></i><span>Przenieś do archiwum</span></button>'
+    );
+  }
+
   function variantNoteFor(rev) {
     var VN = window.DamVariantNotes;
     return VN ? VN.forRevision(rev) : "";
@@ -4221,6 +4282,8 @@
       (isExpanded ? " is-expanded" : "") +
       (st === "aktualne" ? " dam-carrier-card--aktualne" : "") +
       (st === "nieaktualne" || st === "starsza" ? " dam-carrier-card--outdated" : "") +
+      /* Osobna klasa: X = ktos oznaczyl do archiwum i nie przeniosl. */
+      (st === "nieaktualne" ? " dam-carrier-card--x" : "") +
       (st === "demo" ? " dam-carrier-card--demo" : "") +
       (cardOpts.flatMode ? " dam-carrier-card--flat" : "");
 
@@ -4261,6 +4324,7 @@
               esc(label) +
               "</span>" +
               variantDistHtml(rev) +
+              variantFlagHtml(rev) +
               '<div class="dam-carrier-toggle__chips">' +
               tags +
               "</div>" +
@@ -4272,6 +4336,7 @@
             dateOutside +
             indexOutside +
             "</div>" +
+            variantArchiveBtnHtml(rev) +
             (variantLifeHtml
               ? '<div class="dam-carrier-head__meta-life">' + variantLifeHtml + "</div>"
               : "") +
@@ -9011,6 +9076,43 @@
 
   /* Edycja opisu wariantu. Delegacja na dokumencie, bo karty przerysowuja sie
      w calosci przy kazdym renderze i handlery na elementach by gynely. */
+  var _variantArchiveBound = false;
+
+  /* "Przenieś do archiwum" na wariancie z litera X. Uzywa tej samej sciezki co
+     przycisk X w kontrolkach cyklu zycia, wiec folder faktycznie wedruje do
+     — ARCHIWUM, a nie tylko zmienia etykiete w interfejsie. */
+  function bindVariantArchive() {
+    if (_variantArchiveBound) return;
+    _variantArchiveBound = true;
+    document.addEventListener("click", function (ev) {
+      var btn = ev.target.closest && ev.target.closest("[data-variant-archive]");
+      if (!btn) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      var path = btn.getAttribute("data-variant-archive") || "";
+      if (!path) {
+        showToast("Brak sciezki wariantu - nie wiem, co przeniesc", "error");
+        return;
+      }
+      var product = state.product || {};
+      btn.disabled = true;
+      applyLifecycleStatus({
+        scope: "variant",
+        status: "nieaktualne",
+        path: path,
+        productPath: product.path || "",
+        productId: product.id || "",
+        index: ""
+      }).then(function (res) {
+        btn.disabled = false;
+        if (res && res.ok) {
+          showToast("Wariant przeniesiony do archiwum");
+          if (typeof renderMain === "function") renderMain();
+        }
+      });
+    });
+  }
+
   var _variantNoteBound = false;
 
   /* Lista wynikow zaslaniala pol ekranu i nie dalo sie jej zamknac inaczej niz
@@ -9105,6 +9207,7 @@
     ensureExplorerCtaUnifyCss();
     bindCategoryAddButton();
     bindVariantNoteEditing();
+    bindVariantArchive();
     bindSearchDismiss();
     if (window.DamVariantNotes && typeof DamVariantNotes.load === "function") {
       DamVariantNotes.load().then(function () {

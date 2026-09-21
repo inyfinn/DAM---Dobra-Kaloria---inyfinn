@@ -540,16 +540,21 @@ PACKAGING_SET = {norm(h) for h in PACKAGING_HINTS}
 CURATED_VOCAB = PERSON_SET | FLAVOR_SET | PRODUCT_TYPE_SET | PACKAGING_SET
 
 
-LIFECYCLE_SUFFIX_RE = re.compile(r"\s+-\s+[FXD]$", re.IGNORECASE)
+# Tolerancyjnie, bo ludzie pisza to roznie: "- F", "-F", "--F", "_F", " F",
+# z myslnikiem typograficznym albo ze spacja na koncu. Wczesniej wymagane bylo
+# dokladnie " - F" i kazdy inny zapis byl po cichu ignorowany, wiec folder
+# oznaczony przez czlowieka jako gotowy nie liczyl sie wcale.
+# Separator przed litera jest wymagany, zeby nie lapac slow konczacych sie na f/x/d.
+LIFECYCLE_SUFFIX_RE = re.compile(r"[\s\-_–—]+([FXD])[\s.]*$", re.IGNORECASE)
 
 
 def strip_lifecycle_suffix(name: str) -> str:
-    """Usun koncowke statusu folderu: - F / - X / - D."""
+    """Usun koncowke statusu folderu: F / X / D (dowolny zapis separatora)."""
     return LIFECYCLE_SUFFIX_RE.sub("", (name or "").rstrip()).rstrip()
 
 
 def lifecycle_letter_from_folder_name(name: str) -> str:
-    m = re.search(r"\s-\s([FXD])$", name or "", re.I)
+    m = LIFECYCLE_SUFFIX_RE.search(name or "")
     return m.group(1).upper() if m else ""
 
 
