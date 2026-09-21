@@ -34,6 +34,11 @@ jobs:
           python -m pip install pyinstaller
           # rapidocr/psd-tools bywaja bez kol arm64 - nie blokuja buildu (funkcje dodatkowe)
           grep -v -E '^(rapidocr-onnxruntime|psd-tools)' bin/apps/desktop/requirements.txt > /tmp/req-mac.txt
+          # requirements-portable.txt to lista, ktora Windows wgrywa do bin/runtime/win/python
+          # (build-installer.ps1:112 $rtModules). Jest tam ijson, ktorego nie ma w
+          # requirements.txt - bez niego selftest konczy sie FAIL. pythonnet odpada:
+          # to most do .NET, na macOS nie istnieje.
+          grep -v -E '^(pythonnet|#|$)' bin/apps/desktop/requirements-portable.txt >> /tmp/req-mac.txt
           python -m pip install -r /tmp/req-mac.txt
           python -m pip install 'rapidocr-onnxruntime' 'psd-tools' || echo "OPCJONALNE: brak kol arm64, pomijam"
 
