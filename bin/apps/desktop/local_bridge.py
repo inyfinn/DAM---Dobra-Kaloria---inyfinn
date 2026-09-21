@@ -102,6 +102,8 @@ from auth_store import (
     users_count,
 )
 
+import platform_compat
+
 try:
     import oauth_integrations
 except ImportError:
@@ -311,10 +313,12 @@ PUBLIC_FORBIDDEN_PATHS = frozenset(
 # Kolejnosc: M: (komputer zrodlowy Synology) -> X:/Marketing -> staging D: -> inne wykryte.
 # Uzupelniane w tle przy starcie mostu (marketing_discovery); funkcje czytaja globala
 # w chwili wywolania, wiec podmiana krotki wystarcza.
-MARKETING_CANDIDATES: tuple[Path, ...] = (
-    Path("M:/"),
-    Path("X:/Marketing"),
-    Path("D:/Marketing"),
+MARKETING_CANDIDATES: tuple[Path, ...] = platform_compat.marketing_candidates(
+    (
+        Path("M:/"),
+        Path("X:/Marketing"),
+        Path("D:/Marketing"),
+    )
 )
 MARKETING_DISCOVERY_INTERVAL_SEC = 300.0
 
@@ -399,246 +403,10 @@ def is_probably_file(p: str) -> bool:
 
 
 # --- Explorer: karta + fokus (2026-07-20) -----------------------------------
-# Root cause "okno otwiera sie w tle": most to pythonw (proces BEZ okna na
-# pierwszym planie), wiec explorer.exe odpalony przez subprocess nie dostaje
-# fokusu (Windows foreground lock - SetForegroundWindow dziala tylko dla
-# procesu na pierwszym planie). Obejscie: ALT-trick (keybd_event VK_MENU przed
-# SetForegroundWindow) + ShowWindow + BringWindowToTop.
-# Karta zamiast nowego okna: fokus istniejacego okna Eksploratora -> Ctrl+T ->
-# Navigate2(PIDL) na swiezej karcie. UWAGA (HARD): Navigate2 NIE przyjmuje
-# sciezek jako file:/// URI (%20 itd. -> dialog "Nie mozna odnalezc...").
-# Zawsze podawaj PIDL (SHParseDisplayName) albo surowa sciezke Windows.
-
-_VK_MENU, _VK_CONTROL, _VK_T, _KEYEVENTF_KEYUP = 0x12, 0x11, 0x54, 0x02
-
-
-def _explorer_hwnds() -> set:
-    """Top-level okna Eksploratora (klasa CabinetWClass), czysty ctypes."""
-    import ctypes
-
-    user32 = ctypes.windll.user32
-    out: set = set()
-    h = 0
-    while True:
-        h = user32.FindWindowExW(None, h, "CabinetWClass", None)
-        if not h:
-            break
-        out.add(h)
-    return out
-
-
-def _focus_hwnd(hwnd: int) -> bool:
-    """Wysun okno na wierzch. ALT-trick omija foreground lock."""
-    try:
-        import ctypes
-
-        user32 = ctypes.windll.user32
-        user32.ShowWindow(hwnd, 9 if user32.IsIconic(hwnd) else 5)  # SW_RESTORE / SW_SHOW
-        user32.keybd_event(_VK_MENU, 0, 0, 0)
-        user32.SetForegroundWindow(hwnd)
-        user32.keybd_event(_VK_MENU, 0, _KEYEVENTF_KEYUP, 0)
-        user32.BringWindowToTop(hwnd)
-        return user32.GetForegroundWindow() == hwnd
-    except Exception:
-        return False
-
-
-def _open_folder_tab_and_focus(target: str) -> bool:
-    """Otworz folder jako NOWA KARTE istniejacego okna Eksploratora i wysun je.
-
-    Zwraca True tylko gdy karta powstala i zostala nawigowana. False = wolaj
-    fallback (nowe okno). Wywolywac WYLACZNIE z watku daemon - X: (NFS) bywa
-    wolne, a COM/PIDL moga blokowac.
-    """
-    try:
-        import ctypes
-        import pythoncom
-        import win32com.client
-        from win32com.client import VARIANT
-        from win32com.shell import shell as w32shell
-    except Exception:
-        return False
-
-    user32 = ctypes.windll.user32
-    pythoncom.CoInitialize()
-    try:
-        try:
-            pidl = w32shell.SHParseDisplayName(target, 0)[0]
-            var_pidl = VARIANT(
-                pythoncom.VT_ARRAY | pythoncom.VT_UI1, w32shell.PIDLAsString(pidl)
-            )
-        except Exception:
-            return False
-        sh = win32com.client.Dispatch("Shell.Application")
-
-        def explorer_tabs():
-            out = []
-            for w in sh.Windows():
-                try:
-                    if "explorer.exe" in str(w.FullName or "").lower():
-                        out.append(w)
-                except Exception:
-                    pass
-            return out
-
-        items = explorer_tabs()
-        if not items:
-            return False
-        hwnd = int(items[0].HWND)
-        if not _focus_hwnd(hwnd):
-            time.sleep(0.2)
-            if not _focus_hwnd(hwnd):
-                return False
-        time.sleep(0.25)
-        if user32.GetForegroundWindow() != hwnd:
-            return False
-
-        def url_counts():
-            counts: dict = {}
-            for w in explorer_tabs():
-                try:
-                    if int(w.HWND) == hwnd:
-                        u = str(w.LocationURL or "")
-                        counts[u] = counts.get(u, 0) + 1
-                except Exception:
-                    pass
-            return counts
-
-        before = url_counts()
-        # Ctrl+T = nowa karta w oknie na pierwszym planie
-        user32.keybd_event(_VK_CONTROL, 0, 0, 0)
-        user32.keybd_event(_VK_T, 0, 0, 0)
-        user32.keybd_event(_VK_T, 0, _KEYEVENTF_KEYUP, 0)
-        user32.keybd_event(_VK_CONTROL, 0, _KEYEVENTF_KEYUP, 0)
-
-        new_tab = None
-        deadline = time.time() + 3.0
-        while time.time() < deadline and new_tab is None:
-            time.sleep(0.25)
-            after = url_counts()
-            surplus = [u for u in after if after.get(u, 0) > before.get(u, 0)]
-            if surplus:
-                for w in explorer_tabs():
-                    try:
-                        if int(w.HWND) == hwnd and str(w.LocationURL or "") in surplus:
-                            new_tab = w
-                            break
-                    except Exception:
-                        pass
-        if new_tab is None:
-            return False
-
-        ok = False
-        for _ in range(8):
-            try:
-                new_tab.Navigate2(var_pidl)  # PIDL, nie file:/// URI
-                ok = True
-                break
-            except Exception:
-                time.sleep(0.4)
-        if not ok:
-            return False
-        time.sleep(0.3)
-        _focus_hwnd(hwnd)  # re-assert - nawigacja potrafi oddac fokus
-        return True
-    finally:
-        try:
-            pythoncom.CoUninitialize()
-        except Exception:
-            pass
-
-
-def _focus_new_explorer_window(before: set) -> None:
-    """Po odpaleniu explorer.exe znajdz nowe okno (poll do 5 s) i wysun je."""
-    import ctypes
-
-    user32 = ctypes.windll.user32
-    hwnd = 0
-    deadline = time.time() + 5.0
-    while time.time() < deadline:
-        time.sleep(0.25)
-        fresh = _explorer_hwnds() - before
-        if fresh:
-            hwnd = sorted(fresh)[0]
-            break
-    if not hwnd:
-        # Brak nowego okna = Windows zrobil karte w istniejacym oknie
-        current = _explorer_hwnds()
-        if not current:
-            return
-        hwnd = sorted(current)[0]
-    _focus_hwnd(hwnd)
-    if user32.GetForegroundWindow() != hwnd:
-        time.sleep(0.3)
-        _focus_hwnd(hwnd)
-
-
-def _select_file_in_explorer(filepath: str) -> bool:
-    """Zaznacz DOKLADNY plik przez SHOpenFolderAndSelectItems.
-
-    `explorer /select,` bywa zawodne gdy folder WIZKI jest juz otwarty (Windows
-    zostawia poprzednie zaznaczenie - np. FRONT-L zamiast FRONT-S, ktore
-    faktycznie wyslal most). API shellowe wymusza selekcje wskazanego PIDL.
-    """
-    try:
-        import pythoncom
-        from win32com.shell import shell as w32shell
-    except Exception:
-        return False
-    pythoncom.CoInitialize()
-    try:
-        pidl = w32shell.SHParseDisplayName(filepath, 0)[0]
-        # apidl musi byc lista/tablica IDL (None -> TypeError w pywin32)
-        w32shell.SHOpenFolderAndSelectItems(pidl, [], 0)
-        return True
-    except Exception:
-        return False
-    finally:
-        try:
-            pythoncom.CoUninitialize()
-        except Exception:
-            pass
-
-
-def _reveal_worker(target: str, mode: str, args: list) -> None:
-    """Watek daemon: preferuj karte+fokus, fallback = nowe okno + fokus."""
-    try:
-        if mode == "open" and _open_folder_tab_and_focus(target):
-            return
-    except Exception:
-        pass
-    # Select: najpierw SHOpenFolderAndSelectItems (dokladny plik), potem /select
-    if mode == "select":
-        try:
-            if _select_file_in_explorer(target):
-                try:
-                    _focus_new_explorer_window(set())
-                except Exception:
-                    pass
-                return
-        except Exception:
-            pass
-    before = _explorer_hwnds()
-    try:
-        _no_win = (
-            getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
-            if sys.platform == "win32"
-            else 0
-        )
-        subprocess.Popen(
-            args,
-            shell=False,
-            creationflags=_no_win,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-    except Exception:
-        return
-    try:
-        _focus_new_explorer_window(before)
-    except Exception:
-        pass
+# Windows-only implementation (ctypes focus helpers, explorer /select, PIDL
+# tab navigation) zyla tu do 2026-09-21, teraz w platform_compat.py razem z
+# macOS `open -R` odpowiednikiem - reveal_in_explorer() nizej tylko waliduje
+# i deleguje.
 
 
 def reveal_in_explorer(target: str) -> dict:
@@ -658,32 +426,8 @@ def reveal_in_explorer(target: str) -> dict:
         return {"ok": False, "error": "path_outside_marketing", "path": target}
 
     # Bez shell=True (unikaj injection przez cudzyslowy w sciezce).
-    # WAŻNE: ["/select," + path] ze spacjami = Windows otwiera Dokumenty.
-    # Poprawnie: osobny argument sciezki po "/select,".
     # Foldery typu "6300084.00" maja kropke - NIE wolno traktowac ich jako plik.
-    _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
-    if os.path.isfile(target):
-        args = ["explorer", "/select,", target]
-        mode = "select"
-    elif os.path.isdir(target):
-        args = ["explorer", target]
-        mode = "open"
-    elif is_probably_file(target):
-        args = ["explorer", "/select,", target]
-        mode = "select"
-    else:
-        args = ["explorer", target]
-        mode = "open"
-
-    try:
-        # Watek daemon: karta w istniejacym oknie + fokus (fallback: nowe
-        # okno + fokus). Nie blokuje odpowiedzi HTTP (X: NFS bywa wolny).
-        threading.Thread(
-            target=_reveal_worker, args=(target, mode, args), daemon=True
-        ).start()
-        return {"ok": True, "path": target, "command": mode}
-    except Exception as exc:  # noqa: BLE001
-        return {"ok": False, "error": str(exc), "path": target}
+    return platform_compat.reveal_in_folder(target)
 
 
 OPEN_BLOCKED_EXTENSIONS = frozenset(
@@ -718,11 +462,10 @@ def open_in_default_app(target: str) -> dict:
     # nie moze zostac uruchomiony jednym kliknieciem (ani zadaniem do mostu).
     if Path(target).suffix.lower() in OPEN_BLOCKED_EXTENSIONS:
         return {"ok": False, "error": "file_type_blocked", "path": target}
-    try:
-        os.startfile(target)  # type: ignore[attr-defined]
+    result = platform_compat.open_file(target)
+    if result.get("ok"):
         return {"ok": True, "path": target, "command": "startfile"}
-    except Exception as exc:  # noqa: BLE001
-        return {"ok": False, "error": str(exc), "path": target}
+    return {"ok": False, "error": result.get("error") or "open_failed", "path": target}
 
 
 def invoke_synology_share(target: str) -> dict:
@@ -845,6 +588,18 @@ def pick_folder_dialog(start: str = "") -> dict:
 
     if not _PICK_FOLDER_LOCK.acquire(blocking=False):
         return {"ok": False, "error": "picker_busy"}
+
+    if sys.platform == "darwin":
+        # tkinter Tk() w watku spawnowanym = Cocoa wymaga glownego watku (crash/hang).
+        try:
+            native = platform_compat.pick_folder_native(
+                start_dir, prompt="Wybierz folder Marketing (root)"
+            )
+        finally:
+            _PICK_FOLDER_LOCK.release()
+        if not native.get("ok"):
+            return {"ok": False, "cancelled": native.get("error") == "cancelled", "error": native.get("error")}
+        return {"ok": True, "path": native["path"], "cancelled": False}
 
     result: dict = {"ok": False, "cancelled": True}
 

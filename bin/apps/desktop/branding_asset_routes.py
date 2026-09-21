@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import Any, Callable
 from urllib.parse import parse_qs
 
+import platform_compat
+
 # Injected by local_bridge on register
 _CTX: dict[str, Any] = {}
 
@@ -22,7 +24,9 @@ _QUEUE_ITEM_LIMIT = 200
 _QUEUE_CANDIDATE_LIMIT = 12000
 
 _WWW_SCAN_REL = "- POLSKA/06 - STRONY WWW - INTERNET/01 - Strona Dobra Kaloria"
-_DEFAULT_ROOT_PREFIXES = ("M:/", "X:/Marketing/", "D:/Marketing/")
+_DEFAULT_ROOT_PREFIXES = platform_compat.marketing_root_prefixes(
+    ("M:/", "X:/Marketing/", "D:/Marketing/")
+)
 _WWW_SCAN_EXTS = frozenset(
     {".png", ".jpg", ".jpeg", ".webp", ".gif", ".tif", ".tiff", ".svg", ".mp4", ".webm", ".pdf"}
 )

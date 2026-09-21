@@ -13,12 +13,16 @@ import unicodedata
 from pathlib import Path
 from typing import Callable, Optional, Sequence
 
+import platform_compat
+
 # Default candidates when bridge has not injected its list yet.
 # Order (HARD): M:\ -> X:\Marketing -> D:\Marketing (same as marketing_discovery).
-DEFAULT_MARKETING_CANDIDATES: tuple[Path, ...] = (
-    Path("M:/"),
-    Path("X:/Marketing"),
-    Path("D:/Marketing"),
+DEFAULT_MARKETING_CANDIDATES: tuple[Path, ...] = platform_compat.marketing_candidates(
+    (
+        Path("M:/"),
+        Path("X:/Marketing"),
+        Path("D:/Marketing"),
+    )
 )
 # Live list: the bridge replaces it after drive discovery (set_marketing_candidates).
 # Functions read it at call time; a default argument would freeze it at import.

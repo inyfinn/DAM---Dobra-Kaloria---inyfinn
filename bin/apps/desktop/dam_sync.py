@@ -9,6 +9,7 @@ import threading
 import time
 from pathlib import Path
 
+import platform_compat
 from runtime_config import CONTENT_ROOT, DESKTOP_DIR, GIT_ROOT
 
 REPO_ROOT = CONTENT_ROOT  # content tree (bin); git cwd = GIT_ROOT
@@ -118,17 +119,14 @@ def spawn_sync_quiet(*, push: bool = True, no_commit: bool = False) -> bool:
     py_exe = _silent_python()
     cmd = [py_exe, str(SYNC_SCRIPT), *args_tail]
     try:
-        flags = CREATE_NO_WINDOW
-        if sys.platform == "win32":
-            flags |= getattr(subprocess, "DETACHED_PROCESS", 0x00000008)
         subprocess.Popen(
             cmd,
             cwd=str(GIT_CWD),
-            creationflags=flags,
             close_fds=True,
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
+            **platform_compat.popen_background_kwargs(),
         )
         _log("spawn_sync_quiet: " + " ".join(cmd))
         return True

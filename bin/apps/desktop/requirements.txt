@@ -10,3 +10,5 @@ redis>=5.0
 # Opcjonalnie OCR: pip install rapidocr-onnxruntime (enrich-branding-recognize.py)
 rapidocr-onnxruntime>=1.3
 psd-tools>=1.9
+pyobjc-framework-Cocoa; sys_platform == 'darwin'
+pyobjc-framework-WebKit; sys_platform == 'darwin'

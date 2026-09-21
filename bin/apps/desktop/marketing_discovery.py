@@ -23,11 +23,15 @@ import time
 from pathlib import Path
 from typing import Iterable, Sequence
 
+import platform_compat
+
 REQUIRED_ROOT_FOLDERS: tuple[str, ...] = ("-- ARCHIWUM --", "- EKSPORT", "- POLSKA")
-PREFERRED_CANDIDATES: tuple[Path, ...] = (
-    Path("M:/"),
-    Path("X:/Marketing"),
-    Path("D:/Marketing"),
+PREFERRED_CANDIDATES: tuple[Path, ...] = platform_compat.marketing_candidates(
+    (
+        Path("M:/"),
+        Path("X:/Marketing"),
+        Path("D:/Marketing"),
+    )
 )
 
 DRIVE_REMOVABLE = 2
