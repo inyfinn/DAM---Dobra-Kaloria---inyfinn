@@ -1,0 +1,30 @@
+<Configuration>
+  <!--
+    Test instalatora DAM w Piaskownicy Windows na maszynach, gdzie Smart App Control
+    blokuje niepodpisane pliki (komunikat "Zasady kontroli aplikacji zablokowaly ten plik").
+
+    Start: bin\scripts\ops\sandbox-dam-test.ps1 (kopiuje instalator do C:\Temp\dam-sandbox-in
+    i prowadzi caly przebieg). Recznie: podwojny klik w ten plik.
+
+    W piaskownicy SAC startuje wlaczony (VerifiedAndReputablePolicyState = 1) niezaleznie
+    od ustawienia hosta. Instrukcja wylaczenia laduje na Pulpicie jako CZYTAJ-MNIE.txt.
+  -->
+  <MappedFolders>
+    <MappedFolder>
+      <HostFolder>C:\Temp\dam-sandbox-in</HostFolder>
+      <SandboxFolder>C:\dam-setup</SandboxFolder>
+      <ReadOnly>true</ReadOnly>
+    </MappedFolder>
+    <MappedFolder>
+      <HostFolder>C:\Temp\dam-sandbox-out</HostFolder>
+      <SandboxFolder>C:\dam-results</SandboxFolder>
+      <ReadOnly>false</ReadOnly>
+    </MappedFolder>
+  </MappedFolders>
+  <LogonCommand>
+    <Command>powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\dam-setup\sandbox-dam-logon.ps1</Command>
+  </LogonCommand>
+  <Networking>Enable</Networking>
+  <vGPU>Disable</vGPU>
+  <MemoryInMB>8192</MemoryInMB>
+</Configuration>
