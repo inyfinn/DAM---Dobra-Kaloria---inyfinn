@@ -39,7 +39,9 @@ if (-not (Test-Path $Iscc)) {
 $verJson = Join-Path $BinRoot "apps\web\version.json"
 if (-not (Test-Path $verJson)) { throw "Brak $verJson - nie zgaduje wersji." }
 try {
-  $vj = Get-Content $verJson -Raw | ConvertFrom-Json
+  # -Encoding UTF8 obowiazkowo: PowerShell 5.1 czyta plik BEZ BOM jako ANSI
+  # (CP1250), wiec "RĘKAW" z version.json wjezdzalo do README jako "RÄKAW".
+  $vj = Get-Content $verJson -Raw -Encoding UTF8 | ConvertFrom-Json
 } catch {
   throw "version.json jest niepoprawnym JSON-em: $($_.Exception.Message)"
 }
@@ -457,6 +459,14 @@ $readmeLines += @("", $buildLine)
 $readmePath = Join-Path $stageRoot "README.txt"
 Set-Content -LiteralPath $readmePath -Value $readmeLines -Encoding UTF8
 # Wersja w README musi zgadzac sie z budowana - inaczej build staje.
+# Typowe slady podwojnego kodowania UTF-8 -> CP1250. Zakaz w regulach projektu:
+# polskie znaki nie moga wyjechac polamane do uzytkownika.
+$readmeText = Get-Content -LiteralPath $readmePath -Raw -Encoding UTF8
+foreach ($bad in @("Ä", "Ĺ", "Å", "Â", "ď»ż")) {
+  if ($readmeText.Contains($bad)) {
+    throw "README.txt ma polamane polskie znaki (znaleziono '$bad') - popraw kodowanie i powtorz build."
+  }
+}
 if (-not (Select-String -LiteralPath $readmePath -SimpleMatch "DAM $Version" -Quiet)) {
   throw "README.txt nie zawiera wersji $Version - koniec buildu."
 }
