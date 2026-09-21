@@ -2287,41 +2287,127 @@ def variant_note_key(raw: str) -> str:
 
 
 VARIANT_NOTE_MAX = 120
+# Kto moze zatwierdzac cudze zmiany w opisie chronionym.
+VARIANT_NOTE_APPROVERS = ("admin", "power_user")
 
 
 def read_variant_notes() -> dict:
-    data = _load_json(WEB_ROOT / "data" / "variant-notes.json", {"notes": {}})
+    data = _load_json(WEB_ROOT / "data" / "variant-notes.json", {"notes": {}, "pending": {}})
     if not isinstance(data.get("notes"), dict):
         data["notes"] = {}
+    if not isinstance(data.get("pending"), dict):
+        data["pending"] = {}
     return data
 
 
-def upsert_variant_note(raw_key: str, note: str, actor: str = "") -> dict:
-    """Opis wariantu widoczny obok indeksu. NIE zmienia nazwy folderu na dysku."""
+def _save_variant_notes(data: dict) -> None:
+    data["updated_at"] = utc_now()
+    _save_json(WEB_ROOT / "data" / "variant-notes.json", data)
+
+
+def _clean_note_text(note: str) -> str:
+    return re.sub(r"\s+", " ", str(note or "")).strip()[:VARIANT_NOTE_MAX]
+
+
+def upsert_variant_note(raw_key: str, note: str, actor: str = "", role: str = "") -> dict:
+    """Opis wariantu widoczny obok indeksu. NIE zmienia nazwy folderu na dysku.
+
+    Zasada uprawnien:
+      - opisu moze dodac KAZDY zalogowany i wchodzi od razu,
+      - opis zalozony lub zmieniony przez admina/power_usera jest chroniony:
+        zwykly uzytkownik moze go tylko ZAPROPONOWAC, a zmiana czeka na
+        zatwierdzenie przez admina albo power_usera,
+      - admin i power_user nadpisuja bez pytania.
+    """
     key = variant_note_key(raw_key)
     if not key:
         return {"ok": False, "error": "index_required"}
-    text = re.sub(r"\s+", " ", str(note or "")).strip()[:VARIANT_NOTE_MAX]
+    text = _clean_note_text(note)
+    role_n = str(role or "").strip().lower()
+    is_approver = role_n in VARIANT_NOTE_APPROVERS
     data = read_variant_notes()
+    # Plik jest edytowalny recznie i bywa rwany przez synchronizacje - nie
+    # zakladaj, ze oba klucze istnieja.
+    if not isinstance(data.get("notes"), dict):
+        data["notes"] = {}
+    if not isinstance(data.get("pending"), dict):
+        data["pending"] = {}
+    existing = data["notes"].get(key) or {}
+    protected = bool(existing.get("protected"))
+
+    if protected and not is_approver:
+        data["pending"][key] = {
+            "note": text,
+            "replaces": str(existing.get("note") or ""),
+            "by": actor or "",
+            "at": utc_now(),
+        }
+        _save_variant_notes(data)
+        append_change_log(
+            {"action": "variant_note_proposed", "category": "index", "index": key, "note": text}
+        )
+        notify_admins_note_proposal(key, text, str(existing.get("note") or ""), actor)
+        return {
+            "ok": True,
+            "index": key,
+            "pending": True,
+            "note": str(existing.get("note") or ""),
+            "proposed": text,
+            "hint": "Opis zalozyl admin - zmiana czeka na zatwierdzenie.",
+        }
+
     if text:
         data["notes"][key] = {
             "note": text,
             "updated_at": utc_now(),
             "updated_by": actor or "",
+            # Chroniony dopiero wtedy, gdy autorem jest admin/power_user.
+            "protected": is_approver,
         }
     else:
         data["notes"].pop(key, None)
-    data["updated_at"] = utc_now()
-    _save_json(WEB_ROOT / "data" / "variant-notes.json", data)
+    data["pending"].pop(key, None)
+    _save_variant_notes(data)
+    append_change_log(
+        {"action": "variant_note", "category": "index", "index": key, "note": text}
+    )
+    return {"ok": True, "index": key, "note": text, "pending": False}
+
+
+def resolve_variant_note_proposal(raw_key: str, accept: bool, actor: str = "") -> dict:
+    """Zatwierdzenie albo odrzucenie propozycji zwyklego uzytkownika."""
+    key = variant_note_key(raw_key)
+    data = read_variant_notes()
+    if not isinstance(data.get("notes"), dict):
+        data["notes"] = {}
+    if not isinstance(data.get("pending"), dict):
+        data["pending"] = {}
+    proposal = data["pending"].get(key)
+    if not proposal:
+        return {"ok": False, "error": "no_pending_proposal"}
+    if accept:
+        text = _clean_note_text(proposal.get("note") or "")
+        if text:
+            data["notes"][key] = {
+                "note": text,
+                "updated_at": utc_now(),
+                "updated_by": str(proposal.get("by") or ""),
+                "approved_by": actor or "",
+                "protected": True,
+            }
+        else:
+            data["notes"].pop(key, None)
+    data["pending"].pop(key, None)
+    _save_variant_notes(data)
     append_change_log(
         {
-            "action": "variant_note",
+            "action": "variant_note_accepted" if accept else "variant_note_rejected",
             "category": "index",
             "index": key,
-            "note": text,
+            "note": str(proposal.get("note") or ""),
         }
     )
-    return {"ok": True, "index": key, "note": text}
+    return {"ok": True, "index": key, "accepted": bool(accept)}
 
 
 ELEMENTS_LINK_EXTS = {
@@ -6024,6 +6110,81 @@ def append_inbox_item(entry: dict) -> dict:
     return entry
 
 
+SUPPORT_REPORT_KINDS = {
+    "blad": "Blad / usterka",
+    "pomysl": "Pomysl / usprawnienie",
+    "dane": "Zle dane w panelu",
+    "inne": "Inne",
+}
+
+
+def create_support_report(payload: dict, actor: str = "", role: str = "") -> dict:
+    """Zgloszenie z Ustawien -> Pomoc. Trafia do skrzynki KAZDEGO admina.
+
+    Zwykly uzytkownik nie ma gdzie zglosic usterki - dotad jedyna droga bylo
+    powiedziec komus osobiscie. Wpis dostaje audience="admins", wiec nie
+    zasmieca skrzynek pozostalych uzytkownikow.
+    """
+    kind = str(payload.get("kind") or "blad").strip().lower()
+    if kind not in SUPPORT_REPORT_KINDS:
+        kind = "inne"
+    title = re.sub(r"\s+", " ", str(payload.get("title") or "")).strip()[:120]
+    body = str(payload.get("body") or "").strip()[:4000]
+    if not title and not body:
+        return {"ok": False, "error": "title_or_body_required"}
+    if not title:
+        title = body[:80]
+    where = str(payload.get("page") or "").strip()[:200]
+    detail_lines = [body] if body else []
+    if where:
+        detail_lines.append(f"Strona: {where}")
+    # Wersja z version.json - local_bridge nie importuje runtime_config,
+    # a zgloszenie bez numeru wersji jest dla admina bezuzyteczne.
+    ver = ""
+    try:
+        ver = str((_load_json(WEB_ROOT / "version.json", {}) or {}).get("version") or "")
+    except Exception:  # noqa: BLE001
+        ver = ""
+    detail_lines.append(f"Wersja: {ver or 'nieznana'}")
+    detail_lines.append(f"Zglosil: {actor or 'nieznany'}" + (f" ({role})" if role else ""))
+    entry = append_inbox_item(
+        {
+            "kind": "support",
+            "audience": "admins",
+            "title": f"[{SUPPORT_REPORT_KINDS[kind]}] {title}",
+            "detail": "\n".join(detail_lines),
+            "source": "pomoc",
+            "reported_by": actor or "",
+            "report_kind": kind,
+        }
+    )
+    append_change_log(
+        {"action": "support_report", "category": "support", "kind": kind, "title": title}
+    )
+    return {"ok": True, "id": entry.get("id"), "title": entry.get("title")}
+
+
+def notify_admins_note_proposal(index: str, proposed: str, replaces: str, actor: str) -> None:
+    """Propozycja opisu od zwyklego uzytkownika musi kogos obudzic.
+
+    Bez tego wpis lezalby w variant-notes.json i nikt by o nim nie wiedzial.
+    """
+    append_inbox_item(
+        {
+            "kind": "variant_note_proposal",
+            "audience": "admins",
+            "title": f"Propozycja opisu wariantu {index}",
+            "detail": (
+                f"Proponowany opis: {proposed or '(usuniecie opisu)'}\n"
+                f"Obecny opis: {replaces or '(brak)'}\n"
+                f"Zglosil: {actor or 'nieznany'}"
+            ),
+            "source": "eksplorer",
+            "variant_index": index,
+        }
+    )
+
+
 def create_viz_request(payload: dict) -> dict:
     """Faza 5/6 (P10): "Zglos zapotrzebowanie" - wielokanalowe zgloszenie.
     Email/Teams/Asana to na razie STUBY (ADR-005) - logujemy intencje w audit +
@@ -8993,9 +9154,21 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200 if result.get("ok") else 400, result)
             return
         if parsed.path == "/inbox-items":
-            if self._require_login() is None:
+            user = self._require_login()
+            if user is None:
                 return
-            self._json(200, _load_json(INBOX_ITEMS_FILE, {"items": []}))
+            box = _load_json(INBOX_ITEMS_FILE, {"items": []})
+            role = str((user or {}).get("role") or "").strip().lower()
+            if role not in VARIANT_NOTE_APPROVERS:
+                # Wpisy zaadresowane do adminow (zgloszenia usterek, propozycje
+                # opisow) nie moga trafic do zwyklej skrzynki. Brak pola
+                # audience = wpis dla wszystkich, jak dotad.
+                box = dict(box)
+                box["items"] = [
+                    it for it in (box.get("items") or [])
+                    if str((it or {}).get("audience") or "") != "admins"
+                ]
+            self._json(200, box)
             return
         if parsed.path == "/integrations/status":
             if self._require_login() is None:
@@ -9971,7 +10144,10 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, append_carrier_override(path, entry))
             return
         if parsed.path == "/variant-note":
-            actor_user = self._require_admin()
+            # Opis moze dodac KAZDY zalogowany - to wiedza o produkcie, nie
+            # zmiana na dysku. Ochrone dostaje dopiero opis zalozony przez
+            # admina: wtedy cudza zmiana idzie do zatwierdzenia.
+            actor_user = self._require_login()
             if actor_user is None:
                 return
             raw_key = (data.get("index") or data.get("path") or "").strip()
@@ -9979,7 +10155,33 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(400, {"ok": False, "error": "index_required"})
                 return
             result = upsert_variant_note(
-                raw_key, data.get("note") or "", str(actor_user.get("username") or "")
+                raw_key,
+                data.get("note") or "",
+                str(actor_user.get("username") or ""),
+                str(actor_user.get("role") or ""),
+            )
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/support-report":
+            actor_user = self._require_login()
+            if actor_user is None:
+                return
+            result = create_support_report(
+                data if isinstance(data, dict) else {},
+                str(actor_user.get("username") or ""),
+                str(actor_user.get("role") or ""),
+            )
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/variant-note/resolve":
+            actor_user = self._require_power_user_or_admin()
+            if actor_user is None:
+                return
+            raw_key = (data.get("index") or "").strip()
+            result = resolve_variant_note_proposal(
+                raw_key,
+                bool(data.get("accept")),
+                str(actor_user.get("username") or ""),
             )
             self._json(200 if result.get("ok") else 400, result)
             return

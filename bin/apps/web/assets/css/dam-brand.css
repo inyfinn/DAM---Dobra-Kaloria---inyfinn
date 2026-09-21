@@ -13561,3 +13561,118 @@ html[data-theme="dark"] .dam-cache-badge {
 @media (prefers-reduced-motion: reduce) {
   .dam-variant-archive { transition: none; }
 }
+
+/* ==================================================================
+   ZGLOS POPRAWKE (Pomoc) - trafia do skrzynki adminow
+   ================================================================== */
+.dam-report__lead {
+  margin: 0 0 14px;
+  color: var(--dam-text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.dam-report__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 640px;
+}
+
+.dam-report__row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Etykieta NAD polem - nigdy placeholder zamiast etykiety. */
+.dam-report__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dam-text);
+}
+
+.dam-report__input,
+.dam-report__textarea,
+.dam-report__select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--dam-border);
+  border-radius: var(--dam-radius-sm, 8px);
+  background: var(--dam-surface);
+  color: var(--dam-text);
+  font: inherit;
+  font-size: 14px;
+}
+
+.dam-report__textarea {
+  min-height: 110px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.dam-report__input::placeholder,
+.dam-report__textarea::placeholder {
+  color: var(--dam-text-muted);
+}
+
+.dam-report__input:focus-visible,
+.dam-report__textarea:focus-visible,
+.dam-report__select:focus-visible {
+  outline: 2px solid var(--dam-primary);
+  outline-offset: 1px;
+  border-color: var(--dam-primary);
+}
+
+.dam-report__actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.dam-report__submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--dam-primary);
+  border-radius: 999px;
+  background: var(--dam-primary);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.dam-report__submit:hover {
+  background: var(--dam-primary-hover, var(--dam-primary));
+}
+
+.dam-report__submit:focus-visible {
+  outline: 2px solid var(--dam-primary);
+  outline-offset: 2px;
+}
+
+.dam-report__submit:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.dam-report__status {
+  margin: 0;
+  font-size: 13px;
+  color: var(--dam-text-muted);
+}
+
+.dam-report__status.is-ok { color: var(--dam-primary); font-weight: 600; }
+.dam-report__status.is-err { color: #b91c1c; font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dam-report__submit { transition: none; }
+}

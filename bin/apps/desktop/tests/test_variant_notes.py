@@ -81,3 +81,118 @@ class VariantNoteStoreTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class VariantNotePermissionTests(unittest.TestCase):
+    """Kto moze zmienic opis.
+
+    Zasada: opis dodaje KAZDY i wchodzi od razu. Dopiero opis zalozony przez
+    admina/power_usera jest chroniony - wtedy zmiana zwyklego uzytkownika
+    czeka na zatwierdzenie, zamiast po cichu nadpisac decyzje admina.
+    """
+
+    def setUp(self):
+        self.store = {"notes": {}, "pending": {}}
+        self.notified = []
+        self.patches = [
+            mock.patch.object(lb, "read_variant_notes", side_effect=lambda: self.store),
+            mock.patch.object(lb, "_save_variant_notes", side_effect=lambda d: None),
+            mock.patch.object(lb, "append_change_log", lambda e: None),
+            mock.patch.object(lb, "notify_admins_note_proposal",
+                              side_effect=lambda *a: self.notified.append(a)),
+        ]
+        for p in self.patches:
+            p.start()
+
+    def tearDown(self):
+        for p in self.patches:
+            p.stop()
+
+    def test_regular_user_can_create_note_immediately(self):
+        res = lb.upsert_variant_note("6300631", "GRILL", "anna", "user")
+        self.assertTrue(res["ok"])
+        self.assertFalse(res["pending"])
+        self.assertEqual(self.store["notes"]["6300631"]["note"], "GRILL")
+        self.assertFalse(self.store["notes"]["6300631"]["protected"])
+
+    def test_note_from_regular_user_is_editable_by_anyone(self):
+        lb.upsert_variant_note("6300631", "GRILL", "anna", "user")
+        res = lb.upsert_variant_note("6300631", "NA GRILLA", "bartek", "user")
+        self.assertFalse(res["pending"])
+        self.assertEqual(self.store["notes"]["6300631"]["note"], "NA GRILLA")
+
+    def test_admin_note_is_protected(self):
+        lb.upsert_variant_note("6300631", "GRILL", "kw", "admin")
+        self.assertTrue(self.store["notes"]["6300631"]["protected"])
+
+    def test_regular_user_edit_of_admin_note_goes_to_pending(self):
+        lb.upsert_variant_note("6300631", "GRILL", "kw", "admin")
+        res = lb.upsert_variant_note("6300631", "NA GRILLA", "anna", "user")
+        self.assertTrue(res["ok"])
+        self.assertTrue(res["pending"])
+        # Opis na ekranie sie NIE zmienia, dopoki ktos nie zatwierdzi.
+        self.assertEqual(self.store["notes"]["6300631"]["note"], "GRILL")
+        self.assertEqual(self.store["pending"]["6300631"]["note"], "NA GRILLA")
+        self.assertEqual(len(self.notified), 1, "admin musi dostac powiadomienie")
+
+    def test_power_user_overwrites_admin_note_without_approval(self):
+        lb.upsert_variant_note("6300631", "GRILL", "kw", "admin")
+        res = lb.upsert_variant_note("6300631", "NA GRILLA", "piotr", "power_user")
+        self.assertFalse(res["pending"])
+        self.assertEqual(self.store["notes"]["6300631"]["note"], "NA GRILLA")
+
+    def test_approving_proposal_applies_it(self):
+        lb.upsert_variant_note("6300631", "GRILL", "kw", "admin")
+        lb.upsert_variant_note("6300631", "NA GRILLA", "anna", "user")
+        res = lb.resolve_variant_note_proposal("6300631", True, "kw")
+        self.assertTrue(res["ok"])
+        self.assertEqual(self.store["notes"]["6300631"]["note"], "NA GRILLA")
+        self.assertNotIn("6300631", self.store["pending"])
+
+    def test_rejecting_proposal_keeps_original(self):
+        lb.upsert_variant_note("6300631", "GRILL", "kw", "admin")
+        lb.upsert_variant_note("6300631", "NA GRILLA", "anna", "user")
+        lb.resolve_variant_note_proposal("6300631", False, "kw")
+        self.assertEqual(self.store["notes"]["6300631"]["note"], "GRILL")
+        self.assertNotIn("6300631", self.store["pending"])
+
+    def test_resolve_without_proposal_is_rejected(self):
+        self.assertFalse(lb.resolve_variant_note_proposal("6300631", True, "kw")["ok"])
+
+
+class SupportReportTests(unittest.TestCase):
+    """Zgloszenie z Ustawien -> Pomoc trafia WYLACZNIE do adminow."""
+
+    def setUp(self):
+        self.items = []
+        self.patches = [
+            mock.patch.object(lb, "append_inbox_item",
+                              side_effect=lambda e: (self.items.append(e), e)[1]),
+            mock.patch.object(lb, "append_change_log", lambda e: None),
+        ]
+        for p in self.patches:
+            p.start()
+
+    def tearDown(self):
+        for p in self.patches:
+            p.stop()
+
+    def test_report_is_addressed_to_admins(self):
+        res = lb.create_support_report({"kind": "blad", "title": "Nie dziala eksport"}, "anna", "user")
+        self.assertTrue(res["ok"])
+        self.assertEqual(self.items[0]["audience"], "admins")
+        self.assertIn("Nie dziala eksport", self.items[0]["title"])
+
+    def test_report_carries_version_and_author(self):
+        lb.create_support_report({"title": "x", "body": "opis", "page": "explorer.html"}, "anna", "user")
+        detail = self.items[0]["detail"]
+        self.assertIn("Zglosil: anna", detail)
+        self.assertIn("Strona: explorer.html", detail)
+        self.assertIn("Wersja:", detail)
+
+    def test_empty_report_is_rejected(self):
+        self.assertFalse(lb.create_support_report({}, "anna", "user")["ok"])
+
+    def test_unknown_kind_falls_back_to_inne(self):
+        lb.create_support_report({"kind": "cokolwiek", "title": "t"}, "anna", "user")
+        self.assertIn("Inne", self.items[0]["title"])
