@@ -20,6 +20,9 @@ jobs:
   build:
     runs-on: macos-latest   # Apple Silicon (arm64). Alfa: tylko arm64, bez universal2.
     timeout-minutes: 40
+    # Repo ma domyslnie token tylko do odczytu - bez tego "gh release upload" konczy sie 403.
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
