@@ -2374,6 +2374,76 @@ def upsert_variant_note(raw_key: str, note: str, actor: str = "", role: str = ""
     return {"ok": True, "index": key, "note": text, "pending": False}
 
 
+def _norm_tag(name: str) -> str:
+    """Klucz slownika opisow. Wielkosc liter i nadmiarowe spacje nie tworza
+    nowego tagu - inaczej GRILL, Grill i "na grilla" bylyby trzema bytami."""
+    return re.sub(r"\s+", " ", str(name or "")).strip().upper()
+
+
+def _month_ok(month: int) -> bool:
+    return isinstance(month, int) and 1 <= month <= 12
+
+
+def read_variant_tags() -> dict:
+    data = read_variant_notes()
+    tags = data.get("tags")
+    return tags if isinstance(tags, dict) else {}
+
+
+def variant_tag_suggestions(limit: int = 60) -> list[dict]:
+    """Slownik opisow: to, czego juz uzyto, plus tagi z sezonem.
+
+    Bez podpowiedzi ten sam wyroznik zapisze sie jako GRILL, Grill i
+    "na grilla" - trzy byty zamiast jednego, nie do wyszukania razem.
+    """
+    data = read_variant_notes()
+    notes = data.get("notes") if isinstance(data.get("notes"), dict) else {}
+    tags = data.get("tags") if isinstance(data.get("tags"), dict) else {}
+    counts: dict[str, dict] = {}
+    for entry in notes.values():
+        text = str((entry or {}).get("note") or "").strip()
+        if not text:
+            continue
+        key = _norm_tag(text)
+        row = counts.setdefault(key, {"tag": text, "uses": 0})
+        row["uses"] += 1
+    for key, meta in tags.items():
+        row = counts.setdefault(_norm_tag(key), {"tag": str(key), "uses": 0})
+        season = (meta or {}).get("season") or {}
+        if _month_ok(season.get("from")) and _month_ok(season.get("to")):
+            row["season"] = {"from": int(season["from"]), "to": int(season["to"])}
+    out = sorted(counts.values(), key=lambda r: (-r["uses"], r["tag"].lower()))
+    return out[: max(1, int(limit or 60))]
+
+
+def upsert_variant_tag(name: str, season_from=None, season_to=None) -> dict:
+    """Sezon tagu. Poza sezonem wariant nadal JEST aktualny - po prostu nie
+    jest teraz w obiegu (grill w styczniu). Dlatego nie kasujemy statusu,
+    tylko oznaczamy "poza sezonem"."""
+    key = _norm_tag(name)
+    if not key:
+        return {"ok": False, "error": "tag_required"}
+    data = read_variant_notes()
+    if not isinstance(data.get("tags"), dict):
+        data["tags"] = {}
+    if season_from is None and season_to is None:
+        data["tags"].pop(key, None)
+        _save_variant_notes(data)
+        return {"ok": True, "tag": key, "season": None}
+    try:
+        mf, mt = int(season_from), int(season_to)
+    except (TypeError, ValueError):
+        return {"ok": False, "error": "bad_month"}
+    if not _month_ok(mf) or not _month_ok(mt):
+        return {"ok": False, "error": "bad_month"}
+    data["tags"][key] = {"season": {"from": mf, "to": mt}, "updated_at": utc_now()}
+    _save_variant_notes(data)
+    append_change_log(
+        {"action": "variant_tag_season", "category": "index", "tag": key, "from": mf, "to": mt}
+    )
+    return {"ok": True, "tag": key, "season": {"from": mf, "to": mt}}
+
+
 def resolve_variant_note_proposal(raw_key: str, accept: bool, actor: str = "") -> dict:
     """Zatwierdzenie albo odrzucenie propozycji zwyklego uzytkownika."""
     key = variant_note_key(raw_key)
@@ -9153,6 +9223,11 @@ class Handler(BaseHTTPRequestHandler):
             result = explorer_create_mod.next_category_seq_for_brand(base, brand_val)
             self._json(200 if result.get("ok") else 400, result)
             return
+        if parsed.path == "/variant-tags":
+            if self._require_login() is None:
+                return
+            self._json(200, {"ok": True, "tags": variant_tag_suggestions()})
+            return
         if parsed.path == "/inbox-items":
             user = self._require_login()
             if user is None:
@@ -10170,6 +10245,17 @@ class Handler(BaseHTTPRequestHandler):
                 data if isinstance(data, dict) else {},
                 str(actor_user.get("username") or ""),
                 str(actor_user.get("role") or ""),
+            )
+            self._json(200 if result.get("ok") else 400, result)
+            return
+        if parsed.path == "/variant-tag":
+            # Sezon tagu to decyzja slownikowa dla calej firmy, nie notatka
+            # przy jednym wariancie - stad wyzszy prog niz przy opisie.
+            actor_user = self._require_power_user_or_admin()
+            if actor_user is None:
+                return
+            result = upsert_variant_tag(
+                data.get("tag") or "", data.get("season_from"), data.get("season_to")
             )
             self._json(200 if result.get("ok") else 400, result)
             return

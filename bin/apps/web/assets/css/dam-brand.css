@@ -13676,3 +13676,115 @@ html[data-theme="dark"] .dam-cache-badge {
 @media (prefers-reduced-motion: reduce) {
   .dam-report__submit { transition: none; }
 }
+
+/* ==================================================================
+   SEZON WARIANTU
+   ------------------------------------------------------------------
+   Grill w styczniu nadal JEST zatwierdzona wersja opakowania - nie jest
+   tylko teraz w obiegu. Stad osobna, spokojna plakietka zamiast czerwieni
+   zarezerwowanej dla "do archiwum".
+   ================================================================== */
+.dam-variant-flag--offseason {
+  background: color-mix(in srgb, #b45309 10%, transparent);
+  border-color: color-mix(in srgb, #b45309 30%, transparent);
+  color: #92400e;
+}
+
+/* ==================================================================
+   OPIS WARIANTU - okno z podpowiedziami
+   ================================================================== */
+.dam-note-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: color-mix(in srgb, var(--dam-text) 45%, transparent);
+}
+
+.dam-note-dialog__box {
+  width: min(460px, 100%);
+  box-sizing: border-box;
+  padding: 22px;
+  border-radius: var(--dam-radius-lg, 24px);
+  background: var(--dam-surface-elevated, var(--dam-surface));
+  box-shadow: 0 24px 60px rgb(var(--dam-shadow-rgb) / calc(var(--dam-shadow-alpha) * 2.5));
+}
+
+.dam-note-dialog__title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--dam-text);
+}
+
+.dam-note-dialog__lead,
+.dam-note-dialog__hint {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--dam-text-muted);
+}
+
+.dam-note-dialog__hint {
+  margin: 8px 0 18px;
+}
+
+.dam-note-dialog__label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dam-text);
+}
+
+.dam-note-dialog__input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--dam-border);
+  border-radius: var(--dam-radius-sm, 8px);
+  background: var(--dam-surface);
+  color: var(--dam-text);
+  font: inherit;
+  font-size: 14px;
+}
+
+.dam-note-dialog__input:focus-visible {
+  outline: 2px solid var(--dam-primary);
+  outline-offset: 1px;
+  border-color: var(--dam-primary);
+}
+
+.dam-note-dialog__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dam-note-dialog__btn {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--dam-border);
+  border-radius: 999px;
+  background: var(--dam-surface);
+  color: var(--dam-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dam-note-dialog__btn--primary {
+  background: var(--dam-primary);
+  border-color: var(--dam-primary);
+  color: #fff;
+}
+
+.dam-note-dialog__btn:focus-visible {
+  outline: 2px solid var(--dam-primary);
+  outline-offset: 2px;
+}

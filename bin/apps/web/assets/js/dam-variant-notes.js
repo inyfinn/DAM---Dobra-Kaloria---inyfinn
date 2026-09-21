@@ -13,7 +13,7 @@
 (function (global) {
   "use strict";
 
-  var STORE = { notes: {} };
+  var STORE = { notes: {}, tags: {}, suggestions: [] };
   var loaded = null;
 
   function noteKey(raw) {
@@ -46,6 +46,26 @@
     return text;
   }
 
+  /* Podpowiedzi = to, czego juz uzyto (czesciej uzyte wyzej) + tagi ze slownika. */
+  function buildSuggestions() {
+    var counts = {};
+    Object.keys(STORE.notes).forEach(function (k) {
+      var txt = String((STORE.notes[k] || {}).note || "").trim();
+      if (!txt) return;
+      var key = normTag(txt);
+      if (!counts[key]) counts[key] = { tag: txt, uses: 0 };
+      counts[key].uses += 1;
+    });
+    Object.keys(STORE.tags).forEach(function (k) {
+      if (!counts[normTag(k)]) counts[normTag(k)] = { tag: k, uses: 0 };
+    });
+    return Object.keys(counts).map(function (k) { return counts[k]; })
+      .sort(function (a, b) {
+        if (b.uses !== a.uses) return b.uses - a.uses;
+        return a.tag.toLowerCase().localeCompare(b.tag.toLowerCase());
+      });
+  }
+
   function bridgeBase() {
     if (global.DamRuntime && typeof global.DamRuntime.bridgeUrl === "function") {
       return global.DamRuntime.bridgeUrl();
@@ -62,6 +82,8 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (data) {
         if (data && typeof data.notes === "object" && data.notes) STORE.notes = data.notes;
+        if (data && typeof data.tags === "object" && data.tags) STORE.tags = data.tags;
+        STORE.suggestions = buildSuggestions();
         return STORE;
       })
       .catch(function () { return STORE; });
@@ -86,7 +108,70 @@
       .catch(function (err) { return { ok: false, error: String(err && err.message || err) }; });
   }
 
+  /* ------------------------------------------------------------------ *
+   * SEZON
+   *
+   * Wariant poza sezonem JEST aktualny - grill w styczniu nie przestaje byc
+   * zatwierdzona wersja opakowania. Nie jest tylko teraz w obiegu. Dlatego
+   * sezon NIE kasuje statusu, tylko dokleja "poza sezonem", a UI przestaje
+   * liczyc taki wariant jako aktualny w domyslnym widoku.
+   *
+   * Sezon nalezy do TAGU, nie do wariantu: definiujesz raz "GRILL = V-IX",
+   * a dziedziczy to kazdy wariant tak opisany.
+   *
+   * Zakres moze przechodzic przez Nowy Rok (11 -> 2 = listopad..luty).
+   * ------------------------------------------------------------------ */
+  var MONTHS_PL = ["stycznia","lutego","marca","kwietnia","maja","czerwca",
+                   "lipca","sierpnia","wrzesnia","pazdziernika","listopada","grudnia"];
+
+  function normTag(name) {
+    return String(name == null ? "" : name).replace(/\s+/g, " ").trim().toUpperCase();
+  }
+
+  function seasonFor(noteText) {
+    var t = STORE.tags[normTag(noteText)];
+    var se = t && t.season;
+    if (!se) return null;
+    var f = parseInt(se.from, 10), to = parseInt(se.to, 10);
+    if (!(f >= 1 && f <= 12 && to >= 1 && to <= 12)) return null;
+    return { from: f, to: to };
+  }
+
+  function monthInSeason(month, season) {
+    if (!season) return true;
+    if (season.from <= season.to) return month >= season.from && month <= season.to;
+    /* Zakres przez Nowy Rok: listopad..luty. */
+    return month >= season.from || month <= season.to;
+  }
+
+  function seasonLabel(season) {
+    if (!season) return "";
+    return "sezon: " + MONTHS_PL[season.from - 1] + " - " + MONTHS_PL[season.to - 1];
+  }
+
+  /** {inSeason, season, label} dla podanego opisu. now = do testow. */
+  function seasonState(noteText, now) {
+    var season = seasonFor(noteText);
+    if (!season) return { inSeason: true, season: null, label: "" };
+    var d = now instanceof Date ? now : new Date();
+    return {
+      inSeason: monthInSeason(d.getMonth() + 1, season),
+      season: season,
+      label: seasonLabel(season)
+    };
+  }
+
+  function suggestions() {
+    return (STORE.suggestions || []).slice();
+  }
+
   global.DamVariantNotes = {
+    normTag: normTag,
+    seasonFor: seasonFor,
+    monthInSeason: monthInSeason,
+    seasonLabel: seasonLabel,
+    seasonState: seasonState,
+    suggestions: suggestions,
     noteKey: noteKey,
     get: get,
     forRevision: forRevision,

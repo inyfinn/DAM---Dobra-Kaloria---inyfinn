@@ -1327,9 +1327,14 @@
 
   /** Strict: tylko status=aktualne (bez fallbacku is_latest). */
   function getAktualneRevisions(revisions) {
-    return (revisions || []).filter(function (r) {
+    var all = (revisions || []).filter(function (r) {
       return getRevisionStatus(r) === "aktualne";
     });
+    var inSeason = all.filter(function (r) { return !isOutOfSeason(r); });
+    /* Gdyby WSZYSTKIE aktualne byly poza sezonem (grill w styczniu), produkt
+       zrobilby sie pusty. Wtedy pokazujemy je mimo wszystko - z plakietka
+       "poza sezonem". Ukrycie calego produktu bylo by gorsze niz etykieta. */
+    return inSeason.length ? inSeason : all;
   }
 
   function revisionsForProductView(product, showAll) {
@@ -4037,6 +4042,12 @@
      X = ktos oznaczyl folder do archiwum, ale go nie przeniosl - czerwona
          ramka + przycisk, ktory przenosi naprawde (jak klikniecie X). */
   function variantFlagHtml(rev) {
+    var season = variantSeasonState(rev);
+    if (season.season && !season.inSeason) {
+      return '<span class="dam-variant-flag dam-variant-flag--offseason"' +
+        ' data-dam-tip="Wariant jest aktualny, ale poza sezonem (' + esc(season.label) + ')">' +
+        "POZA SEZONEM</span>";
+    }
     var st = getRevisionStatus(rev);
     if (st === "demo") {
       return '<span class="dam-variant-flag dam-variant-flag--demo"' +
@@ -4063,6 +4074,21 @@
   function variantNoteFor(rev) {
     var VN = window.DamVariantNotes;
     return VN ? VN.forRevision(rev) : "";
+  }
+
+  /* Sezon liczymy z OPISU wariantu: tag GRILL niesie sezon V-IX, wiec kazdy
+     wariant tak opisany dziedziczy go bez osobnego ustawiania. */
+  function variantSeasonState(rev) {
+    var VN = window.DamVariantNotes;
+    if (!VN || typeof VN.seasonState !== "function") return { inSeason: true, season: null, label: "" };
+    var d = variantDistFor(rev);
+    if (!d.text) return { inSeason: true, season: null, label: "" };
+    return VN.seasonState(d.text);
+  }
+
+  function isOutOfSeason(rev) {
+    var st = variantSeasonState(rev);
+    return !!st.season && !st.inSeason;
   }
 
   function variantDistFor(rev) {
@@ -9169,25 +9195,74 @@
       }
       var VN = window.DamVariantNotes;
       var current = VN ? VN.get(idx) : "";
-      var NL = String.fromCharCode(10);
-      var msg = [
-        "Opis wariantu " + idx,
-        "",
-        "Krotko, co go wyroznia (np. GRILL, ŻELAZO + MAGNEZ).",
-        "Nazwa folderu na dysku NIE zostanie zmieniona.",
-        "Puste pole usuwa opis."
-      ].join(NL);
-      var next = window.prompt(msg, current || "");
-      if (next === null) return;
+      openVariantNoteEditor(idx, current);
+    });
+  }
+
+  /* Wpisywanie opisu z podpowiedziami zamiast surowego prompt().
+     Bez slownika ten sam wyroznik zapisze sie jako GRILL, Grill i "na grilla" -
+     trzy byty, ktorych nie da sie wyszukac razem. */
+  function openVariantNoteEditor(idx, current) {
+    var VN = window.DamVariantNotes;
+    var old = document.getElementById("damVariantNoteDialog");
+    if (old) old.remove();
+
+    var list = (VN && typeof VN.suggestions === "function" ? VN.suggestions() : []) || [];
+    var opts = list
+      .map(function (s) {
+        var season = VN && VN.seasonFor ? VN.seasonFor(s.tag) : null;
+        var hint = season && VN.seasonLabel ? " (" + VN.seasonLabel(season) + ")" : "";
+        var uses = s.uses ? s.uses + "x" : "nowy";
+        return '<option value="' + esc(s.tag) + '">' + esc(uses + hint) + "</option>";
+      })
+      .join("");
+
+    var wrap = document.createElement("div");
+    wrap.id = "damVariantNoteDialog";
+    wrap.className = "dam-note-dialog";
+    wrap.innerHTML =
+      '<div class="dam-note-dialog__box" role="dialog" aria-modal="true" aria-label="Opis wariantu">' +
+        '<h3 class="dam-note-dialog__title">Opis wariantu ' + esc(idx) + "</h3>" +
+        '<p class="dam-note-dialog__lead">Krotko, co go wyroznia. Nazwa folderu na dysku zostaje bez zmian.</p>' +
+        '<label class="dam-note-dialog__label" for="damVariantNoteInput">Opis</label>' +
+        '<input id="damVariantNoteInput" class="dam-note-dialog__input" list="damVariantNoteList"' +
+        ' maxlength="120" autocomplete="off" value="' + esc(current || "") + '" />' +
+        '<datalist id="damVariantNoteList">' + opts + "</datalist>" +
+        '<p class="dam-note-dialog__hint">Puste pole usuwa opis. Wybierz z listy, jesli taki opis juz istnieje.</p>' +
+        '<div class="dam-note-dialog__actions">' +
+          '<button type="button" class="dam-note-dialog__btn dam-note-dialog__btn--primary" data-note-save>Zapisz</button>' +
+          '<button type="button" class="dam-note-dialog__btn" data-note-cancel>Anuluj</button>' +
+        "</div>" +
+      "</div>";
+    document.body.appendChild(wrap);
+    var input = wrap.querySelector("#damVariantNoteInput");
+    if (input) { input.focus(); input.select(); }
+
+    function close() { wrap.remove(); }
+
+    function save() {
+      var next = input ? input.value : "";
+      close();
       if (!VN) return;
       VN.save(idx, next).then(function (res) {
-        if (res && res.ok) {
+        if (res && res.ok && res.pending) {
+          showToast(res.hint || "Opis zalozyl admin - zmiana czeka na zatwierdzenie.");
+        } else if (res && res.ok) {
           showToast(res.note ? "Zapisano opis: " + res.note : "Opis usuniety");
-          if (typeof renderMain === "function") renderMain();
         } else {
           showToast("Nie zapisano opisu" + (res && res.error ? " (" + res.error + ")" : ""), "error");
         }
+        if (typeof renderMain === "function") renderMain();
       });
+    }
+
+    wrap.addEventListener("click", function (ev) {
+      if (ev.target === wrap || ev.target.closest("[data-note-cancel]")) { close(); return; }
+      if (ev.target.closest("[data-note-save]")) save();
+    });
+    wrap.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape") { ev.preventDefault(); close(); }
+      if (ev.key === "Enter") { ev.preventDefault(); save(); }
     });
   }
 
