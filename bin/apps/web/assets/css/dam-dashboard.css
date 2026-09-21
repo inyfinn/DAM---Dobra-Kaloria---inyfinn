@@ -183,18 +183,39 @@
   outline-offset: 2px;
 }
 
+/* Liczba kafelkow: kontrolka DAM zamiast natywnego <select>.
+   Natywna lista popupu jest rysowana przez system - CSS jej nie dosiega, wiec
+   przy zielonym akcencie panelu wygladala jak szary prostokat z obcego swiata.
+   <select> zostaje w DOM jako nosnik stanu (.dam-widget__count-native). */
 .dam-widget__count-field {
+  position: relative;
   display: inline-flex;
   align-items: center;
   margin: 0;
   flex: 0 0 auto;
 }
 
+.dam-widget__count-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 .dam-widget__count-select {
   box-sizing: border-box;
-  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 56px;
   min-height: 44px;
-  padding: 0 10px;
+  padding: 0 8px 0 12px;
   border: 1px solid var(--dam-border);
   border-radius: 999px;
   background: var(--dam-surface);
@@ -202,19 +223,109 @@
   font-size: var(--dam-fs-sm);
   font-weight: 600;
   font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
   cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
 }
 
-.dam-widget__count-select:hover,
-.dam-widget__count-select:focus-visible {
+.dam-widget__count-select:hover {
   color: var(--dam-primary);
   border-color: color-mix(in srgb, var(--dam-primary) 40%, var(--dam-border));
   background: color-mix(in srgb, var(--dam-primary) 8%, var(--dam-surface));
 }
 
+/* Ring tylko dla klawiatury - mysz dostaje wypelnienie, nie obwodke. */
 .dam-widget__count-select:focus-visible {
   outline: 2px solid var(--dam-primary);
   outline-offset: 2px;
+}
+
+.dam-widget__count-caret {
+  font-size: 16px;
+  line-height: 1;
+  color: var(--dam-text-muted);
+  transition: transform 160ms ease, color 160ms ease;
+}
+
+.dam-widget__count-select:hover .dam-widget__count-caret {
+  color: var(--dam-primary);
+}
+
+.dam-widget__count-field.is-open .dam-widget__count-select {
+  color: var(--dam-primary);
+  border-color: var(--dam-primary);
+  background: color-mix(in srgb, var(--dam-primary) 8%, var(--dam-surface));
+}
+
+.dam-widget__count-field.is-open .dam-widget__count-caret {
+  transform: rotate(180deg);
+  color: var(--dam-primary);
+}
+
+.dam-widget__count-menu {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 5px;
+  border: 1px solid var(--dam-border);
+  border-radius: var(--dam-radius-md, 12px);
+  background: var(--dam-surface-elevated, var(--dam-surface));
+  /* Tokeny cienia, nie color-mix z --dam-text: w ciemnym motywie --dam-text jest
+     prawie biale, wiec mieszanka robila jasna poswiate zamiast cienia. */
+  box-shadow: 0 12px 32px rgb(var(--dam-shadow-rgb) / calc(var(--dam-shadow-alpha) * 2));
+}
+
+.dam-widget__count-menu[hidden] {
+  display: none;
+}
+
+.dam-widget__count-option {
+  box-sizing: border-box;
+  min-width: 48px;
+  /* 32px, bo to jednocyfrowe liczby - przy 36px + gap lista rosla do ~200px
+     i piec pozycji czytalo sie jak dluga lista, a nie jak szybki wybor.
+     Caly trigger ma 44px, wiec cel dotykowy pozostaje spelniony. */
+  min-height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--dam-radius-sm, 8px);
+  background: transparent;
+  color: var(--dam-text);
+  font: inherit;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.dam-widget__count-option:hover {
+  background: color-mix(in srgb, var(--dam-primary) 10%, transparent);
+  color: var(--dam-primary);
+}
+
+.dam-widget__count-option:focus-visible {
+  outline: 2px solid var(--dam-primary);
+  outline-offset: -2px;
+}
+
+.dam-widget__count-option[aria-selected="true"] {
+  background: color-mix(in srgb, var(--dam-primary) 14%, transparent);
+  color: var(--dam-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dam-widget__count-select,
+  .dam-widget__count-caret,
+  .dam-widget__count-option {
+    transition: none;
+  }
 }
 
 .dam-widget__layout-label {

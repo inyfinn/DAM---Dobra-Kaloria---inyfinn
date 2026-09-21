@@ -1699,7 +1699,7 @@ def index_status() -> dict:
         "cancelable": bool(state.get("running") or watcher.get("cancelable") or progress.get("running")),
         "snoozed": snoozed,
         "snooze_until": watcher.get("snooze_until") or "",
-        "control_path": watcher.get("control_path") or str(DESKTOP_DATA_DIR / "index-control.json"),
+        "control_path": watcher.get("control_path") or str(DESKTOP_STATE_DIR / "index-control.json"),
         "hourly_sec": watcher.get("hourly_sec"),
         "hourly_pending": bool(watcher.get("hourly_pending")),
         "current_item": progress.get("current_item") or watcher.get("current_item") or "",
@@ -1776,7 +1776,7 @@ def _run_index_rebuild() -> None:
                 _rebuild_env = _idx_sup.index_builder_env()
             except Exception:
                 _rebuild_env = os.environ.copy()
-                _rebuild_env["DAM_INDEX_LIVE_FILE"] = str(DESKTOP_DATA_DIR / "index-live.json")
+                _rebuild_env["DAM_INDEX_LIVE_FILE"] = str(DESKTOP_STATE_DIR / "index-live.json")
             proc = subprocess.Popen(
                 [sys.executable, "-u", str(BUILD_INDEX)],
                 creationflags=_no_win,
@@ -1818,7 +1818,9 @@ def _run_index_rebuild() -> None:
         try:
             import index_supervisor
 
-            prev = index_supervisor.read_watcher_status()
+            # _for_merge: koperta bledu z czytania nie moze wjechac na dysk
+            # jako watcher_ok=false (to wlasnie zamrazalo pasek na pulpicie).
+            prev = index_supervisor.read_watcher_status_for_merge()
             index_supervisor.write_watcher_status(
                 {
                     "ok": rc == 0,
@@ -2818,10 +2820,15 @@ WYKROJNIKI_REGISTRY_FILE = WEB_ROOT / "data" / "wykrojniki-registry.json"
 BUILD_BRANDING_INDEX = WEB_ROOT / "scripts" / "build-branding-index.py"
 BUILD_BRANDING_GRID_INDEX = WEB_ROOT / "scripts" / "build-branding-grid-index.py"
 DESKTOP_DATA_DIR = Path(__file__).resolve().parent / "data"
+try:
+    from rebuild_lock import STATE_DIR as DESKTOP_STATE_DIR
+except Exception:  # noqa: BLE001 - mostek musi wstac nawet bez modulu blokad
+    DESKTOP_STATE_DIR = DESKTOP_DATA_DIR
 BACKGROUND_JOBS_FILE = DESKTOP_DATA_DIR / "background-jobs.json"
-INDEX_REBUILD_LOCK_FILE = DESKTOP_DATA_DIR / "index-rebuild.lock.json"
-INDEX_WATCHER_STATUS_FILE = DESKTOP_DATA_DIR / "index-watcher-status.json"
-INDEX_REBUILD_LOG_FILE = DESKTOP_DATA_DIR / "index-rebuild.log"
+# Ulotny stan indeksu: poza repo, bo repo lustrzy Synology Drive (rwie pliki w locie).
+INDEX_REBUILD_LOCK_FILE = DESKTOP_STATE_DIR / "index-rebuild.lock.json"
+INDEX_WATCHER_STATUS_FILE = DESKTOP_STATE_DIR / "index-watcher-status.json"
+INDEX_REBUILD_LOG_FILE = DESKTOP_STATE_DIR / "index-rebuild.log"
 BRANDING_REBUILD_LOCK_FILE = DESKTOP_DATA_DIR / "branding-rebuild.lock.json"
 FETCH_PRODUCT_PRICES = WEB_ROOT / "scripts" / "fetch-product-prices.py"
 IMPORT_WYKROJNIKI = WEB_ROOT / "scripts" / "import-wykrojniki-xlsx.py"
@@ -8770,29 +8777,6 @@ class Handler(BaseHTTPRequestHandler):
                             break
                         self.wfile.write(chunk)
                 return
-            fetch_original = (qs.get("fetch") or ["0"])[0].strip().lower() in ("1", "true", "yes")
-            # <img> loads send Sec-Fetch-Dest: image; downloads/exports do not and keep the original.
-            displayed = preview or (self.headers.get("Sec-Fetch-Dest") or "").strip().lower() == "image"
-            if displayed and not matte and not fetch_original and dam_thumb_cache and target:
-                gated = dam_thumb_cache.media_preview_gate(
-                    path, resolve_physical=lambda p, _email="": _coerce_media_target(p)
-                )
-                if gated is not None:
-                    g_code, g_body, g_ctype, g_meta = gated
-                    if g_code != 200:
-                        self._json(g_code, g_meta)
-                        return
-                    self.send_response(200)
-                    self._cors()
-                    self.send_header("Content-Type", g_ctype or "image/avif")
-                    self.send_header("Content-Length", str(len(g_body)))
-                    self.send_header("Cache-Control", "private, max-age=60")
-                    self.send_header("X-DAM-Source", "cache")
-                    self.send_header("X-DAM-Online-Only", "1" if g_meta.get("online_only") else "0")
-                    self.end_headers()
-                    if self.command != "HEAD":
-                        self.wfile.write(g_body)
-                    return
             code, body, ctype = serve_media(path, preview=preview, matte=matte)
             if code != 200:
                 err = {
@@ -9549,20 +9533,12 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200 if res.get("ok") else 400, res)
             return
         if parsed.path == "/auth/login":
-            # BETA: desktop may skip the weak-password screen. The public NAS panel never may,
-            # because the old seed password is known from the public repo.
-            import auth_store as _auth_store_mod
-
-            can_skip = bool(getattr(_auth_store_mod, "APP_BETA", False)) and not PUBLIC_MODE
             res = auth_login(
                 data.get("email") or "",
                 data.get("password") or "",
                 data.get("device_id") or "",
                 data.get("machine_id") or "",
-                allow_weak_password=can_skip and bool(data.get("skip_password_change")),
             )
-            if res.get("error") == "password_change_required":
-                res = dict(res, can_skip=can_skip, beta=can_skip)
             self._json(200, self._ip_guard_login_result(res, data.get("email") or ""))
             return
         if parsed.path == "/auth/ip-unblock":

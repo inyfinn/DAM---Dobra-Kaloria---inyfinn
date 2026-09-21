@@ -367,8 +367,42 @@ if (Test-Path -LiteralPath $relSrc) {
 }
 Write-Host "PAMIEC: $thumbCount miniatur w Setup, spis: $(Test-Path -LiteralPath $relSrc)."
 
-$readmeSrc = Join-Path $BinRoot "installer\README.txt"
-if (Test-Path $readmeSrc) { Copy-Item $readmeSrc (Join-Path $stageRoot "README.txt") -Force }
+# README na ostatniej stronie kreatora generujemy z version.json przy kazdym
+# buildzie. Wczesniej byl to plik pisany recznie i zostal na "DAM 6.0.2" -
+# instalator 2.1.5 pokazywal na koncu wersje 6 i nieaktualne kroki.
+$readmeNote = ""
+try { $readmeNote = [string]$vj.note } catch { $readmeNote = "" }
+if ($readmeNote.Length -gt 300) { $readmeNote = $readmeNote.Substring(0, 300) }
+$readmeLines = @(
+  "DAM $Version - Dobra Kaloria (Inyfinn)",
+  "",
+  "Gotowe. Nic wiecej nie konfigurujesz i nic nie kopiujesz.",
+  "",
+  "Instalator wgral juz komplet:",
+  "- program, skrot na pulpicie i w menu Start,",
+  "- runtime Pythona z bibliotekami, ikony i fonty (Unicons + Jost),",
+  "- polaczenie z baza (pg-config) - bez recznego kopiowania example,",
+  "- konta startowe, dane ekranow (Wykrojniki, Kampanie, Koszty) i siatke Brandingu,",
+  "- pamiec podreczna miniatur, wiec panel ma podglady od pierwszego uruchomienia.",
+  "",
+  "Uslugi w tle (podglady, odswiezanie listy plikow, aktualizacje) startuja same",
+  "razem z Windows. Nie ma tu nic do wlaczania ani zakladania.",
+  "",
+  "Pierwsze uruchomienie: skrot ""DAM - Dobra Kaloria"" -> logowanie kontem z paczki.",
+  "",
+  "Aktualizacje: DAM sam sprawdza GitHub i pobiera najnowsze wydanie w tle.",
+  "Recznie: menu profilu -> Sprawdz aktualizacje."
+)
+if ($readmeNote) {
+  $readmeLines += @("", "Co nowego w $Version:", $readmeNote)
+}
+$readmePath = Join-Path $stageRoot "README.txt"
+Set-Content -LiteralPath $readmePath -Value $readmeLines -Encoding UTF8
+# Wersja w README musi zgadzac sie z budowana - inaczej build staje.
+if (-not (Select-String -LiteralPath $readmePath -SimpleMatch "DAM $Version" -Quiet)) {
+  throw "README.txt nie zawiera wersji $Version - koniec buildu."
+}
+Write-Host "README.txt wygenerowany dla wersji $Version."
 
 $redistDir = Join-Path $BinRoot "installer\redist"
 New-Item -ItemType Directory -Force -Path $redistDir | Out-Null

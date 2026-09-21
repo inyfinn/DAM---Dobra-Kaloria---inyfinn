@@ -27,8 +27,35 @@ from pathlib import Path
 SCRIPT = Path(__file__).resolve()
 BUILD = SCRIPT.parent / "build-file-index.py"
 DESKTOP_DATA = SCRIPT.parents[2] / "desktop" / "data"
-DEFAULT_STATUS = DESKTOP_DATA / "index-watcher-status.json"
-DEFAULT_LOCK = DESKTOP_DATA / "index-rebuild.lock.json"
+
+
+def _state_dir() -> Path:
+    """Ten sam kontrakt co rebuild_lock.resolve_state_dir (tu bez importu z desktop/).
+
+    Stan biezacego uruchomienia nie moze lezec w repo: drzewo jest lustrzane przez
+    Synology Drive, ktory podmienia plik w trakcie zapisu i rodzi kopie *_Conflict.
+    """
+    raw = (os.environ.get("DAM_STATE_DIR") or "").strip()
+    if raw:
+        cand = Path(raw)
+    else:
+        base = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA") or ""
+        if not base:
+            return DESKTOP_DATA
+        cand = Path(base) / "DAM" / "state"
+    try:
+        cand.mkdir(parents=True, exist_ok=True)
+        probe = cand / ".write-probe"
+        probe.write_text("1", encoding="utf-8")
+        probe.unlink()
+    except OSError:
+        return DESKTOP_DATA
+    return cand
+
+
+STATE_DIR = _state_dir()
+DEFAULT_STATUS = STATE_DIR / "index-watcher-status.json"
+DEFAULT_LOCK = STATE_DIR / "index-rebuild.lock.json"
 BIN_ROOT = SCRIPT.parents[3]
 BRANDING_PIPELINE = BIN_ROOT / "scripts" / "ops" / "rebuild-branding-pipeline.py"
 
@@ -77,7 +104,7 @@ def _builder_env() -> dict[str, str]:
         return index_builder_env()
     except Exception:
         env = os.environ.copy()
-        live = DESKTOP_DATA / "index-live.json"
+        live = STATE_DIR / "index-live.json"
         raw = (env.get("DAM_INDEX_LIVE_FILE") or "").strip()
         if not raw or raw in {".", "./", ".\\"}:
             env["DAM_INDEX_LIVE_FILE"] = str(live)
@@ -539,7 +566,7 @@ def main() -> None:
     ap.add_argument(
         "--control-file",
         type=Path,
-        default=DESKTOP_DATA / "index-control.json",
+        default=STATE_DIR / "index-control.json",
         help="Cancel/snooze JSON (apps/desktop/data/index-control.json)",
     )
     ap.add_argument(

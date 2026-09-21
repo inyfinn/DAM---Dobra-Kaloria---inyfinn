@@ -19,6 +19,7 @@ from typing import Any
 
 from rebuild_lock import (
     DATA_DIR,
+    STATE_DIR,
     acquire_lock,
     lock_is_stale,
     mark_cancel_requested,
@@ -29,20 +30,57 @@ from rebuild_lock import (
 DESKTOP_DIR = Path(__file__).resolve().parent
 WEB_ROOT = DESKTOP_DIR.parent / "web"
 WATCH_SCRIPT = WEB_ROOT / "scripts" / "watch-file-index.py"
-SUPERVISOR_LOCK = DATA_DIR / "index-supervisor.lock.json"
-WATCHER_STATUS = DATA_DIR / "index-watcher-status.json"
-WATCHER_LOG = DATA_DIR / "index-watcher.log"
-PRODUCT_REBUILD_LOCK = DATA_DIR / "index-rebuild.lock.json"
-CONTROL_FILE = DATA_DIR / "index-control.json"
+# Ulotny stan biezacego uruchomienia idzie do STATE_DIR (poza repo), bo drzewo
+# repo jest lustrzane przez Synology Drive - patrz rebuild_lock.resolve_state_dir.
+# Przenosimy tylko to, co ma wartosc miedzy uruchomieniami: ustawienia uzytkownika
+# (drzemka), ostatni raport i migawki do porownan. Statusy, blokady i logi wstaja
+# same przy starcie - przenoszenie ich przeniosloby tez zapisany na dysku blad.
+_STATE_MIGRATE_NAMES = (
+    "index-control.json",
+    "index-last-report.json",
+    "index-compare-snapshot.json",
+    "index-compare-snapshot.json.prev",
+)
+
+
+def _migrate_state_files() -> None:
+    """Jednorazowa przeprowadzka ze starego data/ do STATE_DIR.
+
+    Kopiujemy tylko pliki dajace sie odczytac; rozdarty JSON zostaje tam, gdzie
+    byl, zeby nie przeniesc zepsucia razem z danymi. Nic nie kasujemy.
+    """
+    if STATE_DIR == DATA_DIR:
+        return
+    for name in _STATE_MIGRATE_NAMES:
+        src = DATA_DIR / name
+        dst = STATE_DIR / name
+        if dst.exists() or not src.is_file():
+            continue
+        try:
+            raw = src.read_bytes()
+            if name.endswith(".json"):
+                json.loads(raw.decode("utf-8"))
+            dst.write_bytes(raw)
+        except (OSError, ValueError, UnicodeDecodeError):
+            continue
+
+
+_migrate_state_files()
+
+SUPERVISOR_LOCK = STATE_DIR / "index-supervisor.lock.json"
+WATCHER_STATUS = STATE_DIR / "index-watcher-status.json"
+WATCHER_LOG = STATE_DIR / "index-watcher.log"
+PRODUCT_REBUILD_LOCK = STATE_DIR / "index-rebuild.lock.json"
+CONTROL_FILE = STATE_DIR / "index-control.json"
 INDEX_FILE = WEB_ROOT / "data" / "file-index.json"
 WEB_INDEX = INDEX_FILE
 BRANDING_HEAD = WEB_ROOT / "data" / "branding-grid-head.json"
-LIVE_FILE = DATA_DIR / "index-live.json"
-SNAPSHOT_FILE = DATA_DIR / "index-run-snapshot.json"
-COMPARE_SNAPSHOT_FILE = DATA_DIR / "index-compare-snapshot.json"
-COMPARE_SNAPSHOT_PREV = DATA_DIR / "index-compare-snapshot.json.prev"
-REPORT_FILE = DATA_DIR / "index-last-report.json"
-REBUILD_LOG_FILE = DATA_DIR / "index-rebuild.log"
+LIVE_FILE = STATE_DIR / "index-live.json"
+SNAPSHOT_FILE = STATE_DIR / "index-run-snapshot.json"
+COMPARE_SNAPSHOT_FILE = STATE_DIR / "index-compare-snapshot.json"
+COMPARE_SNAPSHOT_PREV = STATE_DIR / "index-compare-snapshot.json.prev"
+REPORT_FILE = STATE_DIR / "index-last-report.json"
+REBUILD_LOG_FILE = STATE_DIR / "index-rebuild.log"
 MAX_LOG_BYTES = 2_000_000
 MAX_NEW_ITEMS = 300
 REPORT_ITEM_CAP = 150
@@ -107,10 +145,10 @@ def _rotate_log_if_needed(path: Path) -> None:
 
 
 def write_watcher_status(payload: dict[str, Any], *, preserve_last: bool = True) -> None:
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    WATCHER_STATUS.parent.mkdir(parents=True, exist_ok=True)
     body = dict(payload)
     if preserve_last:
-        prev = read_watcher_status()
+        prev = read_watcher_status_for_merge()
         for key in (
             "last_ok",
             "last_rc",
@@ -130,6 +168,9 @@ def write_watcher_status(payload: dict[str, Any], *, preserve_last: bool = True)
         body["awaiting_first_rebuild"] = True
     elif body.get("last_ok") is True:
         body["awaiting_first_rebuild"] = False
+    if body.pop(_READ_ERROR_ENVELOPE, False):
+        for key in _TRANSIENT_STATUS_KEYS:
+            body.pop(key, None)
     body["updated_at"] = _utc()
     text = json.dumps(body, ensure_ascii=False, indent=2) + "\n"
     tmp = WATCHER_STATUS.with_name(WATCHER_STATUS.name + f".{os.getpid()}.tmp")
@@ -184,13 +225,30 @@ def _read_dict(path: Path, *, quarantine: bool = False) -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
+# Klucze powstajace WYLACZNIE wtedy, gdy nie dalo sie odczytac pliku statusu.
+# Bez tego czytaj-zmien-zapisz utrwalalo koperte bledu jako prawdziwy status
+# i pulpit meldowal martwy watcher az do reki w pliku (blad przezywal restart).
+_READ_ERROR_ENVELOPE = "_read_error"
+_TRANSIENT_STATUS_KEYS = ("ok", "watcher_ok", "error", _READ_ERROR_ENVELOPE)
+
+
+def _status_read_error(err: str) -> dict[str, Any]:
+    return {"ok": False, "watcher_ok": False, "error": err, _READ_ERROR_ENVELOPE: True}
+
+
 def read_watcher_status() -> dict[str, Any]:
     if not WATCHER_STATUS.is_file():
-        return {"ok": False, "watcher_ok": False, "error": "no_status"}
+        return _status_read_error("no_status")
     data, err = read_json_file(WATCHER_STATUS, quarantine=True)
     if err:
-        return {"ok": False, "watcher_ok": False, "error": err}
-    return data if isinstance(data, dict) else {"ok": False, "watcher_ok": False}
+        return _status_read_error(err)
+    return data if isinstance(data, dict) else _status_read_error("not_a_dict")
+
+
+def read_watcher_status_for_merge() -> dict[str, Any]:
+    """Status nadajacy sie do czytaj-zmien-zapisz: koperta bledu -> pusty dict."""
+    st = read_watcher_status()
+    return {} if st.get(_READ_ERROR_ENVELOPE) else st
 
 
 def supervisor_lock_status() -> dict[str, Any]:
@@ -198,7 +256,7 @@ def supervisor_lock_status() -> dict[str, Any]:
 
 
 def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + f".{os.getpid()}.tmp")
     text = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
     try:
@@ -297,7 +355,7 @@ def merge_live_into_watcher_status(live: dict[str, Any], *, snap: dict[str, Any]
     snap = snap or read_run_snapshot()
     path = resolve_live_path(live, snap)
     label = str(live.get("current_label") or "").strip()
-    body = dict(read_watcher_status())
+    body = dict(read_watcher_status_for_merge())
     if path:
         body["current_path"] = path
     if label:
@@ -1297,7 +1355,7 @@ def merge_live_into_watcher_status(live: dict[str, Any], *, snap: dict[str, Any]
         if not body.get("files_total"):
             body["files_total"] = snap.get("file_count")
     write_live(body)
-    status = read_watcher_status()
+    status = read_watcher_status_for_merge()
     label = str(body.get("current_item") or body.get("current_label") or "")
     status["current_name"] = body.get("current_name") or ""
     status["current_path"] = body.get("current_path") or ""
@@ -1725,9 +1783,14 @@ def public_status() -> dict[str, Any]:
     if not items and isinstance(control.get("last_run_new"), list):
         items = list(control.get("last_run_new") or [])
     # watcher_ok = process alive; index_run_ok = last rebuild succeeded (no false green).
+    # Zywy proces wygrywa z plikiem: zapisany kiedys watcher_ok=false nie moze
+    # trzymac paska "Aktualizacja indeksu nie dziala", gdy supervisor wlasnie tyka.
+    watcher_alive = bool(w.get("watcher_ok"))
+    if not watcher_alive and bool(lock.get("held")) and bool(lock.get("pid_alive")):
+        watcher_alive = True
     return {
         "ok": True,
-        "watcher_ok": bool(w.get("watcher_ok")),
+        "watcher_ok": watcher_alive,
         "index_run_ok": last_ok is True,
         "awaiting_first_rebuild": awaiting,
         "watcher": w,

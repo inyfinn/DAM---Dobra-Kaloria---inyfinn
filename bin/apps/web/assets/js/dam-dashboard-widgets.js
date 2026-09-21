@@ -786,26 +786,149 @@
         "</option>"
       );
     }).join("");
+    // Natywnej listy <select> nie da sie ostylowac (rysuje ja system, nie strona),
+    // wiec <select> zostaje wylacznie jako nosnik stanu - to na nim dalej leci
+    // "change", ktory lapie bindLayoutToggle. Widoczna jest kontrolka DAM.
+    var menuOptions = TILE_COUNTS.map(function (n) {
+      return (
+        '<button type="button" role="option" class="dam-widget__count-option" data-count-value="' +
+        n +
+        '" aria-selected="' +
+        (n === count ? "true" : "false") +
+        '" tabindex="-1">' +
+        n +
+        "</button>"
+      );
+    }).join("");
     return (
       '<div class="dam-widget__actions">' +
-      '<label class="dam-widget__count-field">' +
-      '<span class="visually-hidden">' +
-      escapeHtml(aria) +
-      "</span>" +
-      '<select class="dam-widget__count-select" data-widget-layout-toggle="' +
+      '<div class="dam-widget__count-field" data-dam-count-field>' +
+      '<select class="dam-widget__count-native" data-widget-layout-toggle="' +
       escapeHtml(widgetId) +
       '" data-layout="' +
       escapeHtml(String(count)) +
-      '" aria-label="' +
-      escapeHtml(aria) +
-      '" title="' +
+      '" tabindex="-1" aria-hidden="true">' +
+      options +
+      "</select>" +
+      '<button type="button" class="dam-widget__count-select" data-dam-count-trigger' +
+      ' aria-haspopup="listbox" aria-expanded="false" aria-label="' +
       escapeHtml(aria) +
       '" data-dam-tip="' +
       escapeHtml(aria) +
       '">' +
-      options +
-      "</select></label></div>"
+      '<span class="dam-widget__count-value">' +
+      count +
+      "</span>" +
+      '<i class="uil uil-angle-down dam-widget__count-caret" aria-hidden="true"></i>' +
+      "</button>" +
+      '<div class="dam-widget__count-menu" role="listbox" aria-label="' +
+      escapeHtml(aria) +
+      '" hidden>' +
+      menuOptions +
+      "</div></div></div>"
     );
+  }
+
+  /* --- Lista liczby kafelkow: jedna delegacja na dokument ---------------------
+     Widgety przerysowuja sie w calosci, wiec handlery per element gineloby przy
+     kazdym renderze. Delegacja na dokumencie przezywa kazdy remount. */
+  var _countMenuBound = false;
+
+  function closeCountMenus(except) {
+    var fields = document.querySelectorAll("[data-dam-count-field]");
+    for (var i = 0; i < fields.length; i += 1) {
+      if (fields[i] === except) continue;
+      var menu = fields[i].querySelector(".dam-widget__count-menu");
+      var trigger = fields[i].querySelector("[data-dam-count-trigger]");
+      if (menu) menu.hidden = true;
+      if (trigger) trigger.setAttribute("aria-expanded", "false");
+      fields[i].classList.remove("is-open");
+    }
+  }
+
+  function openCountMenu(field) {
+    var menu = field.querySelector(".dam-widget__count-menu");
+    var trigger = field.querySelector("[data-dam-count-trigger]");
+    if (!menu || !trigger) return;
+    closeCountMenus(field);
+    menu.hidden = false;
+    field.classList.add("is-open");
+    trigger.setAttribute("aria-expanded", "true");
+    var sel = menu.querySelector('[aria-selected="true"]') || menu.firstElementChild;
+    if (sel) sel.focus();
+  }
+
+  function chooseCount(field, value) {
+    var native = field.querySelector(".dam-widget__count-native");
+    var trigger = field.querySelector("[data-dam-count-trigger]");
+    var label = field.querySelector(".dam-widget__count-value");
+    var opts = field.querySelectorAll(".dam-widget__count-option");
+    for (var i = 0; i < opts.length; i += 1) {
+      opts[i].setAttribute(
+        "aria-selected",
+        opts[i].getAttribute("data-count-value") === String(value) ? "true" : "false"
+      );
+    }
+    if (label) label.textContent = String(value);
+    closeCountMenus(null);
+    if (trigger) trigger.focus();
+    if (native && native.value !== String(value)) {
+      native.value = String(value);
+      native.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  }
+
+  function bindCountMenus() {
+    if (_countMenuBound) return;
+    _countMenuBound = true;
+    document.addEventListener("click", function (ev) {
+      var trigger = ev.target.closest && ev.target.closest("[data-dam-count-trigger]");
+      if (trigger) {
+        ev.preventDefault();
+        var field = trigger.closest("[data-dam-count-field]");
+        if (!field) return;
+        if (field.classList.contains("is-open")) closeCountMenus(null);
+        else openCountMenu(field);
+        return;
+      }
+      var opt = ev.target.closest && ev.target.closest(".dam-widget__count-option");
+      if (opt) {
+        ev.preventDefault();
+        var f = opt.closest("[data-dam-count-field]");
+        if (f) chooseCount(f, opt.getAttribute("data-count-value"));
+        return;
+      }
+      closeCountMenus(null);
+    });
+    document.addEventListener("keydown", function (ev) {
+      var field = ev.target.closest && ev.target.closest("[data-dam-count-field]");
+      if (!field) return;
+      var open = field.classList.contains("is-open");
+      if (ev.key === "Escape" && open) {
+        ev.preventDefault();
+        closeCountMenus(null);
+        var tr = field.querySelector("[data-dam-count-trigger]");
+        if (tr) tr.focus();
+        return;
+      }
+      if ((ev.key === "Enter" || ev.key === " ") && ev.target.classList.contains("dam-widget__count-option")) {
+        ev.preventDefault();
+        chooseCount(field, ev.target.getAttribute("data-count-value"));
+        return;
+      }
+      if (ev.key !== "ArrowDown" && ev.key !== "ArrowUp") return;
+      ev.preventDefault();
+      if (!open) {
+        openCountMenu(field);
+        return;
+      }
+      var list = [].slice.call(field.querySelectorAll(".dam-widget__count-option"));
+      var idx = list.indexOf(document.activeElement);
+      var next = ev.key === "ArrowDown" ? idx + 1 : idx - 1;
+      if (next < 0) next = list.length - 1;
+      if (next >= list.length) next = 0;
+      if (list[next]) list[next].focus();
+    });
   }
 
   function shell(w, bodyHtml, extraClass, headActionsHtml) {
@@ -1083,7 +1206,7 @@
       (global.DamPreviewTruth &&
         typeof DamPreviewTruth.onErrorTitle === "function" &&
         DamPreviewTruth.onErrorTitle()) ||
-      "Podgląd niedostępny";
+      "Podglad niedostępny";
     root.querySelectorAll("img.dam-widget__thumb").forEach(function (img) {
       if (img._damHonestThumb) return;
       img._damHonestThumb = true;
@@ -3611,13 +3734,13 @@
                         ">" +
                         winIcon +
                         "</button>" +
-                        '<button type="button" class="dam-viz-icon-btn dam-viz-icon-btn--viz" data-dash-preview="1" title="Podgląd" aria-label="Podgląd" data-dam-tip="Podgląd materiału w miejscu">' +
+                        '<button type="button" class="dam-viz-icon-btn dam-viz-icon-btn--viz" data-dash-preview="1" title="Podglad" aria-label="Podglad" data-dam-tip="Podglad materialu w miejscu">' +
                         '<i class="uil uil-eye" aria-hidden="true"></i></button>' +
                         "</div>" +
                         '<div class="dam-widget__viz-media">' +
                         '<a class="dam-widget__thumb-link" href="' +
                         brandingHref +
-                        '" data-dash-preview="1" title="Podgląd">' +
+                        '" data-dash-preview="1" title="Podglad">' +
                         '<img class="dam-widget__thumb' +
                         (g.hasSafeCover ? "" : " dam-widget__thumb--fallback") +
                         '" src="' +
@@ -5030,7 +5153,7 @@
     "Przeciagnij uchwyty na kartach, aby zmienic uklad pulpitu.",
     "Wlacz tylko te widgety, z ktorych korzystasz na co dzien.",
     "Kolejnosc kart ustawisz strzalkami lub przeciaganiem.",
-    "Podgląd pokazuje szkic karty, zanim zapiszesz zmiany.",
+    "Podglad pokazuje szkic karty zanim zapiszesz zmiany.",
     "Anuluj przywraca stan sprzed edycji bez zapisu.",
     "Przywroc domyslne wraca do fabrycznego ukladu kart.",
     "Zapisz dopiero gdy uklad kart jest gotowy do pracy."
@@ -5575,7 +5698,7 @@
       '<div class="dam-dash-preview-card" data-widget-id="' +
       escapeHtml(w.id) +
       '">' +
-      '<div class="dam-dash-preview-card__badge">Podgląd</div>' +
+      '<div class="dam-dash-preview-card__badge">Podglad</div>' +
       '<div class="dam-dash-preview-card__title">' +
       escapeHtml(label) +
       "</div>" +
@@ -6003,10 +6126,15 @@
     document.addEventListener("keydown", onKey);
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", ensureDashLayoutCss);
-  } else {
+  function bootDashChrome() {
     ensureDashLayoutCss();
+    bindCountMenus();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootDashChrome);
+  } else {
+    bootDashChrome();
   }
 
   global.DamDashWidgets = {

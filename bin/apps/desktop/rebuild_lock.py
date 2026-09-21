@@ -12,6 +12,38 @@ from typing import Any
 DESKTOP_DIR = Path(__file__).resolve().parent
 DATA_DIR = DESKTOP_DIR / "data"
 
+
+def resolve_state_dir() -> Path:
+    """Katalog na ulotny stan biezacego uruchomienia (statusy, blokady, logi).
+
+    NIE moze to byc drzewo repo: caly folder Marketing jest lustrzany przez
+    Synology Drive, ktory podmienia plik w trakcie zapisu i zostawia kopie
+    *_INYFINN_*_Conflict. Rozdarty index-watcher-status.json wracal z czytania
+    jako koperta bledu, koperta byla zapisywana z powrotem jako prawdziwy status
+    i pulpit pokazywal "Aktualizacja indeksu nie dziala" juz na zawsze - nawet
+    po restarcie, bo blad siedzial na dysku. Stan lokalny maszyny trzyma sie
+    w LOCALAPPDATA/DAM/state; gdy zapis tam nie wychodzi, wracamy do DATA_DIR.
+    """
+    raw = (os.environ.get("DAM_STATE_DIR") or "").strip()
+    if raw:
+        cand = Path(raw)
+    else:
+        base = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA") or ""
+        if not base:
+            return DATA_DIR
+        cand = Path(base) / "DAM" / "state"
+    try:
+        cand.mkdir(parents=True, exist_ok=True)
+        probe = cand / ".write-probe"
+        probe.write_text("1", encoding="utf-8")
+        probe.unlink()
+    except OSError:
+        return DATA_DIR
+    return cand
+
+
+STATE_DIR = resolve_state_dir()
+
 DEFAULT_TTL_SEC = 3600
 
 

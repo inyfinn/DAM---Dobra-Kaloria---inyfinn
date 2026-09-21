@@ -1,6 +1,6 @@
 ﻿; DAM Windows installer - pelny kreator (licencja, sciezka, aktualizacja)
 #ifndef MyAppVersion
-  #define MyAppVersion "2.1.5"
+  #define MyAppVersion "2.1.6"
 #endif
 #ifndef StageDir
   #define StageDir "..\dist\staging\DAM-install"
@@ -72,8 +72,9 @@ Name: "polish"; MessagesFile: "compiler:Languages\Polish.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "Utworz skrot na pulpicie"; GroupDescription: "Skroty:"; Flags: checkedonce
-; pythonw.exe bezposrednio: brak okna konsoli, brak wscript/powershell (wzorzec Boxter).
-Name: "bridgeautostart"; Description: "Uruchamiaj mostek DAM przy starcie Windows (zalecane: aktualizacje i podglad dzialaja bez otwierania aplikacji)"; GroupDescription: "Mostek:"; Flags: checkedonce
+; Uslugi w tle NIE sa juz pytaniem do uzytkownika. Bez nich nie dzialaja podglady,
+; odswiezanie listy plikow ani aktualizacje - "mostek" byl wyborem miedzy dzialajacym
+; a polamanym programem i brzmial jak praca do wykonania recznie.
 
 ; Aktualizacja = czysty klad od nowa. Bez tego stare moduly JS/HTML i pliki
 ; usuniete w nowej wersji zostaja na dysku i wracaja do gry przy niezbumpowanym ?v=.
@@ -148,9 +149,9 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilen
 Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Instalowanie Visual C++ Runtime..."; Flags: waituntilterminated; Check: VCRedistNeeded
 Filename: "{tmp}\MicrosoftEdgeWebview2Setup.exe"; Parameters: "/silent /install"; StatusMsg: "Instalowanie WebView2 Runtime (wymagane przez pywebview)..."; Flags: waituntilterminated; Check: WebView2Needed
 ; Bez powershell -ExecutionPolicy Bypass: antywirusy (Bitdefender Boxter) blokuja ten wzorzec.
-; PAMIEC-PODRECZNA jest w Setupie; mostek przy starcie tylko ja aktualizuje z Synology.
+; PAMIEC-PODRECZNA jest w Setupie; uslugi w tle tylko ja aktualizuja z Synology.
 Filename: "{sys}\certutil.exe"; Parameters: "-user -f -addstore TrustedPublisher ""{app}\bin\installer\inyfinn-dam-codesign.cer"""; StatusMsg: "Rejestracja wydawcy Inyfinn..."; Flags: runhidden waituntilterminated skipifdoesntexist
-Filename: "{app}\{#MyAppExeName}"; Description: "Uruchom DAM po zakonczeniu instalacji (startuje mostek)"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "Uruchom DAM po zakonczeniu instalacji"; Flags: nowait postinstall skipifsilent
 ; Cicha aktualizacja z aplikacji (app_updates.py: /VERYSILENT ... /DAMRELAUNCH=1): DAM wraca sam.
 ; Wpis wyzej ma skipifsilent, a RestartApplications=no, wiec bez tego program po prostu znikal.
 Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Flags: nowait runasoriginaluser; Check: IsDamRelaunch
@@ -158,11 +159,10 @@ Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Flags: nowait runasorigi
 [Registry]
 Root: HKCU; Subkey: "Software\Inyfinn\DAM"; ValueType: string; ValueName: "InstallPath"; ValueData: "{app}"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Inyfinn\DAM"; ValueType: string; ValueName: "Version"; ValueData: "{#MyAppVersion}"; Flags: uninsdeletekey
-; Autostart mostka: bundlowany pythonw.exe -> zero okna konsoli, zero script-hosta.
-; HKCU = bez podnoszenia uprawnien. Mostek sam ustapi, jesli port 8766 jest juz zajety.
-Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "DAM-Bridge"; ValueData: """{app}\bin\runtime\win\python\pythonw.exe"" ""{app}\bin\apps\desktop\local_bridge.py"""; Flags: uninsdeletevalue; Tasks: bridgeautostart
-; Odznaczenie zadania przy aktualizacji musi usunac stary wpis.
-Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: none; ValueName: "DAM-Bridge"; Flags: deletevalue uninsdeletevalue; Tasks: not bridgeautostart
+; Uslugi w tle startuja z Windows zawsze - to czesc programu, a nie dodatek.
+; Bundlowany pythonw.exe -> zero okna konsoli, zero script-hosta.
+; HKCU = bez podnoszenia uprawnien. Proces sam ustapi, gdy port 8766 jest zajety.
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "DAM-Bridge"; ValueData: """{app}\bin\runtime\win\python\pythonw.exe"" ""{app}\bin\apps\desktop\local_bridge.py"""; Flags: uninsdeletevalue
 
 [Code]
 function IsProtectedInstallPath(const Path: String): Boolean;

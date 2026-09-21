@@ -458,12 +458,48 @@ def installer_ready(version: str | None = None) -> bool:
     return ok
 
 
+# Jak dlugo wynik sprawdzenia GitHuba wolno uznawac za aktualny przy akcji
+# uzytkownika. Dluzej = mozna zaproponowac wersje, ktora dawno przestala byc
+# najnowsza (2.1.1 uparcie pobieralo 2.1.2, bo tyle mowil jego stary cache).
+CACHE_FRESH_SEC = 900.0
+
+
+def _last_check_at() -> float:
+    state = _load_json(STATE_PATH, {})
+    try:
+        return float(state.get("last_check") or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _cache_is_fresh() -> bool:
+    return (time.time() - _last_check_at()) < CACHE_FRESH_SEC
+
+
+def known_github_latest() -> str:
+    """Wersja z ostatniej odpowiedzi GitHuba (pusta, gdy nigdy nie sprawdzono)."""
+    state = _load_json(STATE_PATH, {})
+    last = state.get("last_result") if isinstance(state.get("last_result"), dict) else {}
+    v = _strip_v(str(last.get("latest") or ""))
+    return v if is_canonical_product_version(v) else ""
+
+
 def _ready_version() -> str:
-    """Najnowsza wersja z cache, nowsza od biezacej i z poprawnym podpisem."""
+    """Najnowsza wersja z cache: nowsza od biezacej, podpisana I nie przeterminowana.
+
+    Samo "lezy na dysku i ma podpis" nie wystarcza. Pobrany kiedys instalator
+    zostawal na zawsze jako gotowy cel, wiec stara instalacja w kolko proponowala
+    te sama "nastepna" wersje i nigdy nie siegala po faktycznie najnowsza.
+    Gdy ostatnie sprawdzenie GitHuba zna cos nowszego - cache przestaje sie liczyc.
+    """
     cur = current_version()
+    newest_known = known_github_latest()
     for v in _cached_versions():
-        if is_newer(v, cur) and installer_ready(v):
-            return v
+        if not is_newer(v, cur) or not installer_ready(v):
+            continue
+        if newest_known and is_newer(newest_known, v):
+            return ""  # na dysku lezy przestarzaly instalator - trzeba pobrac nowszy
+        return v
     return ""
 
 
@@ -1264,7 +1300,10 @@ def _background_check() -> None:
 
 def _action_download() -> dict[str, Any]:
     global _CHECK_THREAD
-    rel = _release_from_result(check_for_updates(force=False))
+    # force=False oddaje ostatni zapisany wynik. Gdy jest starszy niz
+    # CACHE_FRESH_SEC, pomijamy go i pytamy GitHuba - inaczej pobieralibysmy
+    # wersje, ktora byla najnowsza w dniu ostatniego sprawdzenia.
+    rel = _release_from_result(check_for_updates(force=False)) if _cache_is_fresh() else None
     if rel:
         return _start_download(rel)
     with _DL_LOCK:
@@ -1387,6 +1426,14 @@ def _action_install() -> dict[str, Any]:
         v = tgt
     if not v:
         v = _ready_version()
+    # Cel z cache moze byc przestarzaly: jesli ostatnia odpowiedz GitHuba zna cos
+    # nowszego, nie instalujemy "nastepnej po kolei" wersji tylko pobieramy
+    # faktycznie najnowsza. Warunek installer_ready pilnuje, zeby ta sciezka nie
+    # przykryla odmowy dla niepodpisanego albo podmienionego pliku - taki plik ma
+    # dalej trafic do _launch_installer i dostac jasny blad signature_*.
+    newest_known = known_github_latest()
+    if v and newest_known and is_newer(newest_known, v) and installer_ready(v):
+        return _action_download()
     if not v:
         return {"ok": False, "error": "not_ready"}
     return _launch_installer(installer_path(v))
