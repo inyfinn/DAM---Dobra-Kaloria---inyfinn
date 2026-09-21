@@ -31,22 +31,60 @@ if (-not (Test-Path $Iscc)) {
   if ($alt) { $Iscc = $alt } else { throw "Brak ISCC.exe (zainstaluj Inno Setup 6)." }
 }
 
+# version.json czytamy ZAWSZE (nie tylko gdy brak -Version): to zrodlo zarowno
+# numeru, jak i tekstu release_note na ostatnia strone kreatora.
+# 20.09.2026: niepoprawny JSON (niecytowany cudzyslow w "note") przeszedl tu po cichu
+# i Setup wyjechal jako 5.0.130. Mechanizm aktualizacji porownuje wlasnie ten numer,
+# wiec cicha wersja zapasowa jest grozniejsza niz przerwany build.
+$verJson = Join-Path $BinRoot "apps\web\version.json"
+if (-not (Test-Path $verJson)) { throw "Brak $verJson - nie zgaduje wersji." }
+try {
+  $vj = Get-Content $verJson -Raw | ConvertFrom-Json
+} catch {
+  throw "version.json jest niepoprawnym JSON-em: $($_.Exception.Message)"
+}
 if (-not $Version) {
-  # 20.09.2026: niepoprawny JSON (niecytowany cudzyslow w "note") przeszedl tu po cichu
-  # i Setup wyjechal jako 5.0.130. Mechanizm aktualizacji porownuje wlasnie ten numer,
-  # wiec cicha wersja zapasowa jest grozniejsza niz przerwany build.
-  $verJson = Join-Path $BinRoot "apps\web\version.json"
-  if (-not (Test-Path $verJson)) { throw "Brak $verJson - nie zgaduje wersji." }
-  try {
-    $vj = Get-Content $verJson -Raw | ConvertFrom-Json
-  } catch {
-    throw "version.json jest niepoprawnym JSON-em: $($_.Exception.Message)"
-  }
   $Version = [string]$vj.version
   if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw "version.json ma bledna wersje: '$Version'" }
 }
 
-Write-Host "GIT_ROOT=$GitRoot Version=$Version"
+# --- Bramka spojnosci wersji -------------------------------------------------
+# Wersja zyje w czterech plikach naraz. 2.1.5 wyjechalo z runtime_config.py
+# stojacym na 2.1.1, bo nikt tego nie porownywal. Rozjazd konczy build zamiast
+# wypuszczac paczke, ktora klamie o swojej wersji.
+$verSources = @(
+  @{ Name = "apps\web\version.json";               Path = (Join-Path $BinRoot "apps\web\version.json");               Pattern = '"version"\s*:\s*"(\d+\.\d+\.\d+)"' },
+  @{ Name = "apps\web\assets\js\dam-version.js";   Path = (Join-Path $BinRoot "apps\web\assets\js\dam-version.js");   Pattern = 'DAM_APP_VERSION\s*=\s*"(\d+\.\d+\.\d+)"' },
+  @{ Name = "apps\desktop\runtime_config.py";      Path = (Join-Path $BinRoot "apps\desktop\runtime_config.py");      Pattern = 'APP_VERSION\s*=\s*"(\d+\.\d+\.\d+)"' },
+  @{ Name = "installer\DAM-Setup.iss";             Path = (Join-Path $BinRoot "installer\DAM-Setup.iss");             Pattern = 'MyAppVersion\s+"(\d+\.\d+\.\d+)"' }
+)
+$verMismatch = @()
+foreach ($src in $verSources) {
+  if (-not (Test-Path -LiteralPath $src.Path)) { $verMismatch += "$($src.Name): BRAK PLIKU"; continue }
+  $m = [regex]::Match((Get-Content -LiteralPath $src.Path -Raw), $src.Pattern)
+  if (-not $m.Success) { $verMismatch += "$($src.Name): nie znalazlem numeru wersji"; continue }
+  if ($m.Groups[1].Value -ne $Version) { $verMismatch += "$($src.Name): $($m.Groups[1].Value) (oczekiwano $Version)" }
+}
+if ($verMismatch.Count -gt 0) {
+  throw ("Wersja rozjechana miedzy plikami - popraw i powtorz build:`n  " + ($verMismatch -join "`n  "))
+}
+Write-Host "Wersja $Version zgodna we wszystkich $($verSources.Count) plikach."
+
+# --- Commit, z ktorego powstaje paczka ---------------------------------------
+# "Tresc z commita" ma byc prawda, nie deklaracja: SHA ladu-je do README,
+# a niezacommitowane zmiany kodu dostaja glosne ostrzezenie.
+$buildCommit = ""
+$buildDirty = $false
+try {
+  $buildCommit = (& git -C $GitRoot rev-parse --short HEAD 2>$null | Select-Object -First 1)
+  $dirty = @(& git -C $GitRoot status --porcelain --untracked-files=no 2>$null)
+  $buildDirty = ($dirty.Count -gt 0)
+} catch { $buildCommit = "" }
+if ($buildDirty) {
+  Write-Warning "Drzewo ma niezacommitowane zmiany - paczka nie odpowiada dokladnie commitowi $buildCommit."
+}
+
+Write-Host "GIT_ROOT=$GitRoot Version=$Version Commit=$buildCommit"
 $appsSrc = Join-Path $GitRoot "apps"
 if (-not $SkipSync -and -not (Test-Path -LiteralPath $appsSrc)) {
   Write-Host "Skip sync: brak GIT_ROOT\apps (X: CONTENT-only). Uzywam bin\apps."
@@ -398,6 +436,12 @@ $readmeLines = @(
 if ($readmeNote.Count -gt 0) {
   $readmeLines += @("", "Co nowego w ${Version}:") + $readmeNote
 }
+# Stopka: paczka zawsze mowi, z jakiego commita powstala.
+$stamp = (Get-Date -Format "yyyy-MM-dd")
+$buildLine = "Wersja $Version, zbudowana $stamp"
+if ($buildCommit) { $buildLine += ", commit $buildCommit" }
+if ($buildDirty) { $buildLine += " (+ zmiany lokalne, nie z commita)" }
+$readmeLines += @("", $buildLine)
 $readmePath = Join-Path $stageRoot "README.txt"
 Set-Content -LiteralPath $readmePath -Value $readmeLines -Encoding UTF8
 # Wersja w README musi zgadzac sie z budowana - inaczej build staje.
