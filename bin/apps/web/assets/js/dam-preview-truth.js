@@ -15,9 +15,9 @@
   }
 
   var LABEL_ONLINE_ONLY = "Element z dysku dostępny tylko online - Synology";
-  var LABEL_MISSING = "Podglad niedostępny";
+  var LABEL_MISSING = "Podgląd niedostępny";
   var LABEL_HINT = "brak podglądu";
-  var LABEL_ROOT = "Ustaw ścieżke Marketing w ustawieniach dysku";
+  var LABEL_ROOT = "Ustaw ścieżkę Marketing w ustawieniach dysku";
   var CTA_DISK = "settings.html#damDisk";
 
   function bridgeUrl() {
@@ -88,6 +88,31 @@
       img.setAttribute("data-dam-original-unavailable", "1");
     };
     probe.src = original;
+  }
+
+  /** Explicit single-file open: the bridge may download this one original (fetch=1). */
+  function withFetch(url) {
+    if (!url || url.indexOf("/media?") < 0 || /[?&]fetch=1\b/.test(url)) return url || "";
+    return url + "&fetch=1";
+  }
+
+  /**
+   * Hero already shows the cache-first response; ask the bridge again (it returns the original
+   * only when the file is on this disk) and swap once it has fully arrived. Never downloads.
+   */
+  function upgradeWhenReady(img, url) {
+    var full = url || "";
+    if (!img || !full) return;
+    var token = (img._damUpgradeToken = (img._damUpgradeToken || 0) + 1);
+    var probe = new Image();
+    probe.decoding = "async";
+    probe.onload = function () {
+      if (img._damUpgradeToken !== token || !img.isConnected) return;
+      img.onerror = null;
+      img.src = full;
+      img.setAttribute("data-dam-original-ready", "1");
+    };
+    probe.src = full;
   }
 
   var _originalObserver =
@@ -232,7 +257,7 @@
   /*
    * Most po 2,5 s oddaje 504 (thumb_timeout), ale dalej liczy miniature w tle i zapisuje
    * ja w PAMIEC-PODRECZNA. Plik JEST - podglad jeszcze nie. Zamiast od razu
-   * "Podglad niedostepny" (a potem kilka recznych przeladowan okna) ponawiamy sami.
+   * "Podgląd niedostępny" (a potem kilka recznych przeladowan okna) ponawiamy sami.
    */
   var RETRY_DELAYS_MS = [2500, 6000, 12000, 25000, 45000];
   var RETRY_CSS_ID = "damThumbRetryCss";
@@ -285,6 +310,109 @@
     if (host && host.classList) host.classList.remove("dam-thumb-wait");
   }
 
+  var ORIGIN_CSS_ID = "damCacheOriginCss";
+
+  function ensureOriginCss() {
+    if (document.getElementById(ORIGIN_CSS_ID)) return;
+    var st = document.createElement("style");
+    st.id = ORIGIN_CSS_ID;
+    st.textContent =
+      ".dam-cache-origin{position:absolute;left:12px;bottom:12px;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:8px;max-width:calc(100% - 24px);pointer-events:none}" +
+      ".dam-cache-origin__badge,.dam-cache-origin__get{box-sizing:border-box;display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 14px;border-radius:var(--dam-radius-sm,8px);font-family:inherit;font-size:13px;font-weight:600;line-height:1.2;white-space:nowrap;box-shadow:var(--dam-shadow,0 10px 30px rgb(34 34 34 / .08));pointer-events:auto}" +
+      ".dam-cache-origin__badge{background:var(--dam-surface,#fff);color:var(--dam-text,#222);border:1px solid rgb(var(--dam-shadow-rgb,34 34 34) / .12)}" +
+      ".dam-cache-origin__badge i{font-size:16px;color:var(--dam-primary,#007936)}" +
+      ".dam-cache-origin__get{border:0;cursor:pointer;background:var(--dam-primary,#007936);color:#fff;transition:background .15s ease,transform .15s ease}" +
+      ".dam-cache-origin__get i{font-size:18px}" +
+      ".dam-cache-origin__get:hover{background:var(--dam-primary-hover,#00642E)}" +
+      ".dam-cache-origin__get:active{transform:translateY(1px)}" +
+      ".dam-cache-origin__get:focus-visible{outline:2px solid var(--dam-primary,#007936);outline-offset:2px}" +
+      ".dam-cache-origin__get[disabled]{cursor:progress;opacity:.85}" +
+      ".dam-cache-origin__msg{flex-basis:100%;margin:0;padding:4px 8px;border-radius:var(--dam-radius-sm,8px);background:var(--dam-surface,#fff);color:#b42318;font-family:inherit;font-size:12px;font-weight:500;line-height:1.4;pointer-events:auto}" +
+      "@media (prefers-reduced-motion: reduce){.dam-cache-origin__get{transition:none}}";
+    (document.head || document.documentElement).appendChild(st);
+  }
+
+  function iconEl(name) {
+    var i = document.createElement("i");
+    i.className = "uil " + name;
+    i.setAttribute("aria-hidden", "true");
+    return i;
+  }
+
+  /**
+   * Preview of one file: when the image does not come from this disk, say so and offer
+   * "Pobierz oryginał". That click is the only thing that ever downloads an online-only file.
+   */
+  function markPreviewSource(img, path, host) {
+    host = host || (img && img.parentNode);
+    if (!img || !path || !host) return;
+    var prev = host.querySelector(".dam-cache-origin");
+    if (prev) prev.remove();
+    var token = (img._damOriginToken = (img._damOriginToken || 0) + 1);
+    fileAvailability(path).then(function (av) {
+      if (img._damOriginToken !== token || !img.isConnected) return;
+      var state = (av && av.state) || "missing";
+      if (state === "local" || state === "sync_pending") return;
+      ensureOriginCss();
+      if (global.getComputedStyle && getComputedStyle(host).position === "static") {
+        host.style.position = "relative";
+      }
+      var bar = document.createElement("div");
+      bar.className = "dam-cache-origin";
+      var badge = document.createElement("span");
+      badge.className = "dam-cache-origin__badge";
+      badge.title =
+        state === "online_only"
+          ? "Oryginał jest tylko online na Synology. Widzisz kopię z pamięci podręcznej."
+          : "Oryginału nie ma na tym komputerze. Widzisz kopię z pamięci podręcznej.";
+      badge.appendChild(iconEl("uil-database"));
+      badge.appendChild(document.createTextNode("Podgląd z pamięci podręcznej"));
+      bar.appendChild(badge);
+      if (state === "online_only") {
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "dam-cache-origin__get";
+        btn.title = "Pobierz ten plik z Synology na dysk i pokaż oryginał";
+        btn.appendChild(iconEl("uil-arrow-down"));
+        var label = document.createElement("span");
+        label.textContent = "Pobierz oryginał";
+        btn.appendChild(label);
+        btn.addEventListener("click", function (ev) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          var msg = bar.querySelector(".dam-cache-origin__msg");
+          if (msg) msg.remove();
+          var full = withFetch(mediaPreviewUrl(path));
+          if (!full) return;
+          btn.disabled = true;
+          label.textContent = "Pobieram z Synology...";
+          var probe = new Image();
+          probe.decoding = "async";
+          probe.onload = function () {
+            delete _availCache[toLocal(path)];
+            if (!img.isConnected) return;
+            img.onerror = null;
+            img.src = full;
+            img.setAttribute("data-dam-original-ready", "1");
+            bar.remove();
+          };
+          probe.onerror = function () {
+            btn.disabled = false;
+            label.textContent = "Pobierz oryginał";
+            var m = document.createElement("p");
+            m.className = "dam-cache-origin__msg";
+            m.setAttribute("role", "alert");
+            m.textContent = "Nie udało się pobrać. Sprawdź połączenie z Synology i spróbuj ponownie.";
+            bar.appendChild(m);
+          };
+          probe.src = full;
+        });
+        bar.appendChild(btn);
+      }
+      host.appendChild(bar);
+    });
+  }
+
   function rootUnsetCtaHref() {
     return CTA_DISK;
   }
@@ -304,6 +432,9 @@
     LABEL_HINT: LABEL_HINT,
     LABEL_ROOT: LABEL_ROOT,
     thumbCacheUrl: thumbCacheUrl,
+    withFetch: withFetch,
+    upgradeWhenReady: upgradeWhenReady,
+    markPreviewSource: markPreviewSource,
     mediaPreviewUrl: mediaPreviewUrl,
     preferOriginal: preferOriginal,
     armOriginals: armOriginals,

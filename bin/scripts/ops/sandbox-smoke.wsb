@@ -16,12 +16,12 @@
   -->
   <MappedFolders>
     <MappedFolder>
-      <HostFolder>D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\instalator</HostFolder>
+      <HostFolder>C:\Users\xpret\AppData\Local\DAM-build\out</HostFolder>
       <SandboxFolder>C:\dam-setup</SandboxFolder>
       <ReadOnly>true</ReadOnly>
     </MappedFolder>
     <MappedFolder>
-      <HostFolder>D:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\scripts\ops</HostFolder>
+      <HostFolder>X:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\scripts\ops</HostFolder>
       <SandboxFolder>C:\dam-scripts</SandboxFolder>
       <ReadOnly>true</ReadOnly>
     </MappedFolder>

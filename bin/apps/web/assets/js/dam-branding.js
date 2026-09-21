@@ -3532,7 +3532,7 @@
       var titleText =
         (window.DamPreviewTruth && typeof DamPreviewTruth.onErrorTitle === "function"
           ? DamPreviewTruth.onErrorTitle(state)
-          : null) || "Podglad niedostepny";
+          : null) || "Podgląd niedostępny";
       wrap.setAttribute("aria-label", titleText + ": " + label);
       wrap.title = titleText;
       wrap.innerHTML =
@@ -3540,7 +3540,7 @@
         (isOnline ? "cloud-check" : "cloud-slash") +
         '" aria-hidden="true"></i>' +
         "<span>" +
-        (isOnline ? "Tylko online" : "Podglad niedostepny") +
+        (isOnline ? "Tylko online" : "Podgląd niedostępny") +
         "</span>" +
         (label
           ? '<span class="dam-branding-thumb__nosync-id">' +

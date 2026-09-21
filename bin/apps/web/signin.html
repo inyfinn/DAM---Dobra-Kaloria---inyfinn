@@ -222,9 +222,9 @@
 
   <script src="./assets/js/dam-runtime.js?v=1.8.9"></script>
   <script src="./assets/js/dam-file-index.js?v=2.0.8"></script>
-  <script src="./assets/js/dam-api.js?v=2.1.0"></script>
+  <script src="./assets/js/dam-api.js?v=2.1.2"></script>
   <script src="./assets/js/dam-activation.js?v=2.1.0"></script>
-  <script src="./assets/js/dam-password-change.js?v=2.1.0"></script>
+  <script src="./assets/js/dam-password-change.js?v=2.1.2"></script>
   <script>
     (function () {
       var mode = "login";
@@ -350,10 +350,23 @@
             msg.className = "dam-auth-msg";
             msg.textContent = "";
             submitBtn.disabled = false;
-            DamPasswordChange.open(email, password, function (newPassword) {
-              pass.value = newPassword;
-              document.getElementById("damAuthForm").requestSubmit();
-            });
+            DamPasswordChange.open(
+              email,
+              password,
+              function (newPassword) {
+                pass.value = newPassword;
+                document.getElementById("damAuthForm").requestSubmit();
+              },
+              {
+                onSkip: err.canSkip
+                  ? function () {
+                      return DamApi.login(email, password, { skipPasswordChange: true }).then(function () {
+                        location.replace("dashboard.html");
+                      });
+                    }
+                  : null,
+              }
+            );
             return;
           }
           msg.className = "dam-auth-msg is-err";

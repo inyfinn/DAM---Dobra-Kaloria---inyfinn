@@ -1,0 +1,26 @@
+---
+description: Obowiazkowa weryfikacja UI po kazdej zmianie wizualnej (screenshot + Read)
+alwaysApply: true
+---
+
+# Weryfikuj UI po zmianach (HARD GATE)
+
+Po **kazdej** zmianie CSS/HTML/JS wplywajacej na wyglad panelu DAM:
+
+1. **Nie deklaruj done** na podstawie samego DOM/CSS/CDP.
+2. Odswiez strone (cache bust `?v=`), zrob **screenshot** narzedziem przegladarki.
+3. **Przeczytaj plik screenshotu** narzedziem Read (vision) - nie ufaj samej auto-caption.
+4. Sprawdz konkretnie to, o co prosil user (czytelnosc logo, wyrównanie, rozmiar tagow, kontrast).
+5. Jesli screenshot pokazuje regresje (uciete logo, nierowne rzedy, nieczytelny tekst) - **napraw i powtorz** zanim oddasz.
+
+## Minimum checkow
+
+- Sidebar: expanded + **collapsed** (logo na dole musi byc czytelne w calosci, nie crop "dobr").
+- Elementy "na rowni" (np. collapse vs Wstecz): porownaj pozycje na screenshocie.
+- Karty/siatki: baseline tytulow i CTA w jednym wierszu.
+
+## Zakaz
+
+- "Powinno dzialac" bez screenshota.
+- `object-fit: cover` na logo wordmark w waskim slotcie (tnie napis).
+- Oddanie UI-only tasku bez Pass screenshot→Read.

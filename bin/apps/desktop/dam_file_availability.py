@@ -3,8 +3,8 @@ File availability states for Marketing paths (Win32 cloud recall aware).
 
 States:
   local         - file bytes present locally
-  sync_pending  - cloud placeholder / recall in progress → treat as local for UI
-  online_only   - cloud-only; needs download / online
+  sync_pending  - legacy state, no longer produced (probing a placeholder downloaded it)
+  online_only   - cloud placeholder, detected from attributes only; never opened
   missing       - path not found under Marketing roots
   root_unset    - no Marketing base for current device
 
@@ -80,6 +80,19 @@ def _win32_attrs(path: str) -> Optional[int]:
         return int(attrs)
     except Exception:
         return None
+
+
+def is_online_only(path: str) -> bool:
+    """Cloud placeholder (Synology Drive / OneDrive on-demand) whose bytes are not on this disk.
+
+    Attributes only: opening or reading a placeholder makes the sync client download it.
+    """
+    attrs = _win32_attrs(path)
+    if attrs is None:
+        return False
+    if attrs & (_FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS | _FILE_ATTRIBUTE_RECALL_ON_OPEN):
+        return True
+    return bool(attrs & _FILE_ATTRIBUTE_OFFLINE) and not bool(attrs & _FILE_ATTRIBUTE_PINNED)
 
 
 def _probe_readable(path: str, timeout_s: float = PROBE_TIMEOUT_S) -> bool:
@@ -173,40 +186,16 @@ def classify_path(
         _store(cache_key, out)
         return out
 
-    attrs = _win32_attrs(physical)
-    is_recall = False
-    is_offline = False
-    if attrs is not None:
-        is_recall = bool(
-            attrs & (_FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS | _FILE_ATTRIBUTE_RECALL_ON_OPEN)
-        )
-        is_offline = bool(attrs & _FILE_ATTRIBUTE_OFFLINE) and not bool(
-            attrs & _FILE_ATTRIBUTE_PINNED
-        )
-
-    if is_recall or is_offline:
-        # Probe: if bytes come quickly → sync_pending (treat as local); else online_only
-        readable = _probe_readable(physical, PROBE_TIMEOUT_S)
-        if readable:
-            out = {
-                "ok": True,
-                "path": raw,
-                "resolved": physical,
-                "state": "sync_pending",
-                "label_pl": "Synchronizacja w toku - podglad lokalny",
-                "treat_as_local": True,
-                "cached": False,
-            }
-        else:
-            out = {
-                "ok": True,
-                "path": raw,
-                "resolved": physical,
-                "state": "online_only",
-                "label_pl": "Element z dysku dostepny tylko online - Synology",
-                "treat_as_local": False,
-                "cached": False,
-            }
+    if is_online_only(physical):
+        out = {
+            "ok": True,
+            "path": raw,
+            "resolved": physical,
+            "state": "online_only",
+            "label_pl": "Element z dysku dostepny tylko online - Synology",
+            "treat_as_local": False,
+            "cached": False,
+        }
         _store(cache_key, out)
         return out
 

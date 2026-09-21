@@ -35,7 +35,8 @@
     return { wrap: wrap, input: input };
   }
 
-  function open(email, oldPassword, onDone) {
+  function open(email, oldPassword, onDone, opts) {
+    opts = opts || {};
     var prev = document.getElementById("damPasswordChangeOverlay");
     if (prev) prev.remove();
 
@@ -136,6 +137,35 @@
     row.appendChild(cancel);
     row.appendChild(save);
     card.appendChild(title);
+    if (typeof opts.onSkip === "function") {
+      var beta = el(
+        "p",
+        "margin:0 0 14px;padding:10px 12px;border-radius:10px;font-size:13px;line-height:1.5;" +
+          "background:rgba(10,123,62,.1);border:1px solid rgba(10,123,62,.35);",
+        "Aplikacja jest w trybie testowym (BETA). Zmiana hasła nie jest teraz wymagana, możesz ten krok pominąć."
+      );
+      card.appendChild(beta);
+      var skip = el(
+        "button",
+        "display:block;width:100%;margin:0 0 14px;padding:12px 16px;border-radius:10px;cursor:pointer;" +
+          "background:var(--dam-primary,#0a7b3e);color:#fff;border:0;font:600 15px/1.2 inherit;",
+        "POMIŃ ten krok"
+      );
+      skip.type = "button";
+      skip.addEventListener("click", function () {
+        skip.disabled = true;
+        skip.textContent = "Loguję...";
+        msg.textContent = "";
+        Promise.resolve(opts.onSkip())
+          .then(close)
+          .catch(function (err) {
+            skip.disabled = false;
+            skip.textContent = "POMIŃ ten krok";
+            msg.textContent = (err && err.message) || "Nie udało się zalogować.";
+          });
+      });
+      card.appendChild(skip);
+    }
     card.appendChild(lead);
     card.appendChild(f1.wrap);
     card.appendChild(hint);

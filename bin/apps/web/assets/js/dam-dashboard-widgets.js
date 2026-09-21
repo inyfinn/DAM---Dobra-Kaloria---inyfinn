@@ -1083,7 +1083,7 @@
       (global.DamPreviewTruth &&
         typeof DamPreviewTruth.onErrorTitle === "function" &&
         DamPreviewTruth.onErrorTitle()) ||
-      "Podglad niedostępny";
+      "Podgląd niedostępny";
     root.querySelectorAll("img.dam-widget__thumb").forEach(function (img) {
       if (img._damHonestThumb) return;
       img._damHonestThumb = true;
@@ -3611,13 +3611,13 @@
                         ">" +
                         winIcon +
                         "</button>" +
-                        '<button type="button" class="dam-viz-icon-btn dam-viz-icon-btn--viz" data-dash-preview="1" title="Podglad" aria-label="Podglad" data-dam-tip="Podglad materialu w miejscu">' +
+                        '<button type="button" class="dam-viz-icon-btn dam-viz-icon-btn--viz" data-dash-preview="1" title="Podgląd" aria-label="Podgląd" data-dam-tip="Podgląd materiału w miejscu">' +
                         '<i class="uil uil-eye" aria-hidden="true"></i></button>' +
                         "</div>" +
                         '<div class="dam-widget__viz-media">' +
                         '<a class="dam-widget__thumb-link" href="' +
                         brandingHref +
-                        '" data-dash-preview="1" title="Podglad">' +
+                        '" data-dash-preview="1" title="Podgląd">' +
                         '<img class="dam-widget__thumb' +
                         (g.hasSafeCover ? "" : " dam-widget__thumb--fallback") +
                         '" src="' +
@@ -5030,7 +5030,7 @@
     "Przeciagnij uchwyty na kartach, aby zmienic uklad pulpitu.",
     "Wlacz tylko te widgety, z ktorych korzystasz na co dzien.",
     "Kolejnosc kart ustawisz strzalkami lub przeciaganiem.",
-    "Podglad pokazuje szkic karty zanim zapiszesz zmiany.",
+    "Podgląd pokazuje szkic karty, zanim zapiszesz zmiany.",
     "Anuluj przywraca stan sprzed edycji bez zapisu.",
     "Przywroc domyslne wraca do fabrycznego ukladu kart.",
     "Zapisz dopiero gdy uklad kart jest gotowy do pracy."
@@ -5575,7 +5575,7 @@
       '<div class="dam-dash-preview-card" data-widget-id="' +
       escapeHtml(w.id) +
       '">' +
-      '<div class="dam-dash-preview-card__badge">Podglad</div>' +
+      '<div class="dam-dash-preview-card__badge">Podgląd</div>' +
       '<div class="dam-dash-preview-card__title">' +
       escapeHtml(label) +
       "</div>" +

@@ -8770,6 +8770,29 @@ class Handler(BaseHTTPRequestHandler):
                             break
                         self.wfile.write(chunk)
                 return
+            fetch_original = (qs.get("fetch") or ["0"])[0].strip().lower() in ("1", "true", "yes")
+            # <img> loads send Sec-Fetch-Dest: image; downloads/exports do not and keep the original.
+            displayed = preview or (self.headers.get("Sec-Fetch-Dest") or "").strip().lower() == "image"
+            if displayed and not matte and not fetch_original and dam_thumb_cache and target:
+                gated = dam_thumb_cache.media_preview_gate(
+                    path, resolve_physical=lambda p, _email="": _coerce_media_target(p)
+                )
+                if gated is not None:
+                    g_code, g_body, g_ctype, g_meta = gated
+                    if g_code != 200:
+                        self._json(g_code, g_meta)
+                        return
+                    self.send_response(200)
+                    self._cors()
+                    self.send_header("Content-Type", g_ctype or "image/avif")
+                    self.send_header("Content-Length", str(len(g_body)))
+                    self.send_header("Cache-Control", "private, max-age=60")
+                    self.send_header("X-DAM-Source", "cache")
+                    self.send_header("X-DAM-Online-Only", "1" if g_meta.get("online_only") else "0")
+                    self.end_headers()
+                    if self.command != "HEAD":
+                        self.wfile.write(g_body)
+                    return
             code, body, ctype = serve_media(path, preview=preview, matte=matte)
             if code != 200:
                 err = {
@@ -9526,12 +9549,20 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200 if res.get("ok") else 400, res)
             return
         if parsed.path == "/auth/login":
+            # BETA: desktop may skip the weak-password screen. The public NAS panel never may,
+            # because the old seed password is known from the public repo.
+            import auth_store as _auth_store_mod
+
+            can_skip = bool(getattr(_auth_store_mod, "APP_BETA", False)) and not PUBLIC_MODE
             res = auth_login(
                 data.get("email") or "",
                 data.get("password") or "",
                 data.get("device_id") or "",
                 data.get("machine_id") or "",
+                allow_weak_password=can_skip and bool(data.get("skip_password_change")),
             )
+            if res.get("error") == "password_change_required":
+                res = dict(res, can_skip=can_skip, beta=can_skip)
             self._json(200, self._ip_guard_login_result(res, data.get("email") or ""))
             return
         if parsed.path == "/auth/ip-unblock":

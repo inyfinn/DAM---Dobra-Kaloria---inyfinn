@@ -98,6 +98,31 @@ function Wait-DamBridge([string]$BaseUrl, [int]$TimeoutSeconds) {
   return @{ health = $health; up_after_sec = $upSec }
 }
 
+function Test-DamThumbs([string]$InstallPath, [string]$BaseUrl) {
+  # Swiezy PC bez dysku Marketing: miniatury musza przyjsc z cache z instalatora, od razu.
+  $pamiec = Join-Path $InstallPath "bin\PAMIEC-PODRECZNA"
+  $out = [ordered]@{ installed = 0; tried = 0; ok = 0; max_ms = 0; ok_pct = 0 }
+  $out.installed = @(Get-ChildItem -LiteralPath (Join-Path $pamiec "thumbs") -File -ErrorAction SilentlyContinue).Count
+  $idxPath = Join-Path $pamiec "thumb-rel-index.bundled.json"
+  if (-not (Test-Path -LiteralPath $idxPath)) { return $out }
+  $idx = Get-Content -LiteralPath $idxPath -Raw -Encoding UTF8 | ConvertFrom-Json
+  $keys = @($idx.PSObject.Properties.Name | Where-Object { $_ -like "*|grid" } | Select-Object -First 40)
+  foreach ($k in $keys) {
+    $rel = $k.Substring(0, $k.Length - 5)
+    $url = $BaseUrl + "/thumb-cache?profile=grid&path=" + [uri]::EscapeDataString("X:/Marketing/" + $rel)
+    $sw = [Diagnostics.Stopwatch]::StartNew()
+    try {
+      $r = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 10
+      if ($r.StatusCode -eq 200 -and $r.RawContentLength -gt 100) { $out.ok++ }
+    } catch { }
+    $sw.Stop()
+    $out.tried++
+    if ($sw.ElapsedMilliseconds -gt $out.max_ms) { $out.max_ms = [int]$sw.ElapsedMilliseconds }
+  }
+  if ($out.tried -gt 0) { $out.ok_pct = [int](100 * $out.ok / $out.tried) }
+  return $out
+}
+
 function Get-DamPreflight([string]$BaseUrl) {
   try {
     $rp = Invoke-WebRequest -Uri ($BaseUrl + "/preflight") -UseBasicParsing -TimeoutSec 10
@@ -230,6 +255,13 @@ try {
     if ($summary.health_ok -and $summary.preflight_ok -and ($summary.preflight_blocking.Count -eq 0)) {
       $summary.result = "PASS"
     }
+  }
+  $thumbs = Test-DamThumbs -InstallPath $summary.install_path -BaseUrl $BridgeUrl
+  $summary.thumbs = $thumbs
+  Write-Step ("Miniatury: w instalacji {0}, z cache {1}/{2} ({3}%), najwolniejsza {4} ms" -f $thumbs.installed, $thumbs.ok, $thumbs.tried, $thumbs.ok_pct, $thumbs.max_ms)
+  if ($thumbs.installed -lt 1000 -or $thumbs.tried -lt 10 -or $thumbs.ok_pct -lt 90) {
+    $summary.result = "FAIL"
+    $summary.error = "Miniatury z cache nie dzialaja na swiezej instalacji"
   }
 } catch {
   $summary.error = $_.Exception.Message

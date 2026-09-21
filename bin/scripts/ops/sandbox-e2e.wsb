@@ -1,0 +1,35 @@
+<Configuration>
+  <!--
+    Test end-to-end DAM na czystym Windows. Kliknij dwukrotnie (Windows Sandbox musi byc wlaczony).
+    Instalator: DAM-build\out (poza Synology Drive). Kod aktywacyjny: bin\secrets (tylko odczyt).
+    Wyniki: C:\Temp\dam-sandbox-out\e2e.json + ui-*.png. Zamknij poprzednia Piaskownice przed startem.
+  -->
+  <MappedFolders>
+    <MappedFolder>
+      <HostFolder>C:\Users\xpret\AppData\Local\DAM-build\out</HostFolder>
+      <SandboxFolder>C:\dam-setup</SandboxFolder>
+      <ReadOnly>true</ReadOnly>
+    </MappedFolder>
+    <MappedFolder>
+      <HostFolder>X:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\scripts\ops</HostFolder>
+      <SandboxFolder>C:\dam-scripts</SandboxFolder>
+      <ReadOnly>true</ReadOnly>
+    </MappedFolder>
+    <MappedFolder>
+      <HostFolder>X:\Marketing\- POLSKA\99 - WYMIANA\Krzysztof\--- Moj obszar pracy\DAM---Dobra-Kaloria---inyfinn\bin\secrets</HostFolder>
+      <SandboxFolder>C:\dam-secrets</SandboxFolder>
+      <ReadOnly>true</ReadOnly>
+    </MappedFolder>
+    <MappedFolder>
+      <HostFolder>C:\Temp\dam-sandbox-out</HostFolder>
+      <SandboxFolder>C:\dam-results</SandboxFolder>
+      <ReadOnly>false</ReadOnly>
+    </MappedFolder>
+  </MappedFolders>
+  <LogonCommand>
+    <Command>powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\dam-scripts\sandbox-e2e.ps1</Command>
+  </LogonCommand>
+  <Networking>Enable</Networking>
+  <vGPU>Disable</vGPU>
+  <MemoryInMB>8192</MemoryInMB>
+</Configuration>

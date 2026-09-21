@@ -797,7 +797,8 @@
     machineId: machineId,
     fetchIdentity: fetchIdentity,
     clearLocalAuth: clearLocalAuth,
-    async login(email, password) {
+    async login(email, password, opts) {
+      var skipPasswordChange = !!(opts && opts.skipPasswordChange);
       // Lokalna baza kont (bridge) - bcrypt + machine_id / session_id
       // Laravel fallback tylko gdy jawnie wlaczony (inaczej Failed to fetch myli usera).
       try {
@@ -816,6 +817,7 @@
             password: password,
             device_id: (ident && ident.device_id) || deviceId(),
             machine_id: (ident && ident.machine_id) || machineId(),
+            skip_password_change: skipPasswordChange,
           }),
         });
         var bdata = await br.json();
@@ -832,6 +834,7 @@
         if (bdata && bdata.error === "password_change_required") {
           var pcr = new Error("To hasło jest za słabe. Ustaw nowe hasło, żeby się zalogować.");
           pcr.code = "password_change_required";
+          pcr.canSkip = !!bdata.can_skip;
           throw pcr;
         }
         if (bdata && bdata.error === "too_many_attempts") {

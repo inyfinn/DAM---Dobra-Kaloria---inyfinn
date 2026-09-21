@@ -1,6 +1,6 @@
 ﻿; DAM Windows installer - pelny kreator (licencja, sciezka, aktualizacja)
 #ifndef MyAppVersion
-  #define MyAppVersion "2.1.1"
+  #define MyAppVersion "2.1.5"
 #endif
 #ifndef StageDir
   #define StageDir "..\dist\staging\DAM-install"
@@ -122,7 +122,9 @@ Source: "{#StageDir}\README.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; wymuszajac pelny reskan i zerujac skojarzenia widoczne w Brandingu do czasu jego konca.
 ; Ta sama zasada dla pozostalych plikow stanu uzytkownika (indeksy, ustawienia, kampanie,
 ; statusy, osoby) i lokalnej bazy kont: cicha aktualizacja nie moze ich cofnac do wersji z builda.
-Source: "{#StageDir}\bin\*"; DestDir: "{app}\bin"; Excludes: "apps\web\data\branding-index.json,\apps\web\data\file-index.json,\apps\web\data\search-index.json,\apps\web\data\app-settings.json,\apps\web\data\campaigns.json,\apps\web\data\branding-grid-index.json,\apps\web\data\branding-grid-head.json,\apps\web\data\branding-search-index.json,\apps\web\data\lifecycle-status.json,\apps\web\data\product-people.json,\DATABASE\users-seed.sqlite"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#StageDir}\bin\*"; DestDir: "{app}\bin"; Excludes: "apps\web\data\branding-index.json,\apps\web\data\file-index.json,\apps\web\data\search-index.json,\apps\web\data\app-settings.json,\apps\web\data\campaigns.json,\apps\web\data\branding-grid-index.json,\apps\web\data\branding-grid-head.json,\apps\web\data\branding-search-index.json,\apps\web\data\lifecycle-status.json,\apps\web\data\product-people.json,\DATABASE\users-seed.sqlite,\PAMIEC-PODRECZNA\thumbs\*"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Miniatury maja nazwy = skrot tresci, wiec istniejacego pliku nie trzeba nadpisywac (szybsza aktualizacja).
+Source: "{#StageDir}\bin\PAMIEC-PODRECZNA\thumbs\*"; DestDir: "{app}\bin\PAMIEC-PODRECZNA\thumbs"; Flags: onlyifdoesntexist
 Source: "{#StageDir}\bin\apps\web\data\branding-index.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
 Source: "{#StageDir}\bin\apps\web\data\file-index.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
 Source: "{#StageDir}\bin\apps\web\data\search-index.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
@@ -146,7 +148,7 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilen
 Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Instalowanie Visual C++ Runtime..."; Flags: waituntilterminated; Check: VCRedistNeeded
 Filename: "{tmp}\MicrosoftEdgeWebview2Setup.exe"; Parameters: "/silent /install"; StatusMsg: "Instalowanie WebView2 Runtime (wymagane przez pywebview)..."; Flags: waituntilterminated; Check: WebView2Needed
 ; Bez powershell -ExecutionPolicy Bypass: antywirusy (Bitdefender Boxter) blokuja ten wzorzec.
-; PAMIEC-PODRECZNA pobiera mostek przy starcie (dam_thumb_cache.ensure_boot_sync).
+; PAMIEC-PODRECZNA jest w Setupie; mostek przy starcie tylko ja aktualizuje z Synology.
 Filename: "{sys}\certutil.exe"; Parameters: "-user -f -addstore TrustedPublisher ""{app}\bin\installer\inyfinn-dam-codesign.cer"""; StatusMsg: "Rejestracja wydawcy Inyfinn..."; Flags: runhidden waituntilterminated skipifdoesntexist
 Filename: "{app}\{#MyAppExeName}"; Description: "Uruchom DAM po zakonczeniu instalacji (startuje mostek)"; Flags: nowait postinstall skipifsilent
 ; Cicha aktualizacja z aplikacji (app_updates.py: /VERYSILENT ... /DAMRELAUNCH=1): DAM wraca sam.

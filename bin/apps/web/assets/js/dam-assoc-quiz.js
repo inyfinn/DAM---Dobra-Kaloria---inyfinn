@@ -236,7 +236,7 @@
       }
       var searchFn = global.DamSearch && global.DamSearch.search;
       if (!searchFn) {
-        results.innerHTML = '<p class="dam-assoc-quiz__hint">DamSearch niedostepny — odswiez Branding po zaladowaniu indeksu.</p>';
+        results.innerHTML = '<p class="dam-assoc-quiz__hint">Wyszukiwarka niedostępna. Odśwież Branding po załadowaniu indeksu.</p>';
         return;
       }
       Promise.resolve(searchFn(q, { limit: 24 }))

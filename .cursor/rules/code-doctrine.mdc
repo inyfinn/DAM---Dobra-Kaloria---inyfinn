@@ -1,0 +1,34 @@
+---
+description: Wykladnia kodu DAM - obowiazkowa lektura przed zmiana kodu (jak czytac kod, pulapki, dlaczego cos dziala)
+alwaysApply: true
+---
+
+# Wykladnia kodu DAM (Code Doctrine)
+
+**SKILL projektu: `dam-dobrakaloria`** - przy KAZDYM zadaniu w tym repo przeczytaj
+i stosuj skill `dam-dobrakaloria` (doktryna + praktyki + petla weryfikacji
+kod -> test -> screenshot+Read -> poprawka; minimum 3 przeloty na zadanie wizualne).
+
+PRZED KAZDA zmiana w `apps/web/**` (JS/CSS/HTML) przeczytaj:
+[`agents/shared/code-doctrine.md`](../../agents/shared/code-doctrine.md)
+
+To nadrzedna instrukcja "jak rozumiec ten kod": architektura runtime (web 8765 /
+most 8766, dane JSON, brak build-stepu), wzorzec modulu `window.DamX`, i twarde lekcje:
+
+- **Cache-busting**: zmieniasz `.js`/`.css` -> zbumpuj `?v=` w KAZDYM HTML, inaczej user
+  dostaje stary plik.
+- **Wspolbiezni agenci**: nie edytuj plikow innego agenta; potrzebujesz stylu - wstrzyknij
+  CSS z JS (`<style id>`), nie ruszaj cudzych `.css`.
+- **IntersectionObserver + clip-path**: `clip-path` collapsing (inset ...100%) zeruje
+  prostokat -> IO ratio 0 -> reveal sie nie odpala. Stan spoczynku = tylko `opacity:0`;
+  clip-path wylacznie w tweenie. (`dam-grid-reveal.js`)
+- **Wyszukiwanie po indeksie**: uzywaj `search_blob` + pelnych `indexes`/`index_bases`,
+  nie `indexes[0]` ucietego. (`dam-assoc-edit.js`)
+- **Z-index warstw**: overlay na wierzchu innego overlaya musi miec wyzszy z-index
+  (nakladki edycji ~12100, pickery ~12300); diagnoza `elementFromPoint`.
+- **Weryfikacja**: dowod CDP (getBoundingClientRect / getComputedStyle / elementFromPoint)
+  jest silniejszy niz mozliwie-stara klatka screenshotu; screenshot+Read to HARD GATE,
+  ale uwazaj na stale-frame przy wspoldzielonej karcie.
+
+Po rozwiazaniu nowego, nieoczywistego problemu DOPISZ lekcje w sekcji 12 doktryny.
+Kolejnosc zrodel prawdy: `program-instructions.json` > code-doctrine.md > `memory.md` > kod.

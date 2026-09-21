@@ -367,11 +367,18 @@ def _current_identity() -> dict:
         }
 
 
+# BETA (decyzja wlasciciela 2026-09-19): ekran zmiany slabego hasla mozna pominac.
+# Ustaw False, gdy aplikacja wyjdzie z BETY - wtedy zmiana hasla znowu jest obowiazkowa.
+APP_BETA = True
+
+
 def login(
     email: str,
     password: str,
     device_id: str = "",
     machine_id: str = "",
+    *,
+    allow_weak_password: bool = False,
 ) -> dict:
     init_db()
     email_n = (email or "").strip().lower()
@@ -410,7 +417,7 @@ def login(
             _login_ok(email_n)
             # Audyt 2026-09-17: konta seed mialy haslo "test" znane z publicznego repo.
             # Poprawne, ale slabe haslo NIE daje sesji - tylko prawo do zmiany hasla.
-            if password_policy_error(password, email_n):
+            if password_policy_error(password, email_n) and not allow_weak_password:
                 return {"ok": False, "error": "password_change_required", "email": email_n}
             token = secrets.token_urlsafe(48)
             now = _utc()

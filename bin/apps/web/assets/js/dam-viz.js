@@ -3417,7 +3417,7 @@
        Actions = sibling under __main (not inside scrollable __body) so bar stays above
        expanded studio / Pokaż wszystkie grid. */
     var html =
-      '<div class="dam-viz-modal-overlay" id="damVizModal" role="dialog" aria-modal="true" aria-label="Podglad wizualizacji">' +
+      '<div class="dam-viz-modal-overlay" id="damVizModal" role="dialog" aria-modal="true" aria-label="Podgląd wizualizacji">' +
       '<div class="dam-viz-modal-shell">' +
       '<div class="dam-viz-modal-box dam-viz-modal-box--assoc-split">' +
       '<div class="dam-viz-modal__main">' +
@@ -4137,6 +4137,10 @@
             else hero.src = PLACEHOLDER_SVG;
           };
           hero.src = preview;
+          if (window.DamPreviewTruth && window.DamPreviewTruth.upgradeWhenReady) {
+            window.DamPreviewTruth.upgradeWhenReady(hero, preview);
+            window.DamPreviewTruth.markPreviewSource(hero, v.path, hero.parentNode);
+          }
         }
       }
       if (zoomCtrl) zoomCtrl.paintZoom();

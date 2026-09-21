@@ -94,6 +94,16 @@ class PasswordPolicyTests(unittest.TestCase):
         self.assertEqual(c.execute("SELECT COUNT(*) FROM device_sessions").fetchone()[0], 0)
         c.close()
 
+    def test_beta_skip_gives_session_only_when_allowed(self):
+        self._insert_legacy_user("admin@kubara.pl", "test")
+        self.assertEqual(auth_store.login("admin@kubara.pl", "test")["error"], "password_change_required")
+        res = auth_store.login("admin@kubara.pl", "test", allow_weak_password=True)
+        self.assertTrue(res["ok"])
+        self.assertTrue(res["token"])
+        self.assertEqual(
+            auth_store.login("admin@kubara.pl", "zle", allow_weak_password=True)["error"], "invalid_credentials"
+        )
+
     def test_change_password_then_login(self):
         self._insert_legacy_user("admin@kubara.pl", "test")
         self.assertEqual(

@@ -1,0 +1,21 @@
+---
+description: Przypominaj o WAZNA-CHECKLISTA-UZYTKOWNIKA.md gdy prośba zahacza o jej punkty
+alwaysApply: true
+---
+
+# Ważna checklista użytkownika (HARD)
+
+Plik: [`WAZNA-CHECKLISTA-UZYTKOWNIKA.md`](../../WAZNA-CHECKLISTA-UZYTKOWNIKA.md)
+
+## Kiedy
+
+Gdy prośba użytkownika **zahacza** o Asana/OAuth, Microsoft/Teams, FMCG/koszty, wykrojniki/`row-N`, miniatury wideo/ffmpeg, tagi Autor w Brandingu, QA layoutów dashboardu, bump wersji vs memory, Entra/LDAP, ERP faktur, albo redesign BENTO kart:
+
+1. **Na początku odpowiedzi** (1–2 zdania): przypomnij ID z checklisty (np. `B1`, `A3`) i aktualny status `[ ]` / `[x]`.
+2. Nie blokuj pracy — przypomnienie + ewentualna propozycja odhaczenia po done.
+3. Po domknięciu pozycji: zaktualizuj status w `WAZNA-CHECKLISTA-UZYTKOWNIKA.md` (i krótko `process.md`).
+
+## Kiedy nie
+
+- Pytania niezwiązane z listą (np. czysty CSS jednego przycisku poza A/B/C).
+- Nie wklejaj całej checklisty przy każdej wiadomości — tylko trafione ID.

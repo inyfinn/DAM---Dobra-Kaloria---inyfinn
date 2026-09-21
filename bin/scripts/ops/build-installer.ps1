@@ -32,14 +32,18 @@ if (-not (Test-Path $Iscc)) {
 }
 
 if (-not $Version) {
+  # 20.09.2026: niepoprawny JSON (niecytowany cudzyslow w "note") przeszedl tu po cichu
+  # i Setup wyjechal jako 5.0.130. Mechanizm aktualizacji porownuje wlasnie ten numer,
+  # wiec cicha wersja zapasowa jest grozniejsza niz przerwany build.
   $verJson = Join-Path $BinRoot "apps\web\version.json"
-  if (Test-Path $verJson) {
-    try {
-      $vj = Get-Content $verJson -Raw | ConvertFrom-Json
-      if ($vj.version) { $Version = [string]$vj.version }
-    } catch {}
+  if (-not (Test-Path $verJson)) { throw "Brak $verJson - nie zgaduje wersji." }
+  try {
+    $vj = Get-Content $verJson -Raw | ConvertFrom-Json
+  } catch {
+    throw "version.json jest niepoprawnym JSON-em: $($_.Exception.Message)"
   }
-  if (-not $Version) { $Version = "5.0.130" }
+  $Version = [string]$vj.version
+  if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw "version.json ma bledna wersje: '$Version'" }
 }
 
 Write-Host "GIT_ROOT=$GitRoot Version=$Version"
@@ -189,6 +193,10 @@ foreach ($tree in @("apps\api", "scripts", "docs", "agents")) {
 # apps/web: NIE wykluczaj assets/vendor (Jost + Unicons). Bez tego ikony w WebView giną.
 $xdWeb = @($xdCommon | Where-Object { $_ -ne "vendor" }) + @("data")
 Invoke-Robo (Join-Path $BinRoot "apps\web") (Join-Path $binDst "apps\web") $xdWeb $xfCommon
+# 2026-09-20: ksztalt pliku to za malo. Setup 2.1.2 wyjechal z nieaktualnym haslem
+# (kandydat z %LOCALAPPDATA% wygral kolejnosc), a kazda czysta instalacja startowala
+# w trybie offline: 'password authentication failed for user "dam_eta"'.
+# Kandydata przyjmujemy dopiero, gdy naprawde zaloguje sie do bazy.
 function Test-PgConfigSecret([string]$Path) {
   if (-not (Test-Path -LiteralPath $Path)) { return $false }
   try {
@@ -196,10 +204,25 @@ function Test-PgConfigSecret([string]$Path) {
     $pw = [string]$j.password
     $portOk = ([string]$j.port) -eq "5433"
     $dbOk = ([string]$j.dbname) -eq "dam_eta"
-    return ($pw.Length -ge 8) -and $portOk -and $dbOk
+    if (-not (($pw.Length -ge 8) -and $portOk -and $dbOk)) { return $false }
   } catch {
     return $false
   }
+  $probe = Join-Path $env:TEMP "dam-pg-probe.py"
+  @'
+import json, sys
+import psycopg2
+c = json.loads(open(sys.argv[1], encoding="utf-8").read())
+psycopg2.connect(host=c["host"], port=c["port"], dbname=c["dbname"], user=c["user"],
+                 password=c["password"], sslmode=c.get("sslmode", "require"),
+                 connect_timeout=10).close()
+print("PG_OK")
+'@ | Set-Content -LiteralPath $probe -Encoding UTF8
+  $out = & $rtPyExe $probe $Path 2>&1
+  Remove-Item -LiteralPath $probe -Force -ErrorAction SilentlyContinue
+  if ($LASTEXITCODE -eq 0) { return $true }
+  Write-Host ("pg-config odrzucony (baza nie przyjmuje hasla): {0} — {1}" -f $Path, (($out | Select-Object -Last 1) -replace '\s+', ' '))
+  return $false
 }
 
 $webVendorSrc = Join-Path $BinRoot "apps\web\assets\vendor"
@@ -262,8 +285,8 @@ if (Test-Path -LiteralPath $pgEx) {
   Copy-Item -LiteralPath $pgEx -Destination (Join-Path $binDst "apps\desktop\pg-config.example.json") -Force
 }
 $pgCands = @(
-  (Join-Path $env:LOCALAPPDATA "Programs\DAM\bin\apps\desktop\data\pg-config.json"),
   (Join-Path $BinRoot "apps\desktop\data\pg-config.json"),
+  (Join-Path $env:LOCALAPPDATA "Programs\DAM\bin\apps\desktop\data\pg-config.json"),
   (Join-Path $BinRoot "apps\desktop\data\pg-config.json.off")
 )
 $pgSrc = $pgCands | Where-Object { Test-PgConfigSecret $_ } | Select-Object -First 1
@@ -328,11 +351,21 @@ if (-not (Test-Path -LiteralPath $authJpg) -or ((Get-Item -LiteralPath $authJpg)
 }
 Write-Host "Auth hero OK: $authJpg ($((Get-Item $authJpg).Length) B)"
 
-# PAMIEC-PODRECZNA nie jedzie w Setup.exe. Mostek pobiera ja z Synology przy starcie
-# (dam_thumb_cache.ensure_boot_sync). Instalator nie kopiuje cache z dyskow sieciowych.
+# PAMIEC-PODRECZNA jedzie w Setup.exe (decyzja wlasciciela 2026-09-19): miniatury maja byc
+# widoczne od pierwszego uruchomienia, takze bez dysku Marketing. Synology tylko aktualizuje.
+$pamiecSrc = Join-Path $BinRoot "PAMIEC-PODRECZNA"
 $pamiecDst = Join-Path $binDst "PAMIEC-PODRECZNA"
-New-Item -ItemType Directory -Force -Path (Join-Path $pamiecDst "thumbs") | Out-Null
-Write-Host "PAMIEC: pusty szkielet w Setup (mostek pobiera cache z Synology)."
+Invoke-Robo (Join-Path $pamiecSrc "thumbs") (Join-Path $pamiecDst "thumbs") @() @("*.tmp")
+$thumbCount = @(Get-ChildItem -LiteralPath (Join-Path $pamiecDst "thumbs") -File -ErrorAction SilentlyContinue).Count
+if ($thumbCount -lt 1000) {
+  throw "PAMIEC: tylko $thumbCount miniatur w staging (zrodlo: $pamiecSrc). Setup NIE moze wyjechac bez cache."
+}
+$relSrc = Join-Path $pamiecSrc "thumb-rel-index.json"
+if (Test-Path -LiteralPath $relSrc) {
+  # Pod osobna nazwa: most scala go z lokalnym spisem, wiec aktualizacja nie kasuje wpisow uzytkownika.
+  Copy-Item -LiteralPath $relSrc -Destination (Join-Path $pamiecDst "thumb-rel-index.bundled.json") -Force
+}
+Write-Host "PAMIEC: $thumbCount miniatur w Setup, spis: $(Test-Path -LiteralPath $relSrc)."
 
 $readmeSrc = Join-Path $BinRoot "installer\README.txt"
 if (Test-Path $readmeSrc) { Copy-Item $readmeSrc (Join-Path $stageRoot "README.txt") -Force }

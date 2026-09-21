@@ -1,0 +1,15 @@
+---
+description: Newralgiczne reguły DAM ETA żyją w bazie (program-instructions). Czytaj przed zmianą zachowania.
+alwaysApply: true
+---
+
+# Instrukcje programu = źródło prawdy
+
+Przed zmianą zachowania biznesowego (nazewnictwo, status F/X/D, aktywny/nieaktywny, privilege, zakazy UI):
+
+1. Przeczytaj `apps/web/data/program-instructions.json` (albo `GET :8766/program-instructions`).
+2. Przy konflikcie z `memory.md` wygrywa **program-instructions**.
+3. Po nowej decyzji użytkownika: **najpierw** dopisz/zaktualizuj instrukcję w JSON + seed do Postgres KV `program-instructions`, **potem** kod.
+4. Lustro: `app-settings.json` → `instructions`; UI: `settings.html#damProgramInstructions`.
+
+Nie polegaj wyłącznie na memory między sesjami.

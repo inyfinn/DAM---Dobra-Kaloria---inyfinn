@@ -1,10 +1,12 @@
 {
-  "last_check": 1789050634.1825078,
+  "last_check": 1789637584.6085222,
   "last_result": {
-    "current": "5.0.197",
-    "latest": "5.0.197",
+    "ok": true,
+    "current": "2.0.2",
+    "latest": "2.0.2",
     "update_available": false,
     "download_url": "",
-    "error": "github_http_404"
-  }
+    "published_at": "2026-09-17T09:32:18Z"
+  },
+  "next_run": "2026-09-18T09:00:00"
 }

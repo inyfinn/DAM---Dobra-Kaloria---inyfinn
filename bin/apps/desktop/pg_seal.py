@@ -204,6 +204,19 @@ def activate(code: str) -> dict[str, Any]:
         sealed = json.loads(SEALED_PATH.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {"ok": False, "error": "sealed_missing", "hint": "Brak pliku konfiguracji w instalacji."}
+    # unseal() lyka kazdy wyjatek, wiec brak biblioteki wygladalby jak zly kod.
+    # 20.09.2026: Smart App Control zablokowal cryptography/_rust.pyd i uzytkownik
+    # dostawal "Kod aktywacyjny jest niepoprawny" przy poprawnym kodzie.
+    try:
+        from cryptography.fernet import Fernet  # noqa: F401
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "ok": False,
+            "error": "crypto_unavailable",
+            "hint": "Windows zablokował bibliotekę szyfrującą (Smart App Control). "
+                    "Kod jest poprawny - odblokuj plik w Zabezpieczeniach Windows.",
+            "detail": str(exc)[:200],
+        }
     cfg = unseal(sealed if isinstance(sealed, dict) else {}, code)
     if not cfg or not cfg.get("password"):
         return {"ok": False, "error": "code_invalid", "hint": "Kod aktywacyjny jest niepoprawny."}

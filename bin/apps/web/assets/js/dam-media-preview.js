@@ -842,9 +842,9 @@
     ph.setAttribute("role", "img");
     ph.setAttribute(
       "aria-label",
-      "Podglad niedostępny" + (label ? ": " + label : "") + (idHint && idHint !== label ? " (" + idHint + ")" : "")
+      "Podgląd niedostępny" + (label ? ": " + label : "") + (idHint && idHint !== label ? " (" + idHint + ")" : "")
     );
-    ph.title = "Podglad niedostępny (Synology Drive / brak sync)";
+    ph.title = "Podgląd niedostępny";
     ph.innerHTML =
       '<i class="uil uil-image-slash" aria-hidden="true"></i>' +
       (label
@@ -1448,9 +1448,9 @@
           '" alt="' +
           esc(label) +
           '" loading="lazy" onerror="window.__damAssocThumbFallback&&__damAssocThumbFallback(this)">'
-        : '<span class="dam-media-preview__assoc-thumb dam-media-preview__assoc-thumb--fallback" role="img" aria-label="Podglad niedostępny: ' +
+        : '<span class="dam-media-preview__assoc-thumb dam-media-preview__assoc-thumb--fallback" role="img" aria-label="Podgląd niedostępny: ' +
           esc(label) +
-          '" title="Podglad niedostępny (Synology Drive / brak sync)">' +
+          '" title="Podgląd niedostępny">' +
           '<i class="uil uil-image-slash" aria-hidden="true"></i>' +
           '<span class="dam-assoc-thumb-fallback__label">' +
           esc(label) +
@@ -2545,9 +2545,9 @@
           '" loading="lazy" onerror="' +
           onErr +
           '">'
-        : '<span class="dam-media-preview__assoc-thumb dam-media-preview__assoc-thumb--fallback" role="img" aria-label="Podglad niedostępny: ' +
+        : '<span class="dam-media-preview__assoc-thumb dam-media-preview__assoc-thumb--fallback" role="img" aria-label="Podgląd niedostępny: ' +
           esc(label) +
-          '" title="Podglad niedostępny (Synology Drive / brak sync)">' +
+          '" title="Podgląd niedostępny">' +
           '<i class="uil uil-image-slash" aria-hidden="true"></i>' +
           '<span class="dam-assoc-thumb-fallback__label">' +
           esc(label) +
@@ -4619,7 +4619,7 @@
     var html =
       '<div class="dam-viz-modal-overlay dam-media-preview-overlay' +
       (isAssocSplitLayout ? " dam-media-preview--viz-studio dam-media-preview--assoc-split" : "") +
-      '" id="damMediaPreview" role="dialog" aria-modal="true" aria-label="Podglad materialu">' +
+      '" id="damMediaPreview" role="dialog" aria-modal="true" aria-label="Podgląd materiału">' +
       '<div class="dam-viz-modal-shell">' +
       '<div class="dam-viz-modal-box' +
       (isAssocSplitLayout ? " dam-viz-modal-box--assoc-split" : "") +
@@ -4864,6 +4864,10 @@
         armHeroLoadWatch(img);
         thumb.appendChild(img);
         heroEl = img;
+        if (a.path && window.DamPreviewTruth && window.DamPreviewTruth.upgradeWhenReady) {
+          window.DamPreviewTruth.upgradeWhenReady(img, previewUrl(a.path, a));
+          window.DamPreviewTruth.markPreviewSource(img, a.path, thumb);
+        }
         return;
       }
 

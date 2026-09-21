@@ -1,0 +1,45 @@
+---
+description: ZAWSZE używaj /ui-taste przy jakiejkolwiek pracy wizualnej lub zmianach kodu wpływających na wygląd. ui-taste ma wbudowany ui-ux-pro-max (silnik + baza + wykładnia).
+alwaysApply: true
+---
+
+# Reguła globalna: /ui-taste jako podstawowy skill wizualny
+
+## Kiedy obowiązuje (zawsze, bez czekania na /komendę)
+
+Zanim zaczniesz pracę, **wejdź w skill `/ui-taste`** i stosuj go, gdy zadanie:
+
+- zmienia **jak coś wygląda, jak się zachowuje, porusza lub jak się z tym wchodzi w interakcję** (kryterium decyzyjne),
+- dotyczy CSS/HTML, komponentów, layoutu, typografii, kolorów, spacingu, animacji, stanów (hover/focus/disabled), responsywności, dark mode,
+- to nowa strona/sekcja, redesign, audyt UI/UX lub naprawa buga wizualnego.
+
+Nie obowiązuje przy czystym backendzie, API, bazach danych, DevOps ani zadaniach bez warstwy wizualnej.
+
+## Jak stosować
+
+1. **Design Read** (`/ui-taste` §0) — jedna linia: co to za strona/komponent, dla kogo, jaki vibe/system.
+2. **Silnik wiedzy wbudowany w ui-taste** (`/ui-taste` §18): przy nowej stronie/sekcji lub niepewności co do stylu/palety/fontu użyj `scripts/search.py --design-system`; przy audycie sięgnij po Quick Reference §1–§3 z `references/ui-ux-pro-max.md`. Przy drobnej poprawce CSS wystarczy Design Read + zasady §4/§6 — bez uruchamiania silnika.
+3. **Anti-slop** (`/ui-taste` §4 i §9) ma pierwszeństwo przy wyborze estetyki — nie zjeżdżaj do domyślnych „AI tells".
+4. **Screenshot Revision Protocol** (`/ui-taste` §0.E): domyślnie 5 passów, tryb intensywny 10 — screenshot → odczyt obrazu → lista defektów → fix. Bez tego nie deklaruj „done" dla widocznego deliverable.
+
+## Fixy = oba zestawy wiedzy
+
+Przy naprawach dotyczących wyglądu stosuj **jednocześnie**:
+
+- **ui-ux-pro-max** (wbudowany w ui-taste §18): a11y (kontrast 4.5:1, focus, aria), touch ≥44×44px, formularze, RWD, checklista UX §1–§3;
+- **ui-taste**: Design Read, anti-slop, tokeny semantyczne, protokół screenshotów.
+
+Nie trzeba osobno wołać `/ui-ux-pro-max` — jego silnik, baza i wykładnia żyją w `ui-taste` (self-contained).
+
+## Weryfikacja
+
+Każdą widoczną zmianę potwierdź realnym dowodem: screenshot (lokalnie) lub — na produkcji — screenshot/CDP w przeglądarce. „Done" bez dowodu wizualnego jest niedozwolone.
+
+## Stopka użycia
+
+Po odpowiedzi, w której użyto skilla, dopisz na dole:
+
+```
+---
+użyto: ui-taste — [1 zdanie dlaczego]
+```

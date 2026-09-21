@@ -1,8 +1,64 @@
 {
-  "version": 25,
+  "version": 26,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-09-17T18:00:00+02:00",
+  "updated_at": "2026-09-19T19:00:00+02:00",
   "instructions": [
+    {
+      "id": "preview.cache_first_online_only",
+      "must": [
+        "Pamiec podreczna pokazuje sie zawsze i natychmiast. Jest tylko zaslepka, nie obrazem docelowym.",
+        "Oryginal zastepuje cache tylko wtedy, gdy wczyta sie w mniej niz 100 ms (plik fizycznie na dysku).",
+        "Plik tylko online (Synology Drive / OneDrive na zadanie: atrybut RECALL_ON_DATA_ACCESS) rozpoznajemy po atrybutach, nigdy przez otwarcie pliku.",
+        "Pliki-duchy NIGDY nie sa pobierane automatycznie, takze w duzym podgladzie. Oryginaly zostaja tylko online.",
+        "Podglad obrazu spoza dysku: plakietka 'Podgląd z pamięci podręcznej' (DamPreviewTruth.markPreviewSource). Dla pliku tylko online przycisk 'Pobierz oryginał' (strzalka w dol): dopiero klik prosi Synology/Windows o ten jeden plik (/media ... &fetch=1) i podmienia obraz.",
+        "Klucz miniatury v2: rel + mtime w pelnych sekundach + profil (whitebg-v2). Stary klucz v1 zostaje tylko do wyszukiwania."
+      ],
+      "body_pl": "HARD 2026-09-19: cache najpierw, oryginal gdy < 100 ms, pliki-duchy z Synology nigdy nie sa pobierane w tle.",
+      "category": "cache",
+      "must_not": [
+        "Otwierac ani czytac pliku tylko online, zeby sprawdzic dostepnosc albo zbudowac miniature (to wymusza pobranie z Synology).",
+        "Automatycznie podmieniac miniatury na oryginal dla calej siatki, gdy oryginal jest tylko online.",
+        "Liczyc klucza miniatury z ulamkow sekund mtime (Synology Drive je obcina, klucz przestaje pasowac na innym PC)."
+      ],
+      "priority": "critical",
+      "title_pl": "Najpierw pamięć podręczna, oryginał gdy jest pod ręką",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-09-19",
+      "related_code": [
+        "apps/desktop/dam_thumb_cache.py",
+        "apps/desktop/dam_file_availability.py",
+        "apps/desktop/local_bridge.py",
+        "apps/web/assets/js/dam-preview-truth.js"
+      ]
+    },
+    {
+      "id": "auth.beta_skip_password_change",
+      "must": [
+        "Aplikacja jest w BETA: po zalogowaniu slabym haslem okno zmiany hasla ma przycisk POMIN ten krok i informacje o trybie testowym.",
+        "Przelacznik: auth_store.APP_BETA. Most decyduje (can_skip), UI tylko pokazuje przycisk.",
+        "Panel publiczny na NAS (PUBLIC_MODE) nigdy nie pozwala pominac: stare haslo kont seed jest znane z publicznego repo."
+      ],
+      "body_pl": "Decyzja wlasciciela 2026-09-19: nie wymuszac nowego 10-znakowego hasla w BETA. Po wyjsciu z BETY: APP_BETA = False.",
+      "category": "auth",
+      "must_not": [
+        "Usuwac okna zmiany hasla: zostaje na pozniej.",
+        "Wlaczac pomijania w PUBLIC_MODE."
+      ],
+      "priority": "high",
+      "title_pl": "BETA: pominięcie zmiany hasła",
+      "related_kv": [
+        "program-instructions"
+      ],
+      "updated_at": "2026-09-19",
+      "related_code": [
+        "apps/desktop/auth_store.py",
+        "apps/desktop/local_bridge.py",
+        "apps/web/assets/js/dam-password-change.js",
+        "apps/web/signin.html"
+      ]
+    },
     {
       "id": "preview.cache.offline_browse",
       "must": [
@@ -1943,28 +1999,29 @@
     {
       "id": "cache.nas_seed_and_hourly_index",
       "must": [
-        "Cache miniatur NIE jest w instalatorze Windows. Po instalacji DAM pobiera seed z Synology: https://inyfinn.synology.me/Panel-DAM/pamiec-podreczna/manifest.json (fallback W:\\web\\Panel-DAM\\pamiec-podreczna).",
+        "Cache miniatur JEST w instalatorze Windows (decyzja wlasciciela 2026-09-19): bin\\PAMIEC-PODRECZNA\\thumbs + thumb-rel-index.bundled.json. Build przerywa sie, gdy miniatur jest mniej niz 1000.",
+        "Po instalacji DAM tylko aktualizuje cache z Synology: https://inyfinn.synology.me/Panel-DAM/bin/PAMIEC-PODRECZNA/manifest.json (fallback W:\\web\\Panel-DAM\\bin\\PAMIEC-PODRECZNA).",
         "Lokalny cache = GIT_ROOT\\bin\\PAMIEC-PODRECZNA (DAM_CACHE_ROOT override). Zakaz zapisu cache pod X: lub M: Marketing.",
         "Po udanym rebuildzie indeksu PC publikuje nowe thumbs + thumb-rel-index.json na NAS, gdy W: jest zapisowalny; inaczej kolejka desktop/data/cache-publish-queue.json.",
         "Postgres: dam_kv_store.thumb-cache-manifest (wskaznik) + tabela dam_thumb_cache_index (rel|profile, digest, mtime, size, publisher, ts). Nie wkladac file-index do KV.",
         "Indeks: watcher 2s PLUS pelny skan ROOT co godzine. Toast w aplikacji (PL): postep, pozostalo, ETA, zwin. Przerwij albo Nie dzisiaj (snooze do 23:59 lokalnego).",
         "Po instalacji: logowanie dziala; pobieranie cache startuje w tle; indeksowanie mozna odroczyc. Cancel/snooze: apps/desktop/data/index-control.json."
       ],
-      "body_pl": "HARD 2026-09-12: cache z NAS po Setup, publikacja thumbs miedzy PC, hourly ROOT + cancel/snooze w UI.",
+      "body_pl": "HARD 2026-09-19: cache jedzie w Setup, NAS go aktualizuje, publikacja thumbs miedzy PC, hourly ROOT + cancel/snooze w UI.",
       "category": "cache",
       "must_not": [
-        "Pakowac PAMIEC-PODRECZNA do Setup.exe.",
+        "Wypuszczac Setup.exe z pustym PAMIEC-PODRECZNA.",
         "Kopiowac starego cache z D:\\...\\PAMIEC-PODRECZNA (777MB).",
         "Wkladac 9MB file-index.json do dam_kv_store.",
         "Blokowac logowania modalem postepu."
       ],
       "priority": "critical",
-      "title_pl": "Cache z NAS + godzinny indeks z anulowaniem",
+      "title_pl": "Cache w instalatorze + aktualizacja z NAS + godzinny indeks",
       "related_kv": [
         "program-instructions",
         "thumb-cache-manifest"
       ],
-      "updated_at": "2026-09-12",
+      "updated_at": "2026-09-19",
       "related_code": [
         "apps/desktop/dam_thumb_cache.py",
         "apps/desktop/local_bridge.py",

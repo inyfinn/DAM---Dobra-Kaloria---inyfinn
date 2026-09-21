@@ -1015,27 +1015,27 @@
     modal.innerHTML =
       '<div class="dam-basepath-box" role="dialog" aria-modal="true" aria-labelledby="damBasePathTitle">' +
         '<button type="button" class="dam-modal-x" id="damBasePathClose" aria-label="Zamknij"><i class="uil uil-times" aria-hidden="true"></i></button>' +
-        '<h3 id="damBasePathTitle">Sciezka Marketing na tym komputerze</h3>' +
-        '<p class="dam-basepath-lead">Ustawienie dotyczy tylko <strong>tego urzadzenia</strong> ' +
-          '(dom / praca moga miec inna litere dysku). Folder musi zawierac: ' +
+        '<h3 id="damBasePathTitle">Ścieżka Marketing na tym komputerze</h3>' +
+        '<p class="dam-basepath-lead">Ustawienie dotyczy tylko <strong>tego urządzenia</strong> ' +
+          '(dom i praca mogą mieć inną literę dysku). Folder musi zawierać: ' +
           '<strong>-- ARCHIWUM --</strong>, <strong>- EKSPORT</strong>, <strong>- POLSKA</strong>.</p>' +
-        '<p class="dam-basepath-examples">Przyklady: <code>X:\\Marketing</code> | <code>D:\\Marketing</code> | <code>M:\\</code></p>' +
+        '<p class="dam-basepath-examples">Przykłady: <code>X:\\Marketing</code> | <code>D:\\Marketing</code> | <code>M:\\</code></p>' +
         '<p id="damBasePathDeviceHint" class="dam-basepath-examples" hidden></p>' +
         '<div id="damBasePathFound" class="dam-basepath-found" hidden></div>' +
-        '<label class="dam-basepath-label" for="damBasePathInput">Sciezka bazowa</label>' +
+        '<label class="dam-basepath-label" for="damBasePathInput">Ścieżka bazowa</label>' +
         '<div class="dam-basepath-field">' +
           '<input type="text" id="damBasePathInput" class="dam-basepath-input" placeholder="np. X:\\Marketing" ' +
             'value="' + esc(getBasePath() || "") + '" autocomplete="off" spellcheck="false" />' +
-          '<button type="button" class="dam-basepath-browse" id="damBasePathBrowse" title="Wskaz folder w Eksploratorze Windows" aria-label="Wskaz folder">' +
+          '<button type="button" class="dam-basepath-browse" id="damBasePathBrowse" title="Wskaż folder w Eksploratorze Windows" aria-label="Wskaż folder">' +
             '<i class="uil uil-folder" aria-hidden="true"></i>' +
-            '<span>Wskaz folder</span>' +
+            '<span>Wskaż folder</span>' +
           "</button>" +
         "</div>" +
         '<p id="damBasePathMsg" class="dam-basepath-msg" hidden></p>' +
         '<div class="dam-basepath-actions">' +
           '<button type="button" class="geex-btn geex-btn--primary dam-basepath-save" id="damBasePathSave">Zapisz i kontynuuj</button>' +
           '<button type="button" class="geex-btn geex-btn--primary-transparent dam-btn-icon dam-basepath-detect" id="damBasePathSuggest"><i class="uil uil-search" aria-hidden="true"></i><span>Wykryj automatycznie</span></button>' +
-          '<button type="button" class="geex-btn dam-basepath-later" id="damBasePathSkip">Zrobie to pozniej</button>' +
+          '<button type="button" class="geex-btn dam-basepath-later" id="damBasePathSkip">Zrobię to później</button>' +
         "</div>" +
       "</div>";
     document.body.appendChild(modal);
@@ -1074,6 +1074,7 @@
       modal.remove();
     });
     document.getElementById("damBasePathSkip").addEventListener("click", function () {
+      try { sessionStorage.setItem("dam_basepath_later", "1"); } catch (_e) { /* ignore */ }
       modal.remove();
     });
     document.getElementById("damBasePathBrowse").addEventListener("click", function () {
@@ -1210,7 +1211,11 @@
     }).catch(function () { /* ignore */ });
   }
 
+  var SETUP_LATER_KEY = "dam_basepath_later";
+
   function maybePromptSetup() {
+    // "Zrobie to pozniej" = nie pokazuj samoczynnie do konca sesji (cache dziala bez Marketingu).
+    try { if (sessionStorage.getItem(SETUP_LATER_KEY) === "1") return; } catch (_e) { /* ignore */ }
     ensureUserBase().then(function (res) {
       if (res && res.base) return;
       if (hasBasePath()) return;

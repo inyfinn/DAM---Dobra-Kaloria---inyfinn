@@ -89,15 +89,26 @@ def _mtime(path: str) -> float:
         return 0.0
 
 
-def thumb_key(
+# v2: whole-second mtime. Synology Drive placeholders report whole seconds while the
+# machine that built a thumb may have seen fractions, so v1 keys never matched across PCs.
+KEY_VERSION = "whitebg-v2"
+LEGACY_KEY_VERSION = "whitebg-v1"
+
+
+def _digest(rel: str, mt: float, prof: str, version: str = KEY_VERSION) -> str:
+    if version == LEGACY_KEY_VERSION:
+        material = f"{rel}|{mt:.6f}|{prof}|{LEGACY_KEY_VERSION}"
+    else:
+        material = f"{rel}|{int(mt)}|{prof}|{KEY_VERSION}"
+    return hashlib.sha256(material.encode("utf-8", errors="replace")).hexdigest()
+
+
+def _physical_and_rel(
     path: str,
-    *,
-    email: str = "",
-    profile: str = "grid",
-    resolve_physical: Optional[Callable[..., str]] = None,
-    marketing_relative: Optional[Callable[..., str]] = None,
-) -> tuple[str, str, float]:
-    """Return (sha256_hex, relative_key, mtime)."""
+    email: str,
+    resolve_physical: Optional[Callable[..., str]],
+    marketing_relative: Optional[Callable[..., str]],
+) -> tuple[str, str]:
     physical = path
     if resolve_physical:
         try:
@@ -114,13 +125,38 @@ def thumb_key(
         rel = path_resolve.marketing_relative_key(physical, email=email)
     if not rel:
         rel = Path(physical).name
-    mt = _mtime(physical)
+    return physical, rel
+
+
+def _norm_profile(profile: str) -> str:
     prof = (profile or "grid").strip().lower()
-    if prof not in PROFILES:
-        prof = "grid"
-    material = f"{rel}|{mt:.6f}|{prof}|whitebg-v1".encode("utf-8", errors="replace")
-    digest = hashlib.sha256(material).hexdigest()
-    return digest, rel, mt
+    return prof if prof in PROFILES else "grid"
+
+
+def _is_online_only(physical: str) -> bool:
+    try:
+        from dam_file_availability import is_online_only
+    except Exception:
+        return False
+    try:
+        return bool(is_online_only(physical))
+    except Exception:
+        return False
+
+
+def thumb_key(
+    path: str,
+    *,
+    email: str = "",
+    profile: str = "grid",
+    resolve_physical: Optional[Callable[..., str]] = None,
+    marketing_relative: Optional[Callable[..., str]] = None,
+    version: str = KEY_VERSION,
+) -> tuple[str, str, float]:
+    """Return (sha256_hex, relative_key, mtime)."""
+    physical, rel = _physical_and_rel(path, email, resolve_physical, marketing_relative)
+    mt = _mtime(physical)
+    return _digest(rel, mt, _norm_profile(profile), version), rel, mt
 
 
 def _flatten_white(im):
@@ -355,22 +391,37 @@ def _load_rel_index() -> dict[str, dict]:
                     data = {str(k): v for k, v in raw.items() if isinstance(v, dict)}
             except (OSError, json.JSONDecodeError):
                 data = {}
+        bundled = p.with_name("thumb-rel-index.bundled.json")
+        if bundled.is_file():
+            try:
+                extra = json.loads(bundled.read_text(encoding="utf-8"))
+                if isinstance(extra, dict):
+                    for k, v in extra.items():
+                        if isinstance(v, dict):
+                            data.setdefault(str(k), v)
+            except (OSError, json.JSONDecodeError):
+                pass
         _REL_INDEX = data
         return data
 
 
+_REL_INDEX_WRITE_LOCK = threading.Lock()
+
+
 def _save_rel_index() -> None:
-    with _REL_INDEX_LOCK:
-        payload = dict(_REL_INDEX or {})
-    tmp = _rel_index_path().with_suffix(".json.tmp")
-    try:
-        tmp.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-        os.replace(tmp, _rel_index_path())
-    except OSError:
+    # Warm workers save concurrently; one shared tmp file without a lock lost entries.
+    with _REL_INDEX_WRITE_LOCK:
+        with _REL_INDEX_LOCK:
+            payload = dict(_REL_INDEX or {})
+        tmp = _rel_index_path().with_suffix(".json.tmp")
         try:
-            tmp.unlink(missing_ok=True)
+            tmp.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+            os.replace(tmp, _rel_index_path())
         except OSError:
-            pass
+            try:
+                tmp.unlink(missing_ok=True)
+            except OSError:
+                pass
 
 
 def _remember_rel(rel: str, profile: str, digest: str, mtime: float) -> None:
@@ -496,12 +547,7 @@ def _revalidate_thumb(
     try:
         if _marketing_cache_only():
             return
-        physical = path
-        if resolve_physical:
-            try:
-                physical = resolve_physical(path, email) or path
-            except Exception:
-                physical = path
+        physical, rel_key = _physical_and_rel(path, email, resolve_physical, marketing_relative)
         mt = _mtime_quick(physical, timeout_s=0.4)
         if mt is None:
             return
@@ -509,19 +555,13 @@ def _revalidate_thumb(
         key_rel = lookup_rel or _rel_from_logical(path)
         row = idx.get(_rel_index_key(key_rel, profile)) if key_rel else None
         stored_mt = float((row or {}).get("mtime") or 0.0)
-        stored_digest = str((row or {}).get("digest") or known_digest or "")
-        if stored_mt and abs(stored_mt - float(mt)) < 0.0005 and stored_digest == known_digest:
+        if stored_mt and int(stored_mt) == int(mt):
             return
-        digest, rel_key, _ = thumb_key(
-            path,
-            email=email,
-            profile=profile,
-            resolve_physical=resolve_physical,
-            marketing_relative=marketing_relative,
-        )
-        if digest == stored_digest and stored_mt and abs(stored_mt - float(mt)) < 0.0005:
+        if _is_online_only(physical):
+            # Rebuilding would download the original; the cached thumb stays the placeholder.
             return
-        if digest == known_digest and stored_mt and abs(stored_mt - float(mt)) < 0.0005:
+        digest = _digest(rel_key, mt, profile)
+        if digest == known_digest:
             return
         avif_p, jpg_p = _cache_paths(digest)
         built, _ctype = _encode_thumb(physical, avif_p, jpg_p, PROFILES.get(profile, 480))
@@ -532,6 +572,51 @@ def _revalidate_thumb(
                 _remember_rel(rel_key, profile, digest, mt)
     except Exception:
         return
+
+
+def _existing_thumb(digest: str) -> tuple[Optional[Path], str]:
+    avif_p, jpg_p = _cache_paths(digest)
+    if avif_p.is_file():
+        return avif_p, "image/avif"
+    if jpg_p.is_file():
+        return jpg_p, "image/jpeg"
+    return None, ""
+
+
+def lookup_cached(
+    path: str,
+    *,
+    email: str = "",
+    profile: str = "grid",
+    resolve_physical: Optional[Callable[..., str]] = None,
+    marketing_relative: Optional[Callable[..., str]] = None,
+) -> tuple[Optional[Path], str, str, str, float]:
+    """Find an existing thumb without ever opening the original.
+
+    Returns (thumb_file, content_type, digest, rel, source_mtime); thumb_file None on miss.
+    Order: rel index, v2 key (whole-second mtime), legacy v1 key (exact mtime).
+    """
+    prof = _norm_profile(profile)
+    logical = _rel_from_logical(path)
+    hit, ctype, digest = _lookup_by_rel(logical, prof)
+    if hit is not None:
+        return hit, ctype, digest, logical, 0.0
+    if _marketing_cache_only() or not _drive_letter_alive(path):
+        return None, "", "", logical, 0.0
+    physical, rel = _physical_and_rel(path, email, resolve_physical, marketing_relative)
+    if not _drive_letter_alive(physical):
+        return None, "", "", rel, 0.0
+    mt = _mtime_quick(physical)
+    if mt is None:
+        return None, "", "", rel, 0.0
+    for version in (KEY_VERSION, LEGACY_KEY_VERSION):
+        digest = _digest(rel, mt, prof, version)
+        hit, ctype = _existing_thumb(digest)
+        if hit is not None:
+            if logical and logical != rel:
+                _remember_rel(logical, prof, digest, mt)
+            return hit, ctype, digest, rel, mt
+    return None, "", "", rel, mt
 
 
 def get_or_build_thumb(
@@ -580,49 +665,44 @@ def get_or_build_thumb(
             "cache_only": True,
         }
 
-    physical = path
-    root_missing = not _drive_letter_alive(path)
-    if not root_missing and resolve_physical:
-        try:
-            physical = resolve_physical(path, email) or path
-        except Exception:
-            physical = path
-        root_missing = not _drive_letter_alive(physical)
-
-    if root_missing:
-        return 404, b"", "application/json", {
-            "ok": False,
-            "error": "not_found",
-            "thumb_source": "cache",
-            "cache_only": True,
-        }
-
-    mt = _mtime_quick(physical)
-    if mt is None:
-        return 404, b"", "application/json", {
-            "ok": False,
-            "error": "not_found",
-            "thumb_source": "cache",
-            "cache_only": True,
-        }
-
-    digest, rel2, mt2 = thumb_key(
-        path,
-        email=email,
-        profile=prof,
-        resolve_physical=resolve_physical,
-        marketing_relative=marketing_relative,
-    )
-    logical = _rel_from_logical(path)
+    miss = (404, b"", "application/json", {
+        "ok": False,
+        "error": "not_found",
+        "thumb_source": "cache",
+        "cache_only": True,
+    })
+    if not _drive_letter_alive(path):
+        return miss
+    physical, rel2 = _physical_and_rel(path, email, resolve_physical, marketing_relative)
+    if not _drive_letter_alive(physical):
+        return miss
+    mt2 = _mtime_quick(physical)
+    if mt2 is None:
+        return miss
     if rel2:
         rel = rel2
+    logical = _rel_from_logical(path)
+    for version in (KEY_VERSION, LEGACY_KEY_VERSION):
+        found_digest = _digest(rel, mt2, prof, version)
+        hit, hit_ctype = _existing_thumb(found_digest)
+        if hit is not None:
+            if logical and logical != rel:
+                _remember_rel(logical, prof, found_digest, mt2)
+            return _serve_cached(hit, hit_ctype, found_digest, prof, rel, mt2, "cache")
+
+    if _is_online_only(physical):
+        # Never build from a cloud placeholder: reading it downloads the whole file.
+        return 404, b"", "application/json", {
+            "ok": False,
+            "error": "online_only",
+            "state": "online_only",
+            "thumb_source": "cache",
+        }
+
+    digest = _digest(rel, mt2, prof)
     if logical and logical != rel:
         _remember_rel(logical, prof, digest, mt2)
     avif_p, jpg_p = _cache_paths(digest)
-    if avif_p.is_file():
-        return _serve_cached(avif_p, "image/avif", digest, prof, rel, mt2, "cache")
-    if jpg_p.is_file():
-        return _serve_cached(jpg_p, "image/jpeg", digest, prof, rel, mt2, "cache")
 
     try:
         from dam_file_availability import _mark as _avail_mark
@@ -701,15 +781,68 @@ def is_cached_on_disk(
     resolve_physical: Optional[Callable[..., str]] = None,
     marketing_relative: Optional[Callable[..., str]] = None,
 ) -> bool:
-    digest = digest_for_path(
+    hit, _ctype, _digest_hex, _rel, _mt = lookup_cached(
         path,
         profile=profile,
         email=email,
         resolve_physical=resolve_physical,
         marketing_relative=marketing_relative,
     )
-    avif_p, jpg_p = _cache_paths(digest)
-    return avif_p.is_file() or jpg_p.is_file()
+    return hit is not None
+
+
+PREVIEW_PROFILE_ORDER = ("modal", "card", "grid")
+ORIGINAL_FAST_BUDGET_S = 0.1
+
+
+def _readable_within(physical: str, budget_s: float) -> bool:
+    """True when the first bytes of a local file arrive within budget (never call on placeholders)."""
+    box: dict = {}
+
+    def _worker() -> None:
+        try:
+            with open(physical, "rb") as fh:
+                fh.read(64 * 1024)
+            box["ok"] = True
+        except OSError:
+            box["ok"] = False
+
+    t = threading.Thread(target=_worker, daemon=True, name="dam-original-probe")
+    t.start()
+    t.join(timeout=max(0.01, budget_s))
+    return bool(box.get("ok"))
+
+
+def media_preview_gate(
+    path: str,
+    *,
+    email: str = "",
+    resolve_physical: Optional[Callable[..., str]] = None,
+    budget_s: float = ORIGINAL_FAST_BUDGET_S,
+) -> Optional[tuple[int, bytes, str, dict]]:
+    """Cache-first gate for image previews served from /media.
+
+    Returns None when the original is local and readable within budget (serve it),
+    otherwise the best cached thumb. Cloud placeholders are never opened.
+    """
+    physical, _rel = _physical_and_rel(path, email, resolve_physical, None)
+    online_only = _is_online_only(physical)
+    if not online_only and os.path.isfile(physical) and _readable_within(physical, budget_s):
+        return None
+    for prof in PREVIEW_PROFILE_ORDER:
+        hit, ctype, digest, rel, mt = lookup_cached(physical or path, email=email, profile=prof)
+        if hit is not None:
+            code, body, out_ctype, meta = _serve_cached(hit, ctype, digest, prof, rel, mt, "cache")
+            meta["online_only"] = online_only
+            return code, body, out_ctype, meta
+    if online_only:
+        return 404, b"", "application/json", {
+            "ok": False,
+            "error": "online_only",
+            "state": "online_only",
+            "path": path,
+        }
+    return None
 
 
 def warm_status() -> dict:
