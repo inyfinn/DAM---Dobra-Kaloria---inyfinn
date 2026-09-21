@@ -77,12 +77,20 @@ $buildCommit = ""
 $buildDirty = $false
 try {
   $buildCommit = (& git -C $GitRoot rev-parse --short HEAD 2>$null | Select-Object -First 1)
-  # Interesuje nas tylko KOD, ktory trafia do paczki. Logi i stan biegu
-  # (apps/desktop/data) zmieniaja sie od samego uruchomienia DAM i nie moga
-  # falszywie oznaczac paczki jako niezgodnej z commitem.
-  $dirty = @(& git -C $GitRoot status --porcelain --untracked-files=no 2>$null |
-    Where-Object { $_ -notmatch 'apps/desktop/data/' -and $_ -notmatch '\.log$' -and $_ -notmatch 'bin/instalator/' })
+  # Interesuje nas tylko KOD, ktory trafia do paczki:
+  #  - diff --name-only zamiast status: status znaczy plik takze wtedy, gdy
+  #    zmienily sie same konce linii (CRLF po edytorze albo Synology Drive),
+  #  - apps/desktop/data i *.log zmieniaja sie od samego uruchomienia DAM,
+  #  - bin/instalator i .cer to artefakty, ktore ten build wlasnie nadpisuje.
+  $dirty = @(& git -C $GitRoot diff --name-only HEAD 2>$null |
+    Where-Object {
+      $_ -notmatch 'apps/desktop/data/' -and
+      $_ -notmatch '\.log$' -and
+      $_ -notmatch '^bin/instalator/' -and
+      $_ -notmatch '\.cer$'
+    })
   $buildDirty = ($dirty.Count -gt 0)
+  if ($buildDirty) { Write-Host "Niezacommitowany kod: $($dirty -join ', ')" }
 } catch { $buildCommit = "" }
 if ($buildDirty) {
   Write-Warning "Drzewo ma niezacommitowane zmiany - paczka nie odpowiada dokladnie commitowi $buildCommit."
