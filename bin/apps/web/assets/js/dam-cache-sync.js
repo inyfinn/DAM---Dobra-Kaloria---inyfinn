@@ -715,9 +715,14 @@
     var lines = [];
     var pct = 0;
     if (syncRun) {
+      /* Backend zna fazę (pobieranie paczki w MB vs rozpakowywanie plików),
+         więc jego komunikat jest dokładniejszy niż licznik plików tutaj. */
       var tot = total || 329;
-      lines.push("Pobieram pamięć podręczną (" + done + "/" + tot + ")");
-      if (tot > 0) pct = Math.max(pct, Math.round((100 * done) / tot));
+      lines.push(
+        (sync && sync.message) || "Pobieram pamięć podręczną (" + done + "/" + tot + ")"
+      );
+      if (sync && sync.pct != null) pct = Math.max(pct, Number(sync.pct) || 0);
+      else if (tot > 0) pct = Math.max(pct, Math.round((100 * done) / tot));
     }
     if (idxRun) {
       var eta = fmtEta(progress.eta_sec != null ? progress.eta_sec : progress.remaining_sec);
@@ -779,11 +784,17 @@
     }
   }
 
+  var RETRY_AFTER_MS = 120000;
+
   function maybeStartDownload(sync) {
-    if (_startedDownload) return;
     if (!sync || sync.running) return;
     if (!sync.needs_download) return;
-    _startedDownload = true;
+    /* Odstęp zamiast zatrzasku na jedną próbę. Częściowo nieudany przebieg
+       zostawiał needs_download=true i stare `if (_startedDownload) return`
+       blokowało dociąganie reszty aż do restartu programu. */
+    var now = Date.now();
+    if (_startedDownload && now - _startedDownload < RETRY_AFTER_MS) return;
+    _startedDownload = now;
     fetch(bridgeBase() + "/thumb-cache/sync/start", {
       method: "POST",
       headers: authHeaders(),

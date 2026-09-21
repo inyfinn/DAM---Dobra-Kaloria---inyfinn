@@ -24,7 +24,10 @@ import time
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, Optional
+
+import platform_compat
 
 try:
     import dam_redis
@@ -979,7 +982,13 @@ PROVENANCE_SKIP = frozenset(
         ".dam-write-probe",
     }
 )
-SYNC_STATUS_FILE = DESKTOP_DIR / "data" / "cache-sync-status.json"
+# Stan pobierania NIE moze lezec w drzewie repo. bin/apps/desktop/data jest
+# synchronizowane przez Synology Drive, ktore trzyma plik otwarty - zmierzone
+# 21.09.2026: 132 z 200 zapisow atomowych przechodzi, reszta leci
+# PermissionError [WinError 5] i _write_json_atomic polyka go po cichu.
+# Efekt: pasek postepu stoi albo znika, a uzytkownik widzi "nie pobiera sie".
+# Ta sama choroba co status watchera indeksu naprawiony w 2.1.6.
+SYNC_STATUS_FILE = platform_compat.user_state_dir() / "cache-sync-status.json"
 PUBLISH_QUEUE_FILE = DESKTOP_DIR / "data" / "cache-publish-queue.json"
 
 _sync_lock = threading.Lock()
@@ -1178,14 +1187,35 @@ def decide_cache_action(
     remote_b = int(remote.get("total_bytes") or 0)
     if local_n == 0:
         return "download"
+
+    # Licz miniatury, nie cale drzewo. NAS trzyma obok nich cache-pack.tar,
+    # files.tsv i manifest.json, ktorych lokalnie celowo nie zapisujemy
+    # (PROVENANCE_SKIP), wiec file_count ZAWSZE jest wiekszy o te kilka
+    # pozycji. Na porownaniu drzew "delta" nigdy sie nie konczyla i kompletny
+    # cache pobieralby sie w kolko. Zmierzone: drzewo 14361 vs 14360,
+    # miniatury 14353 vs 14353 - zgodne co do sztuki.
+    remote_thumbs = _manifest_files(remote)
+    db_synced = _mtime_ts((db or {}).get("synced_at") or (db or {}).get("generated_at"))
+    remote_gen = _mtime_ts(remote.get("generated_at"))
+
+    if remote_thumbs:
+        # Brakuje sztuk -> dociagnij.
+        if int(local_thumb_stats().get("files") or 0) < len(remote_thumbs):
+            return "delta"
+        # Tyle samo sztuk: o zmianie TRESCI mowi tylko data wygenerowania
+        # manifestu. NIE porownujemy last_mtime drzewa - NAS przepakowuje
+        # cache-pack.tar przy kazdej publikacji, wiec drzewo jest tam zawsze
+        # "nowsze" i kazdy start ciagnalby 115 MB bez potrzeby.
+        if db_synced and remote_gen > db_synced + 1.0:
+            return "delta"
+        return "noop"
+
     if remote_n > local_n or remote_b > local_b:
         return "delta"
     remote_mt = _mtime_ts(remote.get("last_mtime_unix") or remote.get("last_mtime"))
     local_mt = _mtime_ts(local.get("last_mtime_unix") or local.get("last_mtime"))
     if remote_mt > local_mt + 1.0:
         return "delta"
-    db_synced = _mtime_ts((db or {}).get("synced_at") or (db or {}).get("generated_at"))
-    remote_gen = _mtime_ts(remote.get("generated_at"))
     if db_synced and remote_gen > db_synced + 1.0 and remote_n >= local_n:
         return "delta"
     return "noop"
@@ -1261,8 +1291,10 @@ def _walk_remote_ssh() -> dict[str, int]:
 
 
 def _safe_extract_tar(tf: tarfile.TarFile, dest: Path) -> int:
+    """Rozpakowuje nadpisujac - Synology jest zrodlem prawdy dla miniatur."""
     dest_r = dest.resolve()
     extracted = 0
+    last = 0.0
     for member in tf:
         name = (member.name or "").replace("\\", "/").lstrip("/")
         if not name or name.endswith("/"):
@@ -1274,6 +1306,14 @@ def _safe_extract_tar(tf: tarfile.TarFile, dest: Path) -> int:
             continue
         tf.extract(member, dest)
         extracted += 1
+        if time.time() - last >= 0.4:
+            last = time.time()
+            _set_sync(
+                running=True,
+                phase="extract",
+                done=extracted,
+                message=f"Rozpakowuje pamiec podreczna ({extracted})",
+            )
     return extracted
 
 
@@ -1353,26 +1393,115 @@ def _copy_missing_from_dir(src: Path) -> int:
     copied = 0
     remote = _walk_tree_sizes(src)
     local = _walk_tree_sizes(dest_root)
-    for rel, size in remote.items():
-        if local.get(rel) == size:
-            continue
+    # Rozmiar inny niz na NAS-ie = nadpisujemy. Synology jest zrodlem prawdy.
+    todo = [rel for rel, size in remote.items() if local.get(rel) != size]
+    total = len(todo)
+    last = 0.0
+    for i, rel in enumerate(todo, 1):
         src_f = src / Path(*rel.split("/"))
         dest_f = dest_root / Path(*rel.split("/"))
         if _copy_path_atomic(src_f, dest_f):
             copied += 1
+        if time.time() - last >= 0.4:
+            last = time.time()
+            _set_sync(
+                running=True,
+                phase="download",
+                done=i,
+                total=total,
+                copied=copied,
+                pct=int(100 * i / total) if total else 0,
+                source="nas_file",
+                message=f"Pobieram pamiec podreczna ({i}/{total})",
+            )
     return copied
 
 
 def _pull_https_pack() -> int:
+    """Pobiera cache-pack.tar strumieniowo na dysk, potem rozpakowuje.
+
+    Bylo: _http_get_bytes wciagal cale 115 MB do RAM jednym resp.read(), bez
+    zadnego postepu i bez wznawiania. Uzytkownik widzial zamrozony pasek, a
+    zerwane polaczenie kasowalo cala prace. Serwer oddaje 206 z Content-Range
+    (sprawdzone 21.09.2026), wiec wznawiamy od miejsca przerwania.
+    """
     url = nas_cache_url() + "/" + PACK_NAME
-    raw = _http_get_bytes(url, timeout=300.0)
-    if not raw:
-        return 0
     dest = cache_root()
     dest.mkdir(parents=True, exist_ok=True)
-    extracted = 0
-    with tarfile.open(fileobj=io.BytesIO(raw), mode="r:*") as tf:
-        extracted = _safe_extract_tar(tf, dest)
+    tmp = dest / (PACK_NAME + ".part")
+
+    total_bytes = 0
+    got = 0
+    try:
+        got = tmp.stat().st_size if tmp.is_file() else 0
+    except OSError:
+        got = 0
+
+    for attempt in range(3):
+        try:
+            headers = {"User-Agent": "DAM-ETA-cache-sync/1"}
+            if got > 0:
+                headers["Range"] = f"bytes={got}-"
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=120.0, context=_ssl_ctx()) as resp:
+                status = int(getattr(resp, "status", 200) or 200)
+                if got > 0 and status != 206:
+                    got = 0  # serwer zignorowal Range - zaczynamy od zera
+                clen = resp.headers.get("Content-Length")
+                total_bytes = got + (int(clen) if clen and clen.isdigit() else 0)
+                mode = "ab" if got > 0 else "wb"
+                last = 0.0
+                with open(tmp, mode) as fh:
+                    while True:
+                        chunk = resp.read(1024 * 1024)
+                        if not chunk:
+                            break
+                        fh.write(chunk)
+                        got += len(chunk)
+                        if time.time() - last >= 0.4:
+                            last = time.time()
+                            pct = int(100 * got / total_bytes) if total_bytes else 0
+                            _set_sync(
+                                running=True,
+                                phase="download",
+                                pct=min(99, pct),
+                                bytes_done=got,
+                                bytes_total=total_bytes,
+                                message=(
+                                    "Pobieram pamiec podreczna "
+                                    f"({got / 1048576:.0f}/{total_bytes / 1048576:.0f} MB)"
+                                ),
+                            )
+            break
+        except (urllib.error.URLError, OSError, TimeoutError, ValueError) as exc:
+            if attempt == 2:
+                _set_sync(message=f"Pobieranie przerwane: {exc}")
+                return 0
+            time.sleep(1.0 * (attempt + 1))
+            try:
+                got = tmp.stat().st_size if tmp.is_file() else 0
+            except OSError:
+                got = 0
+
+    if not tmp.is_file() or tmp.stat().st_size == 0:
+        return 0
+
+    _set_sync(running=True, phase="extract", pct=99, message="Rozpakowuje pamiec podreczna")
+    try:
+        with tarfile.open(tmp, mode="r:*") as tf:
+            extracted = _safe_extract_tar(tf, dest)
+    except (tarfile.TarError, OSError) as exc:
+        # Niekompletna albo uszkodzona paczka: skasuj, nastepny przebieg pobierze od nowa.
+        try:
+            tmp.unlink(missing_ok=True)
+        except OSError:
+            pass
+        _set_sync(message=f"Paczka uszkodzona: {exc}")
+        return 0
+    try:
+        tmp.unlink(missing_ok=True)
+    except OSError:
+        pass
     return extracted
 
 
@@ -1411,17 +1540,35 @@ def _http_get_to_file(url: str, dest: Path, timeout: float = 60.0) -> bool:
     return _copy_bytes_atomic(dest, body)
 
 
-def _write_json_atomic(path: Path, payload: dict) -> None:
+def _write_json_atomic(path: Path, payload: dict) -> bool:
+    """Zapis atomowy z ponowieniem. Zwraca True, gdy plik naprawde powstal.
+
+    os.replace na Windows leci PermissionError, gdy ktos trzyma plik otwarty
+    (Synology Drive, antywirus, indeksator). Pojedyncza proba gubila co trzeci
+    zapis statusu - stad wrazenie, ze pobieranie stoi.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp = path.with_suffix(path.suffix + f".{os.getpid()}.tmp")
     try:
         tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        os.replace(tmp, path)
     except OSError:
         try:
             tmp.unlink(missing_ok=True)
         except OSError:
             pass
+        return False
+    for attempt in range(4):
+        try:
+            os.replace(tmp, path)
+            return True
+        except OSError:
+            if attempt < 3:
+                time.sleep(0.05 * (attempt + 1))
+    try:
+        tmp.unlink(missing_ok=True)
+    except OSError:
+        pass
+    return False
 
 
 def _read_json_file(path: Path) -> dict:
@@ -1472,6 +1619,26 @@ def _set_sync(**fields) -> None:
     _persist_sync_state()
 
 
+_remote_cache: dict = {"at": 0.0, "manifest": None, "source": ""}
+REMOTE_MANIFEST_TTL_SEC = 120.0
+
+
+def _cached_remote_manifest() -> dict | None:
+    """Manifest z Synology z krotkim TTL - sync_status() jest odpytywany w petli."""
+    now = time.time()
+    if now - float(_remote_cache.get("at") or 0.0) < REMOTE_MANIFEST_TTL_SEC:
+        return _remote_cache.get("manifest")
+    manifest, source = load_remote_manifest()
+    _remote_cache["at"] = now
+    _remote_cache["manifest"] = manifest
+    _remote_cache["source"] = source
+    return manifest
+
+
+def _needs_download(tree: dict, db_state: dict) -> bool:
+    return decide_cache_action(_cached_remote_manifest(), tree, db_state) != "noop"
+
+
 def sync_status() -> dict:
     disk = _read_json_file(SYNC_STATUS_FILE)
     with _sync_lock:
@@ -1497,7 +1664,12 @@ def sync_status() -> dict:
             "nas_ssh_dest": nas_ssh_dest(),
             "nas_writable": False,
             "nas_present": nas_ok,
-            "needs_download": bool(tree["file_count"] == 0),
+            # Bylo: file_count == 0, czyli UI startowalo pobieranie WYLACZNIE przy
+            # zupelnie pustym cache. Kto mial 5000 z 14361 miniatur, nie dostawal
+            # juz nigdy brakujacych - stad "masa cache po prostu sie nie pobiera".
+            # Teraz pyta o to samo, co run_cache_download: czy Synology ma wiecej.
+            "needs_download": _needs_download(tree, db_state),
+            "remote": _cached_remote_manifest(),
             "seed_hint": SEED_THUMB_HINT,
         }
     )
@@ -1515,7 +1687,18 @@ def sync_status() -> dict:
     return out
 
 
-def _http_get_bytes(url: str, timeout: float = 25.0) -> bytes | None:
+_ssl_ctx_cache: list = []
+
+
+def _ssl_ctx():
+    """Jeden kontekst SSL na proces.
+
+    Budowanie go per zadanie wczytuje z dysku caly pakiet certyfikatow: 74 ms
+    na miniature przy 16 watkach, przy pobraniu trwajacym 18 ms. 410 miniatur
+    schodzi z 30.2 s do ~2 s. SSLContext jest bezpieczny watkowo.
+    """
+    if _ssl_ctx_cache:
+        return _ssl_ctx_cache[0]
     ctx = None
     try:
         import ssl
@@ -1528,6 +1711,12 @@ def _http_get_bytes(url: str, timeout: float = 25.0) -> bytes | None:
             ctx = ssl.create_default_context()
     except Exception:
         ctx = None
+    _ssl_ctx_cache.append(ctx)
+    return ctx
+
+
+def _http_get_bytes(url: str, timeout: float = 25.0) -> bytes | None:
+    ctx = _ssl_ctx()
     req = urllib.request.Request(url, headers={"User-Agent": "DAM-ETA-cache-sync/1"})
     try:
         with urllib.request.urlopen(req, timeout=timeout, context=ctx) as resp:
@@ -1730,50 +1919,120 @@ def _merge_rel_index_from_remote(source: str) -> None:
         _save_rel_index()
 
 
-def _download_listed_thumbs(manifest: dict, source: str) -> tuple[int, int, int]:
+DOWNLOAD_WORKERS = 16
+
+
+def _download_listed_thumbs(
+    manifest: dict, source: str, *, force: bool = False
+) -> tuple[int, int, int]:
+    """Pobiera miniatury z Synology rownolegle. Synology jest zrodlem prawdy.
+
+    Nadpisujemy lokalny plik, gdy jego rozmiar nie zgadza sie z manifestem
+    (albo przy force). Zgodny rozmiar pomijamy - inaczej kazdy start ciagnalby
+    116 MB od nowa bez powodu.
+
+    Sekwencyjnie bylo 18 ms/plik = 4.3 min na 14361 miniatur (zmierzone
+    21.09.2026 na laczu do inyfinn.synology.me). 16 watkow schodzi do ~0.5 min.
+    """
     files = _manifest_files(manifest)
     if not files:
         return 0, 0, 0
-    total = len(files)
-    copied = 0
-    skipped = 0
-    done = 0
-    t0 = time.time()
     local_thumbs = cache_root() / "thumbs"
     local_thumbs.mkdir(parents=True, exist_ok=True)
     fetch_src = "https" if source == "https" else "nas_file"
-    for item in files:
+
+    # Jeden skan katalogu zamiast stat() na kazdy wpis manifestu. Przy 14353
+    # miniaturach osobne staty (nawet na 16 watkach) zajmowaly 33 s, czyli
+    # dluzej niz pobranie calej paczki. Skan to ulamek sekundy.
+    have: dict[str, int] = {}
+    try:
+        with os.scandir(local_thumbs) as it:
+            for entry in it:
+                if entry.is_file():
+                    try:
+                        have[entry.name] = entry.stat().st_size
+                    except OSError:
+                        pass
+    except OSError:
+        pass
+
+    if not force:
+        pending = []
+        for item in files:
+            digest = str(item.get("digest") or "").strip().lower()
+            ext = str(item.get("ext") or "avif").lstrip(".").lower() or "avif"
+            want = int(item.get("size") or 0)
+            got = have.get(f"{digest}.{ext}")
+            if got is not None and got > 0 and (want <= 0 or got == want):
+                continue
+            pending.append(item)
+        skipped_upfront = len(files) - len(pending)
+        files = pending
+    else:
+        skipped_upfront = 0
+
+    total = len(files)
+    if total == 0:
+        return 0, skipped_upfront, skipped_upfront
+
+    counters = {"done": 0, "copied": 0, "skipped": skipped_upfront, "failed": 0}
+    lock = threading.Lock()
+    t0 = time.time()
+    last_report = [0.0]
+
+    def _one(item: dict) -> None:
+        # Lista jest juz przefiltrowana (albo force=True), wiec tu tylko pobieramy
+        # i nadpisujemy - Synology jest zrodlem prawdy.
         digest = str(item.get("digest") or "").strip().lower()
         ext = str(item.get("ext") or "avif").lstrip(".").lower() or "avif"
-        if not digest:
-            continue
-        dest = local_thumbs / f"{digest}.{ext}"
-        if dest.is_file() and dest.stat().st_size > 0:
-            skipped += 1
-            done += 1
-        else:
+        outcome = "failed"
+        if digest:
             body = _fetch_remote_thumb(digest, ext, fetch_src)
-            if body and _copy_bytes_atomic(dest, body):
-                copied += 1
-                done += 1
+            if body and _copy_bytes_atomic(local_thumbs / f"{digest}.{ext}", body):
+                outcome = "copied"
+        with lock:
+            counters["done"] += 1
+            if outcome != "failed":
+                counters[outcome] += 1
             else:
-                done += 1
+                counters["failed"] += 1
+            done = counters["done"]
+            snapshot = dict(counters)
+            # Status na dysk najwyzej co 0.4 s. 14361 zapisow po jednym na plik
+            # dusilo pobieranie i wchodzilo w konflikt z Synology Drive.
+            due = (time.time() - last_report[0]) >= 0.4 or done == total
+            if due:
+                last_report[0] = time.time()
+        if not due:
+            return
         elapsed = max(0.2, time.time() - t0)
         rate = done / elapsed
         remain = max(0, total - done)
-        eta = int(remain / rate) if rate > 0 else None
         _set_sync(
             running=True,
             phase="download",
             done=done,
             total=total,
-            copied=copied,
-            skipped=skipped,
-            eta_sec=eta,
+            copied=snapshot["copied"],
+            skipped=snapshot["skipped"],
+            failed=snapshot["failed"],
+            pct=int(100 * done / total) if total else 0,
+            eta_sec=int(remain / rate) if rate > 0 else None,
             source=source,
-            message=f"Pobieram pamiec podreczna ({done}/{total})",
+            message=f"Pobieram brakujace miniatury ({done}/{total})",
         )
-    return copied, skipped, total
+
+    with ThreadPoolExecutor(max_workers=DOWNLOAD_WORKERS, thread_name_prefix="dam-thumb") as ex:
+        list(ex.map(_one, files))
+
+    if counters["failed"]:
+        # Nie chowamy tego. Wczesniej nieudane pobranie liczylo sie jak zrobione
+        # i uzytkownik nie mial skad wiedziec, ze brakuje mu miniatur.
+        _set_sync(
+            failed=counters["failed"],
+            error=f"nie pobrano {counters['failed']} z {total} miniatur",
+        )
+    return counters["copied"], counters["skipped"], total
 
 
 def _download_https_file_index(source: str) -> int:
@@ -1806,8 +2065,34 @@ def _download_https_file_index(source: str) -> int:
     return copied
 
 
-def _fetch_cache_tree(*, action: str, source: str, manifest: dict | None) -> tuple[int, str]:
-    """Return (copied, used_source). Never writes X:/ or M:."""
+def _fetch_cache_tree(
+    *, action: str, source: str, manifest: dict | None, force: bool = False
+) -> tuple[int, str]:
+    """Return (copied, used_source). Never writes X:/ or M:.
+
+    Kolejnosc zrodel zmieniona 21.09.2026 po pomiarze na tym samym NAS-ie:
+
+        cache-pack.tar przez HTTPS   22.1 s  (115 MB, 14 360 miniatur)
+        kopiowanie z W:\\           148.9 s  (to samo, 6.7x wolniej)
+
+    W: to RaiDrive po WebDAV - kazdy z 14 tysiecy plikow to osobna operacja
+    sieciowa, a _copy_missing_from_dir nie raportuje postepu, wiec pasek stal
+    nieruchomo przez ~2.5 minuty. Stad "pobiera w chuj wolno albo wcale".
+    Paczka idzie pierwsza, W: zostaje jako zapas, gdy HTTPS nie odpowiada.
+    """
+    # Delta = brakuje kilku sztuk. Ciaganie calej paczki 115 MB dla pieciu
+    # miniatur nie ma sensu; _download_listed_thumbs bierze tylko te, ktorych
+    # rozmiar nie zgadza sie z manifestem, i robi to na 16 watkach.
+    if action == "delta" and manifest and _manifest_files(manifest):
+        copied, _skipped, _total = _download_listed_thumbs(
+            manifest, source or "https", force=force
+        )
+        if copied:
+            return copied, "https-files"
+
+    packed = _pull_https_pack()
+    if packed:
+        return packed, "https-pack"
     if nas_cache_path().is_dir():
         copied = _copy_missing_from_dir(nas_cache_path())
         if copied or action == "delta":
@@ -1821,14 +2106,13 @@ def _fetch_cache_tree(*, action: str, source: str, manifest: dict | None) -> tup
         local = _walk_tree_sizes(cache_root())
         missing = sorted(rel for rel, size in remote.items() if local.get(rel) != size)
         return _pull_ssh_rels(missing), "ssh"
-    packed = _pull_https_pack()
-    if packed:
-        return packed, "https-pack"
     listed = _download_https_file_index("https" if source == "https" else source)
     if listed:
         return listed, "https-files"
     if manifest:
-        copied, _skipped, _total = _download_listed_thumbs(manifest, source or "https")
+        copied, _skipped, _total = _download_listed_thumbs(
+            manifest, source or "https", force=force
+        )
         return copied, source or "https"
     return 0, source or ""
 
@@ -1888,6 +2172,7 @@ def run_cache_download(*, force: bool = False) -> dict:
             action=action,
             source=source,
             manifest=manifest,
+            force=force,
         )
         try:
             _merge_rel_index_from_remote("https" if used_source.startswith("https") else "nas_file")
@@ -1895,9 +2180,11 @@ def run_cache_download(*, force: bool = False) -> dict:
             pass
         persisted = persist_cache_state(source=used_source or "synology", synced=True)
         after = local_tree_stats()
+        _remote_cache["at"] = 0.0  # policz needs_download na swiezo po pobraniu
         _set_sync(
             running=False,
             phase="idle",
+            pct=100,
             done=after["file_count"],
             total=int((manifest or {}).get("file_count") or after["file_count"]),
             copied=copied,
