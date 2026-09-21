@@ -77,7 +77,11 @@ $buildCommit = ""
 $buildDirty = $false
 try {
   $buildCommit = (& git -C $GitRoot rev-parse --short HEAD 2>$null | Select-Object -First 1)
-  $dirty = @(& git -C $GitRoot status --porcelain --untracked-files=no 2>$null)
+  # Interesuje nas tylko KOD, ktory trafia do paczki. Logi i stan biegu
+  # (apps/desktop/data) zmieniaja sie od samego uruchomienia DAM i nie moga
+  # falszywie oznaczac paczki jako niezgodnej z commitem.
+  $dirty = @(& git -C $GitRoot status --porcelain --untracked-files=no 2>$null |
+    Where-Object { $_ -notmatch 'apps/desktop/data/' -and $_ -notmatch '\.log$' -and $_ -notmatch 'bin/instalator/' })
   $buildDirty = ($dirty.Count -gt 0)
 } catch { $buildCommit = "" }
 if ($buildDirty) {
