@@ -38,6 +38,12 @@ INSTALLER_DIR = DESKTOP_DIR / "data" / "updates"
 
 DEFAULT_REPO = "inyfinn/DAM---Dobra-Kaloria---inyfinn"
 DEFAULT_ASSET = "DAM-Setup.exe"
+# macOS: tylko powiadomienie + link do .dmg. Nie pobieramy i nie instalujemy
+# sami - .dmg montuje sie i przeciaga recznie, a bez konta Apple Developer
+# nie ma czego weryfikowac podpisem Ed25519 jak przy .exe.
+MAC_ASSET = "DAM.dmg"
+IS_MAC = sys.platform == "darwin"
+PLATFORM_ASSET = MAC_ASSET if IS_MAC else DEFAULT_ASSET
 SIG_SUFFIX = ".sig"
 PART_SUFFIX = ".part"
 MAX_SIG_BYTES = 8192
@@ -519,13 +525,14 @@ def _is_github_https(url: str) -> bool:
     return parsed.scheme == "https" and host in _GITHUB_HOSTS
 
 
-def _is_setup_download_url(url: str, asset_name: str = DEFAULT_ASSET) -> bool:
+def _is_setup_download_url(url: str, asset_name: str = "") -> bool:
     u = str(url or "").strip()
-    name = str(asset_name or DEFAULT_ASSET)
+    name = str(asset_name or PLATFORM_ASSET)
     if not _is_github_https(u):
         return False
     path = urllib.parse.urlparse(u).path
-    return path.endswith("/" + name) and name.lower().endswith(".exe")
+    wanted_suffix = ".dmg" if IS_MAC else ".exe"
+    return path.endswith("/" + name) and name.lower().endswith(wanted_suffix)
 
 
 def _is_api_asset_url(url: str) -> bool:
@@ -648,7 +655,7 @@ def _public_result(data: dict[str, Any]) -> dict[str, Any]:
         "published_at": str(data.get("published_at") or ""),
         "checked_at": data.get("checked_at") or time.time(),
         "portable": portable,
-        "update_mode": "restart_exe" if portable else "installer",
+        "update_mode": "notify" if IS_MAC else ("restart_exe" if portable else "installer"),
         "installer_ready": bool(_ready_version()) if not portable else False,
         "auth_configured": bool(_resolve_github_token()),
     }
@@ -808,7 +815,7 @@ def _perform_github_check(token: str) -> dict[str, Any]:
     out = _empty_result()
     cfg = load_update_config()
     repo = str(cfg.get("github_repo") or DEFAULT_REPO)
-    asset_name = str(cfg.get("asset_name") or DEFAULT_ASSET)
+    asset_name = str(cfg.get("asset_name") or PLATFORM_ASSET)
     url = f"https://api.github.com/repos/{repo}/releases?per_page=15"
     try:
         try:
@@ -886,7 +893,8 @@ def check_for_updates(
     finally:
         if not portable:
             _set_state_if_quiet(expect="checking", status="idle")
-    if not portable and auto_download and out.get("update_available"):
+    # macOS: samo powiadomienie. Uzytkownik pobiera .dmg z linku i przeciaga sam.
+    if not portable and not IS_MAC and auto_download and out.get("update_available"):
         rel = _release_from_result(out)
         if rel:
             _start_download(rel)
@@ -1370,6 +1378,11 @@ def consume_success_marker() -> dict[str, Any]:
 
 def _launch_installer(path: Path) -> dict[str, Any]:
     """Uruchamia TYLKO data/updates/<wersja>/DAM-Setup.exe z waznym podpisem (bez cache)."""
+    if IS_MAC:
+        # Na macOS ta sciezka nie powinna byc osiagalna (update_mode="notify"),
+        # ale gdyby UI mimo to ja zawolalo - .exe z argumentami Inno Setup nie
+        # ma tam sensu, a cichy blad byl by trudniejszy do zdiagnozowania.
+        return {"ok": False, "error": "mac_notify_only"}
     try:
         resolved = Path(path).resolve()
         root = INSTALLER_DIR.resolve()
