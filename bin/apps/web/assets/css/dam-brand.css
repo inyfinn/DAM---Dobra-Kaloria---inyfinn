@@ -13788,3 +13788,176 @@ html[data-theme="dark"] .dam-cache-badge {
   outline: 2px solid var(--dam-primary);
   outline-offset: 2px;
 }
+
+/* ==================================================================
+   ZAPISANE WIDOKI (kolekcje)
+   ------------------------------------------------------------------
+   Przy ~500 wariantach trzy pytania padaja w kolko: co nie ma opisu,
+   co czeka na archiwum, co jest poza sezonem. Maja swoje przyciski.
+   ================================================================== */
+.dam-collection-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 16px;
+}
+
+.dam-collection-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--dam-border);
+  border-radius: 999px;
+  background: var(--dam-surface);
+  color: var(--dam-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+
+.dam-collection-chip i { font-size: 16px; line-height: 1; }
+
+.dam-collection-chip:hover {
+  border-color: color-mix(in srgb, var(--dam-primary) 45%, var(--dam-border));
+  color: var(--dam-primary);
+}
+
+.dam-collection-chip.is-active {
+  background: color-mix(in srgb, var(--dam-primary) 12%, var(--dam-surface));
+  border-color: var(--dam-primary);
+  color: var(--dam-primary);
+}
+
+.dam-collection-chip:focus-visible {
+  outline: 2px solid var(--dam-primary);
+  outline-offset: 2px;
+}
+
+/* Licznik: 0 nie ma krzyczec, bo "nic do zrobienia" to dobra wiadomosc. */
+.dam-collection-chip__count {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--dam-surface-muted);
+  color: var(--dam-text-muted);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.dam-collection-chip.is-active .dam-collection-chip__count {
+  background: var(--dam-surface);
+  color: var(--dam-primary);
+}
+
+.dam-collection-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dam-collection-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 16px;
+  border: 1px solid var(--dam-border);
+  border-radius: var(--dam-radius-md, 12px);
+  background: var(--dam-surface);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 150ms ease;
+}
+
+.dam-collection-row:hover { border-color: var(--dam-primary); }
+
+.dam-collection-row:focus-visible {
+  outline: 2px solid var(--dam-primary);
+  outline-offset: 2px;
+}
+
+.dam-collection-row__product {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--dam-text);
+  flex: 0 0 auto;
+}
+
+.dam-collection-row__folder {
+  color: var(--dam-text-muted);
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dam-collection-row__index {
+  margin-left: auto;
+  flex: 0 0 auto;
+  color: var(--dam-text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 720px) {
+  .dam-collection-row { flex-wrap: wrap; }
+  .dam-collection-row__index { margin-left: 0; }
+}
+
+/* Sezon w oknie opisu */
+.dam-note-dialog__season {
+  margin: 4px 0 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--dam-border);
+  border-radius: var(--dam-radius-sm, 8px);
+  background: var(--dam-surface-muted);
+}
+
+.dam-note-dialog__check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dam-text);
+  cursor: pointer;
+}
+
+.dam-note-dialog__season-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.dam-note-dialog__season-range[hidden] { display: none; }
+
+.dam-note-dialog__season .dam-note-dialog__label { margin: 0; }
+
+.dam-note-dialog__select {
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--dam-border);
+  border-radius: var(--dam-radius-sm, 8px);
+  background: var(--dam-surface);
+  color: var(--dam-text);
+  font: inherit;
+  font-size: 13px;
+}
+
+.dam-note-dialog__season .dam-note-dialog__hint { margin: 10px 0 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dam-collection-chip,
+  .dam-collection-row { transition: none; }
+}

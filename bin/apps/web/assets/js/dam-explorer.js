@@ -73,6 +73,7 @@
     searchHits:       null,
     searchPanelTimer: null,
     statusLetterFilter: null,
+    collectionFilter: null,
     _grafikEmails:    null
   };
 
@@ -242,6 +243,95 @@
     return all.filter(function (p) {
       return productMatchesStatusLetter(p, letter);
     });
+  }
+
+  /* ------------------------------------------------------------------ *
+   * KOLEKCJE - zapisane widoki na to, co wymaga reki
+   *
+   * Przy ~500 wariantach nie da sie recznie znalezc tych bez opisu albo tych
+   * z litera X, ktorych nikt nie przeniosl. To sa trzy pytania, ktore padaja
+   * w kolko, wiec maja swoje przyciski.
+   * ------------------------------------------------------------------ */
+  var COLLECTIONS = [
+    {
+      id: "no-note",
+      label: "Bez opisu",
+      icon: "uil-comment-slash",
+      hint: "Warianty, po ktorych indeksie nikt sie nie domysli, czym sa.",
+      match: function (rev) {
+        var d = variantDistFor(rev);
+        return !d.text;
+      }
+    },
+    {
+      id: "to-archive",
+      label: "Do archiwum",
+      icon: "uil-archive",
+      hint: "Litera X w nazwie folderu, ale folder wciaz lezy w produkcie.",
+      match: function (rev) { return getRevisionStatus(rev) === "nieaktualne"; }
+    },
+    {
+      id: "off-season",
+      label: "Poza sezonem",
+      icon: "uil-calendar-slash",
+      hint: "Aktualne, ale teraz nie w obiegu (np. grill zima).",
+      match: function (rev) { return isOutOfSeason(rev); }
+    }
+  ];
+
+  function collectionById(id) {
+    for (var i = 0; i < COLLECTIONS.length; i += 1) {
+      if (COLLECTIONS[i].id === id) return COLLECTIONS[i];
+    }
+    return null;
+  }
+
+  /** Wszystkie warianty pasujace do kolekcji, razem z produktem-rodzicem. */
+  function revisionsForCollection(id) {
+    var col = collectionById(id);
+    if (!col) return [];
+    var products = filterProductsForExplorerView((state.fileIndex && state.fileIndex.products) || []);
+    var out = [];
+    products.forEach(function (prod) {
+      (dedupeLifecycleTwinRevisions(prod.revisions || []) || []).forEach(function (rev) {
+        if (isBogus(rev.folder)) return;
+        if (col.match(rev)) out.push({ product: prod, rev: rev });
+      });
+    });
+    return out;
+  }
+
+  function collectionCount(id) {
+    return revisionsForCollection(id).length;
+  }
+
+  function applyCollectionFilter(id) {
+    state.collectionFilter = id || null;
+    state.statusLetterFilter = null;
+    state.searchQuery = "";
+    state.searchHits = null;
+    state.product = null;
+    var inp = document.getElementById("damFileSearch");
+    if (inp) inp.value = "";
+    hideSearchDropdown();
+    renderMain();
+    renderBreadcrumb();
+  }
+
+  function collectionChipsHtml() {
+    var chips = COLLECTIONS.map(function (c) {
+      var n = collectionCount(c.id);
+      var active = state.collectionFilter === c.id;
+      return (
+        '<button type="button" class="dam-collection-chip' + (active ? " is-active" : "") +
+        '" data-collection="' + esc(c.id) + '" data-dam-tip="' + esc(c.hint) + '">' +
+        '<i class="uil ' + esc(c.icon) + '" aria-hidden="true"></i>' +
+        "<span>" + esc(c.label) + "</span>" +
+        '<span class="dam-collection-chip__count">' + n + "</span>" +
+        "</button>"
+      );
+    }).join("");
+    return '<div class="dam-collection-bar" aria-label="Zapisane widoki">' + chips + "</div>";
   }
 
   function applyStatusLetterFilter(letter) {
@@ -4902,7 +4992,9 @@
         meta: opts.meta || materialCategoryMetaText(products.length, 0, 0),
         showAddProduct: !!opts.showAddProduct,
         categoryContext: { id: state.canonCat, title: catTitle },
-      });
+      }) +
+      /* Zapisane widoki: trzy pytania, ktore padaja w kolko przy ~500 wariantach. */
+      collectionChipsHtml();
 
     if (mixProds.length > 0) {
       var mixOpen = !!state.expandedCarriers["__mix__"];
@@ -4931,6 +5023,7 @@
       regularProds.map(buildProductRowHtml).join("") +
       "</div></div>";
     mount.innerHTML = html;
+    bindCollectionChips(mount);
     bindPanelNav(mount);
     mount.querySelectorAll("[data-toggle-mix]").forEach(function (btn) {
       btn.addEventListener("click", function () {
@@ -5059,6 +5152,68 @@
       esc(clearLbl) +
       "</button></div></div>"
     );
+  }
+
+  function renderCollectionPanel(mount) {
+    var col = collectionById(state.collectionFilter);
+    if (!col) return;
+    var rows = revisionsForCollection(col.id);
+    var html =
+      '<div class="dam-explorer-panel">' +
+      panelHeadHtml({
+        icon: col.icon,
+        kicker: "Zapisany widok",
+        title: col.label,
+        meta: plCount(rows.length, "wariant", "warianty", "wariantow") + ". " + col.hint
+      }) +
+      collectionChipsHtml();
+
+    if (!rows.length) {
+      html += '<div class="dam-explorer-empty">Nic tu nie ma - i dobrze.</div></div>';
+      mount.innerHTML = html;
+      bindCollectionChips(mount);
+      return;
+    }
+
+    html += '<div class="dam-collection-list">';
+    rows.forEach(function (row) {
+      var rev = row.rev;
+      var prod = row.product;
+      var d = variantDistFor(rev);
+      var idx = String(rev.index || "").replace(/\.0+$/, "");
+      html +=
+        '<button type="button" class="dam-collection-row" data-collection-open="' +
+        esc(prod.id || "") + '">' +
+        '<span class="dam-collection-row__product">' +
+        esc(productDisplayTitle(prod)) + "</span>" +
+        '<span class="dam-collection-row__folder">' + esc(rev.folder || "") + "</span>" +
+        (d.text ? '<span class="dam-variant-dist dam-variant-dist--' + esc(d.source) + '">' +
+          esc(d.text) + "</span>" : "") +
+        variantFlagHtml(rev) +
+        '<span class="dam-collection-row__index">' + esc(idx) + "</span>" +
+        "</button>";
+    });
+    html += "</div></div>";
+    mount.innerHTML = html;
+    bindCollectionChips(mount);
+    mount.querySelectorAll("[data-collection-open]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var pid = this.getAttribute("data-collection-open");
+        state.collectionFilter = null;
+        openProduct(pid);
+      });
+    });
+  }
+
+  function bindCollectionChips(scope) {
+    (scope || document).querySelectorAll("[data-collection]").forEach(function (b) {
+      if (b._damColBound) return;
+      b._damColBound = true;
+      b.addEventListener("click", function () {
+        var id = this.getAttribute("data-collection");
+        applyCollectionFilter(state.collectionFilter === id ? null : id);
+      });
+    });
   }
 
   function renderStatusFilterPanel(mount) {
@@ -5230,6 +5385,12 @@
 
     if (!state.fileIndex) {
       mount.innerHTML = '<div class="dam-explorer-empty">Ładowanie indeksu dysku...</div>';
+      return;
+    }
+
+    /* Zapisany widok (bez opisu / do archiwum / poza sezonem) */
+    if (!state.product && state.collectionFilter) {
+      renderCollectionPanel(mount);
       return;
     }
 
@@ -9202,6 +9363,76 @@
   /* Wpisywanie opisu z podpowiedziami zamiast surowego prompt().
      Bez slownika ten sam wyroznik zapisze sie jako GRILL, Grill i "na grilla" -
      trzy byty, ktorych nie da sie wyszukac razem. */
+  /* Sezon tagu to decyzja dla calej firmy (GRILL = V-IX dotyczy kazdego
+     wariantu tak opisanego), wiec ustawia go admin albo power_user.
+     Sam opis nadal dodaje kazdy. */
+  function canSetTagSeason() {
+    var role =
+      (window.DamApi && typeof window.DamApi.role === "function" && window.DamApi.role()) ||
+      localStorage.getItem("dam_role") ||
+      "";
+    role = String(role).toLowerCase();
+    return role === "admin" || role === "power_user";
+  }
+
+  var MONTHS_PL_FULL = ["styczen","luty","marzec","kwiecien","maj","czerwiec",
+                        "lipiec","sierpien","wrzesien","pazdziernik","listopad","grudzien"];
+
+  function monthOptions(selected) {
+    var out = "";
+    for (var m = 1; m <= 12; m += 1) {
+      out += '<option value="' + m + '"' + (m === selected ? " selected" : "") + ">" +
+             MONTHS_PL_FULL[m - 1] + "</option>";
+    }
+    return out;
+  }
+
+  function seasonFieldsHtml(current) {
+    if (!canSetTagSeason()) return "";
+    var VN = window.DamVariantNotes;
+    var se = (VN && VN.seasonFor) ? VN.seasonFor(current) : null;
+    return (
+      '<div class="dam-note-dialog__season">' +
+        '<label class="dam-note-dialog__check">' +
+          '<input type="checkbox" id="damNoteSeasonOn"' + (se ? " checked" : "") + " />" +
+          "<span>Opis sezonowy (np. GRILL tylko latem)</span>" +
+        "</label>" +
+        '<div class="dam-note-dialog__season-range" id="damNoteSeasonRange"' + (se ? "" : " hidden") + ">" +
+          '<label class="dam-note-dialog__label" for="damNoteSeasonFrom">Od</label>' +
+          '<select id="damNoteSeasonFrom" class="dam-note-dialog__select">' +
+          monthOptions(se ? se.from : 5) + "</select>" +
+          '<label class="dam-note-dialog__label" for="damNoteSeasonTo">Do</label>' +
+          '<select id="damNoteSeasonTo" class="dam-note-dialog__select">' +
+          monthOptions(se ? se.to : 9) + "</select>" +
+        "</div>" +
+        '<p class="dam-note-dialog__hint">Poza sezonem wariant nie znika - dostaje plakietke ' +
+        '"poza sezonem" i nie liczy sie jako aktualny. Zakres moze przechodzic przez Nowy Rok.</p>' +
+      "</div>"
+    );
+  }
+
+  function saveTagSeason(noteText) {
+    if (!canSetTagSeason() || !noteText) return Promise.resolve();
+    var on = document.getElementById("damNoteSeasonOn");
+    if (!on) return Promise.resolve();
+    var body = { tag: noteText };
+    if (on.checked) {
+      body.season_from = parseInt((document.getElementById("damNoteSeasonFrom") || {}).value, 10);
+      body.season_to = parseInt((document.getElementById("damNoteSeasonTo") || {}).value, 10);
+    }
+    var base =
+      (window.DamRuntime && window.DamRuntime.bridgeUrl && window.DamRuntime.bridgeUrl()) ||
+      "http://127.0.0.1:8766";
+    return fetch(base + "/variant-tag", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    })
+      .then(function (r) { return r.json(); })
+      .catch(function () { return { ok: false }; });
+  }
+
   function openVariantNoteEditor(idx, current) {
     var VN = window.DamVariantNotes;
     var old = document.getElementById("damVariantNoteDialog");
@@ -9229,6 +9460,7 @@
         ' maxlength="120" autocomplete="off" value="' + esc(current || "") + '" />' +
         '<datalist id="damVariantNoteList">' + opts + "</datalist>" +
         '<p class="dam-note-dialog__hint">Puste pole usuwa opis. Wybierz z listy, jesli taki opis juz istnieje.</p>' +
+        seasonFieldsHtml(current) +
         '<div class="dam-note-dialog__actions">' +
           '<button type="button" class="dam-note-dialog__btn dam-note-dialog__btn--primary" data-note-save>Zapisz</button>' +
           '<button type="button" class="dam-note-dialog__btn" data-note-cancel>Anuluj</button>' +
@@ -9242,8 +9474,14 @@
 
     function save() {
       var next = input ? input.value : "";
+      var seasonP = saveTagSeason(next.trim());
       close();
       if (!VN) return;
+      Promise.resolve(seasonP).then(function () {
+        /* Sezon siedzi w tym samym pliku co opisy - bez przeladowania
+           slownika plakietka "poza sezonem" pojawilaby sie dopiero po F5. */
+        return VN.load(true);
+      }).then(function () {
       VN.save(idx, next).then(function (res) {
         if (res && res.ok && res.pending) {
           showToast(res.hint || "Opis zalozyl admin - zmiana czeka na zatwierdzenie.");
@@ -9254,7 +9492,14 @@
         }
         if (typeof renderMain === "function") renderMain();
       });
+      });
     }
+
+    wrap.addEventListener("change", function (ev) {
+      if (!ev.target.closest || !ev.target.closest("#damNoteSeasonOn")) return;
+      var range = document.getElementById("damNoteSeasonRange");
+      if (range) range.hidden = !ev.target.checked;
+    });
 
     wrap.addEventListener("click", function (ev) {
       if (ev.target === wrap || ev.target.closest("[data-note-cancel]")) { close(); return; }
