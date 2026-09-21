@@ -13371,3 +13371,102 @@ html[data-theme="dark"] .dam-cache-badge {
   background: color-mix(in srgb, var(--dam-surface-elevated) 88%, var(--dam-primary, #005a29));
   color: var(--dam-text);
 }
+
+/* ==================================================================
+   WYROZNIK WARIANTU (chip obok nazwy nosnika / w wynikach szukania)
+   ------------------------------------------------------------------
+   Po samym indeksie nikt nie wie, czym rozni sie 6300631 od 6300569.
+   Dwa zrodla, dwa odcienie tego samego chipa:
+     --folder = wyroznik stoi w nazwie folderu na dysku (fakt),
+     --note   = opis dopisany w programie (nazwa folderu bez zmian),
+     --add    = miejsce na opis, widoczne tylko dla admina.
+   ================================================================== */
+/* inline-block, nie inline-flex: na kontenerze flex text-overflow nie dziala
+   i dluzszy opis ("Żelazo, Magnez, Witamina E") urywal sie bez wielokropka. */
+.dam-variant-dist {
+  display: inline-block;
+  max-width: 30ch;
+  overflow: hidden;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+/* Z dysku: pelny akcent - to nie jest domysl, tylko nazwa folderu. */
+.dam-variant-dist--folder {
+  background: color-mix(in srgb, var(--dam-primary) 12%, transparent);
+  border-color: color-mix(in srgb, var(--dam-primary) 26%, transparent);
+  color: color-mix(in srgb, var(--dam-primary) 82%, var(--dam-text));
+}
+
+/* Z programu: neutralnie, zeby bylo widac, ze to nasz dopisek. */
+.dam-variant-dist--note {
+  background: var(--dam-surface-muted);
+  border-color: var(--dam-border);
+  color: var(--dam-text);
+  border-style: dashed;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.dam-variant-dist--note:hover {
+  border-color: color-mix(in srgb, var(--dam-primary) 45%, var(--dam-border));
+  color: var(--dam-primary);
+}
+
+/* Zaproszenie ma ikone + tekst, wiec tu flex jest potrzebny - i nie tnie,
+   bo napis "opis" zawsze sie miesci. */
+.dam-variant-dist--add {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: none;
+  background: transparent;
+  border: 1px dashed var(--dam-border);
+  color: var(--dam-text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+.dam-variant-dist--add i {
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* Zaproszenie do opisu nie ma krzyczec - pojawia sie na hover wiersza. */
+.dam-carrier-toggle-row:hover .dam-variant-dist--add,
+.dam-variant-dist--add:focus-visible {
+  opacity: 1;
+}
+
+.dam-variant-dist--add:hover {
+  border-color: color-mix(in srgb, var(--dam-primary) 45%, var(--dam-border));
+  color: var(--dam-primary);
+}
+
+.dam-variant-dist:focus-visible {
+  outline: 2px solid var(--dam-primary);
+  outline-offset: 2px;
+}
+
+/* W wynikach szukania chip stoi zaraz za nazwa wariantu. */
+.dam-search-hit__note {
+  margin-left: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dam-variant-dist--add { transition: none; }
+}

@@ -888,6 +888,33 @@
     paint();
   }
 
+  /* Wyroznik obok indeksu. Dwa zrodla, jedna prezentacja:
+     - "folder" = czlon nazwy folderu (MAGNEZ & ŻELAZO) - nic nie trzeba wpisywac,
+     - "note"   = opis dopisany w programie, gdy nazwa folderu nic nie mowi.
+     Sam indeks (6300631) nikomu nic nie mowi, a to jest jedyna roznica
+     miedzy osmioma rekawami Burgera Klasycznego. */
+  function variantNoteChip(h) {
+    var DL = window.DamLabels;
+    var VN = window.DamVariantNotes;
+    if (!DL || typeof DL.variantDistinguisher !== "function") return "";
+    var rev = (h && h.revision) || null;
+    if (!rev && h && h.label) rev = { folder: h.label };
+    if (!rev) return "";
+    var d = DL.variantDistinguisher(rev, function (r) {
+      return VN ? VN.forRevision(r) : "";
+    });
+    if (!d.text) return "";
+    return (
+      '<span class="dam-search-hit__note dam-variant-dist dam-variant-dist--' +
+      escapeHtml(d.source) +
+      '" title="' +
+      (d.source === "folder" ? "Wyróżnik z nazwy folderu" : "Opis dodany w programie") +
+      '">' +
+      escapeHtml(d.text) +
+      "</span>"
+    );
+  }
+
   function buildHitItemHtml(h) {
     var p = h.product || {};
     var r = h.revision;
@@ -930,6 +957,8 @@
       '<span class="dam-search-name">' +
       escapeHtml(hitName) +
       "</span>" +
+      /* Opis wariantu obok indeksu: sam numer nikomu nic nie mowi. */
+      variantNoteChip(h) +
       '<span class="dam-search-meta">' +
       escapeHtml(hitMeta) +
       (h.kind === "product" && h.childCount

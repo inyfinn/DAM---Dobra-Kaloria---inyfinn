@@ -2272,6 +2272,58 @@ def append_carrier_override(path_key: str, entry: dict) -> dict:
     return {"ok": True, "path": path_key, "entry": entry}
 
 
+def variant_note_key(raw: str) -> str:
+    """Klucz notatki = sam indeks, bez ".00".
+
+    Firma wycofuje sie z koncowki ".00", a ten sam wariant wystepuje w indeksie
+    raz jako "6300631.00", raz jako "6300631". Jeden klucz = jedna notatka,
+    niezaleznie od tego, ktora forma akurat trafila do nazwy folderu.
+    """
+    txt = str(raw or "").strip()
+    m = re.search(r"(\d{6,8})(?:\.\d+)?", txt)
+    if m:
+        return m.group(1)
+    return re.sub(r"\s+", " ", txt).strip()
+
+
+VARIANT_NOTE_MAX = 120
+
+
+def read_variant_notes() -> dict:
+    data = _load_json(WEB_ROOT / "data" / "variant-notes.json", {"notes": {}})
+    if not isinstance(data.get("notes"), dict):
+        data["notes"] = {}
+    return data
+
+
+def upsert_variant_note(raw_key: str, note: str, actor: str = "") -> dict:
+    """Opis wariantu widoczny obok indeksu. NIE zmienia nazwy folderu na dysku."""
+    key = variant_note_key(raw_key)
+    if not key:
+        return {"ok": False, "error": "index_required"}
+    text = re.sub(r"\s+", " ", str(note or "")).strip()[:VARIANT_NOTE_MAX]
+    data = read_variant_notes()
+    if text:
+        data["notes"][key] = {
+            "note": text,
+            "updated_at": utc_now(),
+            "updated_by": actor or "",
+        }
+    else:
+        data["notes"].pop(key, None)
+    data["updated_at"] = utc_now()
+    _save_json(WEB_ROOT / "data" / "variant-notes.json", data)
+    append_change_log(
+        {
+            "action": "variant_note",
+            "category": "index",
+            "index": key,
+            "note": text,
+        }
+    )
+    return {"ok": True, "index": key, "note": text}
+
+
 ELEMENTS_LINK_EXTS = {
     ".png", ".jpg", ".jpeg", ".gif", ".webp", ".tif", ".tiff",
     ".ai", ".psd", ".indd", ".pdf", ".zip", ".rar", ".7z",
@@ -3299,6 +3351,7 @@ KV_STORE_KEYS = frozenset({
     "notification-groups",
     "inbox-items",
     "carrier-overrides",
+    "variant-notes",
     "elements-overrides",
     "viz-flags",
     "thumb-overrides",
@@ -9916,6 +9969,19 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(400, {"ok": False, "error": "path_and_entry_required"})
                 return
             self._json(200, append_carrier_override(path, entry))
+            return
+        if parsed.path == "/variant-note":
+            actor_user = self._require_admin()
+            if actor_user is None:
+                return
+            raw_key = (data.get("index") or data.get("path") or "").strip()
+            if not raw_key:
+                self._json(400, {"ok": False, "error": "index_required"})
+                return
+            result = upsert_variant_note(
+                raw_key, data.get("note") or "", str(actor_user.get("username") or "")
+            )
+            self._json(200 if result.get("ok") else 400, result)
             return
         if parsed.path == "/elements-link":
             if self._require_admin() is None:

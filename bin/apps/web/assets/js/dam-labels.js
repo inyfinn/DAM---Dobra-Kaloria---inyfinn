@@ -435,8 +435,141 @@
     return matchCarrierInText(n) || "";
   }
 
+  /* ---------------------------------------------------------------- */
+  /* WYROZNIK WARIANTU                                                   */
+  /*                                                                     */
+  /* Konwencja nazw folderow ma juz slot na wyroznik:                    */
+  /*   DOY - MAGNEZ & ZELAZO - 65 g - 24.02.2026 - 6300753.00            */
+  /*   ^nosnik ^WYROZNIK       ^gram  ^data        ^indeks               */
+  /* Czarna Porzeczka ma dwa doypacki 65 g z ta sama data - rozni je     */
+  /* WYLACZNIE ten czlon. Indeks go nie wyodrebnial, wiec w UI obie      */
+  /* pozycje wygladaly identycznie i nie dalo sie ich rozroznic.         */
+  /*                                                                     */
+  /* Tu zostaje to, czego NIE rozpoznajemy jako nosnik / gramature /     */
+  /* date / indeks / jezyki / flage. Pusto = folder nic nie mowi i       */
+  /* wtedy opis dokleja sie z DamVariantNotes (bez zmiany nazwy na dysku).*/
+  /* Zamiast "wyrzuc caly czlon, jesli wyglada na smiec" - ODEJMIJ znane czesci
+     w srodku czlonu. Pierwsza wersja brala "RĘKAW 180 g", "GB AR FR NL" i
+     "KAR000147.00" za wyrozniki (42% rewizji), bo sprawdzala tylko caly token.
+     Zasada: lepiej NIE pokazac wyroznika niz go zmyslic - brak i tak mozna
+     uzupelnic recznie notatka w programie. */
+  var DIST_STRIP = [
+    /\b\d{6,8}(?:[.,]\d+)?\b/g,                  /* indeks 6300753.00            */
+    /\b\d{4,8}X{2,}(?:[.,]\d+)?\b/gi,            /* placeholder 6300XXX.00       */
+    /\b0{5,}(?:[.,]\d+)?\b/g,                    /* placeholder 000000.00        */
+    /\b\d{1,4}[.\-\/ ]\d{1,2}[.\-\/ ]\d{2,4}\b/g,/* data 24.02.2026 / 18 06 2026 */
+    /\bDD[ _-]?MM[ _-]?RRRR\b/gi,                /* placeholder daty             */
+    /\b\d+(?:[.,]\d+)?\s?(?:g|gr|ml|kg|l|szt)\b/gi, /* gramatura 65 g / 45g      */
+    /\b\d+\s?x\b/gi,                             /* 6x                           */
+    /\bARCHIWUM\b/gi,
+    /\b(?:SZKIC|SZKICE|PREV|PODGLAD|PODGL\u0104D|FOLDER|KOPIA|COPY|FINAL)\d*\b/gi,
+    /\b(?:F|FQ|OK|NEW)\b/g,
+    /\bARCHIVE\b/gi,
+    /\bUNTITLED\b/gi,
+    /\bBEZ[ _-]INDEKSU\b/gi,
+    /\b6XMINI\b/gi,
+    /\bCARTON\b/gi,
+    /^(?:DK|GC)\b/gi,
+    /\bfunkc\b/gi
+  ];
+
+  function distStripKnown(text) {
+    var t = String(text || "").replace(/_/g, " ");
+    for (var i = 0; i < DIST_STRIP.length; i++) t = t.replace(DIST_STRIP[i], " ");
+    /* Nosniki: najdluzsze etykiety najpierw, zeby "KARTON 6x MINI" poszlo przed "KARTON". */
+    var names = [];
+    Object.keys(CARRIER_LABELS).forEach(function (k) { names.push(CARRIER_LABELS[k]); names.push(k); });
+    Object.keys(CARRIER_SHORTS).forEach(function (k) { names.push(CARRIER_SHORTS[k]); names.push(k); });
+    names.sort(function (a, b) { return b.length - a.length; });
+    for (var j = 0; j < names.length; j++) {
+      var nm = String(names[j] || "").trim();
+      if (nm.length < 2) continue;
+      var low = t.toLowerCase();
+      var nml = nm.toLowerCase();
+      var at = low.indexOf(nml);
+      while (at >= 0) {
+        var before = at === 0 ? " " : t.charAt(at - 1);
+        var afterAt = at + nml.length;
+        var after = afterAt >= t.length ? " " : t.charAt(afterAt);
+        if (!/[A-Za-z0-9]/.test(before) && !/[A-Za-z0-9]/.test(after)) {
+          t = t.slice(0, at) + " " + t.slice(afterAt);
+          low = t.toLowerCase();
+          at = low.indexOf(nml);
+        } else {
+          at = low.indexOf(nml, at + 1);
+        }
+      }
+    }
+    return t.replace(/[\s.\-\u2013\u2014,;:]+/g, " ").trim();
+  }
+
+  /* Dwuliterowy token w nazwie folderu to zawsze kod rynku/jezyka (PL EN GB AR). */
+  function distIsMeaningful(text) {
+    var words = String(text || "").split(/\s+/).filter(Boolean);
+    if (!words.length || words.length > 5) return false;
+    var real = words.filter(function (w) { return !/^[A-Za-z]{1,2}$/.test(w); });
+    if (!real.length) return false;
+    var joined = real.join(" ");
+    if (joined.replace(/[^A-Za-z\u00C0-\u024F\u0100-\u017F]/g, "").length < 3) return false;
+    if (/\d{4,}/.test(joined)) return false;
+    return true;
+  }
+
+  /** Wyroznik odczytany z nazwy folderu ("" gdy nazwa nic nie wnosi). */
+  function variantDistinguisherFromFolder(folder) {
+    var raw = String(folder || "").trim();
+    if (!raw) return "";
+    var tokens = raw.split(/\s+[-\u2013\u2014]\s+/);
+    var keep = [];
+    for (var i = 0; i < tokens.length; i++) {
+      var cleaned = distStripKnown(tokens[i]);
+      if (cleaned && distIsMeaningful(cleaned)) keep.push(cleaned);
+    }
+    if (!keep.length) return "";
+    var out = keep.join(" \u00b7 ");
+    return distIsMeaningful(out.replace(/\u00b7/g, " ")) ? out : "";
+  }
+
+  /**
+   * Wyroznik rewizji + jego zrodlo.
+   * source: "folder" = z dysku (nazwa mowi sama za siebie),
+   *         "note"   = dopisany w programie,
+   *         ""       = brak.
+   */
+  function variantDistinguisher(rev, noteLookup) {
+    var fromFolder = variantDistinguisherFromFolder(rev && rev.folder);
+    if (fromFolder) return { text: fromFolder, source: "folder" };
+    var note = "";
+    if (typeof noteLookup === "function") note = noteLookup(rev) || "";
+    else if (typeof noteLookup === "string") note = noteLookup;
+    note = String(note || "").trim();
+    if (note) return { text: note, source: "note" };
+    return { text: "", source: "" };
+  }
+
+  var CARRIER_FORBIDDEN_RE = /^(OTHER|UNKNOWN|WARIANT)$/i;
+
+  /**
+   * Nosnik rewizji. Kolejnosc zrodel ma znaczenie.
+   *
+   * Indeks liczy "carrier" przy skanowaniu dysku i zna caly kontekst produktu,
+   * wiec jest to FAKT, a nie domysl. Wczesniej ta funkcja od razu skakala do
+   * zgadywania z nazw plikow i dla BURGERA KLASYCZNEGO robila z osmiu rekawow
+   * trzy grupy: piec folderow z plikami "WIZKA-..." ladowalo w WIZUALIZACJE,
+   * folder bez wizek w WARIANT, a tylko dwa z prefiksem w folderze trafialy do
+   * RĘKAW. Uzytkownik widzial typy nosnika, ktorych na dysku nie ma.
+   */
+  function carrierFromIndex(rev) {
+    var raw = String((rev && (rev.carrier || rev.carrier_code)) || "").trim().toUpperCase();
+    if (!raw || CARRIER_FORBIDDEN_RE.test(raw)) return "";
+    if (CARRIER_LABELS[raw] || CARRIER_SHORTS[raw]) return raw;
+    return matchCarrierInText(raw) || "";
+  }
+
   function inferCarrierFromRevision(rev) {
     if (!rev) return "UNKNOWN";
+    var indexed = carrierFromIndex(rev);
+    if (indexed) return indexed;
     var fromFolder = parseCarrierCode(rev.folder);
     if (fromFolder && fromFolder !== "UNKNOWN") return fromFolder;
     var files = [];
@@ -448,8 +581,6 @@
     }
     return "UNKNOWN";
   }
-
-  var CARRIER_FORBIDDEN_RE = /^(OTHER|UNKNOWN|WARIANT)$/i;
 
   function resolveCarrierCode(code, gramFromName) {
     if ((!code || CARRIER_FORBIDDEN_RE.test(code)) && gramFromName) {
@@ -983,6 +1114,8 @@
     matchCarrierInText: matchCarrierInText,
     inferCarrierFromFileName: inferCarrierFromFileName,
     inferCarrierFromRevision: inferCarrierFromRevision,
+    variantDistinguisherFromFolder: variantDistinguisherFromFolder,
+    variantDistinguisher: variantDistinguisher,
     carrierShort: carrierShort,
     carrierLabelLong: carrierLabelLong,
     carrierLabel: carrierLabel,

@@ -1887,6 +1887,17 @@
         popup.style.height = popup.classList.contains("geex-content__header__popup--message")
           ? (popup.style.height || "")
           : "";
+        /* Klik w lupe = chce pisac. Popup sie otwieral, ale kursor zostawal
+           nigdzie i trzeba bylo klikac drugi raz w samo pole. */
+        var firstInput = popup.querySelector("input[type=text], input:not([type]), input[type=search]");
+        if (firstInput) {
+          window.requestAnimationFrame(function () {
+            try {
+              firstInput.focus({ preventScroll: true });
+              firstInput.select();
+            } catch (eFocus) { firstInput.focus(); }
+          });
+        }
       }
       syncHeaderPopupOpenClass();
     }, true);

@@ -3988,6 +3988,58 @@
     );
   }
 
+  /* ------------------------------------------------------------------ *
+   * WYROZNIK WARIANTU obok nazwy nosnika.
+   *
+   * Problem: osiem rekawow Burgera Klasycznego rozni tylko indeks, a po samym
+   * numerze nikt nie wie, ktory jest "na grill", a ktory "zelazo + magnez".
+   * Czesc produktow ma to juz w nazwie folderu (Czarna Porzeczka:
+   * "DOY - MAGNEZ & ŻELAZO - 65 g - ..."), czesc nie ma nic.
+   *
+   * Jedna prezentacja, dwa zrodla: z nazwy folderu (nic nie trzeba wpisywac)
+   * albo z opisu dodanego w programie. Opis NIE zmienia nazwy folderu na dysku.
+   * ------------------------------------------------------------------ */
+  function variantNoteFor(rev) {
+    var VN = window.DamVariantNotes;
+    return VN ? VN.forRevision(rev) : "";
+  }
+
+  function variantDistFor(rev) {
+    if (!DL || typeof DL.variantDistinguisher !== "function") return { text: "", source: "" };
+    return DL.variantDistinguisher(rev, variantNoteFor);
+  }
+
+  function variantDistHtml(rev) {
+    if (!rev) return "";
+    var d = variantDistFor(rev);
+    var idx = String(rev.index || rev.index_rev || "").replace(/\.0+$/, "");
+    if (!d.text) {
+      if (!state.adminMode) return "";
+      return (
+        '<button type="button" class="dam-variant-dist dam-variant-dist--add"' +
+        ' data-variant-note-edit="' + esc(idx) + '"' +
+        ' data-dam-tip="Dodaj opis wariantu (nie zmienia nazwy folderu na dysku)">' +
+        '<i class="uil uil-plus" aria-hidden="true"></i><span>opis</span></button>'
+      );
+    }
+    var fromFolder = d.source === "folder";
+    var tip = fromFolder
+      ? "Wyróżnik z nazwy folderu na dysku"
+      : "Opis dodany w programie. Nazwa folderu na dysku bez zmian.";
+    if (fromFolder || !state.adminMode) {
+      return (
+        '<span class="dam-variant-dist dam-variant-dist--' + esc(d.source) + '"' +
+        ' data-dam-tip="' + esc(tip) + '">' + esc(d.text) + "</span>"
+      );
+    }
+    return (
+      '<button type="button" class="dam-variant-dist dam-variant-dist--note"' +
+      ' data-variant-note-edit="' + esc(idx) + '"' +
+      ' data-dam-tip="' + esc(tip) + ' Klik: zmien."' + ">" +
+      esc(d.text) + "</button>"
+    );
+  }
+
   function renderCarrierCard(code, currentRevs, olderRevs, product, allProductRevisions, cardOpts) {
     cardOpts = cardOpts || {};
     var rev = currentRevs[0]; // primary current revision
@@ -4208,6 +4260,7 @@
               '" data-dam-tip="Nośnik. Klik: filtr. Admin: Shift+klik lub podwójny klik - wybierz z listy.">' +
               esc(label) +
               "</span>" +
+              variantDistHtml(rev) +
               '<div class="dam-carrier-toggle__chips">' +
               tags +
               "</div>" +
@@ -8956,6 +9009,86 @@
     });
   }
 
+  /* Edycja opisu wariantu. Delegacja na dokumencie, bo karty przerysowuja sie
+     w calosci przy kazdym renderze i handlery na elementach by gynely. */
+  var _variantNoteBound = false;
+
+  /* Lista wynikow zaslaniala pol ekranu i nie dalo sie jej zamknac inaczej niz
+     wybraniem wyniku. Klik poza polem albo Escape zwija ja bez gubienia wpisanej
+     frazy - samo pole zostaje wypelnione, wiec mozna wrocic do wynikow. */
+  var _searchDismissBound = false;
+
+  function hideSearchDropdown() {
+    var res = document.getElementById("damSearchResults");
+    if (!res || res.style.display === "none") return false;
+    res.style.display = "none";
+    return true;
+  }
+
+  function bindSearchDismiss() {
+    if (_searchDismissBound) return;
+    _searchDismissBound = true;
+    document.addEventListener("click", function (ev) {
+      var res = document.getElementById("damSearchResults");
+      if (!res || res.style.display === "none") return;
+      if (ev.target.closest && ev.target.closest("#damSearchResults")) return;
+      if (ev.target.closest && ev.target.closest("#damFileSearch")) return;
+      hideSearchDropdown();
+    });
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key !== "Escape") return;
+      if (hideSearchDropdown()) {
+        var inp = document.getElementById("damFileSearch");
+        if (inp) inp.focus();
+      }
+    });
+    /* Ponowny klik/wpis w pole przywraca liste, gdy cos juz w niej jest. */
+    document.addEventListener("focusin", function (ev) {
+      if (!ev.target.closest || !ev.target.closest("#damFileSearch")) return;
+      var res = document.getElementById("damSearchResults");
+      if (res && res.innerHTML.trim() && res.style.display === "none") {
+        res.style.display = "";
+      }
+    });
+  }
+
+  function bindVariantNoteEditing() {
+    if (_variantNoteBound) return;
+    _variantNoteBound = true;
+    document.addEventListener("click", function (ev) {
+      var btn = ev.target.closest && ev.target.closest("[data-variant-note-edit]");
+      if (!btn) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      var idx = btn.getAttribute("data-variant-note-edit") || "";
+      if (!idx) {
+        showToast("Ten wariant nie ma indeksu - nie ma czego opisac", "error");
+        return;
+      }
+      var VN = window.DamVariantNotes;
+      var current = VN ? VN.get(idx) : "";
+      var NL = String.fromCharCode(10);
+      var msg = [
+        "Opis wariantu " + idx,
+        "",
+        "Krotko, co go wyroznia (np. GRILL, ŻELAZO + MAGNEZ).",
+        "Nazwa folderu na dysku NIE zostanie zmieniona.",
+        "Puste pole usuwa opis."
+      ].join(NL);
+      var next = window.prompt(msg, current || "");
+      if (next === null) return;
+      if (!VN) return;
+      VN.save(idx, next).then(function (res) {
+        if (res && res.ok) {
+          showToast(res.note ? "Zapisano opis: " + res.note : "Opis usuniety");
+          if (typeof renderMain === "function") renderMain();
+        } else {
+          showToast("Nie zapisano opisu" + (res && res.error ? " (" + res.error + ")" : ""), "error");
+        }
+      });
+    });
+  }
+
   function init() {
     var main = document.getElementById("damExplorerMain");
     if (!main) return;
@@ -8971,6 +9104,14 @@
 
     ensureExplorerCtaUnifyCss();
     bindCategoryAddButton();
+    bindVariantNoteEditing();
+    bindSearchDismiss();
+    if (window.DamVariantNotes && typeof DamVariantNotes.load === "function") {
+      DamVariantNotes.load().then(function () {
+        /* Opisy doczytane po pierwszym renderze - odswiez, zeby chipy wskoczyly. */
+        if (typeof renderMain === "function") renderMain();
+      });
+    }
 
     var revealLow = document.getElementById("damRevealLowTags");
     if (revealLow && window.DamBadges && typeof window.DamBadges.setRevealLowTags === "function") {
