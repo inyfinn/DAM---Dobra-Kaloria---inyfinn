@@ -44,9 +44,13 @@ if (-not (Test-Path $zipPath)) {
   Invoke-WebRequest -Uri $EmbedUrl -OutFile $zipPath -UseBasicParsing
 }
 
+# Zasada 0 (~/.claude/CLAUDE.md): build NIGDY nie kasuje rekurencyjnie. 2026-09-22 ten
+# krok robil Remove-Item -Recurse na runtime\win\python przy kazdym buildzie. Teraz stary
+# katalog jest tylko PRZEMIANOWANY; usuwa go czlowiek przez Kosz (send-to-trash.ps1).
 if (Test-Path $RuntimePy) {
-  Write-Host "Removing existing $RuntimePy"
-  Remove-Item -LiteralPath $RuntimePy -Recurse -Force
+  $oldName = (Split-Path $RuntimePy -Leaf) + ".old-" + (Get-Date -Format "yyyyMMdd-HHmmss")
+  Rename-Item -LiteralPath $RuntimePy -NewName $oldName
+  Write-Host "Poprzedni runtime przemianowany: $(Join-Path (Split-Path $RuntimePy) $oldName) (usun recznie przez Kosz)"
 }
 New-Item -ItemType Directory -Force -Path $RuntimePy | Out-Null
 Write-Host "Expanding embed zip..."

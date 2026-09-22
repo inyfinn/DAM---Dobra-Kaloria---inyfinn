@@ -57,7 +57,10 @@ try {
 } finally { Pop-Location }
 
 Write-Host "== 5/7 stage dist/staging/DAM =="
-if (Test-Path -LiteralPath $Staging) { Remove-Item -LiteralPath $Staging -Recurse -Force }
+# Zasada 0: bez kasowania rekurencyjnego - poprzedni staging tylko przemianowany.
+if (Test-Path -LiteralPath $Staging) {
+  Rename-Item -LiteralPath $Staging -NewName ((Split-Path $Staging -Leaf) + ".old-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
+}
 New-Item -ItemType Directory -Force -Path $Staging | Out-Null
 Copy-Item -LiteralPath $outExe -Destination $Staging -Force
 foreach ($name in @("README.txt", "DAM.cmd")) {

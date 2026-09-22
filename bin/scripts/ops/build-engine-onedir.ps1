@@ -32,17 +32,18 @@ if (-not (Test-Path $Ico)) {
   & $HostPy (Join-Path $ContentRoot "apps\desktop\scripts\build-dam-ico.py")
 }
 
-New-Item -ItemType Directory -Force -Path $EngineDir, $DistWork | Out-Null
-if (Test-Path (Join-Path $EngineDir "dam-appw.exe")) {
-  Remove-Item (Join-Path $EngineDir "*") -Recurse -Force -ErrorAction SilentlyContinue
-}
+# Zasada 0 (~/.claude/CLAUDE.md): bez kasowania rekurencyjnego. PyInstaller buduje do
+# swiezego katalogu; stary silnik jest PRZEMIANOWANY (*.old-<data>), usuwa go czlowiek.
+$stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+$freshDist = "$EngineDir.new-$stamp"
+New-Item -ItemType Directory -Force -Path $DistWork | Out-Null
 
 $specArgs = @(
   "-m", "PyInstaller",
   "--noconfirm", "--clean",
   "--onedir",
   "--name", "dam-appw",
-  "--distpath", $EngineDir,
+  "--distpath", $freshDist,
   "--workpath", (Join-Path $DistWork "build"),
   "--specpath", $DistWork,
   "--windowed",
@@ -56,16 +57,18 @@ try {
   if ($LASTEXITCODE -ne 0) { throw "PyInstaller exit $LASTEXITCODE" }
 } finally { Pop-Location }
 
-$builtDir = Join-Path $EngineDir "dam-appw"
+$builtDir = Join-Path $freshDist "dam-appw"
 $built = Join-Path $builtDir "dam-appw.exe"
 $target = Join-Path $EngineDir "dam-appw.exe"
 if (Test-Path $built) {
-  Get-ChildItem -LiteralPath $builtDir -Force | ForEach-Object {
-    $dest = Join-Path $EngineDir $_.Name
-    if (Test-Path $dest) { Remove-Item $dest -Recurse -Force -ErrorAction SilentlyContinue }
-    Move-Item -LiteralPath $_.FullName -Destination $EngineDir -Force
+  if (Test-Path $EngineDir) {
+    $oldName = (Split-Path $EngineDir -Leaf) + ".old-$stamp"
+    Rename-Item -LiteralPath $EngineDir -NewName $oldName
+    Write-Host "Poprzedni silnik przemianowany: $(Join-Path (Split-Path $EngineDir) $oldName) (usun recznie przez Kosz)"
   }
-  Remove-Item $builtDir -Recurse -Force -ErrorAction SilentlyContinue
+  Move-Item -LiteralPath $builtDir -Destination $EngineDir
+  # pusty katalog posredni - bez -Recurse (nie skasuje niczego z zawartoscia)
+  Remove-Item -LiteralPath $freshDist -ErrorAction SilentlyContinue
 }
 if (-not (Test-Path $target)) { throw "Brak $target po build" }
 Write-Host "OK engine: $target"
