@@ -34,7 +34,11 @@ When the user asks for "commit + push + build" / "zrób instalator" / "wyślij r
    `gh release create v{VERSION} bin/instalator/DAM-Setup.exe --title "DAM {VERSION}" --target HEAD --latest`
 6. Report back the release URL: `https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v{VERSION}`
 
-Don't declare the task done after only a push, or only a local `.exe` on disk — a stale `Latest` release tag is exactly the failure this guards against. As always here: never force-push, never delete old tags/releases, and confirm with the user before pushing/releasing if it wasn't explicitly asked for in this turn (per this environment's general policy on actions visible to others / hard-to-reverse actions).
+Don't declare the task done after only a push, or only a local `.exe` on disk — a stale `Latest` release tag is exactly the failure this guards against. Never force-push, never delete old tags/releases.
+
+**Do NOT ask for confirmation before pushing or releasing.** Krzysztof stated this explicitly on 2026-09-22: asking on routine ship work stalls his workflow. When he asks for a change, a fix, a build or a release, that IS the authorization — including product changes that require a version bump. Diagnose, fix, bump, commit, push, build, release, then report with evidence. Asking "should I?" on this chain is a failure, not caution.
+
+Still ask only when the action is genuinely destructive and irreversible (deleting tags/releases/branches, force-push, dropping data) — that is a different category.
 
 ## Design system rhythm (`.cursor/rules/design-system-rhythm.mdc`)
 
