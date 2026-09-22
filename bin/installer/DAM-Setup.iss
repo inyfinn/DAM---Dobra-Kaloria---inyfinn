@@ -1,6 +1,6 @@
 ﻿; DAM Windows installer - pelny kreator (licencja, sciezka, aktualizacja)
 #ifndef MyAppVersion
-  #define MyAppVersion "2.2.3"
+  #define MyAppVersion "2.2.4"
 #endif
 #ifndef StageDir
   #define StageDir "..\dist\staging\DAM-install"
@@ -150,6 +150,11 @@ Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; S
 Filename: "{tmp}\MicrosoftEdgeWebview2Setup.exe"; Parameters: "/silent /install"; StatusMsg: "Instalowanie WebView2 Runtime (wymagane przez pywebview)..."; Flags: waituntilterminated; Check: WebView2Needed
 ; Bez powershell -ExecutionPolicy Bypass: antywirusy (Bitdefender Boxter) blokuja ten wzorzec.
 ; PAMIEC-PODRECZNA jest w Setupie; uslugi w tle tylko ja aktualizuja z Synology.
+; Certyfikat jest SAMOPODPISANY, wiec sam TrustedPublisher nie wystarcza: lancuch
+; konczy sie na korzeniu, ktorego Windows nie zna i pokazuje "nieznany wydawca"
+; (Get-AuthenticodeSignature: "przerwano na certyfikacie glownym, ktory nie nalezy
+; do zaufanych"). Korzen musi trafic takze do Root - dopiero wtedy podpis sie waliduje.
+Filename: "{sys}\certutil.exe"; Parameters: "-user -f -addstore Root ""{app}\bin\installer\inyfinn-dam-codesign.cer"""; StatusMsg: "Rejestracja wydawcy Inyfinn (korzen zaufania)..."; Flags: runhidden waituntilterminated skipifdoesntexist
 Filename: "{sys}\certutil.exe"; Parameters: "-user -f -addstore TrustedPublisher ""{app}\bin\installer\inyfinn-dam-codesign.cer"""; StatusMsg: "Rejestracja wydawcy Inyfinn..."; Flags: runhidden waituntilterminated skipifdoesntexist
 Filename: "{app}\{#MyAppExeName}"; Description: "Uruchom DAM po zakonczeniu instalacji"; Flags: nowait postinstall skipifsilent
 ; Cicha aktualizacja z aplikacji (app_updates.py: /VERYSILENT ... /DAMRELAUNCH=1): DAM wraca sam.
