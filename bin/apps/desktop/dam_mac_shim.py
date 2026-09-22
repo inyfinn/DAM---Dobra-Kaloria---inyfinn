@@ -104,12 +104,58 @@ def _selftest(root: Path, desktop: Path) -> int:
     return 0 if not problems else 1
 
 
+# Skrypty payloadu, ktore wolno uruchomic przez "--run <nazwa>".
+# ENUM, nie sciezka: gdyby shim przyjmowal dowolna sciezke .py, kazdy moglby
+# wykonac swoj kod przez PODPISANA aplikacje i odziedziczyc jej zgody TCC
+# (Pliki i foldery, dostep do sieci lokalnej). Payload bywa zapisywalny dla
+# uzytkownika, wiec "lezy w .app" NIE znaczy "zaufane".
+RUNNABLE = {
+    "bridge": "local_bridge.py",
+}
+
+
+def _run_payload_script(desktop: Path, name: str) -> int:
+    rel = RUNNABLE.get(name)
+    if not rel:
+        print(f"Nieznany cel --run: {name!r}. Dozwolone: {', '.join(sorted(RUNNABLE))}",
+              file=sys.stderr)
+        return 2
+    target = (desktop / rel).resolve()
+    # Obrona w glab: nawet z bialej listy cel musi zostac wewnatrz payloadu.
+    if not str(target).startswith(str(desktop.resolve())) or target.suffix != ".py":
+        print(f"Cel poza payloadem: {target}", file=sys.stderr)
+        return 2
+    if not target.is_file():
+        print(f"Brak pliku celu: {target}", file=sys.stderr)
+        return 2
+    runpy.run_path(str(target), run_name="__main__")
+    return 0
+
+
 def main() -> int:
     root = _payload_root()
     desktop = _prepare_env(root)
+    args = sys.argv[1:]
 
-    if "--selftest" in sys.argv[1:]:
+    if "--selftest" in args:
         return _selftest(root, desktop)
+
+    if args and args[0] == "--run":
+        if len(args) < 2:
+            print("--run wymaga nazwy celu", file=sys.stderr)
+            return 2
+        return _run_payload_script(desktop, args[1])
+
+    # BRAMKA ANTY-REKURENCYJNA. Bez niej kazdy nieznany argument konczyl sie
+    # odpaleniem pelnego GUI. Tak powstawal lancuch mnozacych sie procesow:
+    # BridgeSupervisor spawnowal [sys.executable, local_bridge.py], czyli
+    # DAM.app z argumentem, shim argument ignorowal i startowal DAM od nowa,
+    # dziecko gino na zajetym porcie 8765, a supervise() respawnowalo je co 2,5 s.
+    # Nieznany argument = blad z kodem wyjscia, NIGDY cichy powrot do GUI.
+    if args:
+        print(f"Nieznane argumenty: {args}. Dozwolone: --selftest, --run <cel>",
+              file=sys.stderr)
+        return 2
 
     main_py = desktop / "__main__.py"
     if not main_py.is_file():

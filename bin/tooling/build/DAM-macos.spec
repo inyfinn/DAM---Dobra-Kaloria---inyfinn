@@ -30,6 +30,8 @@ def tree(src: Path, dest_rel: str, skip_dirs=(), skip_suffixes=()):
             continue
         if path.suffix.lower() in skip_suffixes:
             continue
+        if path.name in SKIP_NAMES:
+            continue
         out.append((str(path), f"{PAYLOAD}/{dest_rel}/{rel.parent.as_posix()}".rstrip("/.")))
     return out
 
@@ -39,6 +41,19 @@ SKIP_DIRS = (
     "logs", "_qa", "tests", "bootstrap", "thumbs", "_invoice_mail_stage",
 )
 SKIP_SUFFIXES = (".pyc", ".log", ".sqlite", ".env")
+
+# NIGDY nie pakuj sekretow do .app. Repo jest PUBLICZNE, a .dmg trafia na
+# GitHub Release (macos-build.yml: hdiutil create -> gh release upload), wiec
+# kazdy plik w bundlu jest publiczny. Krok "Konfiguracja bazy" zapisuje
+# pg-config.bundled.json z sekretu DAM_PG_CONFIG_JSON prosto do
+# bin/apps/desktop/data/ - bez tej bramki poszedlby do publicznego .dmg.
+# Audyt bezpieczenstwa 2026-09 zglosil juz dokladnie to samo dla instalatora
+# Windows ("haslo PG w instalatorze") - to jest ta sama kategoria bledu.
+SKIP_NAMES = (
+    "pg-config.bundled.json",
+    "pg-config.json",
+    "users-seed.sqlite",
+)
 
 datas = []
 datas += tree(DESKTOP, "bin/apps/desktop", SKIP_DIRS, SKIP_SUFFIXES)

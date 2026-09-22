@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import tempfile
 import sys
 import threading
 import time
@@ -15,6 +16,18 @@ from runtime_config import DESKTOP_DIR, HOST, env_for_bridge
 LOCAL_BRIDGE = DESKTOP_DIR / "local_bridge.py"
 CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
 
+# Log bledow startu mostu POZA bundlem .app - zapis do wnetrza podpisanej
+# aplikacji uniewaznia pieczec podpisu, a w /Applications zwykle nie ma praw.
+if sys.platform == "darwin":
+    _LOG_DIR = Path.home() / "Library" / "Logs" / "DAM"
+else:
+    _LOG_DIR = DESKTOP_DIR / "data"
+try:
+    _LOG_DIR.mkdir(parents=True, exist_ok=True)
+except OSError:
+    _LOG_DIR = Path(tempfile.gettempdir())
+BRIDGE_STDERR_LOG = _LOG_DIR / "bridge-stderr.log"
+
 
 def _silent_python() -> str:
     exe = Path(sys.executable)
@@ -23,6 +36,32 @@ def _silent_python() -> str:
         if pw.is_file():
             return str(pw)
     return str(exe)
+
+
+def is_frozen() -> bool:
+    """PyInstaller: sys.executable to binarka aplikacji, NIE interpreter."""
+    return bool(getattr(sys, "frozen", False))
+
+
+def payload_script_cmd(script: Path, run_name: str | None = None) -> list[str]:
+    """Polecenie uruchamiajace skrypt payloadu - dziala tez w zamrozonej .app.
+
+    Windows: dam_root_launcher.py re-exec-uje w bin/runtime/win/python/pythonw.exe,
+    wiec sys.executable jest PRAWDZIWYM interpreterem i [exe, skrypt] dziala.
+
+    macOS (.app): DAM-macos.spec zamraza cienki shim, ktory odpala kod przez
+    runpy W TYM SAMYM PROCESIE - zadnego interpretera na dysku nie ma.
+    sys.executable to DAM.app/Contents/MacOS/DAM, wiec [exe, skrypt] uruchamialo
+    CALA APLIKACJE OD NOWA z ignorowanym argumentem, a nie skrypt. Most na 8766
+    nigdy nie wstawal, a supervise() respawnowal kolejne kopie co 2,5 s.
+
+    W trybie zamrozonym uzywamy wiec sentinela shima: [exe, "--run", <cel>],
+    gdzie <cel> to nazwa z bialej listy dam_mac_shim.RUNNABLE (nie sciezka).
+    """
+    if not is_frozen():
+        return [_silent_python(), str(script)]
+    name = run_name or script.stem.replace("_", "-")
+    return [str(sys.executable), "--run", name]
 
 
 def bridge_health(port: int, timeout: float = 2.5) -> dict | None:
@@ -52,20 +91,34 @@ class BridgeSupervisor:
         self._proc: subprocess.Popen | None = None
         self._stop = threading.Event()
         self._lock = threading.Lock()
+        self.last_error = ""
 
     def start(self) -> subprocess.Popen | None:
         if not LOCAL_BRIDGE.is_file():
+            # Nie polykaj powodu - inaczej UI mowi tylko "most niedostepny".
+            self.last_error = f"brak pliku mostu: {LOCAL_BRIDGE}"
             return None
         flags = CREATE_NO_WINDOW if sys.platform == "win32" else 0
-        return subprocess.Popen(
-            [_silent_python(), str(LOCAL_BRIDGE)],
-            cwd=str(DESKTOP_DIR),
-            env=env_for_bridge(self.ui_port, self.bridge_port),
-            creationflags=flags,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+        cmd = payload_script_cmd(LOCAL_BRIDGE, run_name="bridge")
+        # stderr do pliku, nie do DEVNULL: gdy most padnie przy imporcie
+        # (brakujace kolo arm64, brak praw zapisu), to jedyny slad dla diagnozy.
+        try:
+            err = open(BRIDGE_STDERR_LOG, "ab", buffering=0)
+        except OSError:
+            err = subprocess.DEVNULL
+        try:
+            return subprocess.Popen(
+                cmd,
+                cwd=str(DESKTOP_DIR),
+                env=env_for_bridge(self.ui_port, self.bridge_port),
+                creationflags=flags,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=err,
+            )
+        except OSError as exc:
+            self.last_error = f"spawn mostu nieudany ({cmd[0]}): {exc}"
+            return None
 
     def ensure_running(self, wait_s: float = 12.0) -> dict:
         """Idempotent: health OK -> noop; else spawn bridge and wait."""
