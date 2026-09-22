@@ -1,13 +1,11 @@
 {
-  "ok": true,
-  "watcher_ok": true,
-  "stage": "monitoring",
-  "pid": 95680,
-  "last_ok": true,
-  "last_rc": 0,
-  "last_error": "",
-  "last_started": "2026-09-10T12:46:01Z",
-  "last_finished": "2026-09-10T12:47:00Z",
-  "awaiting_first_rebuild": false,
-  "updated_at": "2026-09-10T13:27:21Z"
+  "ok": false,
+  "watcher_ok": false,
+  "error": "corrupt:UnicodeDecodeError",
+  "current_name": "05 - DRINKS",
+  "current_path": "X:/Marketing/- EKSPORT/01 - PRODUCTS/- GC/03 - PLANT BASED/SZNYCEL — [ plant based ]",
+  "current_item": "05 - DRINKS",
+  "progress_message": "05 - DRINKS",
+  "awaiting_first_rebuild": true,
+  "updated_at": "2026-09-20T21:13:33Z"
 }
