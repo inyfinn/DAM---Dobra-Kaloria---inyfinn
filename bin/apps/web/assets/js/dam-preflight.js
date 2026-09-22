@@ -14,7 +14,16 @@
 
   var TIMEOUT_MS = 3000;
   var FIRST_CHECK_DELAY_MS = 1500;
+  // Stan przy starcie jest PRZEJSCIOWY: przez pierwsze sekundy pliki stanu sa
+  // jeszcze z poprzedniego uruchomienia, wiec pasek bledu potrafi mignac.
+  // Przy stalym RECHECK_MS = 20000 wisial pelne 20 s i uzytkownik widzial go
+  // przy KAZDYM starcie - stad wrazenie, ze blad jest staly.
+  // Teraz: pierwsze ponowienia szybkie, potem coraz rzadsze (2s, 3s, 5s, 8s,
+  // 12s, dalej 20s). Prawdziwa awaria nadal bedzie widoczna - znika tylko
+  // migotanie startowe.
+  var RECHECK_STEPS_MS = [2000, 3000, 5000, 8000, 12000];
   var RECHECK_MS = 20000;
+  var _recheckStep = 0;
   var COLLAPSE_KEY = "dam_preflight_collapsed";
   var BAR_ID = "damPreflightBar";
   var _timer = null;
@@ -257,7 +266,13 @@
         return report;
       }
       var shown = render(report);
-      if (shown) scheduleRecheck(RECHECK_MS);
+      if (shown) {
+        var wait = RECHECK_STEPS_MS[_recheckStep] || RECHECK_MS;
+        if (_recheckStep < RECHECK_STEPS_MS.length) _recheckStep += 1;
+        scheduleRecheck(wait);
+      } else {
+        _recheckStep = 0; // czysto - nastepny problem znowu sprawdzamy szybko
+      }
       return report;
     });
   }

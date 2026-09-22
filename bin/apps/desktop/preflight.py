@@ -164,6 +164,25 @@ def check_watcher(status_fn: Callable[[], dict[str, Any]]) -> dict[str, Any]:
     awaiting = bool(st.get("awaiting_first_rebuild"))
     err = str(st.get("last_error") or "")
     extra = {"awaiting_first_rebuild": awaiting, "last_error": err}
+
+    # POSTEP BIJE PLIKI STANU. Przez pierwsze sekundy po starcie pliki stanu sa
+    # jeszcze z POPRZEDNIEGO uruchomienia (martwe pidy, przeterminowane zamki),
+    # wiec alive wychodzilo False i pulpit dostawal czerwony pasek "Aktualizacja
+    # indeksu nie dziala" - mimo ze indeks wlasnie sie budowal. UI odpytywal
+    # ponownie dopiero po 20 s, wiec uzytkownik widzial blad przy KAZDYM starcie
+    # i slusznie uznal, ze problem jest staly.
+    # Jesli przebudowa realnie posuwa sie naprzod, to nie jest awaria, tylko start.
+    progress = st.get("progress") if isinstance(st.get("progress"), dict) else {}
+    working = bool(progress.get("running"))
+    if not alive and working:
+        done = progress.get("products_done")
+        total = progress.get("products_total")
+        postep = f" ({done}/{total})" if isinstance(done, int) and isinstance(total, int) and total else ""
+        return _item(
+            "watcher", True, "Trwa budowanie indeksu" + postep,
+            "Pliki pojawia sie po jego zakonczeniu.", level="info", **extra,
+        )
+
     if not alive:
         return _item(
             "watcher", False, "Aktualizacja indeksu nie działa",
