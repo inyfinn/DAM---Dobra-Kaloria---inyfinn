@@ -24,11 +24,18 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from runtime_config import DATA_ROOT  # noqa: E402  (runtime_config nie importuje dam_db)
+
 DESKTOP_DIR = Path(__file__).resolve().parent
-DATA_DIR = DESKTOP_DIR / "data"
 CONTENT_ROOT = DESKTOP_DIR.parent.parent
 GIT_ROOT = CONTENT_ROOT.parent
-REPO_DATABASE = CONTENT_ROOT / "DATABASE"
+# Dane zmienne ida do DATA_ROOT: to CONTENT_ROOT, gdy drzewo aplikacji jest
+# zapisywalne (Windows, dev), a katalog uzytkownika, gdy nie jest (.dmg tylko do
+# odczytu, /Applications, podpisany bundle). Bez tego mkdir ponizej wybuchal na
+# zamontowanym .dmg i zabijal import auth_store -> import local_bridge, wiec most
+# ginal zanim zajal port 8766.
+DATA_DIR = DATA_ROOT / "apps" / "desktop" / "data" if DATA_ROOT != CONTENT_ROOT else DESKTOP_DIR / "data"
+REPO_DATABASE = DATA_ROOT / "DATABASE"
 DB_REPO = REPO_DATABASE / "dam-local.sqlite"
 DB_LEGACY_DESKTOP = DATA_DIR / "dam-local.sqlite"
 DB_LEGACY_AUTH = DATA_DIR / "dam-auth.sqlite"
@@ -354,8 +361,13 @@ def _pick_best_sqlite(sources: list[Path], target: Path) -> Path | None:
 def _migrate_sqlite_canonical() -> None:
     """Kanon: bin/DATABASE/dam-local.sqlite. Scal z legacy desktop/data, nie z ROOT Marketing."""
     target = canonical_db_path()
-    target.parent.mkdir(parents=True, exist_ok=True)
-    REPO_DATABASE.mkdir(parents=True, exist_ok=True)
+    # Nigdy nie pozwol, zeby zapis ubil IMPORT (auth_store liczy DB_PATH na module level).
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        REPO_DATABASE.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        print('dam_db: katalog bazy niedostepny do zapisu:', exc)
+        return
 
     old_seed = DATA_DIR / "users-seed.sqlite"
     seed_dst = canonical_db_dir() / "users-seed.sqlite"
