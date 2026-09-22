@@ -33,7 +33,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - runner: macos-13       # Intel (x86_64)
+          # UWAGA na etykiete Intela. "macos-13" bylo poprawne, dopoki GitHub nie
+          # wycofal tych maszyn. Objaw po wycofaniu jest mylacy: zadanie NIE pada,
+          # tylko wisi w stanie "queued" z PUSTYM polem runnera i nigdy nie startuje
+          # (zmierzone: 50 minut bez przypisania, gdy AppleSilicon konczyl w 100 s).
+          # Jesli Intel znowu bedzie wisial bez runnera, sprawdz aktualna etykiete
+          # w dokumentacji GitHuba zamiast czekac.
+          - runner: macos-15-intel   # Intel (x86_64)
             arch: Intel
           - runner: macos-latest   # Apple Silicon (arm64)
             arch: AppleSilicon
