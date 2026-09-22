@@ -80,10 +80,30 @@ jobs:
 
       - name: Podpis ad-hoc (bez konta Apple Developer)
         run: |
-          # Ratuje przed "aplikacja jest uszkodzona" na Apple Silicon, co jest innym
-          # bledem niz zwykle ostrzezenie Gatekeepera.
-          codesign --force --deep -s - dist/DAM.app || echo "codesign ad-hoc nieudany"
-          codesign -dv dist/DAM.app 2>&1 | head -5 || true
+          set -euo pipefail
+          APP=dist/DAM.app
+
+          # --deep jest przez Apple ODRADZANY i byl tu zrodlem bledu: podpisuje
+          # zagniezdzony kod w zlej kolejnosci i zostawia niepoprawne podpisy na
+          # .so/.dylib w srodku pakietu. Efekt na Macu: "aplikacja jest uszkodzona"
+          # mimo poprawnego pliku. Podpisujemy OD SRODKA NA ZEWNATRZ, jak chce Apple.
+          echo "--- podpisuje zagniezdzone biblioteki ---"
+          find "$APP" -type f \( -name '*.dylib' -o -name '*.so' \) -print0 \
+            | xargs -0 -n1 codesign --force --timestamp=none -s - || true
+
+          echo "--- podpisuje binarki wykonywalne w Contents/MacOS ---"
+          find "$APP/Contents/MacOS" -type f -perm -u+x -print0 \
+            | xargs -0 -n1 codesign --force --timestamp=none -s - || true
+
+          echo "--- na koncu sam pakiet ---"
+          codesign --force --timestamp=none -s - "$APP"
+
+          echo "--- weryfikacja (tu wyjdzie, jesli cos w srodku jest zle podpisane) ---"
+          codesign --verify --strict --verbose=2 "$APP"
+          codesign -dv "$APP" 2>&1 | head -5 || true
+
+          echo "--- architektura pakietu (wazne: arm64 NIE uruchomi sie na Intelu) ---"
+          lipo -archs "$APP/Contents/MacOS/DAM" || true
 
       - name: SELFTEST (dowod ukladu sciezek bez Maca)
         run: |
@@ -96,9 +116,35 @@ jobs:
 
       - name: .dmg
         run: |
+          set -euo pipefail
           # hdiutil jest wbudowany w macOS - bez brew/create-dmg (tamto to sama kosmetyka).
-          hdiutil create -volname "DAM" -srcfolder dist/DAM.app -ov -format UDZO dist/DAM.dmg
+          #
+          # Dotad obraz zawieral GOLY DAM.app: bez skrotu do Aplikacji i bez slowa
+          # instrukcji, wiec po zamontowaniu nie bylo wiadomo, co zrobic. Budujemy
+          # katalog posredni z jednym i drugim.
+          STAGE=dist/dmg-stage
+          rm -rf "$STAGE"
+          mkdir -p "$STAGE"
+          cp -R dist/DAM.app "$STAGE/DAM.app"
+          ln -s /Applications "$STAGE/Aplikacje"
+          cp bin/installer/macos/PRZECZYTAJ-MNIE.txt "$STAGE/PRZECZYTAJ-MNIE.txt"
+
+          hdiutil create -volname "DAM" -srcfolder "$STAGE" -ov -format UDZO dist/DAM.dmg
+
+          # PODPIS SAMEGO OBRAZU. Bez tego niepodpisany .dmg po pobraniu z internetu
+          # dostaje kwarantanne, a nowsze macOS odmawiaja go ZAMONTOWAC z komunikatem
+          # o nieczytelnym/uszkodzonym obrazie - mimo ze plik jest bajtowo poprawny.
+          codesign --force --timestamp=none -s - dist/DAM.dmg
+          codesign --verify --verbose=2 dist/DAM.dmg || true
+
           ls -la dist/DAM.dmg
+          echo "--- kontrola: czy obraz da sie zamontowac ---"
+          hdiutil verify dist/DAM.dmg
+          MP=$(mktemp -d)
+          hdiutil attach dist/DAM.dmg -nobrowse -readonly -mountpoint "$MP"
+          ls -la "$MP"
+          test -d "$MP/DAM.app" || { echo "BLAD: w obrazie nie ma DAM.app"; exit 1; }
+          hdiutil detach "$MP"
 
       - uses: actions/upload-artifact@v4
         with:

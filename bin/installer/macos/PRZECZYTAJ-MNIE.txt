@@ -1,0 +1,61 @@
+DAM - Dobra Kaloria (macOS)
+===========================
+
+INSTALACJA
+
+1. Przeciagnij DAM.app na skrot "Aplikacje" obok.
+2. Otworz Aplikacje i uruchom DAM.
+
+
+JESLI MAC MOWI, ZE PLIKU NIE DA SIE OTWORZYC ALBO ZE JEST USZKODZONY
+
+To NIE znaczy, ze plik jest zepsuty. Aplikacja nie ma platnego podpisu
+Apple (koszt konta dewelopera), wiec system oznacza ja jako pobrana
+z internetu i blokuje. Plik jest w porzadku - trzeba tylko zdjac te flage.
+
+Otworz Terminal (Launchpad -> Inne -> Terminal) i wklej JEDNA linie:
+
+    xattr -dr com.apple.quarantine /Applications/DAM.app
+
+Nacisnij Enter, podaj haslo do Maca, jesli zapyta. Potem uruchom DAM normalnie.
+
+Jesli blokada dotyczy samego obrazu .dmg (nie da sie go otworzyc dwuklikiem),
+zrob to samo dla pobranego pliku, podmieniajac sciezke na wlasna:
+
+    xattr -dr com.apple.quarantine ~/Downloads/DAM.dmg
+
+
+ALTERNATYWA BEZ TERMINALA
+
+1. Kliknij DAM.app prawym przyciskiem (albo Ctrl + klik).
+2. Wybierz "Otworz".
+3. W okienku ponownie kliknij "Otworz".
+
+Ta droga dziala tylko przy zwyklym ostrzezeniu Gatekeepera. Gdy system
+twierdzi, ze aplikacja jest USZKODZONA, pomaga wylacznie polecenie
+xattr powyzej.
+
+
+WAZNE: PROCESOR
+
+Ta wersja jest zbudowana dla Apple Silicon (M1, M2, M3, M4).
+Na Macach z procesorem Intel NIE uruchomi sie w ogole.
+
+Jak sprawdzic: menu Apple -> "Ten Mac" -> pole "Uklad" albo "Procesor".
+  - widzisz "Apple M..."  -> ta wersja jest dla Ciebie
+  - widzisz "Intel"       -> napisz, przygotujemy osobna wersje
+
+
+CZEGO POTRZEBUJE APLIKACJA
+
+  - macOS 12 (Monterey) lub nowszy
+  - dostep do folderu Marketing (dysk sieciowy albo lokalna kopia)
+
+Przy pierwszym uruchomieniu DAM zapyta o folder Marketing.
+
+
+PROBLEMY
+
+Pomoc w aplikacji: klawisz F1 albo ikona "?" w prawym dolnym rogu.
+Tam jest tez "Zglos poprawke" - zgloszenie trafia do administratora
+razem ze zrzutem ekranu, ktory mozesz wkleic przez Cmd+V.
