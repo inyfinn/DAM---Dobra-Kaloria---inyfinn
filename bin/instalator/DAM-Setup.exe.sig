@@ -1,6 +1,6 @@
 {
   "v": 1,
-  "version": "2.2.9",
-  "sha256": "8210fac2e43301492f3689328ed0b6ae6b8bcfee29072d8b9b410e040b27a8d7",
-  "sig": "Iqlo//lguf5qZa2M+J9TahSxWYY9VndvGxTsYVBnelPtkAotG8rJaH74scfqBbV0n5yv7GLH0J6NBBzTKWFACA=="
+  "version": "2.3.0",
+  "sha256": "4d8323a9d32d738a83b2fd4d3356844d2a7fb8947465516ed781523ec7107466",
+  "sig": "j7D+BiCRufZfTBRxUXCJIWsWZYD9rEMkQeitx0BLE2woiuLR6VYCARxmHdQzN9Uw6daBjDoWw11eRdUhDaocBQ=="
 }
