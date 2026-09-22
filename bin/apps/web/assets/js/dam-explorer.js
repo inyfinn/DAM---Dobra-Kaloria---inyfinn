@@ -7599,6 +7599,10 @@
         (state.fileIndex.product_count || 0) + " prod. " +
         (state.fileIndex.viz_count ? " " + state.fileIndex.viz_count + " wiz." : "") +
         " indeks: " + (state.fileIndex.generated_at || "");
+      if (window.DamIndexSource) window.DamIndexSource.decorate(meta, "file-index");
+    }
+    if (window.DamIndexSource) {
+      window.DamIndexSource.mountPublishButton(document.getElementById("damIndexRefresh"));
     }
 
     if (window.DamShell && typeof window.DamShell.setTrailLeaf === "function") {

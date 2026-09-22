@@ -71,6 +71,8 @@ hiddenimports = [
     "PIL", "PIL.Image", "PIL.ImageDraw",
     "sqlite3", "ssl", "secrets", "hashlib", "hmac", "uuid",
     "http.server", "socketserver", "urllib.request", "json", "csv",
+    # index_snapshots / pg_db: skan indeksu w bazie jest gzipowany (2.3.4)
+    "gzip",
 ]
 hiddenimports += collect_submodules("webview")
 

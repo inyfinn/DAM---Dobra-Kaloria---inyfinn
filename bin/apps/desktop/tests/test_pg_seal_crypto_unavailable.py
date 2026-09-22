@@ -35,6 +35,9 @@ class ActivateErrorsTests(unittest.TestCase):
             ("DATA_DIR", data),
             ("SEALED_PATH", data / "pg-config.sealed.json"),
             ("DPAPI_PATH", data / "pg-config.dpapi"),
+            # 2.3.4: activate() zapisuje tez kod i skrot sealed.json - nie do repo.
+            ("CODE_PATH", data / "pg-config.code.dpapi"),
+            ("SEALED_USED_PATH", data / "pg-config.sealed.used"),
         ):
             p = mock.patch.object(pg_seal, name, value)
             p.start()

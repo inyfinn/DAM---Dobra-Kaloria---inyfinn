@@ -3552,6 +3552,20 @@
           : "");
       if (img.parentNode) img.replaceWith(wrap);
     }
+    /* Zapasowi kandydaci z grupy - z pamieci podrecznej, przed oryginalem. */
+    var alts = (img.getAttribute("data-alt-paths") || "").split("|").filter(Boolean);
+    if (alts.length && src.indexOf("/thumb-cache") >= 0) {
+      var next = alts.shift();
+      if (alts.length) img.setAttribute("data-alt-paths", alts.join("|"));
+      else img.removeAttribute("data-alt-paths");
+      var nextSrc = cardThumbSrc(next, { path: next });
+      if (nextSrc && nextSrc !== src) {
+        img.setAttribute("data-path", next);
+        img.setAttribute("data-dam-original", next);
+        img.src = nextSrc;
+        return;
+      }
+    }
     /* Progressive real: cache miss -> /media preview (parity dam-viz onThumbError). */
     if (!tried && path) {
       var live = cardLiveThumbSrc(path);
@@ -4431,6 +4445,31 @@
     return html;
   }
 
+  /* 2026-09-22: karty GRUP (+28, +4...) byly puste bez folderu Marketing. pickThumbAsset
+   * woli PDF z grupy, a dla wiekszosci PDF-ow nie ma miniatury w pamieci podrecznej ->
+   * /thumb-cache 404 -> proba oryginalu z martwego dysku -> pusta ramka, choc w tej samej
+   * grupie lezaly rastry z gotowa miniatura. Zapasowi kandydaci ida na <img> i fallback
+   * probuje ich z pamieci PRZED oryginalem. */
+  function altThumbPaths(thumbPath, assetList) {
+    var seen = {};
+    seen[String(thumbPath || "")] = 1;
+    var out = [];
+    (assetList || []).forEach(function (x) {
+      var p = x && x.path;
+      if (!p || seen[p] || out.length >= 6) return;
+      if (!/\.(png|jpe?g|webp|gif|pdf)$/i.test(p)) return;
+      seen[p] = 1;
+      out.push(p);
+    });
+    return out;
+  }
+
+  function altAttr(thumbPath, assetList) {
+    var alts = altThumbPaths(thumbPath, assetList);
+    // "|" nie wystepuje w sciezkach Windows ani macOS Finder - bezpieczny separator.
+    return alts.length ? ' data-alt-paths="' + esc(alts.join("|")) + '"' : "";
+  }
+
   function thumbHtml(a, assetList) {
     assetList = assetList || (a ? [a] : []);
     if (!a) return "";
@@ -4476,7 +4515,7 @@
         esc(thumbPath) +
         '" src="' +
         esc(cardThumbSrc(thumbPath, a)) +
-        '" alt="" loading="lazy" onerror="window.__damBrandingThumbFallback&&__damBrandingThumbFallback(this)">'
+        '"' + altAttr(thumbPath, assetList) + ' alt="" loading="lazy" onerror="window.__damBrandingThumbFallback&&__damBrandingThumbFallback(this)">'
       );
     }
     if (/\.(png|jpe?g|webp|gif|tiff?|psd|psb|bmp)$/i.test(thumbPath || a.name || "") || a.media_type === "source") {
@@ -4487,7 +4526,7 @@
         esc(thumbPath || a.path || "") +
         '" src="' +
         esc(cardThumbSrc(thumbPath || a.path, a)) +
-        '" alt="" loading="lazy" onerror="window.__damBrandingThumbFallback&&__damBrandingThumbFallback(this)">'
+        '"' + altAttr(thumbPath || a.path, assetList) + ' alt="" loading="lazy" onerror="window.__damBrandingThumbFallback&&__damBrandingThumbFallback(this)">'
       );
     }
     if (/\.(ai|eps|svg)$/i.test(a.name || "")) {
@@ -4753,6 +4792,7 @@
       meta +
       (cardN >= limit ? " · limit " + fmtGridCount(limit) + " kart" : "") +
       activeFilterHint();
+    if (window.DamIndexSource) window.DamIndexSource.decorate(el, "branding-search-index");
   }
 
   function activeFilterLabels() {

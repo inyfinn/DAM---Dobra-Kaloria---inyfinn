@@ -1,0 +1,229 @@
+/* DAM ciemny motyw 2.3.4 - warstwa b.
+ * Tylko html[data-theme="dark"] i tokeny z dam-tokens.css. Jasny motyw nietkniety.
+ * Ladowany jako OSTATNI arkusz na kazdej stronie.
+ * Zakres: costs, billing, invoices, inbox, activity, tasks.
+ */
+
+/* --- wspolne: tabele bootstrap (costs, invoices) --- */
+html[data-theme="dark"] .table {
+  --bs-table-bg: var(--dam-surface);
+  --bs-table-color: var(--dam-text);
+  --bs-table-border-color: var(--dam-border);
+  --bs-table-striped-bg: var(--dam-surface-raised);
+  --bs-table-striped-color: var(--dam-text);
+  --bs-table-hover-bg: var(--dam-surface-raised);
+  --bs-table-hover-color: var(--dam-text);
+  --bs-table-accent-bg: var(--dam-surface-raised);
+}
+html[data-theme="dark"] .table > :not(caption) > * > * {
+  background-color: var(--bs-table-bg) !important;
+  color: var(--bs-table-color) !important;
+  border-bottom-color: var(--dam-border) !important;
+}
+
+/* --- costs --- */
+html[data-theme="dark"] .dam-cost-row-meta,
+html[data-theme="dark"] .dam-cost-card__sub {
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] .dam-cost-picker__search,
+html[data-theme="dark"] .dam-cost-picker__select {
+  background: var(--dam-input-bg, var(--dam-surface-raised)) !important;
+  border-color: var(--dam-border) !important;
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-cost-bucket {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+  color: var(--dam-text) !important;
+}
+
+/* --- billing: empty-state panel (inline style z HTML) --- */
+html[data-theme="dark"] [style*="background:#fff;border:1px solid #E7E7E7"] {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] [style*="background:#fff;border:1px solid #E7E7E7"] p {
+  color: var(--dam-text) !important;
+}
+
+/* --- invoices --- */
+html[data-theme="dark"] .dam-inv-summary__tile--all {
+  background: color-mix(in srgb, var(--dam-primary) 18%, transparent) !important;
+}
+html[data-theme="dark"] .dam-inv-summary__tile--paid {
+  background: color-mix(in srgb, #00a389 18%, transparent) !important;
+}
+html[data-theme="dark"] .dam-inv-summary__tile--pending {
+  background: color-mix(in srgb, #fdb23a 18%, transparent) !important;
+}
+html[data-theme="dark"] .dam-inv-summary__tile--overdue {
+  background: color-mix(in srgb, #ff5653 18%, transparent) !important;
+}
+html[data-theme="dark"] .dam-inv-summary__tile--all .dam-inv-summary__label,
+html[data-theme="dark"] .dam-inv-summary__tile--paid .dam-inv-summary__label,
+html[data-theme="dark"] .dam-inv-summary__tile--pending .dam-inv-summary__label,
+html[data-theme="dark"] .dam-inv-summary__tile--overdue .dam-inv-summary__label {
+  color: var(--dam-text-muted) !important;
+}
+/* asana-item i mail sekcje sa wstrzykiwane jako <style> z JS (dam-invoices.js) -
+   ladowane po naszym arkuszu, dlatego !important */
+html[data-theme="dark"] .dam-inv-asana-item {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-theme="dark"] .dam-inv-asana-item__title {
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-inv-asana-item__meta,
+html[data-theme="dark"] .dam-inv-asana-item__due,
+html[data-theme="dark"] .dam-inv-asana-item__est,
+html[data-theme="dark"] .dam-inv-asana-item__est-label {
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] .dam-inv-asana-item__est-amt {
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-inv-asana__lead {
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] .dam-inv-mail__section {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-theme="dark"] .dam-inv-mail__section h5 {
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] .dam-inv-mail__chip {
+  background: var(--dam-surface) !important;
+  border-color: var(--dam-border) !important;
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-inv-mail__row-id,
+html[data-theme="dark"] .dam-inv-mail__row-id strong,
+html[data-theme="dark"] .dam-inv-mail__row-body {
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] #damMailExtraTo,
+html[data-theme="dark"] #damMailNote {
+  background: var(--dam-input-bg, var(--dam-surface-raised)) !important;
+  border-color: var(--dam-border) !important;
+  color: var(--dam-text) !important;
+}
+
+/* --- inbox --- */
+html[data-theme="dark"] .dam-inbox-item {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-theme="dark"] .dam-inbox-tag {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-inbox-item__row-body strong {
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-inbox-item__actor {
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] .dam-inbox-item__date {
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] .dam-inbox-item__actor strong {
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-inbox-side__title {
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] .dam-inbox-unread-toggle {
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-inbox-subtab {
+  background: transparent !important;
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] .dam-inbox-subtab.is-active {
+  background: var(--dam-surface-raised) !important;
+  color: var(--dam-text) !important;
+}
+
+/* --- activity --- */
+html[data-theme="dark"] .dam-audit-item {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-theme="dark"] .dam-audit-item__meta {
+  color: var(--dam-text-muted) !important;
+}
+
+/* --- tasks --- */
+html[data-theme="dark"] .dam-tasks-due.is-overdue,
+html[data-theme="dark"] .dam-tasks-person__stats .is-overdue {
+  color: color-mix(in srgb, #ff5b5b 70%, var(--dam-text)) !important;
+}
+html[data-theme="dark"] .dam-tasks-person__stats .is-done {
+  color: color-mix(in srgb, #2f6b42 55%, var(--dam-text)) !important;
+}
+
+/* --- placeholdery inputow (przegladarka nie dziedziczy koloru tekstu na ::placeholder) --- */
+html[data-theme="dark"] #damCostBaseSearch::placeholder,
+html[data-theme="dark"] .dam-tasks-ai__input::placeholder,
+html[data-theme="dark"] .dam-tasks-notes::placeholder,
+html[data-theme="dark"] #damMailExtraTo::placeholder,
+html[data-theme="dark"] #damMailNote::placeholder {
+  color: var(--dam-text-muted) !important;
+  opacity: 1 !important;
+}
+
+/* --- inbox: kontener boczny i zakladki (jasne tla poza .dam-inbox-tag) --- */
+html[data-theme="dark"] .dam-inbox-side {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-theme="dark"] .dam-inbox-count {
+  color: color-mix(in srgb, var(--dam-primary) 55%, var(--dam-text)) !important;
+}
+html[data-theme="dark"] .dam-inbox-zgloszenie-tabs {
+  background: var(--dam-surface-muted) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-theme="dark"] .dam-inbox-subtab {
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] .dam-inbox-subtab:hover {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-theme="dark"] .dam-inbox-subtab.is-active {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-primary) !important;
+  color: var(--dam-text) !important;
+}
+
+/* --- invoices: dodatkowe drobiazgi --- */
+html[data-theme="dark"] .dam-inv-summary__tile--all .dam-inv-summary__value {
+  color: color-mix(in srgb, var(--dam-primary) 55%, var(--dam-text)) !important;
+}
+html[data-theme="dark"] .dam-inv-summary__tile--total .dam-inv-summary__label {
+  opacity: 1 !important;
+}
+html[data-theme="dark"] [style*="color:#888"] {
+  color: var(--dam-text-muted) !important;
+}
+
+html[data-theme="dark"] .dam-inv-filters .dam-int-filter.active,
+html[data-theme="dark"] .dam-inv-filters .dam-int-filter.is-active,
+html[data-theme="dark"] .dam-inv-filters .inv-filter-btn.active,
+html[data-theme="dark"] .dam-inv-filters .inv-filter-btn.is-active {
+  background: var(--dam-surface-raised) !important;
+}
+html[data-theme="dark"] table#invTable > thead {
+  background: var(--dam-surface-muted) !important;
+}
+
+/* --- activity: pusty stan listy --- */
+html[data-theme="dark"] .dam-audit-item__top {
+  color: var(--dam-text) !important;
+}

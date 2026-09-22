@@ -78,6 +78,9 @@ apps/web/data/dam-identity.json
 # Postgres na Synology (ADR-009) - haslo/host per-maszyna, nigdy w Git
 bin/apps/desktop/data/pg-config.json
 bin/apps/desktop/data/pg-config.json.off
+# 2.3.4: zapamietany kod aktywacyjny (DPAPI) i skrot uzytego sealed.json - tylko na komputerze uzytkownika
+bin/apps/desktop/data/pg-config.code.dpapi
+bin/apps/desktop/data/pg-config.sealed.used
 bin/apps/desktop/dam-connection.env
 apps/desktop/data/pg-config.json
 apps/desktop/data/pg-config.json.off

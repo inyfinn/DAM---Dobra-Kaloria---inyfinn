@@ -1,32 +1,51 @@
-UMOWA LICENCYJNA - DAM DOBRA KALORIA (Inyfinn)
+﻿UMOWA LICENCYJNA - DAM - DOBRA KALORIA - INYFINN
+Wersja programu: 2.3.4
 
-Copyright (c) Inyfinn. Wszelkie prawa zastrzezone.
+Copyright © 2026 Krzysztof Wieczorek. Wszelkie prawa zastrzeżone.
 
-1. LICENCJA
-   Niniejszy instalator i oprogramowanie DAM - Dobra Kaloria sa wlasnoscia
-   Inyfinn i przeznaczone wylacznie dla upowaznionych uzytkownikow firmy
-   oraz partnerow z umowa pisemna.
+WŁAŚCICIEL (WYŁĄCZNE PRAWA)
 
-2. DOZWOLONE UZYCIE
-   Mozesz instalowac i uzywac oprogramowania na komputerach sluzbowych w celu
-   zarzadzania zasobami marketingowymi Dobra Kaloria / Good Calories.
+Program DAM - Dobra Kaloria - Inyfinn należy wyłącznie do: Krzysztofa
+(Krzysiu) Wieczorka.
 
-3. ZAKAZY
-   Zabronione jest: dekompilacja, odsprzedaz, udostepnianie osobom trzecim
-   bez zgody Inyfinn, usuwanie informacji o prawach autorskich.
+  - PESEL (maskowany): 93*****179
+  - Telefon: 535 295 861
+  - E-mail: XPRETRAX@GMAIL.COM
+  - Adres: ul. Czartoryskiego 2/4 m. 108, 42-200 Częstochowa
+  - Korespondencja: ul. Makuszyńskiego 47D / 7, 42-209 Częstochowa
 
-4. DANE I BAZA
-   Aplikacja moze laczyc sie z baza PostgreSQL na serwerze Synology oraz
-   utrzymywac lokalna kopie zapasowa (SQLite / dump). Odpowiedzialnosc za
-   hasla i kopie zapasowe lezy po stronie administratora IT.
+Żadna inna firma ani osoba nie może korzystać z Programu bez pisemnego
+pozwolenia Właściciela.
 
-5. AKTUALIZACJE
-   Oprogramowanie moze automatycznie sprawdzac nowe wersje na GitHub Inyfinn
-   i proponowac instalacje aktualizacji.
+OPŁATY BAZOWE (ORIENTACYJNE)
 
-6. GWARANCJA
-   Oprogramowanie dostarczane jest "tak jak jest", bez gwarancji domyslnych.
-   Inyfinn nie ponosi odpowiedzialnosci za utrate danych wynikajaca z blednej
-   konfiguracji sieci, Synology lub lokalnego dysku.
+Na podstawie rynkowych widełek DAM/MAM (SMB cloud ok. 10-50
+USD/użytkownik/mies.; pakiety roczne ok. 2 500-15 000 EUR; mid-market od ok.
+500 EUR/mies.) ustalono kwoty bazowe dla tego wdrożenia:
 
-Klikajac "Zgadzam sie", akceptujesz powyzsze warunki.
+  - 6 900 PLN netto - licencja jednorazowa (wieczysta na 1 org., do 10
+    stanowisk)
+  - 490 PLN netto / mies. - abonament do 5 użytkowników
+  - 890 PLN netto / mies. - abonament do 15 użytkowników
+
+Ostateczna kwota jest zawsze do ustalenia indywidualnie z Właścicielem
+(kontakt powyżej). Kwoty bazowe są punktem wyjścia, nie sztywnym cennikiem.
+
+ZAKAZY
+
+  - Odsprzedaż, sublicencja, publiczne udostępnianie kodu lub buildu bez
+    pisemnej zgody.
+  - Usuwanie oznaczeń praw autorskich.
+  - Używanie poza zakresem udzielonej licencji.
+
+KOMPONENTY TRZECIE
+
+UI bazuje na motywie Geex (licencja motywu zgodnie z zakupem). Biblioteki
+open-source - zgodnie z ich własnymi licencjami.
+
+BRAK GWARANCJI
+
+Oprogramowanie dostarczane w stanie "as is", w zakresie dozwolonym prawem.
+Szczegóły - osobna umowa pisemna, jeśli zawarta.
+
+Klikając "Akceptuję warunki umowy", akceptujesz powyższe warunki.

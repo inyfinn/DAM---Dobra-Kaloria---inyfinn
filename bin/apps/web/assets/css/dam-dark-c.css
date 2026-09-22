@@ -1,0 +1,263 @@
+/* DAM ciemny motyw 2.3.4 - warstwa c.
+ * Tylko html[data-theme="dark"] i tokeny z dam-tokens.css. Jasny motyw nietkniety.
+ * Ladowany jako OSTATNI arkusz na kazdej stronie.
+ * Strony workera c: help, consents, license, privacy, terms, docs-security,
+ * profile, settings, integrations, project, visualizations.
+ * Nie dotyka: .dam-page-sub, breadcrumb, dam-tag-pill/dam-tag-group,
+ * brand chipy (.dam-brand-chip-btn*), .dam-viz-badge/.dam-badge-tag,
+ * admin switch (.dam-admin-header-switch .dam-switch__label),
+ * .dam-search-scope__btn, .dam-int-chip.dam-int-st--* (wlasnosc A).
+ */
+
+/* --- Karty tresci prawnej: consents/license/privacy/terms/docs-security ---
+ * <article> ma inline style="background:#fff;...;color:#464255" z HTML - trzeba przebic !important.
+ */
+html[data-theme="dark"] .geex-content > article.dam-settings-card,
+html[data-theme="dark"] .geex-content > article:not([class]) {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .geex-content > article.dam-settings-card h3,
+html[data-theme="dark"] .geex-content > article:not([class]) h3 {
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .geex-content > article.dam-settings-card p a,
+html[data-theme="dark"] .geex-content > article:not([class]) p a {
+  color: color-mix(in srgb, var(--dam-primary) 55%, var(--dam-text)) !important;
+}
+html[data-theme="dark"] .geex-content > article.dam-settings-card code,
+html[data-theme="dark"] .geex-content > article:not([class]) code {
+  color: color-mix(in srgb, #E066A3 55%, var(--dam-text)) !important;
+  background: var(--dam-surface-sunken, var(--dam-surface)) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-theme="dark"] #consentSave {
+  background: color-mix(in srgb, #AB54DB 85%, #000) !important;
+}
+
+/* --- Nagłówek: badge wiadomości (wszystkie moje strony) --- */
+html[data-theme="dark"] .geex-content__header__badge.dam-badge--msg {
+  color: color-mix(in srgb, #FF9F43 55%, var(--dam-text)) !important;
+}
+
+/* --- Help --- */
+html[data-theme="dark"] .dam-help-page__group,
+html[data-theme="dark"] .dam-help-page__search {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-theme="dark"] .dam-help-page__search-wrap {
+  background: linear-gradient(var(--dam-bg) 60%, transparent) !important;
+}
+html[data-theme="dark"] .dam-help-page__group-title {
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-report__lead {
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] .dam-report__label {
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-help-page__meta {
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] .dam-faq-q {
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-faq-a {
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] .dam-faq-a strong,
+html[data-theme="dark"] .dam-faq-a em {
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-faq-a code {
+  color: color-mix(in srgb, #E066A3 55%, var(--dam-text)) !important;
+  background: var(--dam-surface-sunken, var(--dam-surface)) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-theme="dark"] .dam-faq-a kbd,
+html[data-theme="dark"] .dam-help-page__meta kbd,
+html[data-theme="dark"] .dam-help-page kbd {
+  background: var(--dam-surface-sunken, var(--dam-surface)) !important;
+  border-color: var(--dam-border) !important;
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-help-page__empty {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+  color: var(--dam-text-muted) !important;
+}
+
+/* --- Ekran logowania (dzieli sie na wszystkich stronach) --- */
+html[data-theme="dark"] p.geex-content__authentication__subtitle {
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] #authSubmit {
+  color: #fff !important;
+}
+
+/* --- Placeholdery inputów (integrations, settings) --- */
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: var(--dam-text-muted) !important;
+  opacity: 1 !important;
+}
+
+/* --- Integrations --- */
+html[data-theme="dark"] #damSleeveSearch {
+  background: var(--dam-input-bg, var(--dam-surface-raised)) !important;
+  color: var(--dam-text) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-theme="dark"] .dam-sleeve-stock__filter {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-sleeve-stock__filter.is-active {
+  background: color-mix(in srgb, var(--dam-primary) 20%, transparent) !important;
+  border-color: color-mix(in srgb, var(--dam-primary) 45%, var(--dam-border)) !important;
+  color: color-mix(in srgb, var(--dam-primary) 55%, var(--dam-text)) !important;
+}
+html[data-theme="dark"] .dam-sleeve-stock__purpose,
+html[data-theme="dark"] .dam-wyk-map__purpose,
+html[data-theme="dark"] .dam-sleeve-stock__people {
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] .dam-sleeve-stock__people strong {
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-sleeve-stock__table th,
+html[data-theme="dark"] .dam-wyk-map__table th {
+  background: var(--dam-surface-sunken, var(--dam-surface)) !important;
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-sleeve-stock__table tr.is-critical {
+  background: color-mix(in srgb, var(--dam-danger) 18%, transparent) !important;
+}
+html[data-theme="dark"] .dam-int-cta {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-int-cta:disabled,
+html[data-theme="dark"] .dam-int-cta[aria-disabled="true"] {
+  color: var(--dam-text-muted) !important;
+  opacity: 1 !important;
+}
+html[data-theme="dark"] .dam-int-config > summary {
+  background: var(--dam-surface-raised) !important;
+  color: color-mix(in srgb, var(--dam-primary) 55%, var(--dam-text)) !important;
+}
+html[data-theme="dark"] .dam-int-soon,
+html[data-theme="dark"] .dam-int-soon:disabled,
+html[data-theme="dark"] .dam-int-soon[aria-disabled="true"] {
+  background: var(--dam-surface-raised) !important;
+  background-color: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] .dam-wyk-map__tab {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-sleeve-stock__chip {
+  background: color-mix(in srgb, #8B3DB8 18%, transparent) !important;
+  color: color-mix(in srgb, #8B3DB8 45%, var(--dam-text)) !important;
+  border-color: color-mix(in srgb, #8B3DB8 35%, var(--dam-border)) !important;
+}
+
+/* --- License --- */
+/* (kod LICENSE.md ubarwiony wyzej w bloku article.dam-settings-card p code) */
+
+/* --- Profile / Settings: sciezki urzadzen (JS wstrzykuje <style>, trzeba przebic) --- */
+html[data-theme="dark"] .dam-devpath-meta code {
+  background: var(--dam-surface-sunken, var(--dam-surface)) !important;
+  color: var(--dam-text) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-theme="dark"] .dam-devpath-pill {
+  color: color-mix(in srgb, #5b8c6a 55%, var(--dam-text)) !important;
+  background: color-mix(in srgb, #5b8c6a 18%, transparent) !important;
+}
+html[data-theme="dark"] .dam-devpath-pill.is-missing {
+  color: color-mix(in srgb, #a15c2d 55%, var(--dam-text)) !important;
+  background: color-mix(in srgb, #a15c2d 18%, transparent) !important;
+}
+html[data-theme="dark"] .dam-colleague-chip {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-colleague-chip i {
+  color: color-mix(in srgb, #AB54DB 55%, var(--dam-text)) !important;
+}
+
+/* --- Settings --- */
+html[data-theme="dark"] .dam-sw-profile__avatar {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--dam-primary) 70%, #000),
+    color-mix(in srgb, var(--dam-primary) 85%, #000)
+  ) !important;
+}
+html[data-theme="dark"] .dam-settings-jump__chip.is-active {
+  color: color-mix(in srgb, var(--dam-primary) 55%, var(--dam-text)) !important;
+}
+html[data-theme="dark"] .dam-accent-preview__link {
+  color: color-mix(in srgb, var(--dam-primary) 55%, var(--dam-text)) !important;
+}
+
+/* --- Project --- */
+html[data-theme="dark"] #damProjectSub,
+html[data-theme="dark"] #damProjectStatus,
+html[data-theme="dark"] #damActionDesc,
+html[data-theme="dark"] #damSlotChecklistHint,
+html[data-theme="dark"] #damProductCatalog .dam-action-desc {
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] .dam-action-tile {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-action-tile > span,
+html[data-theme="dark"] .dam-action-tile > small {
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-slot-checklist {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-theme="dark"] .dam-catalog-price-hero--unavailable {
+  background: linear-gradient(
+    135deg,
+    var(--dam-surface-sunken, var(--dam-surface)),
+    var(--dam-surface-raised)
+  ) !important;
+}
+html[data-theme="dark"] #damCatalogBody a.geex-btn.geex-btn--sm {
+  color: color-mix(in srgb, var(--dam-primary) 55%, var(--dam-text)) !important;
+}
+
+/* --- Visualizations (bez brand chipow i search-scope - wlasnosc A) --- */
+html[data-theme="dark"] .dam-viz-secondary-filters .dam-switch__label,
+html[data-theme="dark"] .dam-viz-secondary-filters .dam-viz-zoom-control__label {
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] .dam-viz-zoom-control__value {
+  color: color-mix(in srgb, var(--dam-primary) 55%, var(--dam-text)) !important;
+}
+
+/* "Wkrotce" (planowane integracje): nieaktywny przycisk z przezroczystoscia byl prawie
+   niewidoczny. Nieaktywnosc pokazuje ramka i kursor, nie znikajacy tekst. */
+html[data-theme="dark"] .dam-int-soon,
+html[data-theme="dark"] .dam-int-soon:disabled,
+html[data-theme="dark"] .dam-int-soon[aria-disabled="true"] {
+  opacity: 1 !important;
+  color: var(--dam-text-muted) !important;
+  -webkit-text-fill-color: var(--dam-text-muted) !important;
+}

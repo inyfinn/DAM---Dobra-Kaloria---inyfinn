@@ -35,6 +35,12 @@ DESKTOP_DIR = Path(__file__).resolve().parent
 DATA_DIR = DESKTOP_DIR / "data"
 SEALED_PATH = DATA_DIR / "pg-config.sealed.json"
 DPAPI_PATH = DATA_DIR / "pg-config.dpapi"
+# Kod aktywacyjny pod DPAPI + skrot sealed.json, z ktorego powstalo obecne haslo.
+# 2026-09-22: aktualizacja przywozila nowy sealed.json (nowe haslo), ale DPAPI
+# trzymalo haslo z pierwszej aktywacji i nikt go nie odswiezal -> "password
+# authentication failed" i tryb offline na kazdym komputerze po zmianie hasla.
+CODE_PATH = DATA_DIR / "pg-config.code.dpapi"
+SEALED_USED_PATH = DATA_DIR / "pg-config.sealed.used"
 _ENTROPY = b"DAM-pg-config-v1"
 
 SCRYPT_N = 2**15
@@ -222,4 +228,73 @@ def activate(code: str) -> dict[str, Any]:
         return {"ok": False, "error": "code_invalid", "hint": "Kod aktywacyjny jest niepoprawny."}
     if not store_protected(cfg):
         return {"ok": False, "error": "dpapi_failed", "hint": "Nie udało się zapisać konfiguracji (DPAPI)."}
+    # Kod zostaje pod DPAPI (ta sama ochrona co samo haslo), zeby kolejna
+    # aktualizacja z nowym haslem odswiezyla konfiguracje bez pytania usera.
+    store_protected({"code": normalize_code(code)}, CODE_PATH)
+    _remember_sealed_used()
     return {"ok": True}
+
+
+def _sealed_fingerprint() -> str:
+    try:
+        return hashlib.sha256(SEALED_PATH.read_bytes()).hexdigest()
+    except OSError:
+        return ""
+
+
+def _remember_sealed_used() -> None:
+    fp = _sealed_fingerprint()
+    if not fp:
+        return
+    try:
+        tmp = SEALED_USED_PATH.with_name(SEALED_USED_PATH.name + f".{os.getpid()}.tmp")
+        tmp.write_text(fp, encoding="ascii")
+        os.replace(tmp, SEALED_USED_PATH)
+    except OSError:
+        pass
+
+
+def remembered_code_present() -> bool:
+    return CODE_PATH.is_file()
+
+
+def reseal_if_newer(*, force: bool = False) -> bool:
+    """Odswiez konfiguracje DPAPI z sealed.json przywiezionego przez aktualizacje.
+
+    True = konfiguracja zostala przepisana (wolajacy powinien wyczyscic cache).
+    Bez zapamietanego kodu (stara aktywacja) zwraca False - wtedy UI prosi o kod.
+    force=True: przepisz nawet przy tym samym sealed.json (po odrzuconym hasle).
+    """
+    if not sealed_present():
+        return False
+    fp = _sealed_fingerprint()
+    if not fp:
+        return False
+    if not force:
+        try:
+            used = SEALED_USED_PATH.read_text(encoding="ascii").strip()
+        except OSError:
+            used = ""
+        if used == fp and DPAPI_PATH.is_file():
+            return False
+    saved = load_protected(CODE_PATH)
+    code = str((saved or {}).get("code") or "")
+    if len(code) < MIN_CODE_LEN:
+        return False
+    try:
+        sealed = json.loads(SEALED_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    cfg = unseal(sealed if isinstance(sealed, dict) else {}, code)
+    if not cfg or not cfg.get("password"):
+        return False
+    current = load_protected()
+    if current and current == cfg:
+        # Ta sama konfiguracja - nic nowego (takze po odrzuconym hasle: wtedy
+        # potrzebny jest nowszy instalator albo nowy kod, nie ponowny zapis).
+        _remember_sealed_used()
+        return False
+    if not store_protected(cfg):
+        return False
+    _remember_sealed_used()
+    return True

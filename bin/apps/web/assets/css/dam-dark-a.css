@@ -1,0 +1,277 @@
+/* DAM ciemny motyw 2.3.4 - warstwa a.
+ * Tylko html[data-theme="dark"] i tokeny z dam-tokens.css. Jasny motyw nietkniety.
+ * Ladowany jako OSTATNI arkusz na kazdej stronie.
+ * Zakres: dashboard, explorer, index, branding (+modal, +quiz, +db-panel)
+ * oraz wspolny chrome (breadcrumb, subtitle, tag pills, brand chips, badge, search-scope, int-chip).
+ */
+
+/* ---- Wspolny chrome: naglowek, breadcrumb ---- */
+/* Specificity musi bic zrodlowa regule (.geex-content__header > .geex-content__header__content >
+   .geex-content__header__subtitle, dam-app.css:763) - stad pelny lancuch. */
+html[data-theme="dark"] .geex-content__header > .geex-content__header__content > .geex-content__header__subtitle,
+html[data-theme="dark"] .geex-content__header__subtitle.dam-page-sub,
+html[data-theme="dark"] .dam-page-sub {
+  color: var(--dam-text-muted) !important;
+}
+
+html[data-theme="dark"] .dam-breadcrumb__current,
+html[data-theme="dark"] .dam-breadcrumb a,
+html[data-theme="dark"] .dam-breadcrumb__item {
+  color: var(--dam-text) !important;
+}
+
+/* ---- Tag pille (wszystkie grupy: smak, opakowanie, autor, marka, przeznaczenie...) ---- */
+html[data-theme="dark"] .dam-tag-pill,
+html[data-theme="dark"] .dam-viz-badge.dam-badge-tag {
+  color: color-mix(in srgb, var(--dam-text-muted) 60%, var(--dam-text)) !important;
+  background: color-mix(in srgb, currentColor 18%, transparent) !important;
+  border-color: var(--dam-border) !important;
+}
+
+/* Grupy z konkretna barwa marki/kategorii - podbij tekst przez color-mix z ta sama barwa. */
+html[data-theme="dark"] .dam-tag-group--smak .dam-tag-pill { color: color-mix(in srgb, #8B3DB8 45%, var(--dam-text)) !important; background: color-mix(in srgb, #8B3DB8 18%, transparent) !important; }
+html[data-theme="dark"] .dam-tag-group--opakowanie .dam-tag-pill { color: color-mix(in srgb, #C96A12 45%, var(--dam-text)) !important; background: color-mix(in srgb, #C96A12 18%, transparent) !important; }
+html[data-theme="dark"] .dam-tag-group--autor .dam-tag-pill,
+html[data-theme="dark"] .dam-branding-tag-group--autor .dam-viz-badge.dam-badge-tag { color: color-mix(in srgb, #0A8DB8 45%, var(--dam-text)) !important; background: color-mix(in srgb, #0A8DB8 18%, transparent) !important; }
+html[data-theme="dark"] .dam-branding-tag-group--marka .dam-viz-badge.dam-badge-tag { color: color-mix(in srgb, var(--dam-primary) 45%, var(--dam-text)) !important; background: color-mix(in srgb, var(--dam-primary) 18%, transparent) !important; }
+html[data-theme="dark"] .dam-branding-tag-group--przeznaczenie .dam-viz-badge.dam-badge-tag { color: color-mix(in srgb, var(--dam-ok, #1E9E5A) 45%, var(--dam-text)) !important; background: color-mix(in srgb, var(--dam-ok, #1E9E5A) 18%, transparent) !important; }
+
+/* Brand chipy (DK, GC) */
+html[data-theme="dark"] .dam-brand-chip-btn.dam-brand-chip-btn--dk { color: color-mix(in srgb, var(--dam-primary) 55%, var(--dam-text)) !important; }
+html[data-theme="dark"] .dam-brand-chip-btn.dam-brand-chip-btn--gc { color: color-mix(in srgb, #0A8DB8 55%, var(--dam-text)) !important; }
+
+/* Switch labele (Pokaz wszystkie / Pokaz archiwum / Info Pakowania / Liczby przy tagach) */
+html[data-theme="dark"] .dam-switch__label,
+html[data-theme="dark"] .dam-viz-zoom-control__label {
+  color: var(--dam-text-muted) !important;
+}
+
+/* Search-scope pills, stan is-disabled (np. "Produkty"/"Warianty" gdy scope zablokowany):
+   dam-brand.css:2398 daje opacity:0.38 na text-muted -> po zblendowaniu z ciemnym tlem
+   wychodzi ~2.3:1. "Wylaczone" komunikujemy borderem/tlem, nie przezroczystoscia tekstu. */
+html[data-theme="dark"] .dam-search-scope__btn.is-disabled,
+html[data-theme="dark"] .dam-search-scope__btn:disabled {
+  opacity: 1 !important;
+  color: var(--dam-text-muted) !important;
+  background: var(--dam-surface) !important;
+  border-color: var(--dam-border) !important;
+}
+
+/* "+N" chipy tagow (dam-tag-more) - #fff bg bez !important w dam-brand.css:4233 */
+html[data-theme="dark"] .dam-tag-more {
+  background: color-mix(in srgb, var(--dam-primary) 18%, transparent) !important;
+  color: color-mix(in srgb, var(--dam-primary) 55%, var(--dam-text)) !important;
+}
+
+/* Explorer toolbar: JS (dam-explorer.js ensureExplorerCtaUnifyCss) wstrzykuje <style> z
+   ".dam-explorer-results__actions #id{background:#fff!important...}" PO naszym arkuszu w DOM ->
+   przy rownej specyficznosci wygrywa kolejnosc. Trzeba przebic specyficznosc (dodac kontener). */
+html[data-theme="dark"] .dam-explorer-results__actions .dam-int-cta,
+html[data-theme="dark"] .dam-explorer-results__actions #damStatusExport,
+html[data-theme="dark"] .dam-explorer-results__actions #damIndexRefresh,
+html[data-theme="dark"] .dam-explorer-results__actions #damLifecycleForce,
+html[data-theme="dark"] #damIndexPublish {
+  background: var(--dam-surface-raised) !important;
+  color: var(--dam-text) !important;
+  border-color: var(--dam-border) !important;
+}
+
+/* Branding modal: "+ Dodaj/Edytuj produkty/materialy/warianty" - dam-assoc-edit.js wstrzykuje
+   "#damMediaPreview .dam-viz-assoc-cta.dam-int-cta{background:#fff!important;color:#464255!important}"
+   (id+2 klasy) - potrzeba conajmniej takiej samej specyficznosci + attribute selektor. */
+html[data-theme="dark"] #damMediaPreview .dam-viz-assoc-cta.dam-int-cta,
+html[data-theme="dark"] #damVizModal .dam-viz-assoc-cta.dam-int-cta {
+  background: var(--dam-surface-raised) !important;
+  color: var(--dam-text) !important;
+  border-color: var(--dam-border) !important;
+}
+
+/* Hero podglad materialu: gdy <img> nie zaladuje sie (404/brak pliku), UA maluje wlasne bialy
+   fallback box. Tlo samego <img> mozna pokolorowac (ikonki UA zostaja, poza zasiegiem CSS). */
+html[data-theme="dark"] #damMediaPreview img#damMediaPreviewHero,
+html[data-theme="dark"] #damMediaPreviewHero {
+  background: var(--dam-surface-sunken) !important;
+  color: var(--dam-text-muted) !important;
+}
+
+/* Badge z licznikiem wiadomosci - pelne #FFBB54 (--dam-warn) daje tylko 1.68:1 z bialym
+   tekstem. Ciemny tekst na pelnym tle warn >> 4.5:1 (jasne tlo, ciemny tekst - odwrotnie
+   niz reszta chipow, bo tu tlo zostaje niezmienione zrodlowe warn, nie tinted). */
+html[data-theme="dark"] #damMsgBadge {
+  color: var(--dam-dark) !important;
+  background: var(--dam-warn) !important;
+}
+
+/* ---- Explorer: kategorie (Batony, Kulki...) ---- */
+html[data-theme="dark"] .dam-folder-item__name {
+  color: var(--dam-text) !important;
+}
+
+/* ---- Index: karty projektow ---- */
+html[data-theme="dark"] .dam-card-checklist {
+  background: var(--dam-surface-raised) !important;
+  color: var(--dam-text) !important;
+  border-color: var(--dam-border) !important;
+}
+/* .dam-card-checklist .dam-check-ok/.dam-check-brak .dam-check-label ustawiaja wlasny
+   kolor #17161E (dam-app.css:477/482) - trzeba nadpisac bezposrednio, dziedziczenie nie wystarczy. */
+html[data-theme="dark"] .dam-check-label {
+  color: var(--dam-text) !important;
+}
+
+html[data-theme="dark"] #damProjectsStatus {
+  color: var(--dam-text-muted) !important;
+}
+
+html[data-theme="dark"] .dam-int-cta {
+  color: var(--dam-text) !important;
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+}
+
+html[data-theme="dark"] .dam-int-chip.dam-int-st {
+  color: color-mix(in srgb, var(--dam-danger, #E5484D) 55%, var(--dam-text)) !important;
+  background: color-mix(in srgb, var(--dam-danger, #E5484D) 18%, transparent) !important;
+}
+
+/* ---- Dashboard: popup bazy (db-panel) ---- */
+html[data-theme="dark"] #damDbStatusPanel {
+  background: var(--dam-surface-raised) !important;
+  color: var(--dam-text) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-theme="dark"] #damDbStatusPanel * {
+  color: inherit;
+}
+/* Karty zrodel (Lokalna SQLite / Synology / Kopia zapasowa) maja wlasne biale tlo
+   i wlasny kolor tytulu/opisu (dam-brand.css:8488+) - dziedziczenie z panelu nie wystarczy. */
+html[data-theme="dark"] .dam-db-source {
+  background: var(--dam-surface) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-theme="dark"] .dam-db-source.is-active,
+html[data-theme="dark"] .dam-db-source.is-dump-picked {
+  background: color-mix(in srgb, var(--dam-primary) 12%, var(--dam-surface)) !important;
+}
+html[data-theme="dark"] .dam-db-source__title {
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-db-source__detail,
+html[data-theme="dark"] .dam-db-source__note {
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] .dam-db-check__box {
+  background: var(--dam-input-bg) !important;
+  border-color: var(--dam-border) !important;
+}
+
+/* ---- Branding: pasek narzedzi / zoom label ---- */
+html[data-theme="dark"] #damBrandingCardZoomLabel {
+  color: var(--dam-text) !important;
+}
+
+/* ---- Branding: okno materialu (modal) ---- */
+html[data-theme="dark"] #damMediaPreview .dam-preview-nav,
+html[data-theme="dark"] .dam-viz-modal__actions {
+  background: var(--dam-surface-raised) !important;
+  color: var(--dam-text) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-theme="dark"] #damMediaPreview .dam-preview-nav *,
+html[data-theme="dark"] .dam-viz-modal__actions * {
+  color: inherit;
+}
+
+html[data-theme="dark"] #damMediaPreviewBadges button.dam-viz-badge.dam-badge-tag {
+  color: color-mix(in srgb, var(--dam-ok, #1E9E5A) 55%, var(--dam-text)) !important;
+  background: color-mix(in srgb, var(--dam-ok, #1E9E5A) 18%, transparent) !important;
+}
+
+html[data-theme="dark"] .dam-media-preview__ext-tag--jpg {
+  color: color-mix(in srgb, #5B8DEF 55%, var(--dam-text)) !important;
+  background: color-mix(in srgb, #5B8DEF 18%, transparent) !important;
+}
+
+html[data-theme="dark"] .dam-media-preview__variant-grid--material .dam-viz-modal__variant,
+html[data-theme="dark"] .dam-media-preview__variant-grid--material .dam-media-preview__variant {
+  background: var(--dam-surface-raised) !important;
+  color: var(--dam-text) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-theme="dark"] .dam-viz-modal__variant-label {
+  color: var(--dam-text) !important;
+}
+
+/* Podwojny selektor id bije #damMediaPreview .dam-viz-modal__actions .dam-viz-modal__cta (dam-viz-modal.css:317). */
+html[data-theme="dark"] #damMediaPreview #damMediaPreviewExplorer {
+  color: color-mix(in srgb, var(--dam-primary) 55%, var(--dam-text)) !important;
+  background: transparent !important;
+}
+
+/* ---- Branding: quiz skojarzen ---- */
+html[data-theme="dark"] .dam-assoc-quiz__panel,
+html[data-theme="dark"] .dam-assoc-quiz__foot {
+  background: var(--dam-surface-raised) !important;
+  color: var(--dam-text) !important;
+  border-color: var(--dam-border) !important;
+}
+/* .dam-assoc-quiz__col--left ma wlasny gradient tla (jasny) niezalezny od panelu. */
+html[data-theme="dark"] .dam-assoc-quiz__col--left {
+  background: var(--dam-surface-raised) !important;
+}
+html[data-theme="dark"] .dam-assoc-quiz__thumb {
+  background: var(--dam-surface-sunken) !important;
+}
+html[data-theme="dark"] .dam-assoc-quiz__panel h2,
+html[data-theme="dark"] .dam-assoc-quiz__label {
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-assoc-quiz__sub {
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] .dam-assoc-quiz__banner {
+  color: var(--dam-text) !important;
+  background: color-mix(in srgb, var(--dam-primary) 18%, transparent) !important;
+}
+html[data-theme="dark"] .dam-assoc-quiz__counter {
+  color: color-mix(in srgb, #6C5CE7 55%, var(--dam-text)) !important;
+}
+html[data-theme="dark"] .dam-assoc-quiz__empty,
+html[data-theme="dark"] .dam-assoc-quiz__empty p,
+html[data-theme="dark"] .dam-assoc-quiz__empty p strong,
+html[data-theme="dark"] .dam-assoc-quiz__hint {
+  color: var(--dam-text-muted) !important;
+}
+html[data-theme="dark"] #damAssocQuizSearch {
+  background: var(--dam-input-bg) !important;
+  color: var(--dam-text) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-theme="dark"] #damAssocQuizSearch::placeholder {
+  color: var(--dam-text-muted) !important;
+}
+
+/* Nawigacja okna materialu (wstecz / dalej / w gore / odswiez / zamknij) i strzalki
+   przy podgladzie. Style wstrzykuje dam-modal-shared.js (tlo #fff), wiec !important. */
+html[data-theme="dark"] .dam-preview-nav__btn,
+html[data-theme="dark"] .dam-preview-nav .dam-viz-modal-close,
+html[data-theme="dark"] .dam-preview-nav__close,
+html[data-theme="dark"] .dam-viz-modal__nav-btn {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+  color: var(--dam-text) !important;
+}
+html[data-theme="dark"] .dam-preview-nav__btn:hover:not(:disabled),
+html[data-theme="dark"] .dam-preview-nav .dam-viz-modal-close:hover,
+html[data-theme="dark"] .dam-viz-modal__nav-btn:hover {
+  background: var(--dam-surface) !important;
+  border-color: var(--dam-primary) !important;
+}
+
+/* Profil: plakietka stanowiska w chipie menedzera (jasne tlo, jasny tekst - 1.4:1). */
+html[data-theme="dark"] #profileManager .dam-viz-badge,
+html[data-theme="dark"] .dam-colleague-chip .dam-viz-badge {
+  background: var(--dam-surface-raised) !important;
+  border-color: var(--dam-border) !important;
+  color: var(--dam-text) !important;
+}

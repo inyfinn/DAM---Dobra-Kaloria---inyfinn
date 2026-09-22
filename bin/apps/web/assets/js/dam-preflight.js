@@ -89,7 +89,14 @@
       ".dam-preflight__label{font-weight:600}",
       ".dam-preflight__item--warn .dam-preflight__label::before{content:'Uwaga: ';color:#b45309}",
       ".dam-preflight__hint{color:var(--dam-text-muted,#64748b);word-break:break-word}",
-      ".dam-preflight__actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}"
+      ".dam-preflight__actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}",
+      /* ton "info": brak folderu Marketing przy dzialajacej pamieci - bez czerwieni */
+      ".dam-preflight--info{border-color:var(--dam-border,#e2e8f0);border-left-color:var(--dam-primary,#6c5dd3)}",
+      ".dam-preflight--info .dam-preflight__icon{background:color-mix(in srgb,var(--dam-primary,#6c5dd3) 16%,transparent);",
+      "color:var(--dam-primary,#6c5dd3);font-style:italic}",
+      ".dam-preflight--warn{border-color:rgba(217,119,6,.35);border-left-color:#d97706}",
+      ".dam-preflight--warn .dam-preflight__icon{background:rgba(217,119,6,.14);color:#d97706}",
+      ".dam-preflight + .dam-preflight{margin-top:-4px}"
     ].join("");
     document.head.appendChild(st);
   }
@@ -150,8 +157,10 @@
   }
 
   function clear() {
-    var bar = document.getElementById(BAR_ID);
-    if (bar && bar.parentNode) bar.parentNode.removeChild(bar);
+    [BAR_ID, BAR_ID + "Db"].forEach(function (id) {
+      var bar = document.getElementById(id);
+      if (bar && bar.parentNode) bar.parentNode.removeChild(bar);
+    });
   }
 
   function mountPoint() {
@@ -161,44 +170,69 @@
     return { parent: content, before: header ? header.nextSibling : content.firstChild };
   }
 
+  /* Baza i folder Marketing to dwie osobne sprawy, wiec dwa osobne paski.
+   * 2026-09-22: odrzucone haslo do bazy lezalo pod tytulem "Pliki moga sie nie
+   * wyswietlac" razem z brakiem folderu - wygladalo jak "nie ma ROOT = nie ma bazy".
+   * Brak folderu przy dzialajacej pamieci podrecznej to informacja, nie alarm. */
+  function isDb(i) { return i && (i.group === "database" || i.id === "database"); }
+
   function render(report) {
     var items = (report && Array.isArray(report.items)) ? report.items : [];
-    var blocking = items.filter(function (i) { return i && i.blocking; });
-    if (!blocking.length) {
-      clear();
-      return false;
-    }
-    var warnings = items.filter(function (i) { return i && !i.blocking && i.level === "warn"; });
-    var shown = blocking.concat(warnings);
+    var dbItems = items.filter(function (i) { return isDb(i) && !i.ok && i.level !== "info"; });
+    var files = items.filter(function (i) { return i && !isDb(i); });
+    var fBlock = files.filter(function (i) { return i.blocking; });
+    var fWarn = files.filter(function (i) { return !i.blocking && i.level === "warn"; });
+    var fInfo = files.filter(function (i) { return !i.ok && i.level === "info"; });
     injectCss();
     clear();
-    var collapsed = readCollapsed();
+    var shownAny = false;
+    if (dbItems.length) {
+      mountBar(BAR_ID + "Db", "danger", String(dbItems[0].label || "Baza: problem z połączeniem"), dbItems);
+      shownAny = true;
+    }
+    if (fBlock.length) {
+      mountBar(BAR_ID, "danger", "Pliki mogą się nie wyświetlać: " + problemsLabel(fBlock.length), fBlock.concat(fWarn));
+      shownAny = true;
+    } else if (fWarn.length || fInfo.length) {
+      var first = fWarn[0] || fInfo[0];
+      mountBar(BAR_ID, fWarn.length ? "warn" : "info", String(first.label || ""), fWarn.concat(fInfo), true);
+      shownAny = true;
+    }
+    if (!shownAny) clear();
+    return shownAny;
+  }
 
+  function mountBar(barId, tone, titleText, shown, titleIsFirstLabel) {
+    var collapsed = readCollapsed();
     var bar = document.createElement("section");
-    bar.id = BAR_ID;
-    bar.className = "dam-preflight" + (collapsed ? " is-collapsed" : "");
-    bar.setAttribute("role", "alert");
+    bar.id = barId;
+    bar.className = "dam-preflight dam-preflight--" + tone + (collapsed ? " is-collapsed" : "");
+    bar.setAttribute("role", tone === "info" ? "status" : "alert");
 
     var head = document.createElement("div");
     head.className = "dam-preflight__head";
     var icon = document.createElement("span");
     icon.className = "dam-preflight__icon";
     icon.setAttribute("aria-hidden", "true");
-    icon.textContent = "!";
+    icon.textContent = tone === "info" ? "i" : "!";
     var title = document.createElement("h3");
     title.className = "dam-preflight__title";
-    title.textContent = "Pliki mogą się nie wyświetlać: " + problemsLabel(blocking.length);
+    title.textContent = titleText;
+    // Tytul powtarza etykiete pierwszego punktu - na liscie zostaje sam opis.
+    if (titleIsFirstLabel && shown.length === 1) shown = [Object.assign({}, shown[0], { label: "" })];
 
     var list = document.createElement("ul");
     list.className = "dam-preflight__list";
-    list.id = BAR_ID + "List";
+    list.id = barId + "List";
     shown.forEach(function (item) {
       var li = document.createElement("li");
-      li.className = "dam-preflight__item" + (item.blocking ? "" : " dam-preflight__item--warn");
-      var label = document.createElement("span");
-      label.className = "dam-preflight__label";
-      label.textContent = String(item.label || item.id || "");
-      li.appendChild(label);
+      li.className = "dam-preflight__item" + (item.level === "warn" ? " dam-preflight__item--warn" : "");
+      if (item.label) {
+        var label = document.createElement("span");
+        label.className = "dam-preflight__label";
+        label.textContent = String(item.label);
+        li.appendChild(label);
+      }
       if (item.hint) {
         var hint = document.createElement("span");
         hint.className = "dam-preflight__hint";
@@ -234,7 +268,7 @@
 
     var at = mountPoint();
     at.parent.insertBefore(bar, at.before || null);
-    return true;
+    return bar;
   }
 
   /** Swiezo zapisana sciezka w localStorage trafia do mostu chwile po starcie (dam-paths.js). */

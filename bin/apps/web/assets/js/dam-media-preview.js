@@ -8,7 +8,8 @@
     "data:image/svg+xml," +
     encodeURIComponent(
       '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="240" viewBox="0 0 320 240">' +
-        '<rect fill="#f1f3f6" width="320" height="240"/>' +
+        /* bez wlasnego tla: w ciemnym motywie jasny prostokat #f1f3f6 byl biala plama */
+        '<rect fill="none" width="320" height="240"/>' +
         '<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="14">Brak podglądu</text>' +
         "</svg>"
     );
@@ -2195,11 +2196,18 @@
         '"><i class="uil uil-play-circle" aria-hidden="true"></i></div>'
       );
     }
+    /* Maly kafelek = miniatura z pamieci podrecznej, nie pelny oryginal. 2026-09-22: bez
+     * folderu Marketing /media dla kazdego wariantu czekal na martwy dysk i kafelki
+     * konczyly jako szare ikonki. Brak miniatury -> fallback i tak probuje /media. */
+    var tileSrc =
+      window.DamPreviewTruth && typeof window.DamPreviewTruth.thumbCacheUrl === "function"
+        ? window.DamPreviewTruth.thumbCacheUrl(v.path, "grid") || previewUrl(v.path, v)
+        : previewUrl(v.path, v);
     return (
       '<img class="dam-viz-modal__variant-thumb" data-path="' +
       esc(v.path || "") +
       '" src="' +
-      esc(previewUrl(v.path, v)) +
+      esc(tileSrc) +
       '" alt="' +
       esc(fileName) +
       '" loading="lazy" onerror="window.__damVariantThumbFallback&&__damVariantThumbFallback(this)">'

@@ -31,8 +31,9 @@
     return parts.join("-");
   }
 
-  function show() {
+  function show(reason) {
     if (document.getElementById("damActivationOverlay")) return;
+    var passwordChanged = reason === "auth_failed";
     var overlay = el(
       "div",
       "position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;" +
@@ -49,13 +50,20 @@
         "background:var(--dam-surface,#fff);color:var(--dam-text,#1a2233);" +
         "box-shadow:0 24px 64px rgba(0,0,0,.35);font:inherit;"
     );
-    var title = el("h2", "margin:0 0 8px;font-size:20px;font-weight:700;line-height:1.3;", "Kod aktywacyjny");
+    var title = el(
+      "h2",
+      "margin:0 0 8px;font-size:20px;font-weight:700;line-height:1.3;",
+      passwordChanged ? "Hasło do bazy się zmieniło" : "Kod aktywacyjny"
+    );
     title.id = "damActivationTitle";
     var lead = el(
       "p",
       "margin:0 0 20px;font-size:14px;line-height:1.55;opacity:.8;",
-      "To pierwsze uruchomienie DAM na tym koncie Windows. Wpisz kod, który dostałeś od administratora. " +
-        "Kod jest potrzebny tylko raz."
+      passwordChanged
+        ? "Baza Synology odrzuciła zapisane hasło, więc DAM pracuje na kopii lokalnej. Wpisz kod aktywacyjny " +
+            "z tej wersji instalatora - później aktualizacje odświeżą hasło same."
+        : "To pierwsze uruchomienie DAM na tym koncie Windows. Wpisz kod, który dostałeś od administratora. " +
+            "Kod jest potrzebny tylko raz."
     );
     var label = el("label", "display:block;margin:0 0 6px;font-size:13px;font-weight:600;", "Kod");
     label.setAttribute("for", "damActivationCode");
@@ -136,16 +144,21 @@
     input.focus();
   }
 
-  function check() {
+  // Odrzucone haslo wychodzi dopiero po pierwszej probie polaczenia (watek zdrowia
+  // co ~5 s), wiec sprawdzamy jeszcze raz chwile po starcie strony.
+  function check(again) {
     fetch(bridge() + "/db/activation", { cache: "no-store" })
       .then(function (r) { return r.json(); })
-      .then(function (res) { if (res && res.activation_required === true) show(); })
+      .then(function (res) {
+        if (res && res.activation_required === true) show(res.reason || "");
+        else if (again) window.setTimeout(function () { check(false); }, 8000);
+      })
       .catch(function () { /* most jeszcze wstaje: signin i tak pokaze swoj stan */ });
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", check);
+    document.addEventListener("DOMContentLoaded", function () { check(true); });
   } else {
-    check();
+    check(true);
   }
 })();

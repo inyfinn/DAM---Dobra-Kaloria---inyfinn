@@ -336,6 +336,8 @@ PUBLIC_FORBIDDEN_PATHS = frozenset(
         "/validate-base",
         "/detect-marketing-bases",
         "/preflight",
+        "/index/snapshots",
+        "/index/publish",
         "/db/activate",
         "/db/activation",
         "/db/path",
@@ -837,6 +839,13 @@ def build_preflight_report() -> dict:
         ("webview2", dam_preflight.check_webview2),
     ]
     report = dam_preflight.run_checks(checks)
+    try:
+        import dam_thumb_cache
+
+        cache_thumbs = int((dam_thumb_cache.local_thumb_stats() or {}).get("files") or 0)
+    except Exception:  # noqa: BLE001
+        cache_thumbs = 0
+    report = dam_preflight.soften_without_root(report, cache_thumbs)
     report["api_version"] = BRIDGE_API_VERSION
     return report
 
@@ -1917,6 +1926,26 @@ def _ensure_slim_publisher() -> Any:
         lock_ttl_sec=BRANDING_LOCK_TTL_SEC,
     )
     return _slim_publisher
+
+
+def _snapshot_root_alive() -> bool:
+    """Czy TEN komputer widzi folder Marketing (tylko wtedy publikuje skan do bazy)."""
+    base = str(read_machine_config().get("base_path") or "").strip()
+    if not base:
+        return False
+    try:
+        if dam_thumb_cache is not None and not dam_thumb_cache._drive_letter_alive(base):
+            return False
+    except Exception:  # noqa: BLE001
+        return False
+    return bool(validate_base(base).get("ok"))
+
+
+def _on_snapshot_updated(key: str, path: Path) -> None:
+    """Swiezy skan z bazy: zrzuc cache i przebuduj siatke brandingu ze skojarzeniami."""
+    _drop_json_cache(path)
+    if key == "branding-search-index":
+        _schedule_slim_grid_publish(delay_sec=2.0)
 
 
 def _schedule_slim_grid_publish(delay_sec: float | None = None) -> None:
@@ -7980,6 +8009,16 @@ def _pg_activation_required() -> bool:
         return False
 
 
+def _pg_activation_reason() -> str:
+    """"auth_failed" = baza odrzuca zapisane haslo; "not_activated" = pierwsza aktywacja."""
+    try:
+        import pg_db as _pg
+
+        return str(_pg.activation_reason() or "")
+    except Exception:
+        return ""
+
+
 def _reset_db_status_cache() -> None:
     """Po aktywacji pill "Baza" ma od razu pokazac prawde, nie 30-sekundowy cache."""
     try:
@@ -8377,6 +8416,15 @@ class Handler(BaseHTTPRequestHandler):
             # Tylko tryb pulpitowy (w publicznym blokuje _public_gate); bez sesji, < 3 s.
             self._json(200, build_preflight_report())
             return
+        if parsed.path == "/index/snapshots":
+            # Skad jest lista materialow (baza / lokalny skan) i z kiedy - etykieta w UI.
+            try:
+                import index_snapshots
+
+                self._json(200, index_snapshots.status())
+            except Exception as exc:  # noqa: BLE001
+                self._json(200, {"ok": False, "error": str(exc)[:200]})
+            return
         if parsed.path == "/machine-config":
             self._json(200, read_machine_config())
             return
@@ -8712,7 +8760,11 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, st)
             return
         if parsed.path == "/db/activation":
-            self._json(200, {"ok": True, "activation_required": _pg_activation_required()})
+            self._json(200, {
+                "ok": True,
+                "activation_required": _pg_activation_required(),
+                "reason": _pg_activation_reason(),
+            })
             return
         if parsed.path == "/db/ping":
             self._json(200, dam_db.ping() if dam_db else {"ok": False, "error": "dam_db_missing"})
@@ -9791,6 +9843,19 @@ class Handler(BaseHTTPRequestHandler):
             if self._require_admin() is None:
                 return
             self._json(200, start_index_rebuild())
+            return
+        if parsed.path == "/index/publish":
+            # "Wyslij indeks do bazy" - tylko admin i tylko z komputera z folderem Marketing.
+            if self._require_admin() is None:
+                return
+            import index_snapshots
+
+            alive = _snapshot_root_alive()
+            if not alive:
+                self._json(200, {"ok": False, "error": "no_marketing_root",
+                                 "hint": "Wysłać indeks może tylko komputer z podłączonym folderem Marketing."})
+                return
+            self._json(200, index_snapshots.publish_changed(WEB_ROOT / "data", root_alive=True, force=True))
             return
         if parsed.path == "/index/cancel":
             self._json(200, index_cancel())
@@ -11243,8 +11308,18 @@ def main() -> None:
         if dam_thumb_cache:
             boot = dam_thumb_cache.ensure_boot_sync()
             print("thumb_cache_sync:", {k: boot.get(k) for k in ("ok", "started", "reason", "running")})
+            # Spis miniatur z bazy - bez niego komputer bez folderu Marketing
+            # nie trafia w pamiec podreczna dla nowszych materialow.
+            dam_thumb_cache.start_db_index_watch()
     except Exception as exc:
         print("thumb_cache_sync:", exc)
+    try:
+        import index_snapshots
+
+        # Lista materialow z bazy: komputer z folderem publikuje skan, reszta pobiera.
+        index_snapshots.start_watch(WEB_ROOT / "data", _snapshot_root_alive, _on_snapshot_updated)
+    except Exception as exc:  # noqa: BLE001
+        print("index_snapshots:", exc)
     if dam_debug is not None:
         try:
             dam_debug.ensure_daemon_started(interval_sec=60.0)

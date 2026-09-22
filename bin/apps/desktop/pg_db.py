@@ -61,6 +61,10 @@ _HEALTH: dict[str, Any] = {
 }
 _HEALTH_THREAD: threading.Thread | None = None
 _INDEX_READY = False
+# Baza odrzucila haslo (a nie: jest nieosiagalna). Inny problem, inne lekarstwo:
+# nowszy sealed.json albo kod aktywacyjny - nie cichy tryb offline.
+_AUTH_FAILED = False
+_RESEAL_CHECKED = False
 
 
 class PgNotConfigured(RuntimeError):
@@ -194,26 +198,56 @@ def raw_config_mapping() -> dict[str, Any]:
 
 
 def activation_required() -> bool:
-    """True = instalacja ma zapieczetowana konfiguracje i czeka na kod aktywacyjny."""
+    """True = instalacja ma zapieczetowana konfiguracje i czeka na kod aktywacyjny.
+
+    Takze gdy baza odrzuca zapisane haslo, a nowszego nie da sie odczytac bez kodu
+    (stara aktywacja bez zapamietanego kodu)."""
     if pg_seal is None or not pg_seal.sealed_present():
         return False
-    return not is_configured()
+    return (not is_configured()) or _AUTH_FAILED
+
+
+def activation_reason() -> str:
+    if pg_seal is None or not pg_seal.sealed_present():
+        return ""
+    if not is_configured():
+        return "not_activated"
+    return "auth_failed" if _AUTH_FAILED else ""
+
+
+def last_auth_failed() -> bool:
+    return _AUTH_FAILED
+
+
+def _is_auth_error(exc: BaseException) -> bool:
+    msg = str(exc).lower()
+    return "password authentication failed" in msg or "no pg_hba.conf entry" in msg
 
 
 def activate(code: str) -> dict[str, Any]:
     if pg_seal is None:
         return {"ok": False, "error": "pg_seal_missing"}
+    global _AUTH_FAILED
     res = pg_seal.activate(code)
     if res.get("ok"):
+        _AUTH_FAILED = False
         reset_config_cache()
     return res
 
 
 def _load_config() -> dict[str, Any]:
-    global _CONFIG_CACHE
+    global _CONFIG_CACHE, _RESEAL_CHECKED
     if _CONFIG_CACHE is not None:
         return _CONFIG_CACHE
     _load_dotenv_file(ENV_PATH)
+    if not _RESEAL_CHECKED and pg_seal is not None:
+        # Raz na proces: aktualizacja mogla przywiezc nowszy sealed.json (nowe haslo).
+        _RESEAL_CHECKED = True
+        try:
+            if pg_seal.reseal_if_newer():
+                print("pg_db: konfiguracja bazy odswiezona z nowszego instalatora", flush=True)
+        except Exception as exc:  # noqa: BLE001
+            print("pg_db reseal warning:", exc, flush=True)
     cfg = _read_stored_config()
     cfg["host"] = os.environ.get("DAM_PG_HOST", cfg.get("host", ""))
     cfg["port"] = int(os.environ.get("DAM_PG_PORT", cfg.get("port", 5433)))
@@ -389,9 +423,12 @@ def _primary_host(cfg: dict[str, Any]) -> str:
     return str(cfg.get("host") or "").strip()
 
 
-def connect():
-    """Polaczenie psycopg2 do JEDNEGO hosta, krotki timeout, TLS (sslmode)."""
-    global _LAST_HOST
+def connect(_retried: bool = False):
+    """Polaczenie psycopg2 do JEDNEGO hosta, krotki timeout, TLS (sslmode).
+
+    Odrzucone haslo: jeden raz odswiez konfiguracje z sealed.json (zapamietany kod)
+    i sprobuj ponownie. Dalej zle -> _AUTH_FAILED, UI prosi o kod aktywacyjny."""
+    global _LAST_HOST, _AUTH_FAILED
     if psycopg2 is None:
         raise RuntimeError("psycopg2-binary nie jest zainstalowany (patrz apps/desktop/requirements.txt)")
     cfg = _load_config()
@@ -414,8 +451,19 @@ def connect():
     try:
         conn = psycopg2.connect(**kwargs)
         _LAST_HOST = host
+        _AUTH_FAILED = False
         return conn
     except Exception as exc:  # noqa: BLE001
+        if _is_auth_error(exc):
+            _AUTH_FAILED = True
+            if not _retried and pg_seal is not None:
+                try:
+                    refreshed = pg_seal.reseal_if_newer(force=True)
+                except Exception:  # noqa: BLE001
+                    refreshed = False
+                if refreshed:
+                    reset_config_cache()
+                    return connect(_retried=True)
         msg = (
             f"Postgres niedostepny {host}:{cfg['port']} "
             f"sslmode={kwargs.get('sslmode')} -> {exc}"
@@ -1092,6 +1140,139 @@ def upsert_thumb_cache_manifest(payload: Any, updated_by: str = "") -> bool:
         return True
     except Exception:
         return False
+
+
+# --- Migawki indeksow (lista materialow z bazy, nie ze stanu plikow) -----------
+# 2026-09-22: lista materialow brala sie z branding-search-index.json / file-index.json
+# wgranych instalatorem (skan z 14.09). Komputer bez folderu Marketing pokazywal stare
+# materialy, choc PC firmowy mial swiezy skan. Teraz komputer z folderem publikuje
+# skan do bazy (gzip, ~5 MB), a pozostale pobieraja nowsza generacje.
+
+_SNAPSHOT_DDL = """
+CREATE TABLE IF NOT EXISTS dam_index_snapshots (
+  store_key TEXT PRIMARY KEY,
+  generation BIGINT NOT NULL,
+  sha256 TEXT NOT NULL,
+  payload_gz BYTEA NOT NULL,
+  raw_bytes BIGINT NOT NULL DEFAULT 0,
+  item_count INTEGER NOT NULL DEFAULT 0,
+  built_at TEXT NOT NULL,
+  built_by TEXT NOT NULL DEFAULT '',
+  published_at TEXT NOT NULL
+)
+"""
+
+
+def publish_index_snapshot(
+    store_key: str,
+    raw: bytes,
+    *,
+    sha256: str,
+    built_at: str,
+    built_by: str = "",
+    item_count: int = 0,
+) -> dict[str, Any]:
+    """Zapisz skan do bazy. Ta sama tresc (sha256) = nic nie robi."""
+    import gzip
+
+    conn = connect()
+    try:
+        cur = conn.cursor()
+        cur.execute(_SNAPSHOT_DDL)
+        cur.execute("SELECT sha256, generation FROM dam_index_snapshots WHERE store_key = %s FOR UPDATE", (store_key,))
+        row = cur.fetchone()
+        if row and row.get("sha256") == sha256:
+            conn.commit()
+            return {"ok": True, "changed": False, "generation": int(row.get("generation") or 0)}
+        gen = int(time.time() * 1000)
+        payload = gzip.compress(raw, compresslevel=6)
+        now = datetime.now(timezone.utc).isoformat()
+        cur.execute(
+            """
+            INSERT INTO dam_index_snapshots
+              (store_key, generation, sha256, payload_gz, raw_bytes, item_count, built_at, built_by, published_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (store_key) DO UPDATE SET
+              generation = EXCLUDED.generation, sha256 = EXCLUDED.sha256,
+              payload_gz = EXCLUDED.payload_gz, raw_bytes = EXCLUDED.raw_bytes,
+              item_count = EXCLUDED.item_count, built_at = EXCLUDED.built_at,
+              built_by = EXCLUDED.built_by, published_at = EXCLUDED.published_at
+            """,
+            (store_key, gen, sha256, psycopg2.Binary(payload), len(raw), int(item_count or 0), built_at, built_by, now),
+        )
+        conn.commit()
+        return {"ok": True, "changed": True, "generation": gen, "gz_bytes": len(payload), "raw_bytes": len(raw)}
+    finally:
+        conn.close()
+
+
+def index_snapshot_meta() -> dict[str, dict[str, Any]]:
+    """Tanie metadane bez kolumny payload_gz (TOAST nie jest czytany)."""
+    conn = connect()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT to_regclass('public.dam_index_snapshots') AS t")
+        row = cur.fetchone()
+        if not row or not row.get("t"):
+            return {}
+        cur.execute(
+            "SELECT store_key, generation, sha256, raw_bytes, item_count, built_at, built_by, published_at "
+            "FROM dam_index_snapshots"
+        )
+        return {str(r["store_key"]): dict(r) for r in cur.fetchall()}
+    finally:
+        conn.close()
+
+
+def fetch_index_snapshot(store_key: str) -> tuple[dict[str, Any], bytes] | None:
+    import gzip
+
+    conn = connect()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT store_key, generation, sha256, payload_gz, built_at, built_by "
+            "FROM dam_index_snapshots WHERE store_key = %s",
+            (store_key,),
+        )
+        row = cur.fetchone()
+        if not row:
+            return None
+        raw = gzip.decompress(bytes(row["payload_gz"]))
+        meta = {k: row[k] for k in ("store_key", "generation", "sha256", "built_at", "built_by")}
+        return meta, raw
+    finally:
+        conn.close()
+
+
+def fetch_thumb_cache_rows(since: str | None = None) -> list[dict[str, Any]]:
+    """Spis miniatur opublikowany przez komputer z folderem Marketing.
+
+    2026-09-22: tabela miala 8009 wierszy, ale zadna instalacja jej nie czytala -
+    bez folderu Marketing miniatury nowych materialow wypadaly z pamieci podrecznej
+    (puste kafelki, "Brak podgladu"), choc pliki lezaly w PAMIEC-PODRECZNA.
+    since = published_at (TEXT ISO) - pobieramy tylko nowsze wiersze."""
+    conn = connect()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT to_regclass('public.dam_thumb_cache_index') AS t")
+        row = cur.fetchone()
+        if not row or not row.get("t"):
+            return []
+        if since:
+            cur.execute(
+                "SELECT store_key, digest, mtime, published_at FROM dam_thumb_cache_index "
+                "WHERE published_at > %s ORDER BY published_at",
+                (since,),
+            )
+        else:
+            cur.execute(
+                "SELECT store_key, digest, mtime, published_at FROM dam_thumb_cache_index "
+                "ORDER BY published_at"
+            )
+        return [dict(r) for r in cur.fetchall()]
+    finally:
+        conn.close()
 
 
 def upsert_thumb_cache_rows(entries: list, *, publisher: str = "") -> bool:

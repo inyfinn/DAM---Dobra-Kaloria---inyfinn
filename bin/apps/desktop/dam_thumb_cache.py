@@ -455,16 +455,43 @@ def _lookup_by_rel(rel: str, profile: str) -> tuple[Optional[Path], str, str]:
     return None, "", digest
 
 
+_DRIVE_ALIVE: dict[str, tuple[float, bool]] = {}
+_DRIVE_ALIVE_LOCK = threading.Lock()
+DRIVE_ALIVE_TTL_S = 15.0
+DRIVE_PROBE_TIMEOUT_S = 0.15
+
+
 def _drive_letter_alive(path: str) -> bool:
-    """Szybki test litery dysku bez wchodzenia w udzial sieciowy."""
+    """Szybki test litery dysku bez wchodzenia w udzial sieciowy.
+
+    2026-09-22: os.path.isdir("X:\\") na ODLACZONYM dysku sieciowym Windows czeka
+    na timeout SMB - i to przy KAZDEJ miniaturze. Pierwsze kafelki Brandingu
+    pojawialy sie po ~5 s. Teraz: sonda w watku z limitem 150 ms, wynik
+    zapamietany na 15 s dla calej litery. Brak odpowiedzi = dysk martwy."""
     s = (path or "").replace("/", "\\")
-    if len(s) >= 2 and s[1] == ":":
-        root = s[:2] + "\\"
+    if not (len(s) >= 2 and s[1] == ":"):
+        return True
+    letter = s[:2].upper()
+    now = time.monotonic()
+    with _DRIVE_ALIVE_LOCK:
+        hit = _DRIVE_ALIVE.get(letter)
+        if hit and now - hit[0] < DRIVE_ALIVE_TTL_S:
+            return hit[1]
+    result = {"ok": False}
+
+    def probe() -> None:
         try:
-            return os.path.isdir(root)
+            result["ok"] = os.path.isdir(letter + "\\")
         except OSError:
-            return False
-    return True
+            result["ok"] = False
+
+    t = threading.Thread(target=probe, daemon=True, name="dam-drive-probe")
+    t.start()
+    t.join(timeout=DRIVE_PROBE_TIMEOUT_S)
+    alive = bool(result["ok"]) and not t.is_alive()
+    with _DRIVE_ALIVE_LOCK:
+        _DRIVE_ALIVE[letter] = (time.monotonic(), alive)
+    return alive
 
 
 def _mtime_quick(path: str, timeout_s: float = 0.08) -> float | None:
@@ -829,8 +856,11 @@ def media_preview_gate(
     otherwise the best cached thumb. Cloud placeholders are never opened.
     """
     physical, _rel = _physical_and_rel(path, email, resolve_physical, None)
-    online_only = _is_online_only(physical)
-    if not online_only and os.path.isfile(physical) and _readable_within(physical, budget_s):
+    # Martwy dysk sieciowy: ani isfile, ani _is_online_only - kazde z nich czeka
+    # na timeout SMB. Od razu pamiec podreczna.
+    drive_ok = _drive_letter_alive(physical or path)
+    online_only = drive_ok and _is_online_only(physical)
+    if drive_ok and not online_only and os.path.isfile(physical) and _readable_within(physical, budget_s):
         return None
     for prof in PREVIEW_PROFILE_ORDER:
         hit, ctype, digest, rel, mt = lookup_cached(physical or path, email=email, profile=prof)
@@ -1917,6 +1947,100 @@ def _merge_rel_index_from_remote(source: str) -> None:
         _REL_INDEX = local
     if changed:
         _save_rel_index()
+
+
+def _db_index_marker_path() -> Path:
+    return platform_compat.user_state_dir() / "thumb-index-db.json"
+
+
+def merge_rel_index_from_db() -> dict:
+    """Spis miniatur z bazy (dam_thumb_cache_index) -> lokalny thumb-rel-index.json.
+
+    Baza jest zrodlem prawdy dla komputerow bez folderu Marketing: komputer z
+    folderem publikuje "sciezka|profil -> skrot", reszta tylko pobiera. Pobieramy
+    przyrostowo (published_at > ostatni znacznik). Regula scalania jak z NAS:
+    brakujacy klucz dodajemy, istniejacy nadpisujemy tylko nowszym mtime."""
+    try:
+        import pg_db
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": f"pg_db: {exc}"}
+    marker_path = _db_index_marker_path()
+    since = ""
+    try:
+        since = str((json.loads(marker_path.read_text(encoding="utf-8")) or {}).get("since") or "")
+    except (OSError, ValueError, AttributeError):
+        since = ""
+    t0 = time.monotonic()
+    try:
+        rows = pg_db.fetch_thumb_cache_rows(since or None)
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)[:300]}
+    global _REL_INDEX
+    local = _load_rel_index()
+    added = updated = 0
+    newest = since
+    with _REL_INDEX_LOCK:
+        for row in rows:
+            key = str(row.get("store_key") or "")
+            digest = str(row.get("digest") or "")
+            if not key or not digest:
+                continue
+            try:
+                mt = float(row.get("mtime") or 0.0)
+            except (TypeError, ValueError):
+                mt = 0.0
+            pub = str(row.get("published_at") or "")
+            if pub > newest:
+                newest = pub
+            cur = local.get(key)
+            if not isinstance(cur, dict):
+                local[key] = {"digest": digest, "mtime": mt}
+                added += 1
+                continue
+            try:
+                cur_mt = float(cur.get("mtime") or 0.0)
+            except (TypeError, ValueError):
+                cur_mt = 0.0
+            if cur.get("digest") != digest and mt >= cur_mt:
+                local[key] = {"digest": digest, "mtime": mt}
+                updated += 1
+        _REL_INDEX = local
+    if added or updated:
+        _save_rel_index()
+    try:
+        marker_path.parent.mkdir(parents=True, exist_ok=True)
+        _write_json_atomic(marker_path, {"since": newest, "rows_last": len(rows), "at": _utc_iso()})
+    except Exception:  # noqa: BLE001
+        pass
+    return {
+        "ok": True,
+        "rows": len(rows),
+        "added": added,
+        "updated": updated,
+        "since": newest,
+        "ms": int((time.monotonic() - t0) * 1000),
+    }
+
+
+_DB_INDEX_THREAD: threading.Thread | None = None
+DB_INDEX_REFRESH_S = 600.0
+
+
+def start_db_index_watch() -> dict:
+    """Przy starcie mostu i co 10 min: dociagnij spis miniatur z bazy (w tle)."""
+    global _DB_INDEX_THREAD
+    if _DB_INDEX_THREAD is not None and _DB_INDEX_THREAD.is_alive():
+        return {"ok": True, "started": False, "running": True}
+
+    def loop() -> None:
+        while True:
+            res = merge_rel_index_from_db()
+            print("thumb_index_db:", res, flush=True)
+            time.sleep(DB_INDEX_REFRESH_S)
+
+    _DB_INDEX_THREAD = threading.Thread(target=loop, daemon=True, name="dam-thumb-index-db")
+    _DB_INDEX_THREAD.start()
+    return {"ok": True, "started": True}
 
 
 DOWNLOAD_WORKERS = 16

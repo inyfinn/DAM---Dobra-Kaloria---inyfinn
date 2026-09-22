@@ -57,39 +57,54 @@ def _item(
 
 
 def check_database(pg: Any) -> dict[str, Any]:
-    """Baza: brak bazy to ostrzezenie (dziala tryb SQLite offline), nie blokada."""
+    """Baza: brak bazy to ostrzezenie (dziala tryb SQLite offline), nie blokada.
+
+    Baza NIE zalezy od folderu Marketing. 2026-09-22: odrzucone haslo lezalo w tym
+    samym pasku co brak folderu ("Pliki moga sie nie wyswietlac"), wiec wygladalo
+    na "nie ma ROOT = nie ma bazy". Stad group="database" i prawdziwa przyczyna
+    (db_problem) - UI rysuje osobny komunikat."""
+    base = {"group": "database"}
     if pg is None:
         return _item(
             "database", False, "Baza: moduł niedostępny",
-            "Program działa w trybie offline (lokalny SQLite).",
+            "Program działa w trybie offline (lokalny SQLite).", **base,
+        )
+    auth_failed = bool(getattr(pg, "last_auth_failed", lambda: False)())
+    if auth_failed and pg.is_configured():
+        return _item(
+            "database", False, "Baza Synology odrzuciła zapisane hasło",
+            "Hasło do bazy zmieniło się, a ta instalacja ma stare. Wpisz kod aktywacyjny - "
+            "okno otworzy się samo. Do tego czasu zmiany zapisują się lokalnie.",
+            action="activate", db_problem="auth_failed", **base,
         )
     if pg.activation_required():
         return _item(
             "database", False, "Baza: wymaga kodu aktywacyjnego",
             "Wpisz kod aktywacyjny od administratora na ekranie logowania. "
             "Do tego czasu program działa w trybie offline.",
-            action="activate",
+            action="activate", db_problem="not_activated", **base,
         )
     if not pg.is_configured():
         return _item(
             "database", False, "Baza: nieskonfigurowana",
             "Program działa w trybie offline (lokalny SQLite). "
             "Zainstaluj DAM ponownie z DAM-Setup.exe albo poproś administratora o konfigurację.",
+            db_problem="not_configured", **base,
         )
     health = pg.cached_health() or {}
     if health.get("ok"):
-        return _item("database", True, "Baza: połączona", "")
+        return _item("database", True, "Baza: połączona", "", **base)
     err = str(health.get("error") or "")
     if err == "health_pending":
         return _item(
             "database", True, "Baza: trwa sprawdzanie połączenia",
-            "Wynik pojawi się za kilka sekund.", level="info",
+            "Wynik pojawi się za kilka sekund.", level="info", **base,
         )
     return _item(
-        "database", False, "Baza: brak połączenia (tryb offline)",
-        "Zmiany zapisują się lokalnie i trafią do bazy po odzyskaniu połączenia."
-        + (f" Szczegóły: {err}" if err else ""),
-        action="retry",
+        "database", False, "Baza Synology nie odpowiada (tryb offline)",
+        "Sprawdź internet albo VPN. Zmiany zapisują się lokalnie i trafią do bazy po odzyskaniu "
+        "połączenia." + (f" Szczegóły: {err}" if err else ""),
+        action="retry", db_problem="unreachable", **base,
     )
 
 
@@ -297,6 +312,49 @@ _TIMEOUT_LABELS = {
     "webview2": "WebView2: sprawdzanie trwa zbyt długo",
 }
 _ERROR_LABEL = "Nie udało się sprawdzić punktu: {cid}"
+
+
+def soften_without_root(report: dict[str, Any], cache_thumbs: int) -> dict[str, Any]:
+    """Brak folderu Marketing przy dzialajacej pamieci podrecznej to NIE awaria.
+
+    2026-09-22: uzytkownik bez podlaczonego X: widzial czerwony pasek "Pliki moga sie
+    nie wyswietlac", choc miniatury, lista i baza dzialaly. Folder Marketing jest
+    potrzebny do oryginalow, przycisku Folder i skanowania dysku - nie do przegladania.
+    Indeks, ktory bez folderu nie moze sie odswiezyc, tez nie jest wtedy bledem."""
+    items = report.get("items") or []
+    by_id = {i.get("id"): i for i in items if isinstance(i, dict)}
+    for it in items:
+        if isinstance(it, dict) and it.get("id") != "database":
+            it.setdefault("group", "files")
+    mk = by_id.get("marketing")
+    if not mk or mk.get("ok"):
+        return report
+    idx = by_id.get("index") or {}
+    have_index = bool(idx.get("ok"))
+    if cache_thumbs > 0 and have_index:
+        why = str(mk.get("hint") or "")
+        mk.update(
+            level="info",
+            blocking=False,
+            label="Pracujesz bez folderu Marketing - miniatury z pamięci podręcznej",
+            hint=(
+                f"Lista materiałów, {cache_thumbs} miniatur i baza działają. Otwieranie oryginałów, "
+                "przycisk Folder i skanowanie dysku wymagają folderu Marketing. " + why
+            ).strip(),
+        )
+        wt = by_id.get("watcher")
+        if wt and wt.get("level") in ("warn", "block"):
+            wt.update(
+                ok=True,
+                level="info",
+                blocking=False,
+                label="Indeks nie odświeża się bez folderu Marketing",
+                hint="Pokazuję ostatni zapisany indeks.",
+            )
+    blocking = [i["id"] for i in items if isinstance(i, dict) and i.get("blocking")]
+    report["blocking"] = blocking
+    report["ok"] = not blocking
+    return report
 
 
 def run_checks(

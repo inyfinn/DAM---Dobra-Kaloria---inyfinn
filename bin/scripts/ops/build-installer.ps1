@@ -532,6 +532,14 @@ if ($signToolExe -and ($env:DAM_CODE_SIGN_PFX -or $env:DAM_CODE_SIGN_THUMBPRINT)
   Write-Host "ISCC bez SignTool (brak SDK albo PFX CA). DAM-Setup.exe podpisze PowerShell po kompilacji."
 }
 
+# Licencja w kreatorze = ta sama tresc, co strona Licencja w aplikacji (2026-09-22: kreator
+# pokazywal tekst z 12.08 bez polskich znakow). DAM-Setup.iss czyta bin\installer\LICENSE.txt.
+& $rtPyExe (Join-Path $BinRoot "scripts\ops\license-from-html.py") `
+  --html (Join-Path $BinRoot "apps\web\license.html") `
+  --version-json (Join-Path $BinRoot "apps\web\version.json") `
+  --out (Join-Path $BinRoot "installer\LICENSE.txt")
+if ($LASTEXITCODE -ne 0) { throw "Generowanie LICENSE.txt z license.html nieudane." }
+
 & $Iscc @isccArgs $iss
 if ($LASTEXITCODE -ne 0) { throw "ISCC failed: $LASTEXITCODE" }
 
