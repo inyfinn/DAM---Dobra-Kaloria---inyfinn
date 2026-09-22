@@ -2274,6 +2274,51 @@ body:has(.geex-customizer.active) .geex-content__header {
   margin-top: 2px;
 }
 
+/* ------------------------------------------------------------------
+   GRUPOWANIE WYNIKOW: produkt + jego warianty = jedna calosc.
+   Problem byl HIERARCHIA, nie sama odleglosc: PRODUKT i WARIANT mialy
+   identyczna plakietke i te sama wage, wiec plaska lista czytala sie
+   jak jeden ciag. Dlatego trzy rzeczy naraz, nie tylko odstep:
+     1. wyrazna przerwa PRZED kazdym kolejnym produktem,
+     2. linia rozdzielajaca - dziala nawet gdy przerwa wypadnie
+        na zlamaniu ekranu i uzytkownik jej nie widzi,
+     3. produkt dominuje typograficznie nad wariantem.
+   Odstep miedzy produktem a jego wariantem zostaje bez zmian.
+   ------------------------------------------------------------------ */
+.dam-search-hits .dam-search-hit--group-start {
+  margin-top: var(--dam-space-search-group-gap, 40px);
+  border-top: 1px solid var(--dam-border, #e2e8f0);
+  padding-top: calc(var(--dam-space-search-group-gap, 40px) / 2);
+}
+
+/* Wariant trafiony bez swojego wiersza produktu (produkt nie pasowal do
+   zapytania) otwiera grupe - wtedy nie wciskamy go pod poprzedni produkt
+   szyna wciecia, bo to juz inny produkt. */
+.dam-search-hits .dam-search-hit--group-start.dam-search-hit--variant > a {
+  padding-left: 12px;
+}
+
+.dam-search-hits .dam-search-hit--group-start.dam-search-hit--variant > a::before {
+  display: none;
+}
+
+/* Produkt ma byc kotwica wzroku - wariant jest jego szczegolem. */
+.dam-search-hit--product > a > .dam-search-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--dam-text, #1e293b);
+}
+
+.dam-search-hit--product > a > .dam-search-hit__badge {
+  background: var(--dam-primary, #005A29);
+  color: #fff;
+}
+
+.dam-search-hit--variant > a > .dam-search-name {
+  font-weight: 600;
+  color: var(--dam-text-muted, #64748b);
+}
+
 /* Search scope: Wszystko / Produkty / Warianty (radio + odklik) */
 .dam-search-scope-mount {
   margin-top: 0;
@@ -2307,6 +2352,25 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-project-card__index-corner--multi > button {
   flex: 0 0 auto;
 }
+/* Kreska oddziela RADIO (zakres: co pokazujemy) od PRZELACZNIKA
+   (opisy: gdzie szukamy). Bez niej "Opisy" wygladaja jak czwarty stan
+   radia i uzytkownik spodziewa sie, ze wylaczy Produkty/Warianty. */
+.dam-search-scope__sep {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+  background: var(--dam-border, #e2e8f0);
+}
+
+/* Przelacznik dwustanowy, nie jeden z radia - stan OFF musi byc czytelny
+   jako "wylaczone", a nie "nieaktywne". */
+.dam-search-scope__btn--desc:not(.is-on) {
+  border-style: dashed;
+  opacity: 0.75;
+}
+
 .dam-search-scope__btn {
   appearance: none;
   border: 1px solid #e0d6f2;

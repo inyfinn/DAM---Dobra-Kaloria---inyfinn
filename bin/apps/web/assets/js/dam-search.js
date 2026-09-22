@@ -343,6 +343,80 @@
     return setScope({ products: true, variants: true });
   }
 
+  /* ------------------------------------------------------------------ *
+   * PRZESZUKIWANIE OPISOW
+   *
+   * Opis wariantu ("GRILL", "Żelazo, Magnez, Witamina E") to czesto
+   * JEDYNE miejsce, gdzie stoi to, czego uzytkownik szuka - sam indeks
+   * 6300631 nikomu nic nie mowi. Dlatego opisy przeszukujemy DOMYSLNIE:
+   * wpisujesz "grill" i dostajesz tez warianty opisane jako grillowe,
+   * nie tylko te z "grill" w nazwie produktu.
+   *
+   * Da sie to wylaczyc - brak klucza w localStorage znaczy WLACZONE,
+   * wiec domyslka nie wymaga zadnego zapisu przy pierwszym uruchomieniu.
+   * ------------------------------------------------------------------ */
+  var DESC_KEY = "dam_search_descriptions";
+
+  function descriptionsEnabled() {
+    try {
+      return localStorage.getItem(DESC_KEY) !== "0";
+    } catch (e) {
+      return true;
+    }
+  }
+
+  function setDescriptionsEnabled(on) {
+    try {
+      localStorage.setItem(DESC_KEY, on ? "1" : "0");
+    } catch (e) { /* prywatne okno */ }
+    return descriptionsEnabled();
+  }
+
+  /** Rozstrzyga flage: jawny boolean z opts wygrywa nad ustawieniem uzytkownika. */
+  function resolveDesc(v) {
+    return typeof v === "boolean" ? v : descriptionsEnabled();
+  }
+
+  /**
+   * Opis rewizji: wyroznik z nazwy folderu ALBO notatka dopisana w programie.
+   * Zrodlo prawdy jest jedno - DamLabels.variantDistinguisher - zeby wyszukiwarka
+   * szukala dokladnie po tym, co uzytkownik widzi na chipie przy wariancie.
+   */
+  function revisionNoteText(rev) {
+    if (!rev) return "";
+    var VN = window.DamVariantNotes;
+    var DL = window.DamLabels;
+    if (DL && typeof DL.variantDistinguisher === "function") {
+      var d = DL.variantDistinguisher(rev, function (r) {
+        return VN && typeof VN.forRevision === "function" ? VN.forRevision(r) : "";
+      });
+      if (d && d.text) return String(d.text);
+    }
+    if (VN && typeof VN.forRevision === "function") return String(VN.forRevision(rev) || "");
+    return "";
+  }
+
+  /** Czy opis rewizji trafia w zapytanie (po calosci albo po pojedynczym tagu). */
+  function revisionNoteMatches(rev, nq) {
+    if (!nq) return false;
+    var txt = revisionNoteText(rev);
+    if (!txt) return false;
+    var VN = window.DamVariantNotes;
+    if (VN && typeof VN.noteMatches === "function") return VN.noteMatches(txt, nq);
+    return norm(txt).indexOf(nq) !== -1;
+  }
+
+  /** Opisy musza byc wczytane, zanim po nich szukamy - inaczej pierwsze zapytanie kłamie. */
+  function notesReady() {
+    var VN = window.DamVariantNotes;
+    if (!VN || typeof VN.load !== "function") return Promise.resolve(null);
+    try {
+      return Promise.resolve(VN.load()).catch(function () { return null; });
+    } catch (e) {
+      return Promise.resolve(null);
+    }
+  }
+
   function loadScopeFromStorage() {
     try {
       var raw = localStorage.getItem("dam_search_scope");
@@ -380,9 +454,12 @@
     return pathInCategoryArchive(p.path || p.name || "");
   }
 
-  function revisionMatchesQuery(rev, nq, dig, includeArchive) {
+  function revisionMatchesQuery(rev, nq, dig, includeArchive, useDesc) {
     if (!rev) return false;
     if (!includeArchive && revisionInArchive(rev)) return false;
+    /* Opis jest czesto jedyna trescia odrozniajaca wariant - sprawdzamy go
+       PRZED blobem, bo notatka nie siedzi w indeksie na dysku. */
+    if (resolveDesc(useDesc) && revisionNoteMatches(rev, nq)) return true;
     var blob = norm(
       [
         rev.index,
@@ -421,7 +498,7 @@
     return revs.length === 0;
   }
 
-  function productMatchesTextQuery(p, nq, dig, includeArchive) {
+  function productMatchesTextQuery(p, nq, dig, includeArchive, useDesc) {
     if (!p) return false;
     if (!includeArchive && productPathInArchive(p) && !productHasLivePresence(p)) {
       /* Produkt tylko w archiwum kategorii */
@@ -448,7 +525,7 @@
       if (includeArchive || productHasLivePresence(p) || !productPathInArchive(p)) return true;
     }
     return revisionsForSearch(p, includeArchive).some(function (r) {
-      return revisionMatchesQuery(r, nq, dig, includeArchive);
+      return revisionMatchesQuery(r, nq, dig, includeArchive, useDesc);
     });
   }
 
@@ -466,7 +543,7 @@
     }
   }
 
-  function appendFileIndexMatches(productIds, nq, dig, includeArchive, fi, optsScan) {
+  function appendFileIndexMatches(productIds, nq, dig, includeArchive, fi, optsScan, useDesc) {
     if (!nq || !fi || !fi.products) return productIds;
     optsScan = optsScan || {};
     var limit = optsScan.limit || 0;
@@ -484,7 +561,7 @@
       var p = list[i];
       if (!p || !p.id || productIds.indexOf(p.id) !== -1) continue;
       if (!includeArchive && !productHasLivePresence(p)) continue;
-      if (productMatchesTextQuery(p, nq, dig, includeArchive)) productIds.push(p.id);
+      if (productMatchesTextQuery(p, nq, dig, includeArchive, useDesc)) productIds.push(p.id);
     }
     return unique(productIds);
   }
@@ -499,8 +576,9 @@
     return !!(searchIndex && fileIndex);
   }
 
-  function buildStructuredHits(products, nq, dig, scope, includeArchive) {
+  function buildStructuredHits(products, nq, dig, scope, includeArchive, useDesc) {
     includeArchive = !!includeArchive;
+    useDesc = resolveDesc(useDesc);
     var hits = [];
     (products || []).forEach(function (p) {
       if (!p) return;
@@ -517,7 +595,7 @@
           return d.indexOf(dig) === 0 || dig.indexOf(d) === 0 || String(ix).toLowerCase().indexOf(nq) !== -1;
         }));
       var matchingRevs = revisionsForSearch(p, includeArchive).filter(function (r) {
-        return revisionMatchesQuery(r, nq, dig, includeArchive);
+        return revisionMatchesQuery(r, nq, dig, includeArchive, useDesc);
       });
       /* Gdy brak dopasowania wariantu, a produkt pasuje - pokaz wszystkie latest jako kontekst opcjonalnie nie */
       if (scope.products && productMatch) {
@@ -575,9 +653,16 @@
       });
     }
 
-    return loadIndexes({
-      searchOnly: pageIsExplorer() || !!(typeof window !== "undefined" && window._DAM_FILE_INDEX)
-    }).then(function () {
+    /* Opisy wczytujemy ROWNOLEGLE z indeksami. Bez tego pierwsze zapytanie po
+       starcie szukaloby po pustym STORE i "grill" nie znalazlby wariantu
+       opisanego jako GRILL - a przy drugim wpisaniu juz tak. */
+    var useDesc = resolveDesc(opts.descriptions);
+    return Promise.all([
+      loadIndexes({
+        searchOnly: pageIsExplorer() || !!(typeof window !== "undefined" && window._DAM_FILE_INDEX)
+      }),
+      useDesc ? notesReady() : null
+    ]).then(function () {
       var fi = getActiveFileIndex(opts);
       var dig = digitsOnly(q);
       var nq = norm(q);
@@ -715,7 +800,7 @@
       productIds = appendFileIndexMatches(productIds, nq, dig, includeArchive, fi, {
         limit: hitLimit || 0,
         scanBudget: light ? Math.max(400, (hitLimit || 80) * 10) : undefined,
-      });
+      }, useDesc);
 
       if (!includeArchive) {
         productIds = productIds.filter(function (pid) {
@@ -735,7 +820,7 @@
         return productById(pid);
       }).filter(Boolean);
       if (opts.limit) products = products.slice(0, opts.limit);
-      var hits = buildStructuredHits(products, nq, dig, scope, includeArchive);
+      var hits = buildStructuredHits(products, nq, dig, scope, includeArchive, useDesc);
 
       return {
         query: q,
@@ -744,6 +829,7 @@
         hits: hits,
         scope: scope,
         includeArchive: includeArchive,
+        descriptions: useDesc,
         suggestions: suggestions,
         message: message,
         tags: Object.keys(searchIndex.by_tag || {}).slice(0, 60)
@@ -822,6 +908,7 @@
 
     function paint() {
       var mode = locked ? "all" : getScopeMode();
+      var descOn = descriptionsEnabled();
       var disAttr = locked ? ' disabled aria-disabled="true"' : "";
       var disCls = locked ? " is-disabled" : "";
       var trailingEl = opts.trailingEl || null;
@@ -851,6 +938,18 @@
         '"' +
         disAttr +
         ">Warianty</button>" +
+        /* Osobny przelacznik, NIE czwarty stan radia: zakres (co pokazujemy)
+           i opisy (gdzie szukamy) to dwa niezalezne wymiary. Domyslnie wlaczony. */
+        '<span class="dam-search-scope__sep" aria-hidden="true"></span>' +
+        '<button type="button" class="dam-search-scope__btn dam-search-scope__btn--desc' +
+        (descOn ? " is-on" : "") +
+        '" data-desc-toggle="1" role="switch" aria-checked="' +
+        (descOn ? "true" : "false") +
+        '" title="' +
+        (descOn
+          ? "Szukamy także w opisach wariantów. Kliknij, aby wyłączyć."
+          : "Opisy są pomijane - szukamy tylko w nazwach i indeksach. Kliknij, aby włączyć.") +
+        '">Opisy</button>' +
         "</div>";
       if (locked) mountEl.classList.add("dam-search-scope-mount--locked");
       else mountEl.classList.remove("dam-search-scope-mount--locked");
@@ -859,6 +958,17 @@
       if (scopeRow && trailingEl) {
         trailingEl.classList.add("dam-search-scope__trailing");
         scopeRow.appendChild(trailingEl);
+      }
+
+      var descBtn = mountEl.querySelector("[data-desc-toggle]");
+      if (descBtn) {
+        descBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          setDescriptionsEnabled(!descriptionsEnabled());
+          paint();
+          if (onChange) onChange(getScope());
+        });
       }
 
       mountEl.querySelectorAll("[data-scope]").forEach(function (btn) {
@@ -893,7 +1003,7 @@
      - "note"   = opis dopisany w programie, gdy nazwa folderu nic nie mowi.
      Sam indeks (6300631) nikomu nic nie mowi, a to jest jedyna roznica
      miedzy osmioma rekawami Burgera Klasycznego. */
-  function variantNoteChip(h) {
+  function variantNoteChip(h, hitName) {
     var DL = window.DamLabels;
     var VN = window.DamVariantNotes;
     if (!DL || typeof DL.variantDistinguisher !== "function") return "";
@@ -904,22 +1014,36 @@
       return VN ? VN.forRevision(r) : "";
     });
     if (!d.text) return "";
-    return (
-      '<span class="dam-search-hit__note dam-variant-dist dam-variant-dist--' +
-      escapeHtml(d.source) +
-      '" title="' +
-      (d.source === "folder" ? "Wyróżnik z nazwy folderu" : "Opis dodany w programie") +
-      '">' +
-      escapeHtml(d.text) +
-      "</span>"
-    );
+    /* Wiersz PRODUKTU dostawal wyroznik wyliczony z wlasnej nazwy, wiec obok
+       "Kiełbasa Grill" wisial chip "Kiełbasa Grill". Chip ma DODAWAC tresc. */
+    if (hitName && norm(d.text) === norm(hitName)) return "";
+
+    var tip = d.source === "folder" ? "Wyróżnik z nazwy folderu" : "Opis dodany w programie";
+    /* Opis "Żelazo, Magnez, Witamina E" to trzy cechy - trzy chipy, nie jeden
+       dlugi napis. Kazdy da sie odczytac osobno i kliknac jak tag. */
+    var parts = (VN && typeof VN.tokens === "function") ? VN.tokens(d.text) : [];
+    if (!parts.length) parts = [d.text];
+    return parts
+      .map(function (t) {
+        return (
+          '<span class="dam-search-hit__note dam-variant-dist dam-variant-dist--' +
+          escapeHtml(d.source) +
+          '" title="' +
+          escapeHtml(tip) +
+          '">' +
+          escapeHtml(t) +
+          "</span>"
+        );
+      })
+      .join("");
   }
 
-  function buildHitItemHtml(h) {
+  function buildHitItemHtml(h, groupStart) {
     var p = h.product || {};
     var r = h.revision;
     var cls = "dam-search-hit dam-search-hit--" + (h.kind || "product");
     if (h.nested) cls += " dam-search-hit--nested";
+    if (groupStart) cls += " dam-search-hit--group-start";
     var badge = h.kind === "variant" ? "Wariant" : "Produkt";
     var focusIdx = r && r.index ? r.index : "";
     if (focusIdx && /[/\\]/.test(focusIdx) && r && r.path) {
@@ -958,7 +1082,7 @@
       escapeHtml(hitName) +
       "</span>" +
       /* Opis wariantu obok indeksu: sam numer nikomu nic nie mowi. */
-      variantNoteChip(h) +
+      variantNoteChip(h, hitName) +
       '<span class="dam-search-meta">' +
       escapeHtml(hitMeta) +
       (h.kind === "product" && h.childCount
@@ -974,8 +1098,16 @@
     if (!hits.length) return "";
     var panelCls = opts.panel ? " dam-search-hits--panel" : "";
     var html = '<ul class="dam-search-hits' + panelCls + '">';
+    /* Poczatek grupy = ZMIANA PRODUKTU, nie "wiersz typu PRODUKT".
+       Wariant trafiony sam (produkt nie pasowal do zapytania - np. GRILL
+       w opisie Burgera Klasycznego przy szukaniu "grill") nie ma nad soba
+       wiersza produktu. Bez tego znacznika taki wariant przyklejal sie
+       wizualnie do poprzedniego produktu i czytalo sie go jako jego czesc. */
+    var prevPid = null;
     hits.slice(0, opts.limit || 40).forEach(function (h) {
-      html += buildHitItemHtml(h);
+      var pid = (h && h.product && h.product.id) || "";
+      html += buildHitItemHtml(h, pid !== prevPid && prevPid !== null);
+      prevPid = pid;
     });
     html += "</ul>";
     return html;
@@ -1676,6 +1808,8 @@
     setScope: setScope,
     getScopeMode: getScopeMode,
     setScopeMode: setScopeMode,
+    descriptionsEnabled: descriptionsEnabled,
+    setDescriptionsEnabled: setDescriptionsEnabled,
     productById: productById,
     parseJsonInWorker: parseJsonInWorker,
     normQuery: norm,

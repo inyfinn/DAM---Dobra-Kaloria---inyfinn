@@ -798,7 +798,7 @@ def build_preflight_report() -> dict:
             ),
         ),
         ("index", lambda: dam_preflight.check_index(INDEX_FILE)),
-        ("watcher", lambda: dam_preflight.check_watcher(watcher_status)),
+        ("watcher", lambda: dam_preflight.check_watcher(watcher_status, INDEX_FILE)),
         ("webview2", dam_preflight.check_webview2),
     ]
     report = dam_preflight.run_checks(checks)

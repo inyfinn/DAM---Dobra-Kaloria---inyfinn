@@ -158,12 +158,30 @@ def check_index(index_file: Path) -> dict[str, Any]:
 # -------------------------------------------------------------- watcher
 
 
-def check_watcher(status_fn: Callable[[], dict[str, Any]]) -> dict[str, Any]:
+def _index_usable(index_file: Path | None) -> bool:
+    """Czy na dysku lezy indeks, z ktorego UI realnie czyta pliki."""
+    if index_file is None:
+        return False
+    try:
+        return Path(index_file).stat().st_size > MIN_INDEX_BYTES
+    except OSError:
+        return False
+
+
+def check_watcher(
+    status_fn: Callable[[], dict[str, Any]],
+    index_file: Path | None = None,
+) -> dict[str, Any]:
     st = status_fn() or {}
     alive = bool(st.get("watcher_ok")) and not bool(st.get("stale"))
     awaiting = bool(st.get("awaiting_first_rebuild"))
     err = str(st.get("last_error") or "")
     extra = {"awaiting_first_rebuild": awaiting, "last_error": err}
+    # Pasek nazywa sie "Pliki moga sie nie wyswietlac". Gdy indeks LEZY NA DYSKU
+    # i jest niepusty, pliki wyswietlaja sie normalnie - martwy watcher znaczy
+    # wtedy tylko "lista moze byc nieaktualna". Blokada jest zarezerwowana dla
+    # sytuacji, w ktorej indeksu nie ma i faktycznie nie bedzie czego pokazac.
+    have_index = _index_usable(index_file)
 
     # POSTEP BIJE PLIKI STANU. Przez pierwsze sekundy po starcie pliki stanu sa
     # jeszcze z POPRZEDNIEGO uruchomienia (martwe pidy, przeterminowane zamki),
@@ -183,18 +201,43 @@ def check_watcher(status_fn: Callable[[], dict[str, Any]]) -> dict[str, Any]:
             "Pliki pojawia sie po jego zakonczeniu.", level="info", **extra,
         )
 
+    # "Czekam na pierwsza przebudowe" (last_ok is None) to NIE awaria - to stan
+    # poczatkowy. Miedzy cyklicznymi przebudowami watcher_ok chwilowo spada, a
+    # last_ok pozostaje None, bo zadna przebudowa jeszcze sie nie ZAKONCZYLA w
+    # tej instalacji. Razem dawalo to czerwony pasek przy zdrowym indeksie
+    # 9,4 MB i dzialajacej przebudowie godzinowej. Ze to nie blad, wiedzial juz
+    # autor poprzedniej wersji - wycinal "awaiting_first_rebuild" z TEKSTU
+    # bledu, ale nie z decyzji o blokadzie.
+    #
+    # UWAGA na druga strone: samo "awaiting" nie moze uciszac wszystkiego, bo
+    # na naprawde zepsutej instalacji watcher nigdy nie wystartowal i last_ok
+    # tez jest None. Dlatego cisza wymaga DOWODU, ze jest z czego czytac
+    # (indeks na dysku) albo ze ktos pracuje (zywy watcher).
+    if awaiting and (have_index or alive):
+        return _item(
+            "watcher", True,
+            "Trwa pierwsze budowanie indeksu" if not have_index else "Indeks czeka na pierwsze odświeżenie",
+            "Pliki pojawią się po jego zakończeniu."
+            if not have_index
+            else "Lista plików działa na dotychczasowym indeksie.",
+            level="info", **extra,
+        )
     if not alive:
+        # Indeks jest - pliki sie wyswietlaja, tylko lista moze byc nieswieza.
+        if have_index:
+            return _item(
+                "watcher", True, "Lista plików może być nieaktualna",
+                "Proces odświeżający zatrzymał się, ale zapisany indeks działa."
+                + (f" Ostatni błąd: {err}." if err and err != "awaiting_first_rebuild" else "")
+                + " Kliknij Odśwież z dysku albo uruchom DAM ponownie.",
+                level="warn", action="retry", **extra,
+            )
         return _item(
             "watcher", False, "Aktualizacja indeksu nie działa",
             "Proces odświeżający listę plików zatrzymał się."
             + (f" Ostatni błąd: {err}." if err and err != "awaiting_first_rebuild" else "")
             + " Zamknij i uruchom DAM ponownie.",
             action="retry", **extra,
-        )
-    if awaiting:
-        return _item(
-            "watcher", True, "Trwa pierwsze budowanie indeksu",
-            "Pliki pojawią się po jego zakończeniu.", level="info", **extra,
         )
     if st.get("last_ok") is False and err:
         return _item(

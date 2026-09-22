@@ -35,12 +35,36 @@
   text-align: center;
 }
 
+/* Karta ceny referencyjnej.
+   Byla rozjasniana bielą (88% primary + 12% #fff). Zmierzone: bialy tekst
+   12 px na jasnym koncu gradientu dawal kontrast 4,42:1, czyli PONIZEJ progu
+   WCAG AA (4,5:1) dla malego tekstu - opis "Porownanie kategorii..." ginal.
+   Teraz ta sama glebia co zwykly hero ceny (.dam-cost-total), a to, ze cena
+   jest referencyjna, a nie sklepowa, niesie PRZERYWANA RAMKA i plakietka
+   (TESTOWE) - znaczenie nie moze zalezec od samego odcienia tla. */
 .dam-catalog-price-hero--reference {
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--dam-primary, #005A29) 88%, #fff),
-    color-mix(in srgb, var(--dam-primary, #005A29) 75%, #060F0C)
+    var(--dam-primary, #005A29),
+    color-mix(in srgb, var(--dam-primary, #005A29) 72%, #000)
   );
+  border: 1px dashed color-mix(in srgb, #fff 45%, transparent);
+}
+
+/* opacity na rodzicu gasi TEZ dziecko - plakietka (TESTOWE) siedzi w etykiecie
+   z opacity .9 i dostawala przygaszenie na wierzch swojego slabego kontrastu. */
+.dam-catalog-price-hero .dam-cost-total__label {
+  opacity: 1;
+}
+
+/* Plakietka (TESTOWE) jest zaprojektowana na JASNE tlo: brazowy tekst
+   rgb(154,91,0) na pomaranczowej mgielce. Na ciemnozielonej karcie byla
+   nieczytelna. Na tym tle odwracamy ja na bialy wariant. */
+.dam-catalog-price-hero .dam-seed-test-badge,
+.dam-catalog-price-hero .dam-badge-tag {
+  color: #fff;
+  background: color-mix(in srgb, #fff 22%, transparent);
+  border-color: color-mix(in srgb, #fff 45%, transparent);
 }
 
 .dam-catalog-price-hero--unavailable {
@@ -51,11 +75,13 @@
   );
 }
 
+/* Opis pod cena to jedyne miejsce, ktore mowi, ZE TO NIE JEST cena tego SKU.
+   Nie wolno go przygaszac: pelna biel, bez opacity, czytelny rozmiar. */
 .dam-catalog-price-hero__hint {
-  font-size: 12px;
-  opacity: 0.92;
-  margin: 10px 0 0;
-  line-height: 1.45;
+  font-size: 12.5px;
+  margin: 10px auto 0;
+  max-width: 62ch;
+  line-height: 1.5;
   color: #fff;
 }
 
@@ -69,10 +95,15 @@
   justify-content: center;
 }
 
+/* Link doklejony do konca zdania lamal sie na dwie linie ("Produkt /
+   referencyjny") i rozrywal opis. Wlasny wiersz + zakaz lamania w srodku. */
 .dam-catalog-ref-link {
+  display: block;
+  margin-top: 6px;
   color: #fff;
   font-weight: 600;
   text-decoration: underline;
+  white-space: nowrap;
 }
 
 .dam-catalog-lifecycle {

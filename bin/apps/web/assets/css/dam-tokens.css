@@ -148,6 +148,10 @@
   --dam-space-toolbar-nested-mb: 5px;
   --dam-space-badge-pill-y: 2px;
   --dam-space-badge-pill-x: 8px;
+  /* Przerwa MIEDZY PRODUKTAMI na liscie wynikow (nie miedzy produktem
+     a jego wariantami - tam rytm zostaje ciasny, bo to jedna calosc).
+     Jedno miejsce do strojenia: zmiana tutaj rusza cala liste. */
+  --dam-space-search-group-gap: 40px;
 
   /* Cien — shop white paper, neutral */
   --dam-shadow-rgb: 34 34 34;

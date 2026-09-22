@@ -6411,6 +6411,21 @@
 
     item.appendChild(btn);
 
+    /* Czerwony minus na miniaturze wyglada jak "kliknij, aby usunac", a
+       naprawde wymaga Shift + przytrzymania. Zwykly klik byl POLYKANY bez
+       slowa (preventDefault + stopImmediatePropagation), wiec uzytkownik
+       widzial przycisk, ktory nic nie robi - zgloszone jako "nie da sie
+       usuwac elementow". Bramka zostaje (to operacja niszczaca), ale odmowa
+       musi powiedziec, czego brakuje. Throttle, zeby seria klikow nie
+       zrobila z tego deszczu komunikatow. */
+    var lastNudgeAt = 0;
+    function nudgeShiftRequired() {
+      var now = Date.now();
+      if (now - lastNudgeAt < 2500) return;
+      lastNudgeAt = now;
+      toast("Przytrzymaj Shift i naciśnij minus przez " + formatHoldSecsLabel(holdMs) + " s, aby usunąć");
+    }
+
     if (global.DamDanger && typeof global.DamDanger.bind === "function") {
       btn.addEventListener(
         "pointerdown",
@@ -6419,6 +6434,7 @@
           if (!e.shiftKey && !shiftArmed()) {
             e.preventDefault();
             e.stopImmediatePropagation();
+            nudgeShiftRequired();
           }
         },
         true
@@ -6437,7 +6453,13 @@
 
     if (!global.DamDanger || !global.DamDanger.isSafeDeleteEnabled()) {
       btn.addEventListener("click", function (e) {
-        if (!shiftArmed()) return;
+        if (!shiftArmed()) {
+          /* Ta sama zasada co wyzej: cicha odmowa wyglada jak zepsuty przycisk. */
+          e.preventDefault();
+          e.stopPropagation();
+          nudgeShiftRequired();
+          return;
+        }
         e.preventDefault();
         e.stopPropagation();
         onClick();

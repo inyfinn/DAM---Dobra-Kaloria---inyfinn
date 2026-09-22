@@ -165,7 +165,98 @@
     return (STORE.suggestions || []).slice();
   }
 
+  /* ------------------------------------------------------------------ *
+   * OPIS -> TAGI (tokeny)
+   *
+   * Opis "Żelazo, Magnez, Witamina E" to w praktyce TRZY cechy, nie jedno
+   * zdanie. Jako jeden dlugi chip nie da sie po nim filtrowac ani klikac.
+   * Tniemy go na tokeny i kazdy staje sie osobnym tagiem.
+   *
+   * Tniemy TYLKO po separatorach listy: , ; / + & · | oraz po polskich
+   * spojnikach " i " / " oraz ". Nigdy po samej spacji - inaczej
+   * "Witamina E" rozpadloby sie na "Witamina" + "E", a "26 g białka"
+   * na trzy smieci.
+   * ------------------------------------------------------------------ */
+  var SPLIT_RE = /\s*(?:[,;/+&|·•]|\s+(?:i|oraz)\s+)\s*/i;
+  /* Ogon w rodzaju "itp.", "itd." nie jest cecha produktu. */
+  var DROP_RE = /^(?:itp|itd|i\s+inne|inne|etc)\.?$/i;
+
+  function normTokenKey(t) {
+    return String(t || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  /** Pierwsza litera duza; skroty pisane wersalikami (GRILL) zostaja. */
+  function prettyToken(t) {
+    var s = String(t || "").replace(/\s+/g, " ").trim();
+    if (!s) return "";
+    if (s === s.toUpperCase()) return s;
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  /**
+   * Opis -> lista tagow. "magnez, żelazo i błonnik" -> ["Magnez","Żelazo","Błonnik"].
+   * @returns {string[]} bez duplikatow, w kolejnosci z opisu
+   */
+  function tokens(noteText) {
+    var raw = String(noteText == null ? "" : noteText).trim();
+    if (!raw) return [];
+    var seen = {};
+    var out = [];
+    raw.split(SPLIT_RE).forEach(function (part) {
+      var t = String(part || "").replace(/\s+/g, " ").trim().replace(/[.\s]+$/, "");
+      if (!t || DROP_RE.test(t)) return;
+      var key = normTokenKey(t);
+      /* Jednoznakowe resztki po cieciu nie niosa tresci. */
+      if (!key || key.length < 2) return;
+      if (seen[key]) return;
+      seen[key] = 1;
+      out.push(prettyToken(t));
+    });
+    return out;
+  }
+
+  /** Tagi opisow z CALEGO indeksu, czesciej uzyte wyzej - do paska tagow. */
+  function allTokens() {
+    var counts = {};
+    Object.keys(STORE.notes || {}).forEach(function (k) {
+      var entry = STORE.notes[k];
+      var txt = typeof entry === "string" ? entry : String((entry || {}).note || "");
+      tokens(txt).forEach(function (t) {
+        var key = normTokenKey(t);
+        if (!counts[key]) counts[key] = { tag: t, uses: 0 };
+        counts[key].uses += 1;
+      });
+    });
+    return Object.keys(counts)
+      .map(function (k) { return counts[k]; })
+      .sort(function (a, b) {
+        if (b.uses !== a.uses) return b.uses - a.uses;
+        return a.tag.toLowerCase().localeCompare(b.tag.toLowerCase(), "pl");
+      });
+  }
+
+  /** Czy opis wariantu pasuje do zapytania - po calosci ALBO po pojedynczym tagu. */
+  function noteMatches(noteText, normalizedQuery) {
+    var nq = String(normalizedQuery || "").trim();
+    if (!nq) return false;
+    var whole = normTokenKey(noteText);
+    if (whole && whole.indexOf(nq) !== -1) return true;
+    return tokens(noteText).some(function (t) {
+      return normTokenKey(t).indexOf(nq) !== -1;
+    });
+  }
+
   global.DamVariantNotes = {
+    tokens: tokens,
+    allTokens: allTokens,
+    noteMatches: noteMatches,
+    normTokenKey: normTokenKey,
     normTag: normTag,
     seasonFor: seasonFor,
     monthInSeason: monthInSeason,

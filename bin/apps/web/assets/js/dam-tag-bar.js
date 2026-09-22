@@ -10,13 +10,16 @@
   "use strict";
 
   var ROW_LIMIT = 8;
-  var GROUP_ORDER = ["smak", "typ", "opakowanie", "autor", "osoba"];
+  /* "opis" na koncu: to tagi z opisow wariantow (GRILL, Żelazo, Magnez),
+     zrodlo inne niz reszta - variant-notes.json, nie indeks dysku. */
+  var GROUP_ORDER = ["smak", "typ", "opakowanie", "autor", "osoba", "opis"];
   var GROUP_LABELS = {
     smak: "Smak",
     typ: "Typ",
     opakowanie: "Opakowanie",
     autor: "Autor",
     osoba: "Autor",
+    opis: "Opis",
   };
   var GROUP_CLASS = {
     smak: "dam-tag-group--smak",
@@ -24,6 +27,7 @@
     opakowanie: "dam-tag-group--opakowanie",
     autor: "dam-tag-group--autor",
     osoba: "dam-tag-group--autor",
+    opis: "dam-tag-group--opis",
   };
 
   function esc(s) {
@@ -36,6 +40,9 @@
 
   function tagLabel(t, groupKey) {
     var key = String(t || "");
+    /* Tagi opisow sa juz sformatowane przez DamVariantNotes.tokens
+       ("Żelazo", "GRILL") - formatTagLabel zrobilby z nich "żelazo". */
+    if (groupKey === "opis") return key;
     var kind = groupKey === "opakowanie" ? "opakowanie" : groupKey === "typ" ? "typ" : groupKey === "smak" ? "smak" : "autor";
     if (window.DamLabels && typeof window.DamLabels.formatTagLabel === "function") {
       return window.DamLabels.formatTagLabel(key, kind);
@@ -68,16 +75,49 @@
       });
   }
 
+  /**
+   * Tagi z OPISOW wariantow. Nie ma ich w search-index.json, bo opis mozna
+   * dopisac w programie bez dotykania dysku - zrodlem jest variant-notes.json.
+   * Dokladamy je jako osobna grupe, zeby dalo sie filtrowac po "GRILL" albo
+   * "Magnez" tak samo jak po smaku czy opakowaniu.
+   */
+  function withDescriptionTags(groups, done) {
+    var out = Object.assign({}, groups || {});
+    var VN = window.DamVariantNotes;
+    if (!VN || typeof VN.allTokens !== "function") {
+      done(out);
+      return;
+    }
+    function apply() {
+      try {
+        var toks = VN.allTokens() || [];
+        if (toks.length) {
+          out.opis = toks.map(function (x) { return x.tag; });
+        }
+      } catch (eTok) { /* brak opisow to nie awaria paska tagow */ }
+      done(out);
+    }
+    if (typeof VN.load === "function") {
+      try {
+        Promise.resolve(VN.load()).then(apply, apply);
+        return;
+      } catch (eLoad) { /* ignore */ }
+    }
+    apply();
+  }
+
   function loadTagGroups(cb) {
     /* Tag bar laduje search-index sam - nie blokuj na DamSearch.load */
     if (window._DAM_SEARCH_INDEX && window._DAM_SEARCH_INDEX.tag_groups) {
       var tg = window._DAM_SEARCH_INDEX.tag_groups;
       if (tg.typ && tg.typ.length) {
-        cb(tg);
+        withDescriptionTags(tg, cb);
         return;
       }
     }
-    fetchTagGroups(cb);
+    fetchTagGroups(function (groups) {
+      withDescriptionTags(groups, cb);
+    });
   }
 
   function buildGroupRow(spec) {

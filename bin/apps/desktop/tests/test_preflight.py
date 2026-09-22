@@ -248,7 +248,17 @@ class BridgeReportTests(unittest.TestCase):
         self.assertFalse(by_id["database"]["blocking"])
         self.assertTrue(by_id["marketing"]["ok"])
         self.assertTrue(by_id["index"]["ok"])
-        self.assertEqual(report["blocking"], ["watcher"])
+        # Ten przypadek ma ZDROWY indeks (2048 B) i martwy watcher. Pasek nazywa
+        # sie "Pliki moga sie nie wyswietlac" - przy istniejacym indeksie pliki
+        # wyswietlaja sie normalnie, wiec to ostrzezenie ("lista moze byc
+        # nieaktualna"), a nie blokada. Poprzednia wersja tego testu wymagala
+        # blocking=["watcher"] i utrwalala dokladnie ten falszywy czerwony pasek,
+        # ktory uzytkownik zglaszal trzykrotnie (2.2.5, 2.2.8, 2.3.0).
+        # Blokada zostaje zarezerwowana dla braku indeksu - patrz
+        # tests/test_watcher_awaiting_not_error.py::PrawdziwaAwariaTests.
+        self.assertEqual(report["blocking"], [])
+        self.assertEqual(by_id["watcher"]["level"], "warn")
+        self.assertIn("boom", by_id["watcher"]["hint"])
         fake_md.check_paths.assert_called_once()
         self.assertLessEqual(fake_md.check_paths.call_args.kwargs["timeout"], 2.0)
         fake_md.discover_roots.assert_not_called()
