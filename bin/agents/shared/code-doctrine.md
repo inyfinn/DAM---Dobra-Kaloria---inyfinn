@@ -2318,3 +2318,37 @@ mial chronic - dwa zapisy bez wersjonowania nadpisujace sie wzajemnie.
     2 kolumny na pełną szerokość dialogu, klik nie zamyka (żywy podgląd), zamyka
     tylko X / Zamknij albo Esc. Klik w tło nakładki NIE zamyka. Overlay picker
     `z-index:12300` (`#damSchemePickerOverlay`). Motyw i HSL zostają na karcie.
+
+11. **2026-09-22 — dwie zielone pigulki znaczace co innego (v2.3.3).**
+    Nowy chip statusu rynkowego ("W obrocie") dostal klase
+    `.dam-variant-panel__chip--ok`, czyli te sama co chip kompletnosci plikow
+    ("Kompletny"). Liczniki w DOM byly zielone: 6 paneli, 4 chipy, zgodnie z
+    danymi. Defekt wyszedl DOPIERO na zrzucie ekranu odczytanym okiem: w jednym
+    naglowku stanely obok siebie dwie identyczne zielone pigulki mowiace o
+    zupelnie roznych rzeczach - jedna o rynku, druga o plikach.
+    Zasada: **dwie rozne osie informacji nie moga miec tego samego stylu**.
+    Fix: osobna rodzina `.dam-market-chip` - status rynkowy ma OBRYS i kropke,
+    kompletnosc plikow zostaje WYPELNIONA. Wniosek ogolny: licznik w CDP
+    potwierdza, ze cos sie wyrenderowalo, nie ze znaczy to, co powinno.
+
+12. **2026-09-22 — sufiks konfliktu Synology udawal indeks produktu (v2.3.3).**
+    Wariant mial `index_code = 165957.00`. Numer nie istnieje w zadnej kartotece -
+    to fragment znacznika czasu z nazwy `..._KRZYSZTOFWI_lip-16-165957-2026`,
+    czyli kopii konfliktowej Synology Drive. `INDEX_PLAIN_RE` lapie dowolne 6-8
+    cyfr, a w repo lezalo wtedy 68 plikow z takim sufiksem, wiec KAZDA przebudowa
+    indeksu dokladala kolejne falszywe numery.
+    Fix: `strip_conflict_suffix()` przed parsowaniem + test
+    `scripts/tests/test_index_conflict_suffix.py`.
+    Zasada: zanim uznasz dziwna wartosc w danych za blad logiki, sprawdz, czy nie
+    pochodzi z nazwy pliku, ktorej nikt nie zamierzal indeksowac.
+
+13. **2026-09-22 — publiczne repo a dane handlowe (v2.3.3).**
+    `build-market-index.py` produkuje `data/market-index.json` z nazwami klientow
+    (Netto, Dealz, Zabka, Selgros, MOKATE, Biedronka, M&S, Aldi) i lista projektow
+    w toku. Repo jest PUBLICZNE (`gh repo view` -> visibility PUBLIC), wiec plik
+    NIE idzie do gita ani do instalatora (`.gitignore` + `Excludes` w DAM-Setup.iss).
+    Zasada: przed commitem wygenerowanego pliku z danymi biznesowymi sprawdz
+    widocznosc repo. Publikacja jest nieodwracalna, brak pliku - nie.
+    Uwaga na przyszlosc: `file-index.json`, `product-catalog.json` i
+    `lifecycle-status.json` SA juz sledzone w publicznym repo (nazwy produktow,
+    sciezki dyskow) - osobny dlug do decyzji wlasciciela.
