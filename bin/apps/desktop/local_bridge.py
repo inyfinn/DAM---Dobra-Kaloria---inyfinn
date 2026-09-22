@@ -222,6 +222,11 @@ try:
 except ImportError:
     dam_preflight = None  # type: ignore
 
+try:
+    import support_reports
+except ImportError:
+    support_reports = None  # type: ignore
+
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("DAM_BRIDGE_PORT", "8766"))
 # Bump po nowych endpointach hub (smoke: GET /health -> api_version)
@@ -5986,7 +5991,31 @@ def create_support_report(payload: dict, actor: str = "", role: str = "") -> dic
     append_change_log(
         {"action": "support_report", "category": "support", "kind": kind, "title": title}
     )
-    return {"ok": True, "id": entry.get("id"), "title": entry.get("title")}
+    # Skrzynka w bazie jest niewidoczna z zewnatrz ("nawet nie wiadomo, gdzie to
+    # sie wysyla"). To samo zgloszenie ladu je wiec w POPRAWKI.md obok kodu -
+    # widac je, da sie przeszukac i commitowac razem z poprawka.
+    filed: dict = {"ok": False, "error": "support_reports_missing"}
+    if support_reports is not None:
+        try:
+            filed = support_reports.append_report(
+                payload if isinstance(payload, dict) else {},
+                actor=actor or "",
+                role=role or "",
+                version=ver,
+                kind_label=SUPPORT_REPORT_KINDS[kind],
+            )
+        except Exception as exc:  # noqa: BLE001
+            filed = {"ok": False, "error": "support_reports_failed", "detail": str(exc)}
+            print("support_reports:", exc)
+    return {
+        "ok": True,
+        "id": filed.get("id") or entry.get("id"),
+        "title": entry.get("title"),
+        # UI pokazuje sciezke, zeby uzytkownik wiedzial, gdzie to poszlo.
+        "file": filed.get("file") or "",
+        "shots_saved": int(filed.get("shots_saved") or 0),
+        "file_error": "" if filed.get("ok") else str(filed.get("error") or ""),
+    }
 
 
 def notify_admins_note_proposal(index: str, proposed: str, replaces: str, actor: str) -> None:
@@ -7963,6 +7992,12 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", _origin_of(CORS_ORIGIN) or CORS_ORIGIN)
         self.send_header("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        # Bez tego naglowka przegladarka ODRZUCA kazda odpowiedz na fetch()
+        # z credentials:"include" - nawet poprawne 200. Formularz "Zglos poprawke"
+        # (help.html) wysylal wlasnie tak i dostawal TypeError, czyli .catch(),
+        # wiec pokazywal "Brak polaczenia z aplikacja DAM", chociaz most odpowiadal.
+        # Origin jest konkretny (nie "*"), wiec wpuszczenie ciasteczek jest legalne.
+        self.send_header("Access-Control-Allow-Credentials", "true")
         # JS fetch() needs Expose-Headers to read thumb cache probes (8765→8766).
         self.send_header(
             "Access-Control-Expose-Headers",
@@ -9311,8 +9346,14 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):  # noqa: N802
         length = int(self.headers.get("Content-Length") or 0)
-        # Limit body (anty DoS) - 2 MB wystarczy na JSON mostu
-        if length > 2 * 1024 * 1024:
+        # Limit body (anty DoS) - 2 MB wystarczy na JSON mostu.
+        # Wyjatek: zgloszenie poprawki niesie zrzuty ekranu w base64 (Ctrl+V).
+        # UI skaluje je do 1920 px, ale kilka zrzutow nadal przekracza 2 MB,
+        # a odbicie sie o limit wygladaloby jak "wysylanie nie dziala".
+        limit = 2 * 1024 * 1024
+        if urlparse(self.path).path == "/support-report":
+            limit = 24 * 1024 * 1024
+        if length > limit:
             self._json(413, {"ok": False, "error": "payload_too_large"})
             return
         raw = self.rfile.read(length) if length else b"{}"

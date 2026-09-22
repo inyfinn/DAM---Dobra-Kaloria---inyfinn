@@ -13673,8 +13673,102 @@ html[data-theme="dark"] .dam-cache-badge {
 .dam-report__status.is-ok { color: var(--dam-primary); font-weight: 600; }
 .dam-report__status.is-err { color: #b91c1c; font-weight: 600; }
 
+/* Zrzuty ekranu w zgloszeniu.
+   Pole jest celem dla Ctrl+V, przeciagniecia i kliku - stad przerywana ramka
+   (znany jezyk "upusc tutaj") i wysokosc dotykowa >= 44 px. */
+.dam-report__drop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 12px 14px;
+  border: 1px dashed var(--dam-border);
+  border-radius: var(--dam-radius-sm, 8px);
+  background: var(--dam-surface);
+  color: var(--dam-text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color var(--dam-anim-hover, 0.22s), background var(--dam-anim-hover, 0.22s);
+}
+
+.dam-report__drop i {
+  font-size: 20px;
+  color: var(--dam-primary);
+  flex: 0 0 auto;
+}
+
+.dam-report__drop strong { color: var(--dam-text); }
+
+.dam-report__drop:hover,
+.dam-report__drop.is-over {
+  border-color: var(--dam-primary);
+  background: color-mix(in srgb, var(--dam-primary) 6%, var(--dam-surface));
+}
+
+.dam-report__drop:focus-visible {
+  outline: 2px solid var(--dam-primary);
+  outline-offset: 2px;
+}
+
+.dam-report__shots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dam-report__shots:empty { display: none; }
+
+.dam-report__shot {
+  position: relative;
+  width: 104px;
+  height: 72px;
+  border: 1px solid var(--dam-border);
+  border-radius: var(--dam-radius-sm, 8px);
+  overflow: hidden;
+  background: var(--dam-surface);
+}
+
+.dam-report__shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* X odsuniety od krawedzi - przyklejony do rogu wyglada jak uciety. */
+.dam-report__shot-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--dam-surface);
+  color: var(--dam-text);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgb(var(--dam-shadow-rgb) / 0.35);
+}
+
+.dam-report__shot-remove:hover,
+.dam-report__shot-remove:focus-visible { color: #b91c1c; }
+
+.dam-report__shot-remove:focus-visible {
+  outline: 2px solid var(--dam-primary);
+  outline-offset: 1px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dam-report__submit { transition: none; }
+  .dam-report__drop { transition: none; }
 }
 
 /* ==================================================================

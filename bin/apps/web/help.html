@@ -21,7 +21,7 @@ html.dam-booting{background:#F6F7F6}html.dam-booting[data-theme="dark"]{backgrou
   <link rel="stylesheet" href="./assets/css/dam-tokens.css?v=1.8.8">
   <link rel="stylesheet" href="./assets/css/dam-primitives.css?v=1.8.8">
   <link rel="stylesheet" href="./assets/css/dam-app.css?v=2.1.1">
-  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=2.2.1">
+  <link rel="stylesheet" href="./assets/css/dam-brand.css?v=2.2.9">
   <link rel="stylesheet" href="./assets/css/dam-bento.css?v=5.0.196">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon.svg">
 </head>
@@ -96,7 +96,20 @@ html.dam-booting{background:#F6F7F6}html.dam-booting[data-theme="dark"]{backgrou
             <div class="dam-report__row">
               <label class="dam-report__label" for="damReportBody">Opis</label>
               <textarea class="dam-report__textarea" id="damReportBody" rows="5" maxlength="4000"
-                        placeholder="Co zrobiłeś, czego się spodziewałeś i co się stało zamiast tego."></textarea>
+                        placeholder="Co zrobiłeś, czego się spodziewałeś i co się stało zamiast tego. Zrzut ekranu wklej tutaj przez Ctrl+V."></textarea>
+            </div>
+            <!-- Zrzut ekranu mowi wiecej niz opis. Trzy drogi, bo kazdy robi to inaczej:
+                 Ctrl+V (najszybsza - prosto z Print Screen / Wycinania), przeciagniecie, klik. -->
+            <div class="dam-report__row">
+              <span class="dam-report__label" id="damReportShotsLabel">Zrzuty ekranu</span>
+              <div class="dam-report__drop" id="damReportDrop" tabindex="0" role="button"
+                   aria-describedby="damReportShotsLabel">
+                <i class="uil uil-image-plus" aria-hidden="true"></i>
+                <span><strong>Ctrl+V</strong>, aby wkleić zrzut - albo przeciągnij plik lub kliknij, aby wybrać.</span>
+                <input type="file" id="damReportFile" accept="image/png,image/jpeg,image/webp,image/gif"
+                       multiple hidden />
+              </div>
+              <ul class="dam-report__shots" id="damReportShots"></ul>
             </div>
             <div class="dam-report__actions">
               <button type="submit" class="dam-report__submit" id="damReportSend">
@@ -320,6 +333,149 @@ html.dam-booting{background:#F6F7F6}html.dam-booting[data-theme="dark"]{backgrou
         status.className = "dam-report__status" + (ok === true ? " is-ok" : ok === false ? " is-err" : "");
       }
 
+      /* ---------------------------------------------------------------- *
+       * Zrzuty ekranu
+       *
+       * Ctrl+V jest najwazniejsza droga: Print Screen / Wycinanie trzyma
+       * obraz w schowku i nikt nie chce go najpierw zapisywac do pliku.
+       * Skalujemy do 1920 px w przegladarce - surowy zrzut 4K w base64
+       * to kilkanascie MB na jedno zgloszenie.
+       * ---------------------------------------------------------------- */
+      var MAX_SHOTS = 6;
+      var MAX_EDGE = 1920;
+      var shots = [];
+      var drop = document.getElementById("damReportDrop");
+      var fileInput = document.getElementById("damReportFile");
+      var shotsEl = document.getElementById("damReportShots");
+
+      /* Polska odmiana: 1 zrzut, 2-4 zrzuty, 5+ zrzutow (i wyjatek 12-14). */
+      function plZrzuty(n) {
+        if (n === 1) return "1 zrzut";
+        var last = n % 10;
+        var lastTwo = n % 100;
+        if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) return n + " zrzuty";
+        return n + " zrzutów";
+      }
+
+      function renderShots() {
+        if (!shotsEl) return;
+        shotsEl.innerHTML = "";
+        shots.forEach(function (s, i) {
+          var li = document.createElement("li");
+          li.className = "dam-report__shot";
+          var img = document.createElement("img");
+          img.src = s.data;
+          img.alt = "Zrzut " + (i + 1);
+          var rm = document.createElement("button");
+          rm.type = "button";
+          rm.className = "dam-report__shot-remove";
+          rm.setAttribute("aria-label", "Usuń zrzut " + (i + 1));
+          rm.textContent = "×";
+          rm.addEventListener("click", function () {
+            shots.splice(i, 1);
+            renderShots();
+          });
+          li.appendChild(img);
+          li.appendChild(rm);
+          shotsEl.appendChild(li);
+        });
+      }
+
+      function shrink(file) {
+        return new Promise(function (resolve) {
+          var fr = new FileReader();
+          fr.onerror = function () { resolve(null); };
+          fr.onload = function () {
+            var img = new Image();
+            img.onerror = function () { resolve(null); };
+            img.onload = function () {
+              var w = img.naturalWidth || img.width;
+              var h = img.naturalHeight || img.height;
+              if (!w || !h) { resolve(null); return; }
+              var scale = Math.min(1, MAX_EDGE / Math.max(w, h));
+              var cw = Math.max(1, Math.round(w * scale));
+              var ch = Math.max(1, Math.round(h * scale));
+              var cv = document.createElement("canvas");
+              cv.width = cw;
+              cv.height = ch;
+              cv.getContext("2d").drawImage(img, 0, 0, cw, ch);
+              /* PNG trzyma ostre krawedzie tekstu w UI - zrzut ma byc czytelny. */
+              try { resolve({ data: cv.toDataURL("image/png") }); }
+              catch (e) { resolve(null); }
+            };
+            img.src = String(fr.result || "");
+          };
+          fr.readAsDataURL(file);
+        });
+      }
+
+      function addFiles(list) {
+        var imgs = Array.prototype.filter.call(list || [], function (f) {
+          return f && /^image\//.test(f.type || "");
+        });
+        if (!imgs.length) return;
+        var room = MAX_SHOTS - shots.length;
+        if (room <= 0) {
+          say("Więcej niż " + MAX_SHOTS + " zrzutów nie przyjmiemy. Usuń któryś.", false);
+          return;
+        }
+        Promise.all(imgs.slice(0, room).map(shrink)).then(function (out) {
+          out.forEach(function (s) { if (s) shots.push(s); });
+          renderShots();
+          if (shots.length) say(plZrzuty(shots.length) + " gotowe do wysłania.", null);
+        });
+      }
+
+      /* Wklejanie lapiemy na calym dokumencie, nie tylko na polu - uzytkownik
+         wciska Ctrl+V tam, gdzie akurat patrzy. */
+      document.addEventListener("paste", function (e) {
+        var cd = e.clipboardData;
+        if (!cd) return;
+        var files = cd.files && cd.files.length ? cd.files : null;
+        if (!files && cd.items) {
+          files = Array.prototype.map.call(cd.items, function (it) {
+            return it && it.kind === "file" ? it.getAsFile() : null;
+          }).filter(Boolean);
+        }
+        if (files && files.length) {
+          e.preventDefault();
+          addFiles(files);
+        }
+      });
+
+      if (drop) {
+        drop.addEventListener("click", function () { if (fileInput) fileInput.click(); });
+        drop.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (fileInput) fileInput.click(); }
+        });
+        ["dragenter", "dragover"].forEach(function (t) {
+          drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.add("is-over"); });
+        });
+        ["dragleave", "drop"].forEach(function (t) {
+          drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.remove("is-over"); });
+        });
+        drop.addEventListener("drop", function (e) {
+          if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files);
+        });
+      }
+      if (fileInput) {
+        fileInput.addEventListener("change", function () {
+          addFiles(this.files);
+          this.value = "";
+        });
+      }
+
+      /* Most autoryzuje TOKENEM (nagłówek), nie ciasteczkiem. Bez tego
+         zgloszenie zalogowanego uzytkownika wracalo jako login_required. */
+      function authHeaders() {
+        var h = { "Content-Type": "application/json" };
+        try {
+          var t = localStorage.getItem("dam_token") || "";
+          if (t) h.Authorization = "Bearer " + t;
+        } catch (e) { /* prywatne okno */ }
+        return h;
+      }
+
       form.addEventListener("submit", function (ev) {
         ev.preventDefault();
         var title = (document.getElementById("damReportTitle") || {}).value || "";
@@ -329,32 +485,51 @@ html.dam-booting{background:#F6F7F6}html.dam-booting[data-theme="dark"]{backgrou
           return;
         }
         if (btn) btn.disabled = true;
-        say("Wysylam…");
+        say("Wysyłam…");
         fetch(bridgeBase() + "/support-report", {
           method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          /* Bez credentials: most czyta token z naglowka, a "include" wymagalo
+             Access-Control-Allow-Credentials - jego brak wywalal fetch w .catch()
+             i UI klamalo "Brak polaczenia", chociaz most odpowiadal. */
+          headers: authHeaders(),
           body: JSON.stringify({
             kind: (document.getElementById("damReportKind") || {}).value || "blad",
             title: title,
             body: body,
-            page: document.referrer || location.pathname
+            page: document.referrer || location.pathname,
+            shots: shots.map(function (s) { return s.data; })
           })
         })
-          .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
+          .then(function (r) {
+            return r.json()
+              .catch(function () { return { ok: false, error: "http_" + r.status }; })
+              .then(function (j) { j.__status = r.status; return j; });
+          })
           .then(function (res) {
             if (btn) btn.disabled = false;
             if (res && res.ok) {
               form.reset();
-              say("Dziekujemy. Zgloszenie trafilo do administratorow.", true);
+              shots = [];
+              renderShots();
+              var where = res.file
+                ? " Zapisano w pliku: " + res.file
+                : " (plik poprawek niedostępny: " + (res.file_error || "brak") + ")";
+              var ile = res.shots_saved ? " Zapisano " + plZrzuty(res.shots_saved) + "." : "";
+              say("Zgłoszenie " + (res.id || "") + " przyjęte." + ile + where
+                  + " Administrator decyduje, czy poprawkę wprowadzamy.", true);
+            } else if (res && res.__status === 401) {
+              say("Sesja wygasła - zaloguj się ponownie i wyślij jeszcze raz.", false);
+            } else if (res && res.__status === 413) {
+              say("Zrzuty są za duże. Usuń część i spróbuj ponownie.", false);
             } else {
-              var err = (res && (res.hint || res.error)) || "nieznany blad";
-              say("Nie udalo sie wyslac: " + err, false);
+              var err = (res && (res.hint || res.error)) || "nieznany błąd";
+              say("Nie udało się wysłać: " + err, false);
             }
           })
           .catch(function (e) {
             if (btn) btn.disabled = false;
-            say("Brak polaczenia z aplikacja DAM. Sprobuj ponownie.", false);
+            say("Most DAM (:8766) nie odpowiada: " + String((e && e.message) || e)
+                + ". Sprawdź, czy aplikacja DAM działa.", false);
           });
       });
     })();

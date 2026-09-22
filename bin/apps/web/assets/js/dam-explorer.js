@@ -1676,19 +1676,52 @@
     var all = revisions || [];
     if (!all.length) return null;
     var aktualne = getAktualneRevisions(all);
+    var hasFinal = aktualne.length > 0;
     if (!showAll) {
       /* F albo working (Bez statusu / latest) - nie chowaj czystego TEST-TEST */
-      var currentOff = aktualne.length ? aktualne : getCurrentRevisions(all);
+      var currentOff = hasFinal ? aktualne : getCurrentRevisions(all);
       /* X zostaje widoczny. Litera X na folderze znaczy "do archiwum", ale ktos
          ja tylko dopisal i nie przeniosl folderu. Chowanie takiego wariantu
          zostawialo go na dysku na zawsze - teraz widac go z czerwona ramka
          i przyciskiem, ktory faktycznie przenosi go do archiwum. */
       if (!currentOff.length) return null;
-      return { current: currentOff, older: [] };
+      return { current: currentOff, older: [], hasFinal: hasFinal };
     }
-    var current = aktualne.length ? aktualne : getCurrentRevisions(all);
+    var current = hasFinal ? aktualne : getCurrentRevisions(all);
     var older = getOlderRevisions(all, current);
-    return { current: current, older: older };
+    return { current: current, older: older, hasFinal: hasFinal };
+  }
+
+  /**
+   * Karty widoczne przy "Pokaz wszystkie" = OFF. JEDNA KARTA = JEDEN WARIANT.
+   *
+   * Regula F (ta sama co w getCurrentRevisions, tylko tu egzekwowana w widoku):
+   *   - grupa nosnika ma CHOCBY JEDEN folder z litera F -> pokazujemy tylko te z F,
+   *   - zadnego F w grupie -> pokazujemy WSZYSTKIE warianty tej grupy.
+   *
+   * Regula byla juz policzona w danych (getCurrentRevisions zwracalo komplet),
+   * ale render brał z niej tylko current[0] i robil jedna karte na nosnik -
+   * reszta ladowala w extraCurrHtml, czyli w szczegolach rozwijanej karty.
+   * Burger Klasyczny (8 rekawow, ZERO folderow z F) pokazywal jeden rekaw.
+   * Teraz kazda rewizja z current dostaje wlasna karte.
+   *
+   * Zaleznosci wstrzykiwane, zeby dalo sie to przetestowac bez DOM
+   * (apps/web/scripts/tests/test_carrier_cards_no_final.js).
+   */
+  function carrierEntriesForCards(groups, pick, flatten) {
+    var out = [];
+    (groups || []).forEach(function (g) {
+      if (!g) return;
+      var picked = pick(g.revisions, false);
+      if (!picked || !picked.current || !picked.current.length) return;
+      /* Jeden wariant = zostaje etykieta nosnika ("RĘKAW"). Kilka = etykieta
+         z nazwy folderu, inaczej wszystkie karty nazywalyby sie tak samo. */
+      var many = picked.current.length > 1;
+      flatten(picked.current).forEach(function (rev) {
+        out.push({ code: g.code, rev: rev, flat: many, hasFinal: !!picked.hasFinal });
+      });
+    });
+    return out;
   }
 
   /* ------------------------------------------------------------------ */
@@ -5476,18 +5509,27 @@
       DL.CATEGORY_CANON.forEach(function (c) { if (c.id === state.canonCat) catForProduct = c.title; });
     }
     catForProduct = catForProduct || state.canonCat || "Produkt";
-    var visibleGroups = 0;
-    if (showAllOn) {
-      visibleGroups = flattenAndSortAllRevisions(allRevisions).length;
-    } else {
-      groups.forEach(function (g) {
-        if (pickCarrierDisplay(g.revisions, false)) visibleGroups++;
-      });
-    }
+    /* OFF: jedna karta = jeden wariant (patrz carrierEntriesForCards). */
+    var offEntries = showAllOn
+      ? []
+      : carrierEntriesForCards(groups, pickCarrierDisplay, flattenAndSortAllRevisions);
+    var visibleGroups = showAllOn
+      ? flattenAndSortAllRevisions(allRevisions).length
+      : offEntries.length;
 
-    var variantMetaLabel = showAllOn
-      ? plCount(visibleGroups, "wariant", "warianty", "wariantów") + " (wszystkie)"
-      : plCount(visibleGroups, "typ", "typy", "typów") + " nośnika (aktualne)";
+    /* Etykieta ma mowic prawde: "(aktualne)" tylko wtedy, gdy ktos naprawde
+       oznaczyl foldery litera F. Bez F nie wybieramy za uzytkownika. */
+    var offAnyWithoutFinal = offEntries.some(function (e) { return !e.hasFinal; });
+    var variantMetaLabel;
+    if (showAllOn) {
+      variantMetaLabel = plCount(visibleGroups, "wariant", "warianty", "wariantów") + " (wszystkie)";
+    } else if (offAnyWithoutFinal) {
+      variantMetaLabel =
+        plCount(visibleGroups, "wariant", "warianty", "wariantów") +
+        " (żaden folder nie ma litery F, więc pokazujemy wszystkie)";
+    } else {
+      variantMetaLabel = plCount(visibleGroups, "wariant", "warianty", "wariantów") + " (aktualne, F)";
+    }
 
     var html2 = '<div class="dam-explorer-panel">' +
       panelHeadHtml({
@@ -5545,11 +5587,16 @@
           });
         });
       } else {
-        groups.forEach(function (g) {
-          var picked = pickCarrierDisplay(g.revisions, false);
-          if (!picked) return;
+        offEntries.forEach(function (e) {
           anyShown = true;
-          html2 += renderCarrierCard(g.code, picked.current, picked.older, state.product, allRevisions);
+          html2 += renderCarrierCard(
+            e.code,
+            [e.rev],
+            [],
+            state.product,
+            allRevisions,
+            e.flat ? { flatMode: true, expandKey: carrierCardExpandKey(e.rev, e.code) } : undefined
+          );
         });
       }
       if (!anyShown) {
