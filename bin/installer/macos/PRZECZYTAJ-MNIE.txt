@@ -36,14 +36,21 @@ twierdzi, ze aplikacja jest USZKODZONA, pomaga wylacznie polecenie
 xattr powyzej.
 
 
-WAZNE: PROCESOR
+WAZNE: POBIERZ WERSJE DLA SWOJEGO PROCESORA
 
-Ta wersja jest zbudowana dla Apple Silicon (M1, M2, M3, M4).
-Na Macach z procesorem Intel NIE uruchomi sie w ogole.
+Wydanie ma DWA obrazy i trzeba wziac wlasciwy:
 
-Jak sprawdzic: menu Apple -> "Ten Mac" -> pole "Uklad" albo "Procesor".
-  - widzisz "Apple M..."  -> ta wersja jest dla Ciebie
-  - widzisz "Intel"       -> napisz, przygotujemy osobna wersje
+    DAM-AppleSilicon.dmg   dla Macow z ukladem Apple M1, M2, M3, M4
+    DAM-Intel.dmg          dla Macow z procesorem Intel
+
+Jak sprawdzic, ktory masz: menu Apple -> "Ten Mac".
+  - pole mowi "Uklad: Apple M..."  -> bierz DAM-AppleSilicon.dmg
+  - pole mowi "Procesor: Intel..." -> bierz DAM-Intel.dmg
+
+Jesli pobierzesz zla wersje, obraz zamontuje sie normalnie, ale ikona
+aplikacji bedzie PRZEKRESLONA, a po dwukliku system powie, ze nie potrafi
+odczytac pliku. To nie jest uszkodzony plik - to po prostu wersja dla
+innego procesora. Pobierz te druga.
 
 
 CZEGO POTRZEBUJE APLIKACJA

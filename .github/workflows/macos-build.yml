@@ -18,7 +18,27 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest   # Apple Silicon (arm64). Alfa: tylko arm64, bez universal2.
+    # DWIE ARCHITEKTURY, budowane natywnie.
+    #
+    # Dotad byl tylko macos-latest, czyli Apple Silicon. Na Macu z Intelem
+    # (np. MacBook Pro 2017, A1708) pakiet arm64 NIE URUCHAMIA SIE w ogole:
+    # obraz montuje sie normalnie, ale ikona aplikacji ma przekreslenie, a po
+    # dwukliku system mowi, ze nie potrafi odczytac pliku. To wyglada jak
+    # uszkodzony plik, a jest zwykla niezgodnoscia architektury.
+    #
+    # Swiadomie NIE robimy universal2: wymaga uniwersalnych kol dla KAZDEJ
+    # zaleznosci (psycopg2, pillow, onnxruntime), a tych czesto nie ma.
+    # Dwa natywne buildy sa nudne i dzialaja.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-13       # Intel (x86_64)
+            arch: Intel
+          - runner: macos-latest   # Apple Silicon (arm64)
+            arch: AppleSilicon
+    runs-on: ${{ matrix.runner }}
+    name: ${{ matrix.arch }}
     timeout-minutes: 40
     # Repo ma domyslnie token tylko do odczytu - bez tego "gh release upload" konczy sie 403.
     permissions:
@@ -129,28 +149,29 @@ jobs:
           ln -s /Applications "$STAGE/Aplikacje"
           cp bin/installer/macos/PRZECZYTAJ-MNIE.txt "$STAGE/PRZECZYTAJ-MNIE.txt"
 
-          hdiutil create -volname "DAM" -srcfolder "$STAGE" -ov -format UDZO dist/DAM.dmg
+          DMG="dist/DAM-${{ matrix.arch }}.dmg"
+          hdiutil create -volname "DAM (${{ matrix.arch }})" -srcfolder "$STAGE" -ov -format UDZO "$DMG"
 
           # PODPIS SAMEGO OBRAZU. Bez tego niepodpisany .dmg po pobraniu z internetu
           # dostaje kwarantanne, a nowsze macOS odmawiaja go ZAMONTOWAC z komunikatem
           # o nieczytelnym/uszkodzonym obrazie - mimo ze plik jest bajtowo poprawny.
-          codesign --force --timestamp=none -s - dist/DAM.dmg
-          codesign --verify --verbose=2 dist/DAM.dmg || true
+          codesign --force --timestamp=none -s - "$DMG"
+          codesign --verify --verbose=2 "$DMG" || true
 
-          ls -la dist/DAM.dmg
+          ls -la "$DMG"
           echo "--- kontrola: czy obraz da sie zamontowac ---"
-          hdiutil verify dist/DAM.dmg
+          hdiutil verify "$DMG"
           MP=$(mktemp -d)
-          hdiutil attach dist/DAM.dmg -nobrowse -readonly -mountpoint "$MP"
+          hdiutil attach "$DMG" -nobrowse -readonly -mountpoint "$MP"
           ls -la "$MP"
           test -d "$MP/DAM.app" || { echo "BLAD: w obrazie nie ma DAM.app"; exit 1; }
           hdiutil detach "$MP"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: DAM-macos-arm64
+          name: DAM-macos-${{ matrix.arch }}
           path: |
-            dist/DAM.dmg
+            dist/DAM-${{ matrix.arch }}.dmg
             /tmp/selftest.log
           retention-days: 14
 
@@ -158,4 +179,4 @@ jobs:
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${{ github.event.release.tag_name }}" dist/DAM.dmg --clobber
+        run: gh release upload "${{ github.event.release.tag_name }}" "dist/DAM-${{ matrix.arch }}.dmg" --clobber

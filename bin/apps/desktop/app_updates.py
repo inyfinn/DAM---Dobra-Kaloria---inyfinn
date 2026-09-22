@@ -41,8 +41,30 @@ DEFAULT_ASSET = "DAM-Setup.exe"
 # macOS: tylko powiadomienie + link do .dmg. Nie pobieramy i nie instalujemy
 # sami - .dmg montuje sie i przeciaga recznie, a bez konta Apple Developer
 # nie ma czego weryfikowac podpisem Ed25519 jak przy .exe.
-MAC_ASSET = "DAM.dmg"
 IS_MAC = sys.platform == "darwin"
+
+
+def _mac_asset_name() -> str:
+    """Na macOS pakiet zalezy od PROCESORA - jeden .dmg nie obsluzy obu.
+
+    Pakiet arm64 na Macu z Intelem nie uruchamia sie w ogole: obraz montuje
+    sie normalnie, ale ikona aplikacji ma przekreslenie, a po dwukliku system
+    mowi, ze nie potrafi odczytac pliku. Wyglada to na uszkodzony plik, a jest
+    zwykla niezgodnoscia architektury (zgloszone z MacBooka Pro 2017, A1708).
+    Dlatego wydanie ma dwa obrazy, a aktualizator musi wskazac wlasciwy.
+    """
+    import platform  # noqa: PLC0415 - tylko macOS, nie obciazamy startu na Windows
+
+    machine = (platform.machine() or "").lower()
+    if machine in ("arm64", "aarch64"):
+        return "DAM-AppleSilicon.dmg"
+    return "DAM-Intel.dmg"
+
+
+MAC_ASSET = _mac_asset_name() if IS_MAC else "DAM-AppleSilicon.dmg"
+# Wydania do 2.3.1 mialy jeden obraz bez sufiksu architektury (arm64).
+# Przyjmujemy go, zeby starsze wydanie nadal dalo sie pobrac z linku.
+MAC_ASSET_LEGACY = "DAM.dmg"
 PLATFORM_ASSET = MAC_ASSET if IS_MAC else DEFAULT_ASSET
 SIG_SUFFIX = ".sig"
 PART_SUFFIX = ".part"
@@ -532,7 +554,12 @@ def _is_setup_download_url(url: str, asset_name: str = "") -> bool:
         return False
     path = urllib.parse.urlparse(u).path
     wanted_suffix = ".dmg" if IS_MAC else ".exe"
-    return path.endswith("/" + name) and name.lower().endswith(wanted_suffix)
+    if not name.lower().endswith(wanted_suffix):
+        return False
+    if path.endswith("/" + name):
+        return True
+    # Starsze wydania macOS mialy jeden obraz "DAM.dmg" bez sufiksu architektury.
+    return bool(IS_MAC and path.endswith("/" + MAC_ASSET_LEGACY))
 
 
 def _is_api_asset_url(url: str) -> bool:
