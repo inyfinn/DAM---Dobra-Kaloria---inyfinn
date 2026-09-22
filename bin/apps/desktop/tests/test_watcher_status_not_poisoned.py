@@ -106,6 +106,47 @@ class PublicStatusSelfHealTests(unittest.TestCase):
         ):
             self.assertTrue(isup.public_status()["watcher_ok"])
 
+    def test_stale_supervisor_lock_does_not_poison_live_rebuild(self):
+        """Martwy nadzorca + ZYWY robotnik przebudowy = brak paska bledu.
+
+        Objaw 2026-09-22: index-supervisor.lock.json trzymal pid 53876, ktory juz
+        nie istnial (heartbeat starszy o 258 s przy ttl 120 s), a index-rebuild.lock
+        mial zywy pid 3268 z heartbeatem sprzed sekundy i postep 182/194 produktow.
+        public_status() liczylo wtedy stale = lock.stale or rebuild.stale, wiec
+        przeterminowany zamek nadzorcy sam zapalal "Aktualizacja indeksu nie dziala"
+        mimo trwajacej przebudowy.
+        """
+        with (
+            mock.patch.object(isup, "read_watcher_status", return_value={"watcher_ok": True, "last_ok": True}),
+            mock.patch.object(isup, "supervisor_lock_status", return_value={"held": False, "stale": True, "pid_alive": False, "lock": {}}),
+            mock.patch.object(isup, "status_from_lock", return_value={"held": True, "stale": False, "pid_alive": True, "lock": {}}),
+            mock.patch.object(isup, "read_report", return_value={}),
+            mock.patch.object(isup, "public_control", return_value={}),
+        ):
+            self.assertFalse(isup.public_status()["stale"])
+
+    def test_stale_rebuild_lock_still_counts(self):
+        """Przeterminowany zamek PRZEBUDOWY nadal oznacza stale - wtedy nikt nie pracuje."""
+        with (
+            mock.patch.object(isup, "read_watcher_status", return_value={"watcher_ok": True, "last_ok": True}),
+            mock.patch.object(isup, "supervisor_lock_status", return_value={"held": False, "stale": False, "pid_alive": False, "lock": {}}),
+            mock.patch.object(isup, "status_from_lock", return_value={"held": False, "stale": True, "pid_alive": False, "lock": {}}),
+            mock.patch.object(isup, "read_report", return_value={}),
+            mock.patch.object(isup, "public_control", return_value={}),
+        ):
+            self.assertTrue(isup.public_status()["stale"])
+
+    def test_stale_supervisor_without_live_rebuild_still_counts(self):
+        """Martwy nadzorca i BRAK zywej przebudowy = pasek bledu ma prawo sie zapalic."""
+        with (
+            mock.patch.object(isup, "read_watcher_status", return_value={"watcher_ok": True, "last_ok": True}),
+            mock.patch.object(isup, "supervisor_lock_status", return_value={"held": False, "stale": True, "pid_alive": False, "lock": {}}),
+            mock.patch.object(isup, "status_from_lock", return_value={"held": False, "stale": False, "pid_alive": False, "lock": {}}),
+            mock.patch.object(isup, "read_report", return_value={}),
+            mock.patch.object(isup, "public_control", return_value={}),
+        ):
+            self.assertTrue(isup.public_status()["stale"])
+
     def test_dead_supervisor_keeps_dead_flag(self):
         with (
             mock.patch.object(isup, "read_watcher_status", return_value={"watcher_ok": False, "last_ok": True}),

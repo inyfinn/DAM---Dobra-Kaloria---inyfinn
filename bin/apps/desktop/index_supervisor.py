@@ -1788,6 +1788,16 @@ def public_status() -> dict[str, Any]:
     watcher_alive = bool(w.get("watcher_ok"))
     if not watcher_alive and bool(lock.get("held")) and bool(lock.get("pid_alive")):
         watcher_alive = True
+    # Ta sama zasada dla "stale": przeterminowany zamek NADZORCY nie moze sam
+    # zapalac paska "Aktualizacja indeksu nie dziala", gdy robotnik przebudowy
+    # zyje i bije heartbeat. Nadzorca konczy prace po przekazaniu roboty, jego
+    # zamek (ttl 120 s) po chwili jest przeterminowany, a indeks w tym czasie
+    # normalnie sie buduje. Objaw 2026-09-22: supervisor pid martwy od 258 s,
+    # rebuild pid zywy z heartbeatem sprzed 1 s, postep 182/194 - a UI krzyczalo,
+    # ze proces sie zatrzymal. Przeterminowany zamek PRZEBUDOWY nadal liczy sie
+    # zawsze, bo wtedy naprawde nikt nie pracuje.
+    rebuild_alive = bool(rebuild.get("held")) and bool(rebuild.get("pid_alive"))
+    stale_flag = bool(rebuild.get("stale")) or (bool(lock.get("stale")) and not rebuild_alive)
     return {
         "ok": True,
         "watcher_ok": watcher_alive,
@@ -1801,7 +1811,7 @@ def public_status() -> dict[str, Any]:
             "awaiting_first_rebuild" if awaiting else ""
         ),
         "last_rc": w.get("last_rc"),
-        "stale": bool(lock.get("stale") or rebuild.get("stale")),
+        "stale": stale_flag,
         "log": str(WATCHER_LOG),
         "progress": progress,
         "control": control,
