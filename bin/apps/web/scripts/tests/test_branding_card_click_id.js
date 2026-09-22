@@ -40,11 +40,27 @@ if (!/cardStub && cardStub\.id === id/.test(js)) {
 if (css.indexOf(".dam-viz-card__indexes-anchor.is-expanded .dam-viz-card__indexes-wrap") === -1) {
   fail("CSS must show indexes-wrap when anchor is-expanded");
 }
-if (html.indexOf("dam-branding.js?v=5.0.156") === -1) {
-  fail("branding.html must cache-bust dam-branding.js to 5.0.156");
+// Nie usztywniamy konkretnego numeru wersji (stary schemat "5.0.x" jest
+// porzucony, projekt jest teraz na dotted-integer typu 2.3.0 - patrz
+// bin/apps/desktop/runtime_config.py). Pilnujemy za to prawdziwej rzeczy:
+// zeby JS i CSS brandingu mialy TEN SAM cache-bust "?v=", zeby kazdy bump
+// jednego bez drugiego byl widoczny jako regresja.
+var jsVerMatch = html.match(/dam-branding\.js\?v=([^"'\s]+)/);
+var cssVerMatch = html.match(/dam-branding\.css\?v=([^"'\s]+)/);
+if (!jsVerMatch) {
+  fail("branding.html must cache-bust dam-branding.js with ?v=");
 }
-if (html.indexOf("dam-branding.css?v=5.0.156") === -1) {
-  fail("branding.html must cache-bust dam-branding.css to 5.0.156");
+if (!cssVerMatch) {
+  fail("branding.html must cache-bust dam-branding.css with ?v=");
+}
+if (jsVerMatch[1] !== cssVerMatch[1]) {
+  fail(
+    "branding.html cache-bust mismatch: dam-branding.js?v=" +
+      jsVerMatch[1] +
+      " vs dam-branding.css?v=" +
+      cssVerMatch[1] +
+      " (must be the same ?v= on every bump)"
+  );
 }
 
 console.log("OK branding click-id parity + show-indexes expand");

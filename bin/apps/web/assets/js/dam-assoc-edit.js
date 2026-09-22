@@ -6225,13 +6225,34 @@
     }
   }
 
+  /* Cicha odmowa wyglada dokladnie tak samo jak zepsuty przycisk. Uzytkownik
+     zglosil "nie reagowalo na nic w ogole" wlasnie dlatego, ze usuwanie
+     wychodzilo przez return bez slowa. Kazde wyjscie musi powiedziec, czemu. */
+  function refuseRemove(why) {
+    toast(why);
+    return Promise.resolve();
+  }
+
+  function removeBlockedReason(id) {
+    if (!canEditAssoc()) {
+      return isPrivileged()
+        ? "Włącz tryb admina (przełącznik ADMIN u góry), aby usuwać skojarzenia"
+        : "Twoje konto nie ma uprawnień do usuwania skojarzeń";
+    }
+    if (!id) return "Nie rozpoznałem, które skojarzenie usunąć - odśwież widok";
+    return "";
+  }
+
   function quickRemoveProductAssoc(ctx, productId) {
-    if (!canEditAssoc() || !productId) return Promise.resolve();
+    var blocked = removeBlockedReason(productId);
+    if (blocked) return refuseRemove(blocked);
     var prevPids = collectLinkedIdsFromCtx(ctx, "product");
     var nextPids = prevPids.filter(function (id) {
       return id !== productId;
     });
-    if (nextPids.length === prevPids.length) return Promise.resolve();
+    if (nextPids.length === prevPids.length) {
+      return refuseRemove("Tego produktu nie ma już na liście skojarzeń - odśwież widok");
+    }
     var prevVids = (ctx.groupContext.variants || [])
       .map(function (v) {
         return v && v.id;
@@ -6264,12 +6285,15 @@
 
   /** Shift+minus na kafelku WARIANTY MATERIAŁU — usuwa wariant z grupy. */
   function quickRemoveVariantAssoc(ctx, variantId) {
-    if (!canEditAssoc() || !variantId) return Promise.resolve();
+    var blockedV = removeBlockedReason(variantId);
+    if (blockedV) return refuseRemove(blockedV);
     var prevVids = collectLinkedIdsFromCtx(ctx, "variant");
     var nextVids = prevVids.filter(function (id) {
       return id !== variantId;
     });
-    if (nextVids.length === prevVids.length) return Promise.resolve();
+    if (nextVids.length === prevVids.length) {
+      return refuseRemove("Tego wariantu nie ma już na liście skojarzeń - odśwież widok");
+    }
     var prevPids = collectLinkedIdsFromCtx(ctx, "product");
     function restoreSeed() {
       patchCtxVariantIds(ctx, prevVids);
@@ -6395,14 +6419,41 @@
       (global.DamDanger && global.DamDanger.DEFAULT_HOLD_MS) ||
       (global.DamDanger && global.DamDanger.MAX_HOLD_MS) ||
       1500;
-    var tipText =
+    /* JEDNO ustawienie rzadzi OBIEMA bramkami (przytrzymanie i Shift).
+       Ustawienia -> "Bezpieczne usuwanie" obiecuje wprost: "Wylaczenie = zwykly
+       klik". Dotad wylaczenie zdejmowalo tylko przytrzymanie (DamDanger), bo
+       wymog Shift siedzial tutaj osobno i bezwarunkowo - klik bez Shift byl
+       polykany (preventDefault na pointerdown tlumi pozniejszy click), wiec
+       przycisk wygladal na martwy. Zgloszone jako "nie da sie usuwac elementow".
+       Czytamy stan W CHWILI ZDARZENIA, nie przy tworzeniu przycisku: uzytkownik
+       moze przelaczyc ustawienie w innej karcie, bez przeladowania tej. */
+    function holdGateOn() {
+      return !!(
+        global.DamDanger &&
+        typeof global.DamDanger.isSafeDeleteEnabled === "function" &&
+        global.DamDanger.isSafeDeleteEnabled()
+      );
+    }
+
+    var tipHold =
       tip || "Shift + przytrzymaj " + formatHoldSecsLabel(holdMs) + " s, aby usunąć";
-    btn.setAttribute("aria-label", tipText);
-    btn.title = tipText;
-    btn.setAttribute("data-dam-tip", tipText);
+    var tipPlain = tip || "Kliknij, aby usunąć (bezpieczne usuwanie wyłączone)";
+
+    /* Podpowiedz musi mowic prawde o AKTUALNYM trybie, a nie zawsze o Shifcie. */
+    function syncTip() {
+      var t = holdGateOn() ? tipHold : tipPlain;
+      btn.setAttribute("aria-label", t);
+      btn.title = t;
+      btn.setAttribute("data-dam-tip", t);
+    }
+    syncTip();
+    btn.addEventListener("pointerenter", syncTip);
     btn.innerHTML = '<i class="uil uil-minus" aria-hidden="true"></i>';
 
-    function shiftArmed() {
+    /* Zatrzasniety shiftKeyDown gubi sie po blur okna (alt-tab), wiec gdy mamy
+       zdarzenie, czytamy e.shiftKey bezposrednio - to zrodlo prawdy. */
+    function shiftArmed(e) {
+      if (e && e.shiftKey) return true;
       return !!(
         shiftKeyDown ||
         (shiftHost && shiftHost.classList.contains("is-shift-hover"))
@@ -6431,7 +6482,11 @@
         "pointerdown",
         function (e) {
           if (e.button !== undefined && e.button !== 0) return;
-          if (!e.shiftKey && !shiftArmed()) {
+          /* Bramka wylaczona -> przepuszczamy klik. TO JEST TA JEDNA LINIA,
+             ktorej brakowalo: bez niej preventDefault ponizej tlumil click
+             i handler usuwania nigdy sie nie odpalal. */
+          if (!holdGateOn()) return;
+          if (!shiftArmed(e)) {
             e.preventDefault();
             e.stopImmediatePropagation();
             nudgeShiftRequired();
@@ -6441,30 +6496,27 @@
       );
       global.DamDanger.bind(btn, {
         label: "Usuń skojarzenie",
-        hint: tipText,
+        hint: tipHold,
         holdMs: holdMs,
         disableSafeDeleteAction: true,
         onConfirm: function () {
-          if (!shiftArmed()) return;
+          /* Shift wymagany tylko przy wlaczonej bramce. */
+          if (holdGateOn() && !shiftArmed()) return;
           onClick();
         },
       });
     }
 
-    if (!global.DamDanger || !global.DamDanger.isSafeDeleteEnabled()) {
-      btn.addEventListener("click", function (e) {
-        if (!shiftArmed()) {
-          /* Ta sama zasada co wyzej: cicha odmowa wyglada jak zepsuty przycisk. */
-          e.preventDefault();
-          e.stopPropagation();
-          nudgeShiftRequired();
-          return;
-        }
-        e.preventDefault();
-        e.stopPropagation();
-        onClick();
-      });
-    }
+    /* Rejestrujemy ZAWSZE, bo o trybie decyduje stan w chwili klikniecia.
+       Przy wlaczonej bramce ten handler tylko wychodzi - usuwanie nalezy wtedy
+       do DamDanger (onConfirm). Gdyby usuwal takze tutaj, po potwierdzonym
+       przytrzymaniu klik przelecialby dalej i skojarzenie zniknelo by DWA RAZY. */
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (holdGateOn()) return;
+      onClick();
+    });
 
     return btn;
   }
@@ -6773,7 +6825,11 @@
 
   /** Odetnij produkt od materialu brandingowego (viz Shift+minus). */
   function quickUnlinkProductFromMaterial(ctx, asset, productId) {
-    if (!canEditAssoc() || !asset || !asset.id || !productId) return Promise.resolve();
+    var blockedU = removeBlockedReason(productId);
+    if (blockedU) return refuseRemove(blockedU);
+    if (!asset || !asset.id) {
+      return refuseRemove("Nie rozpoznałem materiału - odśwież widok i spróbuj ponownie");
+    }
     var prev = [];
     var seen = {};
     function add(id) {

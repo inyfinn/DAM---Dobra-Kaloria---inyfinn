@@ -109,26 +109,62 @@ def _selftest(root: Path, desktop: Path) -> int:
 # wykonac swoj kod przez PODPISANA aplikacje i odziedziczyc jej zgody TCC
 # (Pliki i foldery, dostep do sieci lokalnej). Payload bywa zapisywalny dla
 # uzytkownika, wiec "lezy w .app" NIE znaczy "zaufane".
+#
+# Sciezki sa wzgledne wobec KORZENIA BIN payloadu (<damroot>/bin), a nie wobec
+# bin/apps/desktop - wiekszosc celow to skrypty z bin/apps/web/scripts, ktore
+# most odpala przez subprocess (przebudowa indeksu, ceny, wykrojniki,
+# rozpoznawanie brandingu). Poprzednia baza (desktop) nie byla w stanie ich
+# wskazac, wiec na zamrozonej .app te spawny odpalaly cale GUI od nowa.
 RUNNABLE = {
-    "bridge": "local_bridge.py",
+    "bridge": "apps/desktop/local_bridge.py",
+    "db-backup-sync": "apps/desktop/scripts/sync-database-backups-to-git.py",
+    "index": "apps/web/scripts/build-file-index.py",
+    "project-costs": "apps/web/scripts/build-project-costs.py",
+    "product-prices": "apps/web/scripts/fetch-product-prices.py",
+    "branding-recognize": "apps/web/scripts/enrich-branding-recognize.py",
+    "wykrojniki-import": "apps/web/scripts/import-wykrojniki-xlsx.py",
+    "wykrojniki-link": "apps/web/scripts/link-wykrojniki-products.py",
 }
 
 
-def _run_payload_script(desktop: Path, name: str) -> int:
+def _payload_bin_root(desktop: Path) -> Path:
+    """<damroot>/bin - katalog, poza ktory zaden cel --run nie moze wyjsc."""
+    return desktop.resolve().parent.parent
+
+
+def _run_payload_script(desktop: Path, name: str, script_args: list[str] | None = None) -> int:
     rel = RUNNABLE.get(name)
     if not rel:
         print(f"Nieznany cel --run: {name!r}. Dozwolone: {', '.join(sorted(RUNNABLE))}",
               file=sys.stderr)
         return 2
-    target = (desktop / rel).resolve()
+    bin_root = _payload_bin_root(desktop)
+    target = (bin_root / rel).resolve()
     # Obrona w glab: nawet z bialej listy cel musi zostac wewnatrz payloadu.
-    if not str(target).startswith(str(desktop.resolve())) or target.suffix != ".py":
+    # relative_to zamiast startswith - prefiks tekstowy przepuscilby katalog
+    # rodzenstwo o nazwie zaczynajacej sie tak samo (np. "bin-kopia").
+    try:
+        target.relative_to(bin_root)
+    except ValueError:
         print(f"Cel poza payloadem: {target}", file=sys.stderr)
+        return 2
+    if target.suffix != ".py":
+        print(f"Cel nie jest skryptem .py: {target}", file=sys.stderr)
         return 2
     if not target.is_file():
         print(f"Brak pliku celu: {target}", file=sys.stderr)
         return 2
-    runpy.run_path(str(target), run_name="__main__")
+    # sys.argv celu musi wygladac tak, jakby odpalil go interpreter:
+    # [sciezka_skryptu, *argumenty]. Bez tego argparse w skryptach payloadu
+    # (fetch-product-prices --product-id, sync-database-backups --from-bridge...)
+    # dostaje ["--run", "<cel>", ...] i konczy sie SystemExit(2), albo - gorzej -
+    # skrypt rusza z cudzymi argumentami.
+    saved_argv = list(sys.argv)
+    sys.argv = [str(target), *(script_args or [])]
+    try:
+        runpy.run_path(str(target), run_name="__main__")
+    finally:
+        sys.argv = saved_argv
     return 0
 
 
@@ -144,7 +180,9 @@ def main() -> int:
         if len(args) < 2:
             print("--run wymaga nazwy celu", file=sys.stderr)
             return 2
-        return _run_payload_script(desktop, args[1])
+        # Wszystko po nazwie celu to argumenty SKRYPTU - shim ich nie interpretuje,
+        # tylko przekazuje dalej w oryginalnej kolejnosci.
+        return _run_payload_script(desktop, args[1], args[2:])
 
     # BRAMKA ANTY-REKURENCYJNA. Bez niej kazdy nieznany argument konczyl sie
     # odpaleniem pelnego GUI. Tak powstawal lancuch mnozacych sie procesow:

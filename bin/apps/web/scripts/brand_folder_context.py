@@ -640,15 +640,21 @@ def build_linked_product_meta(product_ids: list[str], file_index: dict) -> list[
 
 
 _SKU_INDEX_RE = re.compile(r"(6300\d{3}(?:\.\d{2})?)")
+# Cache trzyma SILNA referencje do zrodlowego file_index obok wyniku.
+# Poprzednia wersja pamietala tylko id(file_index): gdy stary slownik zostal
+# zwolniony przez GC, nowy obiekt mogl dostac ten sam adres i trafic w stary
+# wpis cache, przez co funkcja zwracala mape zbudowana z innych danych
+# (np. pusta). Silna referencja gwarantuje, ze adres nie zostanie ponownie
+# uzyty, dopoki wpis zyje, wiec kolizja id() jest niemozliwa.
+# Porownanie przez "is" (tozsamosc), nie przez id().
 _variant_to_product_cache: dict[str, str] | None = None
-_variant_to_product_cache_id: int | None = None
+_variant_to_product_cache_src: dict | None = None
 
 
 def build_variant_to_product_map(file_index: dict) -> dict[str, str]:
     """Mapa indeks wariantu (6300684.01) → product_id. Jedno źródło prawdy z file-index."""
-    global _variant_to_product_cache, _variant_to_product_cache_id
-    cache_id = id(file_index)
-    if _variant_to_product_cache is not None and _variant_to_product_cache_id == cache_id:
+    global _variant_to_product_cache, _variant_to_product_cache_src
+    if _variant_to_product_cache is not None and _variant_to_product_cache_src is file_index:
         return _variant_to_product_cache
     out: dict[str, str] = {}
     for p in file_index.get("products") or []:
@@ -667,7 +673,7 @@ def build_variant_to_product_map(file_index: dict) -> dict[str, str]:
             if key and key not in out:
                 out[key] = pid
     _variant_to_product_cache = out
-    _variant_to_product_cache_id = cache_id
+    _variant_to_product_cache_src = file_index
     return out
 
 

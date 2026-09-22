@@ -341,3 +341,10 @@ id_dsa
 !**/credentials.json.example
 cloud-agent-nas
 # --- end secrets-lock ---
+
+# Zgloszenia poprawek: plik i rejestr ida do repo (czytelny backlog),
+# ale ZRZUTY zostaja lokalnie - do 6 obrazow na zgloszenie rozdmuchaloby repo.
+poprawki-zrzuty/
+
+# Konfiguracja Piaskownicy generowana pod konkretna maszyne (rozne litery dyskow).
+bin/scripts/ops/sandbox-smoke.local.wsb

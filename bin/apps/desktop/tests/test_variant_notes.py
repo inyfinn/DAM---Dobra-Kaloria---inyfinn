@@ -7,7 +7,9 @@ w eksplorerze i w wyszukiwarce, ale NIE moze zmieniac nazwy folderu na dysku.
 """
 from __future__ import annotations
 
+import shutil
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -161,21 +163,34 @@ class VariantNotePermissionTests(unittest.TestCase):
 
 
 class SupportReportTests(unittest.TestCase):
-    """Zgloszenie z Ustawien -> Pomoc trafia WYLACZNIE do adminow."""
+    """Zgloszenie z Ustawien -> Pomoc trafia WYLACZNIE do adminow.
+
+    Chroni przed regresja: lb.create_support_report() woła w srodku
+    support_reports.append_report(), ktory zapisuje POPRAWKI.md /
+    poprawki.jsonl na dysku pod support_reports.reports_root(). Bez
+    podmiany tego katalogu na tymczasowy, KAZDE uruchomienie tego zestawu
+    testow dopisywalo smieciowe wpisy (P-000x, autor "anna", tytul "x")
+    do PRAWDZIWEGO POPRAWKI.md w korzeniu repo. Wzorzec podmiany wziety
+    z test_support_reports_file.py (linie 39-43).
+    """
 
     def setUp(self):
         self.items = []
+        self.tmp = Path(tempfile.mkdtemp(prefix="dam-poprawki-test-"))
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
         self.patches = [
             mock.patch.object(lb, "append_inbox_item",
                               side_effect=lambda e: (self.items.append(e), e)[1]),
             mock.patch.object(lb, "append_change_log", lambda e: None),
         ]
+        if getattr(lb, "support_reports", None) is not None:
+            self.patches.append(
+                mock.patch.object(lb.support_reports, "reports_root",
+                                   side_effect=lambda: self.tmp)
+            )
         for p in self.patches:
             p.start()
-
-    def tearDown(self):
-        for p in self.patches:
-            p.stop()
+            self.addCleanup(p.stop)
 
     def test_report_is_addressed_to_admins(self):
         res = lb.create_support_report({"kind": "blad", "title": "Nie dziala eksport"}, "anna", "user")

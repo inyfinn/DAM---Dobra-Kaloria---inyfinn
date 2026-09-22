@@ -1,5 +1,16 @@
 <Configuration>
   <!--
+    UWAGA: ten plik ma ZAHARDKODOWANE sciezki maszyny domowej
+    (C:\Users\xpret, X:\Marketing). Na innym komputerze Piaskownica go nie
+    uruchomi - dlatego test czystej instalacji nigdy nie ruszyl na firmowym PC.
+    Piaskownica Windows nie rozwija zmiennych srodowiskowych w HostFolder,
+    wiec jedynym wyjsciem jest wygenerowanie pliku pod dana maszyne:
+
+        powershell -NoProfile -ExecutionPolicy Bypass -File bin\scripts\ops\make-sandbox-smoke.ps1
+
+    Powstanie sandbox-smoke.local.wsb z poprawnymi sciezkami (plik jest
+    w .gitignore). Ten plik zostaje jako wzorzec i historia.
+
     Test czystej instalacji DAM w Windows Sandbox.
 
     PRZED URUCHOMIENIEM:

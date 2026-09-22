@@ -659,6 +659,33 @@
     );
   }
 
+  /**
+   * Jak uruchomic aplikacje - zalezy od systemu.
+   * Komunikat o niedostepnym moscie kazal WSZYSTKIM uruchomic URUCHOM-DAM.bat,
+   * takze na macOS, gdzie takiego pliku nie ma. Instrukcja niewykonalna jest
+   * gorsza niz zadna: uzytkownik szuka pliku, ktorego nie znajdzie.
+   */
+  function startAppHint() {
+    var plat = "";
+    try {
+      plat = String(
+        (navigator.userAgentData && navigator.userAgentData.platform) ||
+          navigator.platform ||
+          navigator.userAgent ||
+          ""
+      ).toLowerCase();
+    } catch (e) {
+      plat = "";
+    }
+    if (plat.indexOf("mac") !== -1 || plat.indexOf("darwin") !== -1) {
+      return "Uruchom aplikację DAM z Aplikacji (DAM.app).";
+    }
+    if (plat.indexOf("linux") !== -1 && plat.indexOf("android") === -1) {
+      return "Uruchom aplikację DAM.";
+    }
+    return "Uruchom URUCHOM-DAM.bat / skrót na pulpicie.";
+  }
+
   function token() {
     return localStorage.getItem("dam_token") || "";
   }
@@ -864,7 +891,7 @@
         }
       }
       throw new Error(
-        "Most DAM niedostępny (port 8766). Uruchom URUCHOM-DAM.bat / skrót na pulpicie." +
+        "Most DAM niedostępny (port 8766). " + startAppHint() +
           (bridgeErr && bridgeErr.message ? " (" + bridgeErr.message + ")" : "")
       );
     },

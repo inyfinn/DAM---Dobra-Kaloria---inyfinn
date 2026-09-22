@@ -95,6 +95,23 @@ def _user_data_root() -> Path:
     return Path(os.environ.get("XDG_DATA_HOME") or (Path.home() / ".local" / "share")) / "DAM"
 
 
+def _under_test_runner() -> bool:
+    """Czy leci nas test, a nie prawdziwa aplikacja.
+
+    Bez tej bramki KAZDY przebieg zestawu testow dopisywal smieci do
+    PRAWDZIWEGO POPRAWKI.md w korzeniu repo - 15 wpisow "anna (user) / x"
+    narobilo sie w jeden dzien, bo tests/test_variant_notes.py wola
+    create_support_report() bez podmiany tej funkcji. Test ma podmieniac
+    reports_root u siebie, ale kod tez musi sie bronic sam: backlog
+    uzytkownika nie moze zalezec od tego, czy ktos pamietal o patchu.
+    """
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        return True
+    if "unittest" in sys.modules or "pytest" in sys.modules:
+        return True
+    return os.path.basename(sys.argv[0] or "").startswith("test")
+
+
 def reports_root() -> Path:
     """Katalog na POPRAWKI.md. Repo, gdy zapisywalne; inaczej dane uzytkownika."""
     override = (os.environ.get("DAM_REPORTS_ROOT") or "").strip()
@@ -102,6 +119,11 @@ def reports_root() -> Path:
         return Path(override)
     # bin/apps/desktop -> bin/apps -> bin -> korzen repo
     repo_root = DESKTOP_DIR.parents[2]
+    if _under_test_runner():
+        # Piaskownica na czas testow - nigdy korzen repo.
+        import tempfile  # noqa: PLC0415 - tylko sciezka testowa
+
+        return Path(tempfile.gettempdir()) / "dam-poprawki-test"
     if _is_writable(repo_root):
         return repo_root
     return _user_data_root()

@@ -1183,18 +1183,29 @@
     return t;
   }
 
-  /** Hero / assoc: /media preview ze zrodla (PI); thumb-cache tylko fallback. */
+  /**
+   * Hero / assoc: cache-first (thumb-cache "modal"), potem thumb/preview z indeksu,
+   * a /media ze zrodla dopiero na koncu.
+   * UWAGA (historia 277dd553): tamta zmiana odwrocila kolejnosc na /media-first, zeby
+   * zlikwidowac "blank hero" - bo URL z cache moze nie istniec, a previewUrl() tylko
+   * sklada string i nigdy nie wie, czy plik jest. Skutkiem ubocznym bylo trwale
+   * omijanie cache (galaz thumbCacheUrl stawala sie martwym kodem).
+   * Teraz kolejnosc jest znowu cache-first, a pusty hero pokrywa runtime:
+   * img.onerror -> __damMediaPreviewFallback (przelacza src na /media) oraz
+   * armHeroLoadWatch() dla /thumb-cache, ktory po HERO_LOAD_TIMEOUT_MS wymusza
+   * ten sam fallback, gdy odpowiedz wisi i onerror nigdy nie przyjdzie.
+   */
   function heroSrcFromAsset(a) {
     if (!a) return "";
-    if (a.path) {
-      var live = previewUrl(a.path, a);
-      if (live) return live;
+    if (a.path && window.DamPreviewTruth && typeof DamPreviewTruth.thumbCacheUrl === "function") {
+      var cacheFirst = DamPreviewTruth.thumbCacheUrl(a.path, "modal");
+      if (cacheFirst) return cacheFirst;
     }
     var fromIndex = normalizeMediaThumbUrl(a.thumb_url || a.preview_url || "");
     if (fromIndex) return fromIndex;
-    if (a.path && window.DamPreviewTruth && typeof DamPreviewTruth.thumbCacheUrl === "function") {
-      var cacheFallback = DamPreviewTruth.thumbCacheUrl(a.path, "modal");
-      if (cacheFallback) return cacheFallback;
+    if (a.path) {
+      var live = previewUrl(a.path, a);
+      if (live) return live;
     }
     return "";
   }

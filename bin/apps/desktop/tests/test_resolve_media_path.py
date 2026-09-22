@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 
@@ -113,9 +114,33 @@ class KulkiIntegrationTests(unittest.TestCase):
     )
     EXPECT_SUFFIX = Path("SUCHE") / "gotowe" / "kulki.png"
 
+    # Twardy limit: _coerce_media_target robi fuzzy-skan udzialu M:. Gdy udzial
+    # jest wolny/uspiony, skan idzie minutami i CALY zestaw testow wisi
+    # (zmierzone 2026-09-22: 610 s na tym jednym tescie). Test integracyjny
+    # nie moze blokowac zestawu - po limicie robimy skipTest, nie czekamy.
+    RESOLVE_TIMEOUT_S = 20.0
+
     def test_kulki_live_resolve(self) -> None:
-        hit = lb._coerce_media_target(self.INDEXED)
-        if not Path(hit).is_file():
+        box: dict = {}
+
+        def _work() -> None:
+            try:
+                box["hit"] = lb._coerce_media_target(self.INDEXED)
+            except Exception as exc:  # noqa: BLE001
+                box["exc"] = exc
+
+        th = threading.Thread(target=_work, daemon=True, name="kulki-resolve")
+        th.start()
+        th.join(self.RESOLVE_TIMEOUT_S)
+        if th.is_alive():
+            # Watek jest daemon - nie zatrzyma wyjscia z interpretera.
+            self.skipTest(
+                "resolve kulki.png przekroczyl %.0f s (udzial M: wolny)" % self.RESOLVE_TIMEOUT_S
+            )
+        if "exc" in box:
+            raise box["exc"]
+        hit = box.get("hit") or ""
+        if not hit or not Path(hit).is_file():
             self.skipTest("kulki.png not on this machine")
         self.assertTrue(str(hit).replace("/", "\\").endswith(str(self.EXPECT_SUFFIX).replace("/", "\\")))
         self.assertFalse(Path(lb.normalize_path(self.INDEXED)).is_file())
@@ -147,41 +172,88 @@ class ThumbCacheTimeoutTests(unittest.TestCase):
 
 
 class DirDriveRebaseTests(unittest.TestCase):
-    """Indexed D:/Marketing dirs must resolve onto live X: (ELEMENTY picker)."""
+    """Sciezka z indeksu (litera D:) musi trafic na ZYWY udzial (litera X:).
 
-    INDEXED_REV = (
-        "D:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY/"
-        "CYNAMONKA — [ nerkowcowy ]/KAR6X - 20.05.2026  - PL EN - 6300783.00 - F"
-    )
-    INDEXED_EL = INDEXED_REV + "/1 - MATERIAŁY/ELEMENTY"
+    Wczesniej klasa miala zahardkodowana jedna rewizje Cynamonki. Gdy tej
+    jednej rewizji nie bylo na X:, wszystkie trzy testy szly w skipTest i
+    nie dawaly zadnego dowodu. Teraz szukamy DOWOLNEJ rewizji na X:, ktora
+    ma niepusty folder "1 - MATERIALY/ELEMENTY" - jesli maszyna ma zywy X:,
+    test sie wykona; jesli nie ma, skip mowi dlaczego (z liczbami).
+    """
+
+    X_BATONY = Path("X:/Marketing/- POLSKA/01 - PRODUKTY/- DK/01 - BATONY")
+    _probe: tuple | None = None
+
+    @classmethod
+    def _live_pair(cls) -> tuple:
+        """(rewizja_X, elementy_X, powod_skipu). Skanuje tylko 2 poziomy - ~0,05 s."""
+        if cls._probe is not None:
+            return cls._probe
+        revs = 0
+        if not cls.X_BATONY.is_dir():
+            cls._probe = (None, None, "brak %s (dysk X: nie jest podlaczony)" % cls.X_BATONY)
+            return cls._probe
+        try:
+            for prod in cls.X_BATONY.iterdir():
+                if not prod.is_dir():
+                    continue
+                for rev in prod.iterdir():
+                    if not rev.is_dir():
+                        continue
+                    revs += 1
+                    for slot in rev.iterdir():
+                        if not (slot.is_dir() and slot.name.lower().startswith("1 - materia")):
+                            continue
+                        for el in slot.iterdir():
+                            if not (el.is_dir() and el.name.lower() == "elementy"):
+                                continue
+                            if any(f.is_file() for f in el.iterdir()):
+                                cls._probe = (rev, el, "")
+                                return cls._probe
+        except OSError as exc:
+            cls._probe = (None, None, "blad odczytu X:: %s" % exc)
+            return cls._probe
+        cls._probe = (
+            None,
+            None,
+            "X: przeszukany (%d rewizji), zadna nie ma niepustego ELEMENTY" % revs,
+        )
+        return cls._probe
+
+    def _live_rev(self) -> tuple:
+        rev, el, why = self._live_pair()
+        if rev is None or el is None:
+            self.skipTest(why)
+        indexed_rev = str(rev).replace("\\", "/").replace("X:", "D:", 1)
+        indexed_el = str(el).replace("\\", "/").replace("X:", "D:", 1)
+        # Dowod ma sens tylko wtedy, gdy blizniak na D: NIE istnieje - inaczej
+        # resolve zwroci D: i nie sprawdzimy rebase'u litery.
+        if Path(indexed_rev.replace("/", "\\")).exists():
+            self.skipTest("blizniak na D: istnieje - rebase litery nieweryfikowalny: %s" % indexed_rev)
+        return rev, el, indexed_rev, indexed_el
 
     def test_resolve_physical_path_rebases_directory(self):
         import dam_path_resolve as dpr
 
-        x_twin = Path("X:" + self.INDEXED_REV[1:].replace("/", "\\"))
-        if not x_twin.is_dir():
-            self.skipTest("Cynamonka ELEMENTY revision missing on X:")
-        hit = dpr.resolve_physical_path(self.INDEXED_REV)
+        rev, _el, indexed_rev, _ = self._live_rev()
+        hit = dpr.resolve_physical_path(indexed_rev)
         self.assertTrue(Path(hit).is_dir(), hit)
         self.assertTrue(str(hit).upper().startswith("X:"), hit)
-        self.assertFalse(Path(dpr._norm(self.INDEXED_REV)).exists())
+        self.assertFalse(Path(dpr._norm(indexed_rev)).exists())
 
     def test_list_folder_images_d_drive_not_path_not_found(self):
-        if not Path(self.INDEXED_EL.replace("/", "\\").replace("D:", "X:", 1)).is_dir():
-            self.skipTest("Cynamonka ELEMENTY missing on X:")
-        res = lb.list_folder_images(self.INDEXED_REV)
+        _rev, _el, indexed_rev, indexed_el = self._live_rev()
+        res = lb.list_folder_images(indexed_rev)
         self.assertTrue(res.get("ok"), res)
         self.assertNotEqual(res.get("error"), "path_not_found")
-        el = lb.list_folder_images(self.INDEXED_EL)
+        el = lb.list_folder_images(indexed_el)
         self.assertTrue(el.get("ok"), el)
         names = {f.get("name") for f in (el.get("files") or [])}
         self.assertTrue(names, el)
-        self.assertTrue(any("CYNAMON" in n.upper() for n in names), names)
 
     def test_remap_revision_live_paths_fills_elements(self):
-        rev = {"path": self.INDEXED_REV, "files_by_role": {"elements": []}}
-        if not Path(self.INDEXED_EL.replace("/", "\\").replace("D:", "X:", 1)).is_dir():
-            self.skipTest("Cynamonka ELEMENTY missing on X:")
+        _rev, _el, indexed_rev, _ = self._live_rev()
+        rev = {"path": indexed_rev, "files_by_role": {"elements": []}}
         lb._remap_revision_live_paths(rev)
         els = rev.get("files_by_role", {}).get("elements") or []
         self.assertTrue(els)

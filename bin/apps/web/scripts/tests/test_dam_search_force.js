@@ -22,6 +22,7 @@ if (code.indexOf("window._DAM_FILE_INDEX = null") === -1) {
 
 var sandbox = {
   window: {},
+  document: { readyState: "complete", addEventListener: function () {} },
   localStorage: {
     _d: {},
     getItem: function (k) {

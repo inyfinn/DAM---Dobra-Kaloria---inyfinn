@@ -251,6 +251,41 @@ REQUIRED_ROOT_FOLDERS = ("-- ARCHIWUM --", "- EKSPORT", "- POLSKA")
 CORS_ORIGIN = os.environ.get("DAM_UI_ORIGIN", "http://127.0.0.1:8765")
 
 
+def _frozen_app() -> bool:
+    """PyInstaller: sys.executable to BINARKA APLIKACJI, nie interpreter Pythona."""
+    return bool(getattr(sys, "frozen", False))
+
+
+def _payload_script_cmd(
+    script: Path,
+    run_name: str,
+    *args: str,
+    python_flags: tuple[str, ...] = (),
+) -> list[str]:
+    """Polecenie uruchamiajace skrypt payloadu - dziala tez w zamrozonej .app macOS.
+
+    Ten sam wzorzec co bridge_supervisor.payload_script_cmd(): w zamrozonej
+    aplikacji sys.executable to DAM.app/Contents/MacOS/DAM, wiec [exe, skrypt]
+    odpalalo CALE GUI od nowa z ignorowanym argumentem zamiast skryptu. W trybie
+    zamrozonym idziemy wiec sentinelem shima: [exe, "--run", <cel z bialej listy>].
+
+    ROZNICA wzgledem bridge_supervisor: tam galaz niezamrozona uzywa
+    _silent_python() (pythonw.exe, zeby nie mrugalo okno konsoli mostu). TU
+    celowo zostaje goly sys.executable, bo te wywolania dzialaja na Windows
+    od dawna i ich zachowanie ma zostac IDENTYCZNE co do znaku - podmiana
+    python.exe na pythonw.exe zabralaby np. stdout przekierowany do logu
+    przebudowy indeksu.
+
+    python_flags to flagi INTERPRETERA (np. "-u"). W trybie zamrozonym nie ma
+    do czego ich podac - shim odpala cel przez runpy w procesie aplikacji -
+    wiec sa tam pomijane. Argumenty SKRYPTU (args) leca w obu trybach i shim
+    przepisuje je do sys.argv celu, zeby argparse zobaczyl swoje flagi.
+    """
+    if not _frozen_app():
+        return [sys.executable, *python_flags, str(script), *args]
+    return [sys.executable, "--run", run_name, *args]
+
+
 def _origin_of(url: str) -> str:
     """scheme://host[:port] - naglowek Origin nigdy nie ma sciezki ('/Panel-DAM')."""
     try:
@@ -1538,7 +1573,7 @@ def _run_index_rebuild() -> None:
                 _rebuild_env = os.environ.copy()
                 _rebuild_env["DAM_INDEX_LIVE_FILE"] = str(DESKTOP_STATE_DIR / "index-live.json")
             proc = subprocess.Popen(
-                [sys.executable, "-u", str(BUILD_INDEX)],
+                _payload_script_cmd(BUILD_INDEX, "index", python_flags=("-u",)),
                 creationflags=_no_win,
                 stdin=subprocess.DEVNULL,
                 stdout=log_f,
@@ -4143,7 +4178,7 @@ def _run_build_project_costs() -> dict:
     try:
         _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
         rc = subprocess.call(
-            [sys.executable, str(BUILD_PROJECT_COSTS)],
+            _payload_script_cmd(BUILD_PROJECT_COSTS, "project-costs"),
             creationflags=_no_win,
         )
         costs = _load_json(PROJECT_COSTS_FILE, {})
@@ -6224,6 +6259,68 @@ def _child_dir_prefix(parent: Path, prefix_lower: str) -> Path | None:
     except OSError:
         return None
     return None
+
+
+def _remap_revision_live_paths(rev: dict) -> None:
+    """Przepisz sciezki rewizji na litere dysku ZYWA na tej maszynie i dosyp ELEMENTY.
+
+    Po co to istnieje: ten sam udzial marketingu ma rozne litery na roznych
+    maszynach (M: i D: w pracy, X: w domu). Indeks zapisuje litere maszyny,
+    ktora go zbudowala, wiec rev["path"] z indeksu na innej maszynie nie
+    istnieje - picker ELEMENTY dostawal path_not_found i pokazywal pustke.
+
+    Mutuje rev W MIEJSCU i nic nie zwraca (taki jest kontrakt testu).
+    Idempotentna: dla sciezki, ktora juz zyje, resolve_physical_path zwraca
+    ja bez zmian, a powtorne wywolanie tylko nadpisze te same dane.
+    Nie rzuca wyjatkiem - to wzbogacenie odpowiedzi, nie jej warunek.
+
+    Przypadki brzegowe (celowo ciche):
+      * rev nie jest slownikiem albo nie ma "path" -> wyjscie bez zmian,
+      * sciezka juz zyje -> rebase zwraca to samo, reszta leci normalnie,
+      * po rebase nadal brak katalogu -> nie psujemy reszty rev,
+      * brak podfolderu "1 - MATERIALY/ELEMENTY" albo pusty listing ->
+        zostawiamy files_by_role bez zmian (lepiej stare niz wyczyszczone),
+      * rev bez "files_by_role" -> dorabiamy slownik dopiero gdy mamy pliki.
+    """
+    if not isinstance(rev, dict):
+        return
+    try:
+        raw = str(rev.get("path") or "").strip()
+        if not raw:
+            return
+        live = (
+            dam_path_resolve.resolve_physical_path(
+                raw,
+                normalize_path=normalize_path,
+                marketing_candidates=MARKETING_CANDIDATES,
+                machine_config_path=MACHINE_CONFIG,
+            )
+            if dam_path_resolve
+            else normalize_path(raw)
+        )
+        if not live:
+            return
+        rev["path"] = str(live).replace("\\", "/")
+
+        rev_dir = Path(live)
+        if not rev_dir.is_dir():
+            return
+        # "1 - materia" lapie i "1 - MATERIALY", i "1 - MATERIAŁY" (polski znak).
+        materials = _child_dir_prefix(rev_dir, "1 - materia")
+        elementy = _child_dir_named(materials, "elementy") if materials else None
+        if elementy is None or not elementy.is_dir():
+            return
+        res = list_folder_images(str(elementy))
+        files = (res.get("files") or []) if isinstance(res, dict) and res.get("ok") else []
+        if not files:
+            return
+        fbr = rev.get("files_by_role")
+        if not isinstance(fbr, dict):
+            fbr = {}
+            rev["files_by_role"] = fbr
+        fbr["elements"] = files
+    except Exception:
+        return
 
 
 _SZKICE_NAME_RE = re.compile(r"szkice", re.IGNORECASE)
@@ -9122,7 +9219,9 @@ class Handler(BaseHTTPRequestHandler):
                 try:
                     _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
                     subprocess.call(
-                        [sys.executable, str(FETCH_PRODUCT_PRICES), "--product-id", product_id],
+                        _payload_script_cmd(
+                            FETCH_PRODUCT_PRICES, "product-prices", "--product-id", product_id
+                        ),
                         creationflags=_no_win,
                     )
                     cache = _load_json(PRODUCT_PRICES_CACHE_FILE, {"products": {}})
@@ -9731,7 +9830,7 @@ class Handler(BaseHTTPRequestHandler):
                 _invalidate_branding_data_caches()
                 _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
                 rc = subprocess.call(
-                    [sys.executable, str(ENRICH_BRANDING_RECOGNIZE)],
+                    _payload_script_cmd(ENRICH_BRANDING_RECOGNIZE, "branding-recognize"),
                     creationflags=_no_win,
                 )
                 if rc == 0:
@@ -9817,7 +9916,7 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
                 rc = subprocess.call(
-                    [sys.executable, str(IMPORT_WYKROJNIKI)],
+                    _payload_script_cmd(IMPORT_WYKROJNIKI, "wykrojniki-import"),
                     creationflags=_no_win,
                 )
                 reg = _load_json(WYKROJNIKI_REGISTRY_FILE, {})
@@ -9842,7 +9941,7 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 _no_win = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) if sys.platform == "win32" else 0
                 rc = subprocess.call(
-                    [sys.executable, str(LINK_WYKROJNIKI)],
+                    _payload_script_cmd(LINK_WYKROJNIKI, "wykrojniki-link"),
                     creationflags=_no_win,
                 )
                 reg = _load_json(WYKROJNIKI_REGISTRY_FILE, {})
@@ -10965,7 +11064,14 @@ def _pg_backup_git_sync() -> None:
     try:
         flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
         subprocess.run(
-            [sys.executable, str(script), "--from-bridge", "--skip-pull", "--no-commit", "--quiet"],
+            _payload_script_cmd(
+                script,
+                "db-backup-sync",
+                "--from-bridge",
+                "--skip-pull",
+                "--no-commit",
+                "--quiet",
+            ),
             cwd=str(DESKTOP_DIR),
             timeout=120,
             check=False,

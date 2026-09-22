@@ -61,7 +61,7 @@ DEFAULT_UI_PORT = 8765
 DEFAULT_BRIDGE_PORT = 8766
 HOST = "127.0.0.1"
 APP_TITLE = "DAM - Dobra Kaloria - Inyfinn"
-APP_VERSION = "2.3.0"  # sync z apps/web/version.json + dam-version.js
+APP_VERSION = "2.3.1"  # sync z apps/web/version.json + dam-version.js
 MUTEX_NAME = "Global\\DAM_DOBRA_KALORIA_INYFINN_SINGLE_INSTANCE"
 
 

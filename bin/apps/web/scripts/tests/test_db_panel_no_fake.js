@@ -36,9 +36,27 @@ if (code.indexOf("admina") === -1) {
   fail("must toast on admin_required");
 }
 if (code.indexOf("_draftMode || prefer.mode") === -1) {
-  fail("status poll must preserve the unsaved radio selection");
+  fail("status poll must preserve the unsaved selection");
 }
-if (code.indexOf('_draftMode = radio.value') === -1) {
-  fail("radio change must store the pending engine mode");
+// UI zostalo przeprojektowane w 0526d704 z radio+"Zastosuj" na klikalne
+// karty (.dam-db-source[data-dam-db-mode]) - applyMode() jest teraz
+// jedynym miejscem, ktore ustawia _draftMode. Pilnujemy zamiaru: wybor
+// silnika jest zapamietywany od razu po kliknieciu karty, zanim/gdy
+// trwa poll statusu (patrz "_draftMode || prefer.mode" wyzej).
+var applyModeIdx = code.indexOf("function applyMode(mode)");
+if (applyModeIdx === -1) {
+  fail("applyMode(mode) function missing");
+}
+var applyModeSlice = code.slice(applyModeIdx, applyModeIdx + 400);
+if (applyModeSlice.indexOf('_draftMode = mode || "auto"') === -1) {
+  fail("applyMode must store the pending engine mode into _draftMode");
+}
+var cardsIdx = code.indexOf('.dam-db-source[data-dam-db-mode]").forEach(');
+if (cardsIdx === -1) {
+  fail("mode cards must be wired via querySelectorAll on data-dam-db-mode");
+}
+var cardsSlice = code.slice(cardsIdx, cardsIdx + 300);
+if (cardsSlice.indexOf("applyMode(") === -1) {
+  fail("clicking a data-dam-db-mode card must call applyMode(...)");
 }
 console.log("OK dam-db-status panel: real engine modes + auth dump");
