@@ -418,7 +418,18 @@ def login(
             # Audyt 2026-09-17: konta seed mialy haslo "test" znane z publicznego repo.
             # Poprawne, ale slabe haslo NIE daje sesji - tylko prawo do zmiany hasla.
             if password_policy_error(password, email_n) and not allow_weak_password:
-                return {"ok": False, "error": "password_change_required", "email": email_n}
+                # can_skip mowi UI, ze wolno pokazac przycisk "Pomin". Frontend
+                # czyta go w dam-api.js (pcr.canSkip = !!bdata.can_skip) i bez
+                # tego klucza !!undefined = false, wiec przycisk NIGDY sie nie
+                # pojawial - okno zmiany hasla bylo nie do obejscia, mimo ze
+                # login() ma parametr allow_weak_password, a frontend wysyla
+                # skip_password_change. Brakowalo tylko tego jednego ogniwa.
+                return {
+                    "ok": False,
+                    "error": "password_change_required",
+                    "email": email_n,
+                    "can_skip": True,
+                }
             token = secrets.token_urlsafe(48)
             now = _utc()
             hostname = str(identity.get("hostname") or "")

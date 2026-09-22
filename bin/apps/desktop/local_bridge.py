@@ -9589,11 +9589,15 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200 if res.get("ok") else 400, res)
             return
         if parsed.path == "/auth/login":
+            # skip_password_change przychodzi z UI (dam-api.js), ale do 2.2.6 nikt
+            # go tu nie czytal - most gubil flage, wiec "Pomin" nic nie robil,
+            # a okno "Ustaw nowe haslo" bylo nie do obejscia.
             res = auth_login(
                 data.get("email") or "",
                 data.get("password") or "",
                 data.get("device_id") or "",
                 data.get("machine_id") or "",
+                allow_weak_password=bool(data.get("skip_password_change")),
             )
             self._json(200, self._ip_guard_login_result(res, data.get("email") or ""))
             return
