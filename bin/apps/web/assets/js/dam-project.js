@@ -31,6 +31,20 @@
     "artwork", "prev", "print_pdf", "viz_3d", "tech", "marketing", "karta", "presentation",
   ];
 
+  // Status rynkowy wariantu: teczki projektow + karty zalozenia indeksow
+  // (data/market-index.json, budowane przez scripts/build-market-index.py).
+  // Trzymane modulowo, bo variantPanelHtml jest wolane z kilku miejsc.
+  var MARKET_DOC = null;
+
+  // Osobna rodzina chipow: status RYNKOWY ma obrys, kompletnosc plikow ma wypelnienie.
+  // Bez tego "W obrocie" i "Kompletny" byly dwiema identycznymi zielonymi pigulkami
+  // obok siebie, mimo ze mowia o zupelnie innych rzeczach.
+  var MARKET_STAGE_CHIP = {
+    wdrozony: { cls: "live", label: "W obrocie" },
+    w_toku: { cls: "wip", label: "Projekt w toku" },
+    zawieszony: { cls: "hold", label: "Zawieszony" },
+  };
+
   var ASANA_BY_INDEX = {
     "6300728.00":
       "https://app.asana.com/1/1143952495030509/project/1212679241997947/list/1212717099105923",
@@ -185,6 +199,49 @@
     return '<span class="dam-variant-panel__chip dam-variant-panel__chip--gap">Niekompletny</span>';
   }
 
+  // Baza indeksu opakowania: "6300744.01" -> "6300744". Indeks handlowy i GTIN
+  // sa przypisane do opakowania, nie do rewizji grafiki.
+  function packIndexBase(index) {
+    var digits = String(index || "").split(".")[0];
+    return /^6\d{6}$/.test(digits) ? digits : "";
+  }
+
+  function marketEntryFor(rev) {
+    if (!MARKET_DOC || !MARKET_DOC.packages) return null;
+    var base = packIndexBase(rev && rev.index);
+    return base ? MARKET_DOC.packages[base] || null : null;
+  }
+
+  // Chip statusu rynkowego + osobny chip EAN, gdy karta zalozenia indeksu go zna.
+  function marketChipsHtml(rev) {
+    var e = marketEntryFor(rev);
+    if (!e) return "";
+    var out = "";
+    var chip = MARKET_STAGE_CHIP[e.stage];
+    if (chip) {
+      var tipParts = [];
+      if (e.project) tipParts.push("Projekt: " + e.project);
+      if (e.year) tipParts.push("Rok: " + e.year);
+      if (e.trade_index) tipParts.push("Indeks handlowy: " + e.trade_index);
+      if (e.client) tipParts.push("Klient: " + e.client);
+      out +=
+        '<span class="dam-market-chip dam-market-chip--' +
+        chip.cls +
+        '" title="' +
+        esc(tipParts.join(" · ")) +
+        '">' +
+        esc(chip.label) +
+        "</span>";
+    }
+    if (e.gtin_unit) {
+      out +=
+        '<span class="dam-market-chip dam-market-chip--ean" title="GTIN jednostkowy z karty założenia indeksu">EAN ' +
+        esc(e.gtin_unit) +
+        "</span>";
+    }
+    return out;
+  }
+
   function variantPanelHtml(rev, raw, p, marketingAssets) {
     var roles = revisionRoles(rev, raw, marketingAssets);
     var paths = revisionRolePaths(rev, raw);
@@ -218,6 +275,7 @@
       (rev.folder ? " · " + esc(rev.folder) : "") +
       "</p></div>" +
       '<div class="dam-variant-panel__actions">' +
+      marketChipsHtml(rev) +
       variantStatusChip(st.status) +
       '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-win-btn dam-variant-panel__folder" data-path="' +
       esc(rev.path || p.path || "") +
@@ -540,6 +598,9 @@
     try {
       lifecycle = await fetchJsonLocal("data/product-lifecycle.json");
     } catch (eLc) { /* optional */ }
+    try {
+      MARKET_DOC = await fetchJsonLocal("data/market-index.json");
+    } catch (eMk) { /* brak teczek projektow - chipy rynkowe po prostu nie pokaza sie */ }
     try {
       var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
       var timer = ctrl
@@ -1608,9 +1669,13 @@
           }
           var basePath = p.path || "";
           var idxOne = revs.length === 1 && revs[0] ? revs[0].index : p.product_index;
-          listEl.innerHTML = REQUIRED.map(function (r) {
-            return rowHtml(r, !!present[r], paths[r] || basePath, p.id, idxOne);
-          }).join("");
+          // Jeden wariant nie ma naglowka panelu, wiec chipy rynkowe ida nad checkliste.
+          var soloChips = marketChipsHtml({ index: idxOne });
+          listEl.innerHTML =
+            (soloChips ? '<div class="dam-slot-market-bar">' + soloChips + "</div>" : "") +
+            REQUIRED.map(function (r) {
+              return rowHtml(r, !!present[r], paths[r] || basePath, p.id, idxOne);
+            }).join("");
         }
         bindSlotRows(listEl);
       }

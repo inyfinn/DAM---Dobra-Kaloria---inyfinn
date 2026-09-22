@@ -282,6 +282,14 @@ THUMB_MAX_EDGE = 480
 INDEX_RE = re.compile(r"(?P<base>\d{6,8})\.(?P<rev>\d{2})")
 # Foldery typu "DOY - 23.06.2026 - 6300760" (bez .00) - jak DamLabels.extractIndexFromString
 INDEX_PLAIN_RE = re.compile(r"(?<!\d)(?P<base>\d{6,8})(?!\d)")
+# Kopie konfliktowe Synology Drive: "_INYFINN_wrz-20-025033-2026_Conflict",
+# "_KRZYSZTOFWI_lip-16-165957-2026". Znacznik czasu w srodku udaje indeks.
+CONFLICT_SUFFIX_RE = re.compile(
+    r"_[A-Za-z]{4,}_[a-z]{3}-\d{1,2}-\d{4,6}-\d{4}(?:_Conflict)?.*$"
+    r"|_INYFINN_.*$"
+    r"|_Conflict\b.*$",
+    re.IGNORECASE,
+)
 DATE_DOT_RE = re.compile(r"(\d{2})\.(\d{2})\.(\d{4})")
 DATE_SPACE_RE = re.compile(r"(\d{2})\s+(\d{2})\s+(\d{4})")
 # Prefiks nosnika - dluzsze tokeny pierwsze; jezyki (CZ SK) odcinane osobno
@@ -817,10 +825,22 @@ def merge_global_tag_groups(products: list[dict], cap: int = 48) -> dict[str, li
     return out
 
 
+def strip_conflict_suffix(name: str) -> str:
+    """Utnij sufiks kopii konfliktowej Synology Drive.
+
+    Nazwa "MINI - 18.10.2022 - GB_0000000_KRZYSZTOFWI_lip-16-165957-2026" ma w sobie
+    znacznik czasu 165957, ktory INDEX_PLAIN_RE bierze za indeks. Sufiks powstaje przy
+    kazdym konflikcie synchronizacji, wiec bez tego kazdy taki plik dokladal falszywy
+    numer do indeksu produktu.
+    """
+    return CONFLICT_SUFFIX_RE.sub("", name)
+
+
 def parse_index(name: str) -> tuple[str | None, str | None, str | None]:
     """Wyciagnij indeks produktu. Preferuj NNNNNNN.RR; akceptuj tez same cyfry (bez .00)."""
     if not name:
         return None, None, None
+    name = strip_conflict_suffix(name)
     name = strip_lifecycle_suffix(name)
     # Placeholder typu 6300XXX - nie traktuj jako prawdziwy indeks
     if re.search(r"\d{3,}X{2,}", name, flags=re.IGNORECASE):

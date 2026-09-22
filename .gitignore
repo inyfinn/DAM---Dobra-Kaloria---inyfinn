@@ -348,3 +348,8 @@ poprawki-zrzuty/
 
 # Konfiguracja Piaskownicy generowana pod konkretna maszyne (rozne litery dyskow).
 bin/scripts/ops/sandbox-smoke.local.wsb
+
+# Dane rynkowe z Teczek projektow: nazwy klientow i pipeline projektow.
+# Repo jest PUBLICZNE - ten plik buduje sie lokalnie (scripts/build-market-index.py).
+bin/apps/web/data/market-index.json
+apps/web/data/market-index.json
