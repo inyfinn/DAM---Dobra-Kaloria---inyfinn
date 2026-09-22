@@ -9581,6 +9581,11 @@ class Handler(BaseHTTPRequestHandler):
                 res = {"ok": False, "error": "activate_failed", "detail": type(exc).__name__}
             if res.get("ok"):
                 _reset_db_status_cache()
+                try:
+                    if dam_db is not None:
+                        dam_db.force_retry_now()
+                except Exception:  # noqa: BLE001
+                    pass
             self._json(200 if res.get("ok") else 400, res)
             return
         if parsed.path == "/reveal":

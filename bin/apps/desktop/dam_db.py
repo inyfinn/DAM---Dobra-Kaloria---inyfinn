@@ -174,6 +174,17 @@ def _leave_offline() -> None:
     _OFFLINE_SINCE = 0.0
 
 
+def force_retry_now() -> None:
+    """Zeruje okno _OFFLINE_RETRY_SEC (wywolaj po aktywacji/zmianie konfiguracji bazy).
+
+    22.09.2026: aktywacja kodem naprawiala haslo w pg_db, ale dam_db.connect() ma
+    WLASNY, niezalezny licznik odstepu miedzy probami (2 min) i o naprawie nie wiedzial -
+    uzytkownik po udanej aktywacji dalej widzial "Zapis wstrzymany - baza" do 2 minut."""
+    global _OFFLINE_SINCE
+    if _OFFLINE_MODE:
+        _OFFLINE_SINCE = 0.0
+
+
 def _should_try_postgres() -> bool:
     """Online: zawsze. Offline: retry co _OFFLINE_RETRY_SEC (DDNS moze wrocic)."""
     if not synology_allowed() or not pg_configured():
