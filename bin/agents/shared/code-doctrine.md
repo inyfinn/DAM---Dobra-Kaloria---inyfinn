@@ -2352,3 +2352,24 @@ mial chronic - dwa zapisy bez wersjonowania nadpisujace sie wzajemnie.
     Uwaga na przyszlosc: `file-index.json`, `product-catalog.json` i
     `lifecycle-status.json` SA juz sledzone w publicznym repo (nazwy produktow,
     sciezki dyskow) - osobny dlug do decyzji wlasciciela.
+
+14. **2026-09-22 — "queued" w CI nie znaczy kolejka (v2.3.3).**
+    Zadanie Intel w `macos-build.yml` wisialo w statusie `queued` przez 50 minut.
+    Uznalem to za normalne opoznienie runnerow macOS i tak zaraportowalem - **blednie**.
+    Prawdziwa przyczyna: GitHub wycofal runnery `macos-13`, wiec etykieta nie miala
+    juz kogo wskazywac i zadanie NIGDY nie dostalo maszyny. Objaw jest mylacy, bo
+    job nie pada, tylko wisi w nieskonczonosc; obok `AppleSilicon` na `macos-latest`
+    konczyl w 100 sekund.
+    Pytanie, ktore rozstrzyga w 5 sekund:
+    `gh api repos/{owner}/{repo}/actions/runs/{id}/jobs --jq '.jobs[] | "\(.name) \(.status) labels=\(.labels) runner=\(.runner_name)"'`
+    Puste `runner_name` przy statusie `queued` = nieistniejaca etykieta, nie kolejka.
+    Fix byl jednoliniowy: `macos-13` -> `macos-15-intel`.
+    Zasada: zanim nazwiesz cokolwiek "kolejka" albo "wolno dziala", sprawdz, czy
+    zasob w ogole zostal przydzielony. Czekanie na cos, co nigdy nie ruszy, wyglada
+    identycznie jak czekanie na cos wolnego.
+
+    Drugi wniosek, procesowy: krok uploadu ma `if: github.event_name == 'release'`,
+    wiec build z pushu robi artefakt, ale NIE dokleja go do wydania. Gdy tag juz
+    istnieje, a build naprawiono pozniej, nie podbijaj wersji tylko po to, zeby
+    dowiezc brakujacy plik - sciagnij artefakt i zrob `gh release upload <tag> <plik>`.
+    Warunek: `git diff <tag>..<galaz-builda>` nie moze dotykac kodu aplikacji.
