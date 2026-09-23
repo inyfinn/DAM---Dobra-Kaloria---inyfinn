@@ -35,7 +35,7 @@ class FakeDb:
             return {"ok": True, "changed": False, "generation": cur["generation"]}
         gen = int(time.time() * 1000) + len(self.rows)
         self.rows[key] = {"raw": raw, "sha256": sha256, "generation": gen, "built_at": built_at,
-                          "built_by": built_by, "published_at": built_at}
+                          "built_by": built_by, "published_at": built_at, "raw_bytes": len(raw)}
         return {"ok": True, "changed": True, "generation": gen}
 
     def index_snapshot_meta(self):
@@ -148,6 +148,23 @@ class BrandingSnapshotFlowTests(unittest.TestCase):
         # wiecej niz surowe bajty. 2x daje margines na narzuty bez ukrywania
         # regresji do pelnego parsowania.
         self.assertLess(peak, len(raw) * 2)
+
+    def test_niepelny_skan_nie_trafia_do_bazy(self):
+        """23.09: skan widzial 9 produktow zamiast 196 i trafil do bazy. Plik mniejszy
+        niz polowa wersji w bazie nie jest publikowany (bez force)."""
+        self._as("pc")
+        full = _big_json_bytes(40_000)
+        _write(self.pc_firmowy / "file-index.json", full)
+        res = ix.publish_changed(self.pc_firmowy, root_alive=True)
+        self.assertIn("file-index", res["published"])
+        small = _big_json_bytes(4_000)
+        _write(self.pc_firmowy / "file-index.json", small, mtime=time.time() + 5)
+        res2 = ix.publish_changed(self.pc_firmowy, root_alive=True)
+        self.assertNotIn("file-index", res2["published"])
+        self.assertEqual(res2["refused_shrink"][0]["key"], "file-index")
+        self.assertEqual(self.db.rows["file-index"]["raw"], full)
+        res3 = ix.publish_changed(self.pc_firmowy, root_alive=True, force=True)
+        self.assertIn("file-index", res3["published"])
 
     def test_pull_sciaga_branding_index_zapisuje_atomowo_i_woła_on_updated(self):
         self._as("pc")

@@ -73,11 +73,29 @@ if (Test-PortOpen $BridgePort) {
     $env:DAM_BRIDGE_PORT = "$BridgePort"
     $env:DAM_UI_ORIGIN = "http://127.0.0.1:$WebPort"
     $env:DAM_STATE_DIR = $stateDir
+    # Sciezki ze spacjami ("- POLSKA", "--- Moj obszar pracy") w cudzyslowach - bez nich
+    # Python dostawal pocieta sciezke i most padal bez sladu (23.09).
+    $logDir = Join-Path $App "qa-logs"
+    if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir | Out-Null }
     $bridgeProc = Start-Process -FilePath $pythonExe `
-        -ArgumentList @($bridgeScript, "--app", $App) `
+        -ArgumentList @("`"$bridgeScript`"", "--app", "`"$App`"") `
         -WorkingDirectory (Join-Path $App "bin\apps\desktop") `
+        -RedirectStandardOutput (Join-Path $logDir "bridge.out") `
+        -RedirectStandardError (Join-Path $logDir "bridge.err") `
         -WindowStyle Hidden -PassThru
-    Write-Host "[start-noroot] Most (noroot) wystartowany: pid=$($bridgeProc.Id) port=$BridgePort"
+    Write-Host "[start-noroot] Most (noroot) wystartowany: pid=$($bridgeProc.Id) port=$BridgePort, log: $logDir"
+    # Nie czekamy na cos, czego nie widac: most ma odpowiedziec w 60 s albo skrypt konczy sie bledem.
+    $deadline = (Get-Date).AddSeconds(60)
+    while (-not (Test-PortOpen $BridgePort)) {
+        if ($bridgeProc.HasExited -or (Get-Date) -gt $deadline) {
+            Write-Error ("[start-noroot] Most nie wstal (exit={0}). Ostatnie linie bledu:`n{1}" -f `
+                $(if ($bridgeProc.HasExited) { $bridgeProc.ExitCode } else { "timeout 60 s" }), `
+                ((Get-Content (Join-Path $logDir "bridge.err") -Tail 15 -ErrorAction SilentlyContinue) -join "`n"))
+            exit 2
+        }
+        Start-Sleep -Milliseconds 500
+    }
+    Write-Host "[start-noroot] Most odpowiada na porcie $BridgePort"
 }
 
 # --- Serwer statyczny UI ---
@@ -85,7 +103,7 @@ if (Test-PortOpen $WebPort) {
     Write-Host "[start-noroot] Strona (UI) juz odpowiada na porcie $WebPort - nie startuje ponownie."
 } else {
     $webProc = Start-Process -FilePath $pythonExe `
-        -ArgumentList @("-m", "http.server", "$WebPort", "--bind", "127.0.0.1", "--directory", $webDir) `
+        -ArgumentList @("-m", "http.server", "$WebPort", "--bind", "127.0.0.1", "--directory", "`"$webDir`"") `
         -WindowStyle Hidden -PassThru
     Write-Host "[start-noroot] Strona (UI) wystartowana: pid=$($webProc.Id) port=$WebPort"
 }

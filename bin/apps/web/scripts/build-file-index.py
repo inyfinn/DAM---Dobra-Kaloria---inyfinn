@@ -2532,6 +2532,25 @@ def main() -> None:
         "viz_latest": viz,
         "lang_labels": LANG_LABELS,
     }
+    # Bezpiecznik 2026-09-23: skan po instalacji 2.3.6 zobaczyl na M: 9 produktow
+    # (tylko "- MIX" z BATONOW, 3,9 s) zamiast 196, nadpisal file-index i trafil
+    # do bazy - komputery bez ROOT dostaly 9 produktow. Skan, ktory gubi ponad
+    # ponad 20% produktow wzgledem obecnego indeksu, to niepelny odczyt dysku, nie
+    # usuniecie: zapisujemy go obok (*.rejected.json) i nie ruszamy indeksu.
+    if not args.max_products and not args.root and OUT.is_file():
+        try:
+            prev_count = len((json.loads(OUT.read_text(encoding="utf-8")) or {}).get("products") or [])
+        except (OSError, ValueError):
+            prev_count = 0
+        if prev_count >= 20 and len(products) < prev_count * 0.8:
+            rejected = OUT.with_name(OUT.stem + ".rejected.json")
+            _atomic_write_json(rejected, payload)
+            print(
+                f"ODRZUCONE: skan widzi {len(products)} produktow, indeks ma {prev_count} - "
+                f"niepelny odczyt dysku. Indeks bez zmian, wynik w {rejected}",
+                file=sys.stderr,
+            )
+            raise SystemExit(3)
     _atomic_write_json(OUT, payload)
     _atomic_write_json(
         SEARCH_OUT,

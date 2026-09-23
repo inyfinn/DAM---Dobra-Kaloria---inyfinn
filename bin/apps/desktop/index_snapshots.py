@@ -43,6 +43,9 @@ SNAPSHOT_FILES = {
 }
 MIN_BYTES = 1024
 REFRESH_S = 600.0
+# Publikacja odmawia pliku mniejszego niz 80% wersji w bazie (niepelny skan; 23.09
+# branding-index spadl z 265 do 151 MB = 57% - prog 50% by go przepuscil).
+SHRINK_GUARD = 0.8
 # Powyzej tego rozmiaru nie robimy pelnego json.loads() na calej tresci -
 # branding-index.json na zlotej maszynie ma ~362 MB, a json.loads kopii w
 # pamieci (bytes -> str -> drzewo obiektow) to kilka GB RAM. Zamiast tego
@@ -178,6 +181,10 @@ def publish_changed(data_dir: Path, *, root_alive: bool, force: bool = False) ->
         return {"ok": False, "error": f"pg_db: {exc}"}
     state = _load_state()
     out: dict[str, Any] = {"ok": True, "published": [], "unchanged": []}
+    try:
+        db_metas = pg_db.index_snapshot_meta()
+    except Exception:  # noqa: BLE001
+        db_metas = {}
     for key, fname in SNAPSHOT_FILES.items():
         path = Path(data_dir) / fname
         if not path.is_file() or path.stat().st_size < MIN_BYTES:
@@ -188,6 +195,15 @@ def publish_changed(data_dir: Path, *, root_alive: bool, force: bool = False) ->
             continue
         if not force and sha in (entry.get("pulled_sha"), entry.get("published_sha")):
             out["unchanged"].append(key)
+            continue
+        # Bezpiecznik 2026-09-23: niepelny skan (9 produktow zamiast 196) zostal tu
+        # opublikowany i wszystkie komputery bez ROOT dostaly okrojony indeks. Plik
+        # mniejszy niz 80% wersji w bazie nie idzie do bazy bez force.
+        db_bytes = int((db_metas.get(key) or {}).get("raw_bytes") or 0)
+        if not force and db_bytes and path.stat().st_size < db_bytes * SHRINK_GUARD:
+            out.setdefault("refused_shrink", []).append(
+                {"key": key, "local_bytes": path.stat().st_size, "db_bytes": db_bytes}
+            )
             continue
         try:
             raw = path.read_bytes()

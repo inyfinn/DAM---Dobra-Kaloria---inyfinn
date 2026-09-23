@@ -99,6 +99,11 @@ def main():
 
     sys.path.insert(0, os.path.dirname(bridge))
     sys.argv = [bridge]
+    # Skaner indeksu startuje jako OSOBNY proces (build-file-index.py) i nie dziedziczy
+    # tej nakladki - 23.09 kopia bez ROOT skanowala prawdziwy M: i dublowala skan zlotej
+    # maszyny. Komputer bez ROOT nigdy nie skanuje dysku, wiec wylaczamy przebiegi indeksu.
+    os.environ["DAM_INDEX_FIRST_DELAY_SEC"] = "1000000000"
+    os.environ["DAM_INDEX_HOURLY_SEC"] = "1000000000"
     print("[noroot] start mostu", bridge, "port", os.environ.get("DAM_BRIDGE_PORT"), flush=True)
     runpy.run_path(bridge, run_name="__main__")
 
