@@ -36,15 +36,15 @@ CREATE TABLE IF NOT EXISTS asset_sync_state (
 #   duplikowanie w meta tylko psuloby porownanie "ta sama tresc" w diff_scan;
 # - id - stary licznikowy identyfikator (br-000001...) z build-branding-index;
 #   nowy stabilny asset_id liczy scan_entry/id_of, stary nie ma tu znaczenia;
-# - linked_product_ids / linked_products / folder_linked_product_ids - to
-#   powiazania LICZONE z bazy skojarzen (dam_asset_product_links), nie stan
-#   pliku na dysku. Trzymanie ich w dam_assets.meta duplikowaloby zrodlo prawdy
-#   i przy kazdej zmianie skojarzenia (bez zmiany pliku) generowaloby fantomowy
-#   upsert w scalaniu asset_sync (mtime ten sam, ale "tresc" inna).
-_SCAN_META_EXCLUDE = {
-    "path", "size", "mtime_ms", "id",
-    "linked_product_ids", "linked_products", "folder_linked_product_ids",
-}
+# - linked_products - pelne obiekty produktow, wyprowadzalne z linked_product_ids.
+# linked_product_ids / folder_linked_product_ids ZOSTAJA: build-branding-index
+# wylicza je z kontekstu folderu i nie ma ich w dam_asset_product_links - siatka
+# bierze je z indeksu, a baza nadpisuje tylko materialy, ktore w niej sa. 23.09:
+# bez nich kopia bez ROOT gubila skojarzenia 2184 materialow. Zmiana samego meta
+# nie generuje zapisu (asset_sync._content_differs porownuje rozmiar i skrot).
+# "size" w branding-index to ETYKIETA rozmiaru wizki ("L", "S", "XL"), nie bajty -
+# zostaje w meta; rozmiar w bajtach tylko z liczbowego pola (patrz _size_bytes).
+_SCAN_META_EXCLUDE = {"path", "mtime_ms", "id", "linked_products"}
 
 
 def ensure_local(conn: sqlite3.Connection) -> None:
@@ -151,10 +151,41 @@ def set_pg_rev(conn: sqlite3.Connection, rev: int) -> None:
 # Skan zlotego indeksu -> wpisy asset_sync
 # --------------------------------------------------------------------------
 
-def scan_from_index(index_assets: list[dict], root: str) -> dict[str, dict]:
+def _size_bytes(asset: dict) -> int | None:
+    """Rozmiar pliku w bajtach, jesli indeks go zna (liczba); inaczej None.
+    23.09: import padl na "size" = "L" (etykieta wizki) wpisywanej do BIGINT."""
+    for key in ("size_bytes", "file_size", "bytes", "size"):
+        v = asset.get(key)
+        if isinstance(v, bool):
+            continue
+        if isinstance(v, (int, float)):
+            return int(v)
+    return None
+
+
+def taken_from_rows(rows: dict[str, dict]) -> dict[str, str]:
+    """asset_id -> asset_key z lustra (tez usuniete) - do rozwiazywania kolizji id."""
+    return {aid: str(r.get("asset_key") or "") for aid, r in (rows or {}).items()
+            if r.get("asset_key")}
+
+
+def scan_from_index(index_assets: list[dict], root: str, *,
+                    taken: dict[str, str] | None = None) -> dict[str, dict]:
     """Zloty indeks (branding-index.json) -> asset_id -> wpis skanu dla asset_sync.
 
+    Id: stabilne id z indeksu (build-branding-index rozwiazal juz kolizje
+    8-cyfrowego skrotu - ok. 8 par na 38 tys. plikow), o ile nie nalezy w bazie
+    do innego pliku (`taken`: asset_id -> asset_key z lustra wierszy). Inaczej
+    stable_asset_id z tym samym `taken`. 23.09: liczenie id od nowa bez kolizji
+    sklejalo dwa pliki w jeden wiersz - 8 plikow znikalo, 8 id wskazywalo inny plik
+    niz skojarzenia w bazie.
+
     Pomija pola liczone z bazy skojarzen - patrz _SCAN_META_EXCLUDE."""
+    ids = asset_sync._asset_ids()  # noqa: SLF001 - ten sam modul co build-branding-index
+    owner: dict[str, str] = dict(taken or {})
+    # Plik znany w bazie zawsze zachowuje swoje id (23.09: build z inna kolejnoscia
+    # skanu dal plikowi nowe id -> drugi wiersz z tym samym asset_key, PUSH odrzucony).
+    id_by_key: dict[str, str] = {k: aid for aid, k in owner.items()}
     out: dict[str, dict] = {}
     for asset in index_assets or ():
         if not isinstance(asset, dict):
@@ -162,10 +193,20 @@ def scan_from_index(index_assets: list[dict], root: str) -> dict[str, dict]:
         path = asset.get("path")
         if not path:
             continue
+        key = asset_sync.dir_key(str(path), root)
+        cand = str(asset.get("id") or "")
+        if key in id_by_key:
+            aid = id_by_key[key]
+        elif ids.is_stable_id(cand) and owner.get(cand, key) == key:
+            aid = cand
+        else:
+            aid = ids.stable_asset_id(key, owner)
+        owner[aid] = key
+        id_by_key[key] = aid
         meta = {k: v for k, v in asset.items() if k not in _SCAN_META_EXCLUDE}
         aid, entry = asset_sync.scan_entry(
-            str(path), size=asset.get("size"), mtime_ms=asset.get("mtime_ms") or 0,
-            root=root, meta=meta,
+            str(path), size=_size_bytes(asset), mtime_ms=asset.get("mtime_ms") or 0,
+            root=root, meta=meta, asset_id=aid,
         )
         out[aid] = entry
     return out

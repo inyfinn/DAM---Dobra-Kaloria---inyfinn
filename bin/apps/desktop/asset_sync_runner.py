@@ -190,7 +190,8 @@ def run_once(
             if manifest_scan_time > state_last_scan:
                 index_assets = _load_scan_assets(data_dir, manifest)
                 if index_assets is not None:
-                    scan = asset_repo.scan_from_index(index_assets, root_path)
+                    scan = asset_repo.scan_from_index(
+                        index_assets, root_path, taken=asset_repo.taken_from_rows(rows))
                     scan_kwargs.update(
                         scan=scan,
                         scanned_dirs=manifest.get("scanned_dirs") or (),
@@ -248,6 +249,10 @@ def run_once(
 
         index_path = data_dir / INDEX_NAME
         should_write_index = changed or not index_path.is_file()
+        if did_scan and not result.get("ok"):
+            # 23.09: nieudany PUSH nadpisal wynik buildera wierszami - skan z dysku
+            # przepadl i nastepny cykl nie mial czego ponowic. Skan zostaje do ponowienia.
+            should_write_index = False
         if should_write_index:
             try:
                 payload = {

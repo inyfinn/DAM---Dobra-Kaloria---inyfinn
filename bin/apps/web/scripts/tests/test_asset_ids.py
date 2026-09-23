@@ -130,5 +130,69 @@ class MakeAssetStableIdTest(unittest.TestCase):
             self.assertTrue(is_stable_id(asset_b1["id"]))
 
 
+class SeedIdTakenFromRowsTest(unittest.TestCase):
+    """Kolizje rozstrzyga baza (asset_rows), nie kolejnosc skanu dysku."""
+
+    def test_reverse_scan_order_gets_ids_from_db(self):
+        import json
+        import sqlite3
+        from unittest import mock
+        import asset_ids
+        mod = _load_build_branding_index()
+        mod._ID_TAKEN.clear()
+        real = asset_ids._digits
+        # Wymuszona kolizja: oba pliki maja ten sam skrot bazowy.
+        fake = lambda key, attempt: 7 if attempt == 0 else real(key, attempt)  # noqa: E731
+        a = "M:/- POLSKA/01 - PRODUKTY/a.png"
+        b = "M:/- POLSKA/01 - PRODUKTY/b.png"
+        with mock.patch.object(asset_ids, "_digits", fake):
+            first = {}
+            id_a = stable_asset_id(a, first)      # skan na zlotym: a pierwszy
+            id_b = stable_asset_id(b, first)
+            self.assertNotEqual(id_a, id_b)
+            with tempfile.TemporaryDirectory() as tmp:
+                db = Path(tmp) / "dam-local.sqlite"
+                conn = sqlite3.connect(db)
+                conn.execute("CREATE TABLE asset_rows (asset_id TEXT PRIMARY KEY, row_json TEXT)")
+                for aid, path in ((id_a, a), (id_b, b)):
+                    conn.execute("INSERT INTO asset_rows VALUES (?, ?)",
+                                 (aid, json.dumps({"asset_key": asset_key(path)})))
+                conn.commit()
+                conn.close()
+                self.assertEqual(mod.seed_id_taken_from_rows(db), 2)
+            # Inny komputer skanuje w odwrotnej kolejnosci - id i tak jak w bazie.
+            self.assertEqual(stable_asset_id(b, mod._ID_TAKEN), id_b)
+            self.assertEqual(stable_asset_id(a, mod._ID_TAKEN), id_a)
+        mod._ID_TAKEN.clear()
+        mod._ID_BY_KEY.clear()
+
+    def test_file_known_in_db_keeps_db_id_even_if_base_id_is_free(self):
+        """23.09: plik mial w bazie przesuniete id, a nowy build dal mu bazowe -> dwa
+        wiersze z tym samym asset_key i odrzucony PUSH."""
+        import json
+        import sqlite3
+        mod = _load_build_branding_index()
+        mod._ID_TAKEN.clear()
+        mod._ID_BY_KEY.clear()
+        a = "M:/- POLSKA/01 - PRODUKTY/a.png"
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "dam-local.sqlite"
+            conn = sqlite3.connect(db)
+            conn.execute("CREATE TABLE asset_rows (asset_id TEXT PRIMARY KEY, row_json TEXT)")
+            conn.execute("INSERT INTO asset_rows VALUES (?, ?)",
+                         ("br-012345678", json.dumps({"asset_key": asset_key(a)})))
+            conn.commit()
+            conn.close()
+            mod.seed_id_taken_from_rows(db)
+        self.assertEqual(mod.asset_id_for(a), "br-012345678")
+        self.assertEqual(mod.asset_id_for("X:/Marketing/- POLSKA/01 - PRODUKTY/a.png"), "br-012345678")
+        mod._ID_TAKEN.clear()
+        mod._ID_BY_KEY.clear()
+
+    def test_missing_db_is_noop(self):
+        mod = _load_build_branding_index()
+        self.assertEqual(mod.seed_id_taken_from_rows(Path(tempfile.gettempdir()) / "brak.sqlite"), 0)
+
+
 if __name__ == "__main__":
     unittest.main()

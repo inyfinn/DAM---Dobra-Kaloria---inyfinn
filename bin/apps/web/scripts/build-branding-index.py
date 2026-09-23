@@ -100,6 +100,46 @@ _BG_SCAN_CACHE = load_background_scan_cache()
 # Stabilne id (asset_ids.stable_asset_id): id -> klucz sciezki, jeden slownik
 # na caly przebieg builda - rozwiazuje rzadkie kolizje hashu w obrebie indeksu.
 _ID_TAKEN: dict[str, str] = {}
+# Klucz sciezki -> id z bazy: plik znany w bazie zawsze zachowuje swoje id.
+_ID_BY_KEY: dict[str, str] = {}
+LOCAL_DB = WEB.parents[1] / "DATABASE" / "dam-local.sqlite"
+
+
+def asset_id_for(path: str) -> str:
+    """Id z bazy, jesli plik tam jest; inaczej stable_asset_id z kolizjami wobec bazy."""
+    known = _ID_BY_KEY.get(asset_key(path))
+    if known:
+        _ID_TAKEN[known] = asset_key(path)
+        return known
+    return stable_asset_id(path, _ID_TAKEN)
+
+
+def seed_id_taken_from_rows(db_path: Path = LOCAL_DB) -> int:
+    """Kolizje id rozstrzyga baza (dam_assets, lokalne lustro asset_rows), nie
+    kolejnosc os.scandir - inaczej inny komputer z ROOT moglby dac parze plikow
+    z tym samym skrotem id na odwrot i skojarzenia wskazalyby nie ten plik."""
+    if not db_path.is_file():
+        return 0
+    import sqlite3
+    try:
+        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+        try:
+            got = conn.execute("SELECT asset_id, row_json FROM asset_rows").fetchall()
+        finally:
+            conn.close()
+    except sqlite3.Error:
+        return 0
+    n = 0
+    for aid, row_json in got:
+        try:
+            key = str(json.loads(row_json).get("asset_key") or "")
+        except (TypeError, ValueError, AttributeError):
+            continue
+        if key:
+            _ID_TAKEN[str(aid)] = key
+            _ID_BY_KEY[key] = str(aid)
+            n += 1
+    return n
 
 
 def normalize_perspective_token(raw: str) -> str:
@@ -278,7 +318,7 @@ def make_asset(
     except OSError:
         pass
     asset = {
-        "id": stable_asset_id(path, _ID_TAKEN),
+        "id": asset_id_for(path),
         "path": path,
         "name": name,
         "brand": brand,
@@ -576,6 +616,7 @@ def main() -> int:
     t0_ms = int(t0 * 1000)
     _SCANNED_DIRS.clear()
     _FAILED_DIRS.clear()
+    print(f"id z bazy (asset_rows): {seed_id_taken_from_rows()}", flush=True)
     marketing = resolve_marketing_base()
     marketing_assets, scan_stats = scan_marketing_roots(marketing, include_archive=args.include_archive)
     print(

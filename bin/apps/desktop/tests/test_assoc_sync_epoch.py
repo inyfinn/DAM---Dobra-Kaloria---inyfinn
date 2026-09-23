@@ -153,5 +153,66 @@ class SplitLegacyForPushTests(unittest.TestCase):
         )
 
 
+class _KeysPG:
+    """Atrapa PG: dam_meta.assoc_reconcile + lista kluczy dam_asset_product_links."""
+
+    def __init__(self, tag, keys):
+        self.tag, self.keys, self._rows = tag, keys, []
+
+    def cursor(self):
+        return self
+
+    def execute(self, sql, params=None):
+        if "dam_meta" in sql:
+            self._rows = [{"value": self.tag}] if self.tag else []
+        else:
+            self._rows = [{"asset_id": a, "product_id": p} for a, p in self.keys]
+
+    def fetchone(self):
+        return self._rows[0] if self._rows else None
+
+    def fetchall(self):
+        return list(self._rows)
+
+
+class ApplyReconcileTests(unittest.TestCase):
+    """23.09: twarde DELETE w PG (ponowne zasianie) nie docieralo do innych komputerow."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.db = Path(self.tmp.name) / "t.sqlite"
+        self.conn = assoc_repo.connect(self.db)
+        _insert(self.conn, [
+            ("br-012345678", "tuba", 80, "ocr", "auto", "", "t1", "ocr", 0),     # skasowany w PG
+            ("br-012345678", "ciasto", 80, "ocr", "auto", "", "t1", "ocr", 0),   # jest w PG
+            ("br-087654321", "figa", 100, "manual", "confirmed", "", "t2", "u", 1),  # niewyslany
+        ])
+        self.conn.execute("UPDATE asset_product_links SET dirty=0 WHERE product_id<>'figa'")
+        self.conn.commit()
+
+    def tearDown(self):
+        self.conn.close()
+        self.tmp.cleanup()
+
+    def test_removes_rows_missing_in_pg_keeps_unpushed(self):
+        pg = _KeysPG("reseed-1", [("br-012345678", "ciasto")])
+        tag = assoc_sync._server_reconcile(pg)
+        res = assoc_sync._apply_reconcile(self.conn, pg, tag, self.db)
+        self.assertEqual(res, {"tag": "reseed-1", "removed": 1})
+        self.assertEqual(set(_all_rows(self.conn)),
+                         {("br-012345678", "ciasto"), ("br-087654321", "figa")})
+        saved = json.loads(Path(str(self.db) + ".reconcile-reseed-1.json").read_text(encoding="utf-8"))
+        self.assertEqual([(r["asset_id"], r["product_id"]) for r in saved], [("br-012345678", "tuba")])
+
+    def test_same_tag_twice_and_no_tag_are_noop(self):
+        pg = _KeysPG("reseed-1", [])
+        assoc_sync._apply_reconcile(self.conn, pg, "reseed-1", self.db)
+        before = _all_rows(self.conn)
+        _insert(self.conn, [("br-011111111", "nowy", 1, "ocr", "auto", "", "t", "ocr", 2)])
+        self.assertIsNone(assoc_sync._apply_reconcile(self.conn, pg, "reseed-1", self.db))
+        self.assertIsNone(assoc_sync._apply_reconcile(self.conn, _KeysPG("", []), "", self.db))
+        self.assertEqual(len(_all_rows(self.conn)), len(before) + 1)
+
+
 if __name__ == "__main__":
     unittest.main()

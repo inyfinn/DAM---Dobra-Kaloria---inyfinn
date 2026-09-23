@@ -127,18 +127,65 @@ class ImportAndLiveIndexTests(unittest.TestCase):
         self.root = "M:/Marketing"
         self.assets = _index_assets(P, 12, root=self.root) + _index_assets(Q, 12, root=self.root)
 
-    def test_scan_from_index_strips_computed_association_fields(self):
+    def test_scan_from_index_keeps_folder_links_strips_heavy_objects(self):
+        """Skojarzenia z kontekstu folderu nie sa w bazie - kopia bez ROOT ich potrzebuje."""
         scan = asset_repo.scan_from_index(self.assets, self.root)
         self.assertEqual(len(scan), 24)
         for entry in scan.values():
-            self.assertNotIn("linked_product_ids", entry["meta"])
+            self.assertEqual(entry["meta"]["linked_product_ids"], ["p1", "p2"])
+            self.assertEqual(entry["meta"]["folder_linked_product_ids"], ["p1"])
             self.assertNotIn("linked_products", entry["meta"])
-            self.assertNotIn("folder_linked_product_ids", entry["meta"])
             self.assertNotIn("id", entry["meta"])
             self.assertNotIn("path", entry["meta"])
-            self.assertNotIn("size", entry["meta"])
             self.assertNotIn("mtime_ms", entry["meta"])
             self.assertEqual(entry["meta"]["sku"], "6300576")
+
+    def test_size_label_stays_in_meta_and_bytes_are_numeric_or_none(self):
+        """23.09: "size" w branding-index to etykieta wizki ("L") - import do BIGINT padal."""
+        assets = [dict(self.assets[0], size="L"), dict(self.assets[1], size=1234)]
+        scan = asset_repo.scan_from_index(assets, self.root)
+        by_label = {e["meta"].get("size"): e for e in scan.values()}
+        self.assertIsNone(by_label["L"]["size"])
+        self.assertEqual(by_label[1234]["size"], 1234)
+
+    def test_colliding_ids_from_index_are_kept_not_merged(self):
+        """23.09: 8 par plikow z tym samym 8-cyfrowym skrotem - build nadal drugiemu
+        przesuniete id, a scan_from_index liczyl od nowa i sklejal je w jeden wiersz."""
+        a = dict(self.assets[0], id="br-000000001")
+        b = dict(self.assets[1], id="br-000000002")
+        scan = asset_repo.scan_from_index([a, b], self.root)
+        self.assertEqual(set(scan), {"br-000000001", "br-000000002"})
+        self.assertEqual(scan["br-000000001"]["name"], "wiz-00.png")
+        self.assertEqual(scan["br-000000002"]["name"], "wiz-01.png")
+
+    def test_index_id_owned_by_other_file_in_rows_is_reassigned(self):
+        a = dict(self.assets[0], id="br-000000001")
+        taken = {"br-000000001": "- polska/inny/plik.png"}
+        scan = asset_repo.scan_from_index([a], self.root, taken=taken)
+        (aid,) = scan
+        self.assertNotEqual(aid, "br-000000001")
+        self.assertEqual(scan[aid]["name"], "wiz-00.png")
+
+    def test_file_known_in_rows_keeps_row_id_over_index_id(self):
+        """23.09: nowy build dal plikowi inne id niz w bazie -> duplikat asset_key w PG."""
+        a = dict(self.assets[0], id="br-000000009")
+        key = asset_sync.dir_key(a["path"], self.root)
+        scan = asset_repo.scan_from_index([a], self.root, taken={"br-000000001": key})
+        self.assertEqual(list(scan), ["br-000000001"])
+
+    def test_nfd_path_kept_as_on_disk_key_in_nfc(self):
+        import unicodedata
+        nfd = unicodedata.normalize("NFD", f"{self.root}/{P}/cień.tif")
+        scan = asset_repo.scan_from_index([{"path": nfd, "mtime_ms": 1}], self.root)
+        (entry,) = scan.values()
+        self.assertEqual(entry["path_rel"], nfd[len(self.root) + 1:])
+        self.assertEqual(entry["asset_key"], unicodedata.normalize("NFC", entry["asset_key"]))
+
+    def test_live_index_keeps_size_label(self):
+        scan = asset_repo.scan_from_index([dict(self.assets[0], size="S_SKLEP")], self.root)
+        rows = {aid: dict(e, rev=1) for aid, e in scan.items()}
+        (entry,) = asset_repo.live_index(rows, self.root)
+        self.assertEqual(entry["size"], "S_SKLEP")
 
     def test_import_then_scan_again_is_consistent_zero_ops(self):
         scan = asset_repo.scan_from_index(self.assets, self.root)

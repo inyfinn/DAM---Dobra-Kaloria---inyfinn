@@ -99,16 +99,23 @@ def dir_key(path: str, root: str | None = None) -> str:
 
 
 def scan_entry(path: str, *, size: int | None, mtime_ms: int, root: str | None = None,
-               meta: dict | None = None, content_hash: str | None = None) -> tuple[str, dict]:
-    """Pomocnik dla skanera: (asset_id, wpis skanu) z bezwzglednej sciezki pliku."""
+               meta: dict | None = None, content_hash: str | None = None,
+               asset_id: str | None = None) -> tuple[str, dict]:
+    """Pomocnik dla skanera: (asset_id, wpis skanu) z bezwzglednej sciezki pliku.
+
+    asset_id - id nadane juz przez build-branding-index (z rozwiazana kolizja
+    8-cyfrowego skrotu); bez niego liczone od klucza. Klucz jest w NFC, ale
+    path_rel/name zostaja w zapisie z dysku (NFD na plikach z Maca) - inaczej
+    kopia bez ROOT pokazuje inna sciezke niz plik, ktory naprawde istnieje."""
     key = dir_key(path, root)
-    p = unicodedata.normalize("NFC", str(path)).replace("\\", "/")
+    p = str(path).replace("\\", "/")
     rel = p
     if root is not None:
-        r = unicodedata.normalize("NFC", str(root)).replace("\\", "/").rstrip("/")
-        if p.casefold().startswith(r.casefold() + "/"):
+        r = str(root).replace("\\", "/").rstrip("/")
+        if unicodedata.normalize("NFC", p).casefold().startswith(
+                unicodedata.normalize("NFC", r).casefold() + "/"):
             rel = p[len(r) + 1:]
-    return id_of(key), {
+    return asset_id or id_of(key), {
         "asset_key": key,
         "path_rel": rel,
         "name": p.rsplit("/", 1)[-1],
@@ -373,9 +380,14 @@ def live_entries(rows: dict, root: str | None = None) -> list[dict]:
             "id": aid,
             "path": f"{base}/{rel}" if base is not None else rel,
             "name": r.get("name") or rel.rsplit("/", 1)[-1],
-            "size": r.get("size"),
             "mtime_ms": r.get("mtime_ms"),
         })
+        # "size" w branding-index to etykieta wizki ("L", "S_SKLEP") z meta -
+        # kolumna bajtow jej nie nadpisuje (23.09: 2129 wizek bez rozmiaru).
+        if r.get("size") is not None:
+            e["size_bytes"] = r.get("size")
+        if e.get("size") is None:
+            e["size"] = r.get("size")
         out.append(e)
     return out
 

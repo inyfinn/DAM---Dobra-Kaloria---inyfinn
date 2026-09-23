@@ -180,6 +180,29 @@ class AssetSyncRunnerTests(unittest.TestCase):
         return {"scan_time_ms": 2000, "scanned_dirs": [""], "failed_dirs": [],
                 "index_size": st.st_size + (1 if tamper else 0), "index_mtime_ns": st.st_mtime_ns}
 
+    def test_failed_cycle_with_scan_keeps_build_output_for_retry(self) -> None:
+        """23.09: nieudany PUSH nadpisal branding-index.json wierszami - skan przepadl."""
+        pg = _pg_mode("rows")
+        idx = self.data_dir / "branding-index.json"
+        idx.write_text(json.dumps({"assets": [{"path": "Z:/Marketing/p/a.jpg", "size": 1, "mtime_ms": 5}]}),
+                       encoding="utf-8")
+        before = idx.read_bytes()
+        (self.data_dir / "branding-scan-dirs.json").write_text(
+            json.dumps(self._manifest_for_index(idx)), encoding="utf-8")
+        _seed_state(self.db_path, {"asset_sync_last_scan_time_ms": "0"})
+        row = {"asset_id": "br-012345678", "asset_key": "p/x.jpg", "path_rel": "p/x.jpg",
+               "rev": 7, "mtime_ms": 1}
+        fake = {"ok": False, "error": "duplicate key", "rows": {"br-012345678": row},
+                "pulled": None, "push": {"ok": False}}
+        with patch.object(asset_sync, "sync_cycle", return_value=fake):
+            res = asset_sync_runner.run_once(
+                self.db_path, self.data_dir, root_alive=True, root_path="Z:/Marketing",
+                machine="M", pg_connect=lambda: pg, on_index_written=None,
+            )
+        self.assertTrue(res["did_scan"])
+        self.assertFalse(res["index_written"])
+        self.assertEqual(idx.read_bytes(), before)
+
     def test_index_is_scan_only_when_fingerprint_matches(self) -> None:
         """Bez .scan.json: branding-index.json jest skanem tylko, gdy to plik z buildu."""
         pg = _pg_mode("rows")

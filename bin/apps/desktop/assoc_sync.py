@@ -251,6 +251,47 @@ def _apply_epoch(local: sqlite3.Connection, server_epoch: str, db_path: Path) ->
     return {"epoch": server_epoch, "removed_legacy": len(legacy), "saved_manual": len(saved_manual)}
 
 
+def _server_reconcile(pg) -> str:
+    """dam_meta.assoc_reconcile - zmieniany po twardym usunieciu wierszy w PG (np.
+    ponowne zasianie skojarzen). '' = brak."""
+    cur = pg.cursor()
+    cur.execute("SELECT value FROM dam_meta WHERE key='assoc_reconcile'")
+    row = cur.fetchone()
+    return str(row["value"] or "") if row else ""
+
+
+def _apply_reconcile(local: sqlite3.Connection, pg, tag: str, db_path: Path) -> dict[str, Any] | None:
+    """PULL przenosi tylko wstawienia i zmiany - twarde DELETE w PG nigdy nie docieralo
+    do innych komputerow (23.09: kopia bez ROOT trzymala 96 skojarzen skasowanych przy
+    ponownym zasianiu, np. TUBA <-> ciasto porzeczkowe). Przy nowym znaczniku: usun
+    lokalne wiersze, ktorych nie ma w PG, poza niewyslanymi zmianami (dirty=1) - te
+    PUSH wysle. Usuwane wiersze ida najpierw do <db>.reconcile-<znacznik>.json."""
+    if not tag or _get_state(local, "assoc_reconcile") == tag:
+        return None
+    cur = pg.cursor()
+    cur.execute("SELECT asset_id, product_id FROM dam_asset_product_links")
+    remote = {(str(r["asset_id"]), str(r["product_id"])) for r in cur.fetchall()}
+    rows = local.execute(
+        "SELECT asset_id, product_id, score, source, status, reason, updated_at, updated_by, dirty "
+        "FROM asset_product_links"
+    ).fetchall()
+    gone = [r for r in rows if (str(r["asset_id"]), str(r["product_id"])) not in remote
+            and int(r["dirty"] or 0) != 1]
+    if gone:
+        safe_tag = re.sub(r"[^A-Za-z0-9_.-]", "_", tag)[:60]
+        out_path = Path(db_path).with_name(Path(db_path).name + f".reconcile-{safe_tag}.json")
+        out_path.write_text(json.dumps(
+            [dict(_version(r), asset_id=r["asset_id"], product_id=r["product_id"]) for r in gone],
+            ensure_ascii=False, indent=1), encoding="utf-8")
+        local.executemany(
+            "DELETE FROM asset_product_links WHERE asset_id=? AND product_id=? AND dirty<>1",
+            [(r["asset_id"], r["product_id"]) for r in gone],
+        )
+    _set_state(local, "assoc_reconcile", tag)
+    local.commit()
+    return {"tag": tag, "removed": len(gone)}
+
+
 def _version(row: Any) -> dict[str, Any]:
     return {k: row[k] for k in FIELDS}
 
@@ -403,6 +444,7 @@ def sync_once(db_path: Path) -> dict[str, Any]:
         try:
             server_epoch = _server_epoch(pg)
             epoch_result = _apply_epoch(local, server_epoch, Path(db_path))
+            reconcile_result = _apply_reconcile(local, pg, _server_reconcile(pg), Path(db_path))
             pulled, c1 = _pull(local, pg)
             pushed, c2 = _push(local, pg, server_epoch)
             pending_local = local.execute(
@@ -416,6 +458,8 @@ def sync_once(db_path: Path) -> dict[str, Any]:
               "dirty_left": int(pending_local)}
     if epoch_result:
         result["epoch"] = epoch_result
+    if reconcile_result:
+        result["reconcile"] = reconcile_result
     return result
 
 

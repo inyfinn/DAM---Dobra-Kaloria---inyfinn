@@ -12,7 +12,7 @@
 
 
 
-  global.DAM_APP_VERSION = "2.3.9";
+  global.DAM_APP_VERSION = "2.4.0";
 
 
 

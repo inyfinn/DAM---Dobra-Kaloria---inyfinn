@@ -356,3 +356,9 @@ bin/scripts/ops/sandbox-smoke.local.wsb
 # Repo jest PUBLICZNE - ten plik buduje sie lokalnie (scripts/build-market-index.py).
 bin/apps/web/data/market-index.json
 apps/web/data/market-index.json
+# Faza 2 (23.09): manifest skanu i odrzucone skany maja sciezki folderow klienta - repo PUBLICZNE.
+bin/apps/web/data/branding-scan-dirs.json
+bin/apps/web/data/branding-index.scan.json
+bin/apps/web/data/file-index.rejected.json
+bin/apps/web/data/*.pre-reseed-*
+bin/apps/web/data/*.pre-stable-ids-*
