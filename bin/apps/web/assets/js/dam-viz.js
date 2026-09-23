@@ -187,6 +187,12 @@
     return fallback || key;
   }
 
+  /** i18nText + typografia PL (sieroty), jak applyTranslations dla data-i18n. */
+  function i18nNbsp(key, fallback) {
+    var v = i18nText(key, fallback);
+    return window.DamI18n && typeof window.DamI18n.nbspPl === "function" ? window.DamI18n.nbspPl(v) : v;
+  }
+
   function rowStatusLetter(v) {
     var nm = String((v && (v.revision_path || v.path)) || "").split(/[/\\]/).pop() || "";
     var m = nm.match(/\s-\s([FXD])$/i);
@@ -1963,7 +1969,8 @@
         .map(function (rep) {
           var v = rep.v;
           var label = variantChipLabel(v, ctx);
-          var thumb = v.thumb_url || (v.path ? mediaPreviewUrl(v.path) : "") || "";
+          var thumb = variantThumbSrc(v);
+          var thumbLive = v.thumb_url || (v.path ? mediaPreviewUrl(v.path) : "") || "";
           var on = productVariantKey(v) === activeKey;
           return (
             '<button type="button" class="dam-viz-modal__variant dam-media-preview__variant' +
@@ -1984,9 +1991,11 @@
             (thumb
               ? '<img class="dam-viz-modal__variant-thumb" src="' +
                 esc(thumb) +
+                '" data-live="' +
+                esc(thumbLive !== thumb ? thumbLive : "") +
                 '" alt="' +
                 esc(label) +
-                '" onerror="window.__damAssocThumbFallback&&__damAssocThumbFallback(this)">'
+                '" onerror="window.__damVizVariantThumbError&&__damVizVariantThumbError(this)">'
               : '<div class="dam-viz-modal__variant-placeholder dam-media-preview__variant-placeholder--noviz" title="Brak wizualizacji"><i class="uil uil-image-slash" aria-hidden="true"></i><span>Brak wizualizacji</span></div>') +
             '<span class="dam-viz-modal__variant-label">' +
             esc(label) +
@@ -2810,6 +2819,80 @@
     return t;
   }
 
+  /**
+   * Hero okna produktu: ta sama zasada co dam-media-preview.js (heroSrcFromAsset):
+   * najpierw pamiec podreczna (thumb-cache, profil "modal"), oryginal /media
+   * podmieniany dopiero gdy sie wczyta (DamPreviewTruth.upgradeWhenReady).
+   * Bez ROOT /media zwraca 404 - wtedy zostaje obraz z pamieci podrecznej,
+   * nie "Brak miniatury".
+   * Kolejnosc zrodel: cache -> oryginal -> thumb_url -> placeholder.
+   */
+  function heroCacheUrl(v) {
+    if (!v || !v.path) return "";
+    if (global.DamPreviewTruth && typeof DamPreviewTruth.thumbCacheUrl === "function") {
+      return DamPreviewTruth.thumbCacheUrl(v.path, "modal") || "";
+    }
+    return "";
+  }
+
+  function heroSourceChain(v) {
+    var out = [];
+    [heroCacheUrl(v), heroMediaUrl(v), v && v.thumb_url ? String(v.thumb_url) : ""].forEach(function (u) {
+      if (u && out.indexOf(u) < 0) out.push(u);
+    });
+    return out;
+  }
+
+  function paintVizHero(hero, v) {
+    if (!hero || !v) return;
+    var chain = heroSourceChain(v);
+    var original = heroMediaUrl(v);
+    var step = 0;
+    hero.setAttribute("data-path", v.path || "");
+    hero.removeAttribute("data-dam-original-ready");
+    hero.onerror = function () {
+      step++;
+      while (step < chain.length && chain[step] === hero.getAttribute("src")) step++;
+      if (step < chain.length) {
+        hero.src = chain[step];
+      } else {
+        hero.onerror = null;
+        hero.src = PLACEHOLDER_SVG;
+      }
+    };
+    var first = chain[0] || PLACEHOLDER_SVG;
+    if (hero.getAttribute("src") !== first) hero.src = first;
+    var truth = global.DamPreviewTruth;
+    if (original && original !== first && truth && typeof truth.upgradeWhenReady === "function") {
+      truth.upgradeWhenReady(hero, original);
+    }
+    if (v.path && truth && typeof truth.markPreviewSource === "function") {
+      truth.markPreviewSource(hero, v.path, hero.parentNode);
+    }
+  }
+
+  /** Miniatury wariantow w oknie produktu: cache-first (profil "grid", jak karty). */
+  function variantThumbSrc(v) {
+    if (!v) return "";
+    if (v.path && global.DamPreviewTruth && typeof DamPreviewTruth.thumbCacheUrl === "function") {
+      var cached = DamPreviewTruth.thumbCacheUrl(v.path, "grid");
+      if (cached) return cached;
+    }
+    return v.thumb_url || (v.path ? mediaPreviewUrl(v.path) : "") || "";
+  }
+
+  /* Blad miniatury wariantu: raz sprobuj oryginalu (/media), potem wspolny fallback. */
+  global.__damVizVariantThumbError = function (img) {
+    if (!img) return;
+    var live = img.getAttribute("data-live") || "";
+    if (live && img.getAttribute("data-live-tried") !== "1" && img.getAttribute("src") !== live) {
+      img.setAttribute("data-live-tried", "1");
+      img.src = live;
+      return;
+    }
+    if (typeof global.__damAssocThumbFallback === "function") global.__damAssocThumbFallback(img);
+  };
+
   var THUMB_OVERRIDES_KEY = "dam_thumb_overrides";
   var ADMIN_KEY = "dam_admin_mode";
   var VIZ_FLAGS_KEY = "dam_viz_flags";
@@ -3392,7 +3475,7 @@
       "</div>" +
       '<div id="damVizModalAllFiles" class="dam-viz-modal__all-files-host" hidden></div>' +
       missingLangHtml;
-    var initialHeroSrc = heroMediaUrl(first);
+    var initialHeroSrc = heroSourceChain(first)[0] || "";
     var vizNavPrev =
       items.length > 1
         ? '<button type="button" class="dam-viz-modal__nav-btn" id="damVizModalPrev" aria-label="Poprzedni" title="Poprzedni" data-dam-tip="Poprzedni plik (←)"><i class="uil uil-angle-left"></i></button>'
@@ -3402,18 +3485,25 @@
         ? '<button type="button" class="dam-viz-modal__nav-btn" id="damVizModalNext" aria-label="Następny" title="Następny" data-dam-tip="Następny plik (→)"><i class="uil uil-angle-right"></i></button>'
         : "";
     var thumbHtml =
-      '<div class="dam-viz-modal__thumb dam-viz-modal__thumb--panzoom" data-dam-tip="Scroll: powiększ/zmniejsz. Przybliżone: przeciągnij obraz.">' +
+      '<div class="dam-viz-modal__thumb dam-viz-modal__thumb--panzoom" data-i18n-tip="preview.thumb_tip" data-dam-tip="' +
+      esc(
+        i18nNbsp(
+          "preview.thumb_tip",
+          "Scroll: powiększ/zmniejsz. Przybliżone: przeciągnij obraz. Dwuklik: pełny ekran."
+        )
+      ) +
+      '">' +
       (items.length > 1 ? '<div class="dam-viz-modal__nav">' + vizNavPrev + vizNavNext + "</div>" : "") +
       (initialHeroSrc
         ? '<img id="damVizModalHero" src="' +
           esc(initialHeroSrc) +
           '" alt="' +
           esc(productName) +
-          '" onerror="this.src=\'' +
-          PLACEHOLDER_SVG.replace(/'/g, "%27") +
-          '\'">'
+          '">'
         : '<div class="dam-viz-modal__nothumb"><i class="uil uil-image"></i></div>') +
-      '<div class="dam-viz-modal__thumb-hint" aria-hidden="true"><span>Powiększ · przesuń</span></div>' +
+      '<div class="dam-viz-modal__thumb-hint" aria-hidden="true"><span data-i18n="preview.thumb_hint">' +
+      esc(i18nNbsp("preview.thumb_hint", "Powiększ · przesuń · dwuklik")) +
+      "</span></div>" +
       "</div>";
     /* PI viz.assoc_no_visualization_loop: 2-col — lewa hero+meta, prawa skojarzenia.
        Actions = sibling under __main (not inside scrollable __body) so bar stays above
@@ -3441,12 +3531,12 @@
       var vizCss = document.createElement("link");
       vizCss.id = "dam-viz-modal-css";
       vizCss.rel = "stylesheet";
-      vizCss.href = "assets/css/dam-viz-modal.css?v=5.0.196";
+      vizCss.href = "assets/css/dam-viz-modal.css?v=2.4.2";
       document.head.appendChild(vizCss);
     } else {
       var existingVizCss = document.getElementById("dam-viz-modal-css");
       if (existingVizCss && existingVizCss.tagName === "LINK") {
-        existingVizCss.href = "assets/css/dam-viz-modal.css?v=5.0.196";
+        existingVizCss.href = "assets/css/dam-viz-modal.css?v=2.4.2";
       }
     }
     document.body.insertAdjacentHTML("beforeend", html);
@@ -3527,6 +3617,7 @@
       if (orphan) orphan.remove();
     });
     var thumbStage = modal.querySelector(".dam-viz-modal__thumb");
+    paintVizHero(document.getElementById("damVizModalHero"), first);
 
     /* Pkt 5/7: chip ID marketingowego kopiuje widoczne V-... (klik i prawy klik) */
     var idChipEl = document.getElementById("damVizModalAssetId");
@@ -3614,6 +3705,9 @@
       global._damVizModalItems = null;
       global._damVizModalActiveIdx = null;
       global._damVizModalTeardown = null;
+      if (window.DamLightbox && typeof window.DamLightbox.isOpen === "function" && window.DamLightbox.isOpen()) {
+        window.DamLightbox.close();
+      }
       if (modal && modal.parentNode) modal.remove();
     }
 
@@ -4129,22 +4223,8 @@
       if (!v) return;
       if (zoomCtrl) zoomCtrl.resetView();
       var hero = document.getElementById("damVizModalHero");
-      if (hero) {
-        var preview = heroMediaUrl(v) || "";
-        if (preview) {
-          hero.onerror = function () {
-            var fallback = mediaPreviewUrl(v.path);
-            if (fallback && hero.src.indexOf("/media?") < 0) hero.src = fallback;
-            else if (v.thumb_url && hero.src.indexOf("data/thumbs/") < 0) hero.src = v.thumb_url;
-            else hero.src = PLACEHOLDER_SVG;
-          };
-          hero.src = preview;
-          if (window.DamPreviewTruth && window.DamPreviewTruth.upgradeWhenReady) {
-            window.DamPreviewTruth.upgradeWhenReady(hero, preview);
-            window.DamPreviewTruth.markPreviewSource(hero, v.path, hero.parentNode);
-          }
-        }
-      }
+      /* cache-first + oryginal gdy sie wczyta (bez ROOT zostaje pamiec podreczna) */
+      if (hero) paintVizHero(hero, v);
       if (zoomCtrl) zoomCtrl.paintZoom();
       var meta = document.getElementById("damVizModalMeta");
       if (meta) {
@@ -4228,6 +4308,75 @@
       });
     }
     if (shared && shared.scheduleFitChrome) shared.scheduleFitChrome(modal);
+
+    /* --- Dwuklik / podwojne tkniecie / Enter na duzym obrazie = pelny ekran ---
+       (dam-lightbox.js). Zrodlo: oryginal /media aktywnego wariantu (ta sama
+       logika co hero: mediaPreviewUrl), GIF zostaje animowany. Placeholder = to,
+       co hero juz pokazuje. Strzalki/przesuniecie = selectVariant jak w modalu. */
+    function vizLightboxSources() {
+      var hero = document.getElementById("damVizModalHero");
+      var shown = hero ? hero.currentSrc || hero.getAttribute("src") || "" : "";
+      if (shown === PLACEHOLDER_SVG || /^data:image\/svg/.test(shown)) shown = "";
+      var v = items[activeIdx];
+      /* sciezka tego, co hero naprawde pokazuje (paintVizHero ustawia data-path; w trybie
+         produktu to pierwszy wariant) - oryginal zawsze z tej samej sciezki */
+      var heroPath = (hero && hero.getAttribute("data-path")) || (v && v.path) || "";
+      var original = heroPath ? mediaPreviewUrl(heroPath) : "";
+      return {
+        src: original || shown,
+        placeholderSrc: shown && shown !== original ? shown : "",
+        alt: String(heroPath).split(/[\\/]/).pop() || (v && v.name) || productName || "",
+      };
+    }
+    function openVizLightbox() {
+      if (!window.DamLightbox || typeof window.DamLightbox.open !== "function") return false;
+      var hero = document.getElementById("damVizModalHero");
+      if (!hero) return false;
+      var srcs = vizLightboxSources();
+      if (!srcs.src && !srcs.placeholderSrc) return false;
+      var nav = null;
+      if (items.length > 1) {
+        nav = {
+          hasPrev: function () {
+            return activeIdx > 0;
+          },
+          hasNext: function () {
+            return activeIdx < items.length - 1;
+          },
+          go: function (dir) {
+            var ni = activeIdx + dir;
+            if (ni < 0 || ni >= items.length) return null;
+            selectVariant(ni);
+            return vizLightboxSources();
+          },
+        };
+      }
+      return window.DamLightbox.open({
+        src: srcs.src,
+        placeholderSrc: srcs.placeholderSrc,
+        alt: srcs.alt,
+        nav: nav,
+        returnFocusEl: function () {
+          var h = document.getElementById("damVizModalHero");
+          return h && h.isConnected ? h : thumbStage;
+        },
+      });
+    }
+    var vizHeroForFocus = document.getElementById("damVizModalHero");
+    if (vizHeroForFocus) vizHeroForFocus.tabIndex = 0;
+    if (thumbStage && window.DamLightbox && typeof window.DamLightbox.bindOpenGesture === "function") {
+      window.DamLightbox.bindOpenGesture(thumbStage, openVizLightbox, {
+        filter: function (e) {
+          if (!document.getElementById("damVizModalHero")) return false;
+          return !(e.target && e.target.closest && e.target.closest("button, a, .dam-viz-modal__nav, .dam-viz-modal__zoom"));
+        },
+      });
+      thumbStage.addEventListener("keydown", function (e) {
+        if (e.key !== "Enter" || !e.target || e.target.id !== "damVizModalHero") return;
+        e.preventDefault();
+        openVizLightbox();
+      });
+    }
 
     function refreshCardThumb(pid, thumbUrl) {
       var card = document.querySelector(
@@ -4495,7 +4644,7 @@
           first = items[0] || first;
           var hero = document.getElementById("damVizModalHero");
           var fresh = items[activeIdx] || first;
-          if (hero) hero.src = heroMediaUrl(fresh) || PLACEHOLDER_SVG;
+          if (hero) paintVizHero(hero, fresh);
           refreshCardThumb(group.pid, (items[0] && items[0].thumb_url) || "");
           showToast("Przywrocono domyslna miniature");
           refreshModalBadgesAndAdmin();

@@ -6132,9 +6132,9 @@
     }
 
     /* --- Dwuklik na duzym obrazie = pelny ekran (dam-lightbox.js) ---
-       Nie koliduje z zoomem/przesuwaniem: bindZoom slucha wheel/pointer*, nie
-       click/dblclick. Po przeciagnieciu (pan) dwuklik jest ignorowany. */
-    var lbDown = null;
+       Nie koliduje z zoomem/przesuwaniem: bindZoom slucha wheel/pointer*, a gest
+       otwarcia (DamLightbox.bindOpenGesture) nie wola preventDefault na pointerdown.
+       Po przeciagnieciu (pan) dwuklik/tkniecie jest ignorowane. */
     function openHeroLightbox() {
       if (!window.DamLightbox || typeof window.DamLightbox.open !== "function") return false;
       if (!heroEl || heroEl.tagName !== "IMG") return false;
@@ -6167,18 +6167,16 @@
         },
       });
     }
+    if (thumbStage && window.DamLightbox && typeof window.DamLightbox.bindOpenGesture === "function") {
+      /* dwuklik mysza + podwojne tkniecie na dotyku (wlasna detekcja w dam-lightbox.js) */
+      window.DamLightbox.bindOpenGesture(thumbStage, openHeroLightbox, {
+        filter: function (e) {
+          if (!heroEl || heroEl.tagName !== "IMG") return false;
+          return !(e.target && e.target.closest && e.target.closest("button, a, .dam-viz-modal__nav, .dam-viz-modal__zoom"));
+        },
+      });
+    }
     if (thumbStage) {
-      thumbStage.addEventListener("pointerdown", function (e) {
-        lbDown = { x: e.clientX, y: e.clientY };
-      });
-      thumbStage.addEventListener("dblclick", function (e) {
-        if (!heroEl || heroEl.tagName !== "IMG") return;
-        if (e.target.closest("button, a, .dam-viz-modal__nav, .dam-viz-modal__zoom")) return;
-        if (lbDown && Math.abs(e.clientX - lbDown.x) + Math.abs(e.clientY - lbDown.y) > 6) return;
-        e.preventDefault();
-        e.stopPropagation();
-        openHeroLightbox();
-      });
       thumbStage.addEventListener("keydown", function (e) {
         if (e.key !== "Enter" || e.target !== heroEl) return;
         e.preventDefault();
@@ -6336,7 +6334,7 @@
   };
 
   function ensureVizModalCss() {
-    var href = "assets/css/dam-viz-modal.css?v=5.0.196";
+    var href = "assets/css/dam-viz-modal.css?v=2.4.2";
     var existing = document.getElementById("dam-viz-modal-css");
     if (existing) {
       if (existing.tagName === "LINK" && existing.getAttribute("href") !== href) {

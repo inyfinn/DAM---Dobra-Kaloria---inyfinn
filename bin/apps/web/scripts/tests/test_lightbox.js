@@ -1,5 +1,5 @@
 /**
- * Pelnoekranowy lightbox podgladu materialu (2.4.1): dwuklik na duzym obrazie
+ * Pelnoekranowy lightbox podgladu materialu (2.4.1, gesty dotyku 2.4.2): dwuklik na duzym obrazie
  * w #damMediaPreview otwiera dam-lightbox.js na calym oknie.
  * Run: node apps/web/scripts/tests/test_lightbox.js
  *
@@ -109,7 +109,7 @@ if (fnMatch) {
 }
 
 /* ---------- 3. wpiecie w modal ---------- */
-ok(/thumbStage\.addEventListener\("dblclick"/.test(mp), "modal: dwuklik na #damMediaPreviewThumb");
+ok(/bindOpenGesture\(thumbStage, openHeroLightbox/.test(mp), "modal: dwuklik / podwojne tkniecie na #damMediaPreviewThumb");
 ok(/closest\("button, a, \.dam-viz-modal__nav/.test(mp), "modal: dwuklik na strzalkach/przyciskach ignorowany");
 ok(/heroEl\.tagName !== "IMG"/.test(mp), "modal: wideo nie otwiera lightboxa (ma wlasne kontrolki)");
 ok(/window\.DamLightbox\.close\(\)/.test(mp), "closeModal zamyka tez lightbox");
@@ -154,10 +154,10 @@ ok(LB.t("lightbox.close") === en["lightbox.close"], "z DamI18n (EN) - tekst z en
 /* ---------- 5. strony ---------- */
 ["branding.html", "dashboard.html", "explorer.html", "visualizations.html"].forEach(function (f) {
   var h = fs.readFileSync(path.join(WEB, f), "utf8");
-  var iLb = h.indexOf('src="./assets/js/dam-lightbox.js?v=2.4.1"');
+  var iLb = h.indexOf('src="./assets/js/dam-lightbox.js?v=2.4.2"');
   var iMp = h.indexOf("dam-media-preview.js?v=");
-  ok(iLb > 0, f + ": laduje dam-lightbox.js?v=2.4.1");
-  ok(h.indexOf('href="./assets/css/dam-lightbox.css?v=2.4.1"') > 0, f + ": laduje dam-lightbox.css?v=2.4.1");
+  ok(iLb > 0, f + ": laduje dam-lightbox.js?v=2.4.2");
+  ok(h.indexOf('href="./assets/css/dam-lightbox.css?v=2.4.2"') > 0, f + ": laduje dam-lightbox.css?v=2.4.2");
   ok(iLb > 0 && iMp > iLb, f + ": dam-lightbox.js przed dam-media-preview.js");
 });
 
@@ -180,6 +180,116 @@ ok(/, true\);/.test(lb), "lightbox: klawisze w fazie capture (modal pod spodem n
 ok(/setAttribute\("inert"/.test(lb), "lightbox: tlo inert");
 ok(/overflow = "hidden"/.test(lb), "lightbox: blokada scrolla strony");
 ok(!/\u2014/.test(lb) && !/\u2014/.test(css), "bez em dash w nowych plikach");
+
+/* ---------- 8. gesty (czyste funkcje) ---------- */
+var GS = LB._gest;
+ok(GS && typeof GS.isDoubleTap === "function", "DamLightbox._gest wystawione");
+ok(GS.isTap({ t: 0, x: 10, y: 10 }, { t: 120, x: 14, y: 12 }), "tap: krotko i blisko");
+ok(!GS.isTap({ t: 0, x: 10, y: 10 }, { t: 600, x: 10, y: 10 }), "tap: przytrzymanie to nie tap");
+ok(!GS.isTap({ t: 0, x: 10, y: 10 }, { t: 100, x: 40, y: 10 }), "tap: ruch 30 px to nie tap");
+ok(GS.isDoubleTap({ t: 1000, x: 100, y: 100 }, { t: 1250, x: 110, y: 105 }), "double-tap: 250 ms, 11 px");
+ok(!GS.isDoubleTap({ t: 1000, x: 100, y: 100 }, { t: 1300, x: 100, y: 100 }), "double-tap: 300 ms to juz za wolno");
+ok(!GS.isDoubleTap({ t: 1000, x: 100, y: 100 }, { t: 1100, x: 180, y: 100 }), "double-tap: 80 px od siebie - nie");
+ok(!GS.isDoubleTap(null, { t: 1, x: 0, y: 0 }), "double-tap: bez poprzedniego - nie");
+ok(GS.classifySwipe(-120, 10, 300) === 1, "swipe w lewo = nastepny (+1)");
+ok(GS.classifySwipe(120, -10, 300) === -1, "swipe w prawo = poprzedni (-1)");
+ok(GS.classifySwipe(-40, 0, 200) === 0, "swipe za krotki (< 60 px) = nic");
+ok(GS.classifySwipe(-100, 90, 300) === 0, "swipe ukosny/pionowy = nic");
+ok(GS.classifySwipe(-200, 0, 1500) === 0, "swipe za wolny (> 800 ms) = nic");
+
+/* ---------- 9. bindOpenGesture na sztucznym elemencie (czas sterowany) ---------- */
+var fakeNow = 10000;
+sandbox.Date = { now: function () { return fakeNow; } };
+function fakeEl() {
+  var h = {};
+  return {
+    addEventListener: function (t, fn) { (h[t] = h[t] || []).push(fn); },
+    removeEventListener: function (t, fn) { h[t] = (h[t] || []).filter(function (x) { return x !== fn; }); },
+    fire: function (t, ev) {
+      ev.type = t;
+      ev.defaultPrevented = false;
+      ev.cancelable = true;
+      ev.preventDefault = function () { ev.defaultPrevented = true; };
+      ev.stopPropagation = function () {};
+      ev.target = ev.target || { closest: function () { return null; } };
+      (h[t] || []).forEach(function (fn) { fn(ev); });
+      return ev;
+    },
+    count: function (t) { return (h[t] || []).length; },
+  };
+}
+function tap(el, id, x, y, dur, type) {
+  el.fire("pointerdown", { pointerId: id, pointerType: type || "touch", clientX: x, clientY: y });
+  fakeNow += dur || 80;
+  return el.fire("pointerup", { pointerId: id, pointerType: type || "touch", clientX: x, clientY: y });
+}
+var opened = 0;
+var el1 = fakeEl();
+var unbind = LB.bindOpenGesture(el1, function () { opened++; });
+tap(el1, 1, 100, 100);
+fakeNow += 150;
+var up2 = tap(el1, 2, 104, 102);
+ok(opened === 1, "gest: dwa tkniecia < 300 ms otwieraja lightbox (opened=" + opened + ")");
+ok(up2.defaultPrevented, "gest: drugie tkniecie preventDefault (bez przegladarkowego zoomu)");
+fakeNow += 2000;
+tap(el1, 3, 100, 100);
+fakeNow += 400;
+tap(el1, 4, 100, 100);
+ok(opened === 1, "gest: tkniecia co 480 ms nie otwieraja");
+fakeNow += 2000;
+tap(el1, 5, 100, 100);
+fakeNow += 100;
+tap(el1, 6, 200, 100);
+ok(opened === 1, "gest: tkniecia 100 px od siebie nie otwieraja");
+fakeNow += 2000;
+tap(el1, 7, 100, 100, 80, "mouse");
+fakeNow += 100;
+tap(el1, 8, 100, 100, 80, "mouse");
+ok(opened === 1, "gest: mysz nie uzywa detekcji tkniec (ma dblclick)");
+el1.fire("dblclick", { clientX: 100, clientY: 100 });
+ok(opened === 2, "gest: dblclick mysza otwiera");
+fakeNow += 2000;
+/* pinch w modalu (dwa palce) nie moze byc uznany za podwojne tkniecie */
+el1.fire("pointerdown", { pointerId: 11, pointerType: "touch", clientX: 100, clientY: 100 });
+el1.fire("pointerdown", { pointerId: 12, pointerType: "touch", clientX: 200, clientY: 200 });
+fakeNow += 60;
+el1.fire("pointerup", { pointerId: 11, pointerType: "touch", clientX: 100, clientY: 100 });
+el1.fire("pointerup", { pointerId: 12, pointerType: "touch", clientX: 200, clientY: 200 });
+fakeNow += 100;
+tap(el1, 13, 100, 100);
+ok(opened === 2, "gest: dwa palce (pinch) + tkniecie nie otwieraja");
+var el2 = fakeEl();
+var opened2 = 0;
+LB.bindOpenGesture(el2, function () { opened2++; }, { filter: function () { return false; } });
+tap(el2, 1, 50, 50);
+fakeNow += 100;
+tap(el2, 2, 50, 50);
+el2.fire("dblclick", { clientX: 50, clientY: 50 });
+ok(opened2 === 0, "gest: filter=false (strzalka, brak obrazu) blokuje otwarcie");
+unbind();
+ok(el1.count("pointerup") === 0 && el1.count("dblclick") === 0, "gest: unbind odpina sluchacze");
+ok(!/pointerdown[\s\S]{0,80}preventDefault/.test(lb.slice(lb.indexOf("function bindOpenGesture"))), "gest: bindOpenGesture nie blokuje pointerdown (zoom modalu dziala)");
+
+/* ---------- 10. swipe w lightboxie (zrodlo) ---------- */
+ok(/swipe: !!st\.nav && !isPannable\(\)/.test(lb), "lightbox: swipe tylko przy dopasowaniu (bez przyblizenia) i z nawigacja");
+ok(/classifySwipe\(pe\.x - endDrag\.sx/.test(lb), "lightbox: koniec przeciagniecia klasyfikowany jako swipe");
+ok(/isDoubleTap\(st\.lastTapPt, tap\)/.test(lb), "lightbox: podwojne tkniecie przez isDoubleTap");
+
+/* ---------- 11. okno produktu (dam-viz.js) ---------- */
+var vz = fs.readFileSync(path.join(WEB, "assets", "js", "dam-viz.js"), "utf8");
+ok(/bindOpenGesture\(thumbStage, openVizLightbox/.test(vz), "dam-viz: gest otwarcia na miniaturze okna produktu");
+ok(/window\.DamLightbox\.open\(/.test(vz), "dam-viz: DamLightbox.open");
+ok(/mediaPreviewUrl\(heroPath\)/.test(vz.slice(vz.indexOf("function vizLightboxSources"))), "dam-viz: oryginal przez mediaPreviewUrl (GIF = /media)");
+ok(/selectVariant\(ni\)/.test(vz), "dam-viz: nawigacja w lightboxie = selectVariant");
+ok(/data-i18n-tip="preview\.thumb_tip"/.test(vz) && /data-i18n="preview\.thumb_hint"/.test(vz), "dam-viz: tooltip i podpowiedz przez i18n");
+ok(vz.indexOf('data-dam-tip="Scroll: powiększ/zmniejsz. Przybliżone: przeciągnij obraz.">') < 0, "dam-viz: stary twardy tooltip usuniety");
+ok(vz.indexOf("<span>Powiększ · przesuń</span>") < 0, "dam-viz: stara twarda podpowiedz usunieta");
+ok(/DamLightbox\.close\(\)/.test(vz), "dam-viz: zamkniecie okna zamyka lightbox");
+ok(/bindOpenGesture\(thumbStage, openHeroLightbox/.test(mp), "dam-media-preview: ten sam pomocnik gestu");
+var vh = fs.readFileSync(path.join(WEB, "visualizations.html"), "utf8");
+ok(vh.indexOf("dam-viz.js?v=2.4.2") > 0, "visualizations.html: dam-viz.js?v=2.4.2");
+ok(vh.indexOf("dam-lightbox.js?v=2.4.2") > 0 && vh.indexOf("dam-lightbox.js") < vh.indexOf("dam-viz.js?v="), "visualizations.html: dam-lightbox.js przed dam-viz.js");
+ok(/#damVizModalHero[\s\S]{0,40}touch-action: manipulation/.test(css), "CSS: hero okna produktu bez przegladarkowego zoomu na double-tap");
 
 if (fails) {
   console.error("\n" + fails + " FAIL");

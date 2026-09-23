@@ -30,7 +30,12 @@
   var MIN_ZOOM_FACTOR = 0.25; /* wzgledem dopasowania */
   var MAX_ZOOM = 8; /* wzgledem 100% pikseli */
   var DRAG_SLOP = 5;
-  var DOUBLE_TAP_MS = 320;
+  var DOUBLE_TAP_MS = 300;
+  var DOUBLE_TAP_DIST = 30; /* px miedzy tknieciami */
+  var TAP_MAX_MS = 350; /* dluzej = przytrzymanie, nie tkniecie */
+  var TAP_MAX_MOVE = 10; /* px ruchu palca w obrebie tkniecia */
+  var SWIPE_MIN_PX = 60;
+  var SWIPE_MAX_MS = 800;
 
   function tr(key) {
     var fb = FALLBACK[key] || key;
@@ -72,6 +77,32 @@
     var lo = Math.min(fit, 1) * MIN_ZOOM_FACTOR;
     var hi = Math.max(MAX_ZOOM, fit);
     return Math.max(lo, Math.min(hi, s));
+  }
+
+  /* ---------- czyste gesty (testowane w node) ---------- */
+
+  /** Tkniecie = krotko i prawie bez ruchu. down/up: {t, x, y}. */
+  function isTap(down, up) {
+    if (!down || !up) return false;
+    return up.t - down.t <= TAP_MAX_MS && Math.hypot(up.x - down.x, up.y - down.y) <= TAP_MAX_MOVE;
+  }
+
+  /** Dwa tkniecia < 300 ms i blisko siebie = podwojne tkniecie. */
+  function isDoubleTap(prev, cur) {
+    if (!prev || !cur) return false;
+    var dt = cur.t - prev.t;
+    return dt > 0 && dt < DOUBLE_TAP_MS && Math.hypot(cur.x - prev.x, cur.y - prev.y) <= DOUBLE_TAP_DIST;
+  }
+
+  /**
+   * Przesuniecie palcem przy dopasowaniu -> kierunek nawigacji.
+   * Palec w lewo (dx < 0) = nastepny (+1), w prawo = poprzedni (-1), inaczej 0.
+   */
+  function classifySwipe(dx, dy, dt) {
+    if (!(dt >= 0) || dt > SWIPE_MAX_MS) return 0;
+    if (Math.abs(dx) < SWIPE_MIN_PX) return 0;
+    if (Math.abs(dx) < Math.abs(dy) * 1.5) return 0;
+    return dx < 0 ? 1 : -1;
   }
 
   function prefersReducedMotion() {
@@ -222,10 +253,16 @@
       img.classList.toggle("is-animating", !!animate);
       img.style.width = st.nw + "px";
       img.style.height = st.nh + "px";
-      img.style.transform = "translate(" + st.x + "px," + st.y + "px) scale(" + st.scale + ")";
-      var pannable = st.nw * st.scale > v.w + 1 || st.nh * st.scale > v.h + 1;
+      img.style.transform =
+        "translate(" + (st.x + (st.swipeDx || 0)) + "px," + st.y + "px) scale(" + st.scale + ")";
+      var pannable = isPannable();
       stage.classList.toggle("is-pannable", pannable);
       zoomOut.textContent = st.nw ? Math.round(st.scale * 100) + "%" : "";
+    }
+
+    function isPannable() {
+      var v = viewport();
+      return st.nw * st.scale > v.w + 1 || st.nh * st.scale > v.h + 1;
     }
 
     function toFit(animate) {
@@ -361,6 +398,7 @@
       if (ids.length === 2) {
         var a = st.pointers[ids[0]];
         var b = st.pointers[ids[1]];
+        st.swipeDx = 0;
         st.pinch = {
           dist: Math.hypot(a.x - b.x, a.y - b.y) || 1,
           scale: st.scale,
@@ -372,7 +410,15 @@
         st.drag = null;
       } else if (ids.length === 1) {
         var p0 = st.pointers[ids[0]];
-        st.drag = { sx: p0.x, sy: p0.y, x: st.x, y: st.y };
+        st.drag = {
+          sx: p0.x,
+          sy: p0.y,
+          x: st.x,
+          y: st.y,
+          t: Date.now(),
+          /* bez przyblizenia palec/mysz w bok = poprzedni/nastepny material */
+          swipe: !!st.nav && !isPannable(),
+        };
       }
       try {
         stage.setPointerCapture(e.pointerId);
@@ -408,6 +454,11 @@
       if (!st.moved && Math.abs(dx) + Math.abs(dy) < DRAG_SLOP) return;
       st.moved = true;
       stage.classList.add("is-panning");
+      if (st.drag.swipe) {
+        st.swipeDx = dx;
+        paint(false);
+        return;
+      }
       st.x = st.drag.x + dx;
       st.y = st.drag.y + dy;
       paint(false);
@@ -415,6 +466,7 @@
 
     function endPointer(e) {
       if (!st.pointers[e.pointerId]) return;
+      var endDrag = st.drag;
       delete st.pointers[e.pointerId];
       try {
         stage.releasePointerCapture(e.pointerId);
@@ -426,12 +478,36 @@
         st.drag = null;
         stage.classList.remove("is-panning");
       }
+      if (endDrag && endDrag.swipe && st.swipeDx) {
+        var pe = localPoint(e);
+        var dir =
+          e.type === "pointerup"
+            ? classifySwipe(pe.x - endDrag.sx, pe.y - endDrag.sy, Date.now() - endDrag.t)
+            : 0;
+        var canGo =
+          dir &&
+          st.nav &&
+          (dir < 0
+            ? typeof st.nav.hasPrev === "function" && st.nav.hasPrev()
+            : typeof st.nav.hasNext === "function" && st.nav.hasNext());
+        st.swipeDx = 0;
+        if (canGo) {
+          paint(false);
+          go(dir);
+        } else {
+          paint(!root.classList.contains("dam-fs-lightbox--no-motion"));
+        }
+        return;
+      }
       /* dotyk: podwojne tkniecie = dwuklik (dblclick na dotyku bywa niepewny) */
       if (e.type === "pointerup" && e.pointerType === "touch" && !st.moved) {
         var now = Date.now();
-        if (now - st.lastTap < DOUBLE_TAP_MS) {
+        var pt = localPoint(e);
+        var tap = { t: now, x: pt.x, y: pt.y };
+        if (isDoubleTap(st.lastTapPt, tap)) {
           st.lastTap = 0;
-          var p = localPoint(e);
+          st.lastTapPt = null;
+          var p = pt;
           toggleFit(p.x, p.y);
           st.suppressClick = true;
           setTimeout(function () {
@@ -439,6 +515,7 @@
           }, 500);
         } else {
           st.lastTap = now;
+          st.lastTapPt = tap;
         }
       }
     }
@@ -593,11 +670,97 @@
     }
   }
 
+  /**
+   * Wejscie do lightboxa z duzego obrazu w modalu: dwuklik mysza ORAZ wlasna
+   * detekcja podwojnego tkniecia (2 tkniecia < 300 ms, <= 30 px), bo dblclick
+   * na dotyku bywa zawodny. Nie wola preventDefault na pointerdown, wiec nie
+   * rusza istniejacego przyblizania/przesuwania w modalu (DamModalShared.bindZoom).
+   * opts.filter(e) -> false = ignoruj (np. klik w strzalke / brak obrazu).
+   * Zwraca funkcje odpinajaca.
+   */
+  function bindOpenGesture(el, openFn, opts) {
+    if (!el || typeof openFn !== "function") return function () {};
+    opts = opts || {};
+    var filter =
+      typeof opts.filter === "function"
+        ? opts.filter
+        : function () {
+            return true;
+          };
+    var downs = {};
+    var active = 0;
+    var multi = false;
+    var lastTap = null;
+    var lastOpen = 0;
+    var lastDown = null;
+
+    function fire(e) {
+      var now = Date.now();
+      if (now - lastOpen < 600 || isOpen()) return;
+      lastOpen = now;
+      openFn(e);
+    }
+    function onDown(e) {
+      downs[e.pointerId] = { t: Date.now(), x: e.clientX, y: e.clientY };
+      lastDown = downs[e.pointerId];
+      active++;
+      if (active > 1) {
+        multi = true;
+        lastTap = null;
+      }
+    }
+    function onUp(e) {
+      var d = downs[e.pointerId];
+      delete downs[e.pointerId];
+      active = Math.max(0, active - 1);
+      var wasMulti = multi;
+      if (!active) multi = false;
+      if (e.type !== "pointerup" || e.pointerType === "mouse" || !d || wasMulti) return;
+      var up = { t: Date.now(), x: e.clientX, y: e.clientY };
+      if (!isTap(d, up) || !filter(e)) {
+        lastTap = null;
+        return;
+      }
+      if (isDoubleTap(lastTap, up)) {
+        lastTap = null;
+        if (e.cancelable) e.preventDefault();
+        fire(e);
+      } else {
+        lastTap = up;
+      }
+    }
+    function onDbl(e) {
+      if (!filter(e)) return;
+      if (lastDown && Math.abs(e.clientX - lastDown.x) + Math.abs(e.clientY - lastDown.y) > 6) return;
+      e.preventDefault();
+      e.stopPropagation();
+      fire(e);
+    }
+    el.addEventListener("pointerdown", onDown);
+    el.addEventListener("pointerup", onUp);
+    el.addEventListener("pointercancel", onUp);
+    el.addEventListener("dblclick", onDbl);
+    return function unbind() {
+      el.removeEventListener("pointerdown", onDown);
+      el.removeEventListener("pointerup", onUp);
+      el.removeEventListener("pointercancel", onUp);
+      el.removeEventListener("dblclick", onDbl);
+    };
+  }
+
   global.DamLightbox = {
     open: open,
     close: close,
     isOpen: isOpen,
+    bindOpenGesture: bindOpenGesture,
     t: tr,
     _geom: { fitScale: fitScale, clampPan: clampPan, zoomAt: zoomAt, clampScale: clampScale },
+    _gest: {
+      isTap: isTap,
+      isDoubleTap: isDoubleTap,
+      classifySwipe: classifySwipe,
+      DOUBLE_TAP_MS: DOUBLE_TAP_MS,
+      SWIPE_MIN_PX: SWIPE_MIN_PX,
+    },
   };
 })(typeof window !== "undefined" ? window : globalThis);

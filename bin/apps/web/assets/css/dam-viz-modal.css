@@ -156,14 +156,20 @@
   touch-action: pan-y;
 }
 
-/* F3 layout-only: actions cluster — flex/gap (anatomy colors live in primitives / brand) */
+/* F3 layout-only: actions cluster — flex/gap (anatomy colors live in primitives / brand)
+   2.4.2: pasek ZAWIJA zamiast sie sciskac. Wczesniej nowrap + __actions-main
+   { flex: 0 1 auto; min-width: 0 } zwezal grupe glowna ponizej jej tresci, przyciski
+   wylewaly sie poza nia i grupa admina (Miniatura/Demo/Ukryj) rysowala sie NA ikonie
+   Udostepnij (okno produktu, 1280 px, lewa kolumna ~690 px). Teraz grupy nie kurcza sie
+   ponizej tresci, a nadmiar przechodzi do nastepnego rzedu z odstepem-tokenem. */
 #damVizModal .dam-viz-modal__actions,
 #damMediaPreview .dam-viz-modal__actions,
 .dam-viz-modal__actions {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
+  row-gap: var(--dam-space-toolbar-row-gap);
   box-sizing: border-box;
 }
 
@@ -171,30 +177,188 @@
 #damMediaPreview .dam-viz-modal__actions-main,
 .dam-viz-modal__actions-main {
   display: inline-flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
+  row-gap: var(--dam-space-toolbar-row-gap);
   flex: 0 1 auto;
-  min-width: 0;
+  min-width: min-content;
+  max-width: 100%;
 }
 
 #damVizModal .dam-viz-modal__actions-admin,
 #damMediaPreview .dam-viz-modal__actions-admin,
 .dam-viz-modal__actions-admin {
   display: inline-flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  flex: 0 0 auto;
+  row-gap: var(--dam-space-toolbar-row-gap);
+  flex: 0 1 auto;
+  max-width: 100%;
+}
+
+/* Grupa admina odsunieta od Udostepnij elastycznie (auto), nie stalym 70px z dam-brand.css:
+   w jednym rzedzie trzyma sie prawej krawedzi, po zawinieciu nie ma wciecia 70px. */
+#damVizModal .dam-viz-modal__actions-admin {
+  margin-left: auto;
 }
 
 #damVizModal .dam-viz-modal__actions-admin-group,
 #damMediaPreview .dam-viz-modal__actions-admin-group,
 .dam-viz-modal__actions-admin-group {
   display: inline-flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+  row-gap: var(--dam-space-toolbar-row-gap);
+}
+
+/*
+  2.4.2 DOTYK: na ekranach dotykowych (pointer: coarse) kazdy przycisk stopki okna
+  produktu (#damVizModal) i podgladu materialu (#damMediaPreview) ma cel >= 44x44
+  (--dam-control-h). Desktop (pointer: fine) bez zmian - tam CTA maja --dam-chip-h.
+  :not(#dam-touch-target) podnosi specyficznosc ponad istniejace reguly CTA
+  z !important (#... .dam-viz-modal__actions-main .geex-btn.dam-viz-modal__cta),
+  bez ruszania globalnego .geex-btn--sm poza modalami.
+*/
+@media (pointer: coarse) {
+  #damVizModal .dam-viz-modal__actions button:not(#dam-touch-target),
+  #damMediaPreview .dam-viz-modal__actions button:not(#dam-touch-target) {
+    min-height: var(--dam-control-h) !important;
+    min-width: var(--dam-control-h) !important;
+  }
+}
+
+/*
+  2.4.2 TELEFON / waski ekran (uklad jednokolumnowy <= 767px, patrz "Mobile: stack"):
+  jedno przewijanie = pudelko okna. Przyczyna "uciętego hero" w podgladzie materialu:
+  dam-branding.css (#damMediaPreview .dam-viz-modal-box { overflow: hidden } oraz
+  #damMediaPreview .dam-viz-modal__thumb { flex: 1 1 0; min-height: 96px }) wygrywaly
+  specyficznoscia z regulami mobilnymi, pudelko nie przewijalo sie, a miniatura byla
+  sciskana do ~96px przy hero min-height 280px - obraz ucinany z gory i z dolu (to nie
+  byl scrollTop: pudelko ma scrollTop 0). Do tego __body mial wlasne przewijanie
+  (max-height 48vh, overflow-y auto !important) - dwa zagniezdzone przewijania na telefonie.
+*/
+@media (max-width: 767px) {
+  #damVizModal .dam-viz-modal-box--assoc-split,
+  #damMediaPreview .dam-viz-modal-box--assoc-split {
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  #damMediaPreview .dam-viz-modal-box--assoc-split .dam-viz-modal__thumb {
+    flex: 0 0 auto;
+    min-height: 180px;
+    max-height: 42vh;
+  }
+
+  #damVizModal .dam-viz-modal-box--assoc-split .dam-viz-modal__body,
+  #damMediaPreview .dam-viz-modal-box--assoc-split .dam-viz-modal__body {
+    flex: 0 0 auto !important;
+    max-height: none;
+    overflow: visible !important;
+  }
+}
+
+/*
+  2.4.2 TELEFON (ten sam prog 720px co reguly zawijania w dam-brand.css): stopka
+  przypieta do dolu przewijanego .dam-viz-modal-box przez CALE przewijanie, takze nad
+  panelem skojarzen. __main dostaje display: contents, wiec miniatura, tresc i stopka
+  staja sie bezposrednimi elementami pudelka; stopka ma order: 99 (ostatnia, po panelu
+  skojarzen) i position: sticky; bottom: 0. Zostaje w przeplywie jako ostatni element,
+  wiec na koncu przewijania nic nie chowa sie pod nia (dziala jak padding-bottom rowny
+  jej wysokosci). Desktop (> 720px) bez zmian.
+*/
+@media (max-width: 720px) {
+  #damVizModal .dam-viz-modal-box--assoc-split > .dam-viz-modal__main,
+  #damMediaPreview .dam-viz-modal-box--assoc-split > .dam-viz-modal__main {
+    display: contents;
+  }
+
+  #damVizModal .dam-viz-modal__main > .dam-viz-modal__actions,
+  #damMediaPreview .dam-viz-modal__main > .dam-viz-modal__actions,
+  #damVizModal .dam-viz-modal__body > .dam-viz-modal__actions,
+  #damMediaPreview .dam-viz-modal__body > .dam-viz-modal__actions {
+    order: 99;
+    flex: 0 0 auto;
+    position: sticky;
+    bottom: 0;
+    z-index: 40;
+    width: 100%;
+    max-width: none;
+    margin-top: 0;
+    background: var(--dam-surface);
+    border-top: 1px solid color-mix(in srgb, var(--dam-text) 10%, transparent);
+    box-shadow: 0 -6px 14px rgb(var(--dam-shadow-rgb) / var(--dam-shadow-alpha));
+  }
+
+  /*
+    Znacznik "Podglad z pamieci podrecznej" (DamPreviewTruth.markPreviewSource, styl
+    wstrzykiwany z dam-preview-truth.js): na telefonie sama ikona 44x44 w lewym gornym
+    rogu miniatury, nad obrazem - miniatura dostaje tyle gornego odstepu, zeby znacznik
+    nie przykrywal produktu. Tekst zostaje w DOM (czytnik ekranu) + title (dymek).
+  */
+  #damVizModal .dam-viz-modal__thumb:has(> .dam-cache-origin),
+  #damMediaPreview .dam-viz-modal__thumb:has(> .dam-cache-origin) {
+    padding-top: calc(var(--dam-control-h) + 12px);
+  }
+
+  #damVizModal .dam-cache-origin,
+  #damMediaPreview .dam-cache-origin {
+    top: 6px;
+    bottom: auto;
+    left: 12px;
+    max-width: calc(100% - 24px);
+  }
+
+  #damVizModal .dam-cache-origin__badge,
+  #damMediaPreview .dam-cache-origin__badge,
+  #damVizModal .dam-cache-origin__get,
+  #damMediaPreview .dam-cache-origin__get {
+    width: var(--dam-control-h);
+    height: var(--dam-control-h);
+    padding: 0;
+    justify-content: center;
+    gap: 0;
+    font-size: 0;
+    overflow: hidden;
+  }
+
+  #damVizModal .dam-cache-origin__badge i,
+  #damMediaPreview .dam-cache-origin__badge i,
+  #damVizModal .dam-cache-origin__get i,
+  #damMediaPreview .dam-cache-origin__get i {
+    font-size: 18px;
+  }
+
+  /* Dymek zadania w tle (dam-cache-sync.js, #damJobToast, fixed bottom 76px) na telefonie
+     zaslanial przypieta stopke okna. Gdy okno podgladu/produktu jest otwarte, dymek
+     chowa sie; wraca po zamknieciu okna (zadanie biegnie dalej, stan bez zmian). */
+  body:has(#damVizModal) #damJobToast,
+  body:has(#damMediaPreview) #damJobToast {
+    display: none !important;
+  }
+
+  #damVizModal .dam-cache-origin__get span,
+  #damMediaPreview .dam-cache-origin__get span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+/* Pusty kontener plikow zrodlowych (PSD/PSB) w stopce podgladu materialu nie moze
+   zajmowac miejsca: jako pusty element flex dokladal drugi gap (~19px zamiast ~10px
+   miedzy "Folder" a ikonami). */
+#damMediaPreview .dam-media-preview__source-mount:empty,
+#damMediaPreview .dam-media-preview__source-mount:not(:has(*)) {
+  display: none;
 }
 
 /* Pinned action bar: NEVER under expanded .dam-media-preview__all-files / studio */

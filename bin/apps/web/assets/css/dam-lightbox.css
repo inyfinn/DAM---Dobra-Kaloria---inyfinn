@@ -140,6 +140,7 @@
   gap: 12px;
   padding: 10px calc(var(--dam-fs-lb-pad) + 56px) 12px var(--dam-fs-lb-pad);
   background: linear-gradient(to top, var(--dam-fs-lb-scrim), transparent);
+  min-height: 44px;
   font-size: 12px;
   line-height: 1.4;
   pointer-events: none;
@@ -200,12 +201,21 @@
   display: none;
 }
 
-/* Hero w modalu przyjmuje fokus po zamknieciu lightboxa (widoczny tylko z klawiatury). */
-#damMediaPreviewHero:focus {
+/* Hero w modalach (podglad materialu + okno produktu) przyjmuje fokus po zamknieciu
+   lightboxa (widoczny tylko z klawiatury). touch-action: manipulation wylacza
+   przegladarkowy zoom na podwojne tkniecie, zeby to tkniecie otwieralo lightbox. */
+#damMediaPreviewHero,
+#damVizModalHero {
+  touch-action: manipulation;
+}
+
+#damMediaPreviewHero:focus,
+#damVizModalHero:focus {
   outline: none;
 }
 
-#damMediaPreviewHero:focus-visible {
+#damMediaPreviewHero:focus-visible,
+#damVizModalHero:focus-visible {
   outline: 3px solid var(--dam-primary);
   outline-offset: -3px;
 }

@@ -231,6 +231,7 @@
   "cost.months.10": "October",
   "cost.months.11": "November",
   "cost.months.12": "December",
+  "invoices.source_loading": "Source: …",
   "invoices.title": "Invoices",
   "invoices.subtitle": "Invoice history for graphic and print work",
   "invoices.new": "New invoice",
