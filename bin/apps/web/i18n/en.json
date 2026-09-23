@@ -393,5 +393,13 @@
   "update.already_latest": "You have the latest version ({current}).",
   "update.available": "A newer version is available ({latest}).",
   "update.checking": "Checking for updates…",
-  "explorer.lifecycle_needs_db": "Changing F, X or D requires a database connection. The thumbnail cache is for preview only."
+  "explorer.lifecycle_needs_db": "Changing F, X or D requires a database connection. The thumbnail cache is for preview only.",
+  "preview.thumb_tip": "Scroll: zoom in/out. When zoomed: drag the image. Double-click: full screen.",
+  "preview.thumb_hint": "Zoom · pan · double-click",
+  "lightbox.label": "Full-screen preview",
+  "lightbox.close": "Close full screen",
+  "lightbox.prev": "Previous item",
+  "lightbox.next": "Next item",
+  "lightbox.hint": "Scroll: zoom. Drag: pan. Double-click: fit/100%. Esc: close.",
+  "lightbox.loading": "Loading original…"
 }

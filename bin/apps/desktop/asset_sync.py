@@ -126,6 +126,15 @@ def scan_entry(path: str, *, size: int | None, mtime_ms: int, root: str | None =
         # 23.09: sciezka spoza podanego korzenia (inna litera dysku) trafiala do
         # path_rel z litera - komputery skladaly potem "M:/M:/...".
         rel = rel[m.end():]
+    # Korzen nie pasowal (inny montaz / zagniezdzenie): kotwica jak w asset_ids.asset_key
+    # - folder najwyzszego poziomu Marketingu, zeby path_rel i asset_key sie nie rozjechaly.
+    low = rel.casefold()
+    if len(low) == len(rel) and not any(low.startswith(t) for t in _asset_ids()._KNOWN_TOP):
+        for top in _asset_ids()._KNOWN_TOP:
+            i = low.find("/" + top)
+            if i >= 0:
+                rel = rel[i + 1:]
+                break
     return asset_id or id_of(key), {
         "asset_key": key,
         "path_rel": rel,
@@ -204,6 +213,18 @@ def _content_differs(entry: dict, prev: dict) -> bool:
     return bool(h_new and h_old and h_new != h_old)
 
 
+def _descriptor_differs(entry: dict, prev: dict) -> bool:
+    """Ten sam plik (mtime), ale inny opis: meta (np. skojarzenia z kontekstu folderu,
+    etykieta rozmiaru) albo zapis sciezki/nazwy. 23.09: zmiana samego meta nigdy nie
+    trafiala do bazy - komputery bez ROOT zostawaly ze starym opisem na zawsze."""
+    if (entry.get("meta") or {}) != (prev.get("meta") or {}):
+        return True
+    for f in ("path_rel", "name"):
+        if entry.get(f) and str(entry.get(f)) != str(prev.get(f) or ""):
+            return True
+    return False
+
+
 def diff_scan_report(prev_rows: dict, scan: dict, scanned_dirs: Iterable[str],
                      scan_time_ms: int, machine: str, *,
                      last_seen: Iterable[str] | None = None,
@@ -252,6 +273,8 @@ def diff_scan_report(prev_rows: dict, scan: dict, scanned_dirs: Iterable[str],
             continue
         if mt > pmt or (mt == pmt and _content_differs(entry, prev)):
             ops.append(_op(OP_UPSERT, aid, entry, prev, machine, scan_time_ms, "change"))
+        elif mt == pmt and _descriptor_differs(entry, prev):
+            ops.append(_op(OP_UPSERT, aid, entry, prev, machine, scan_time_ms, "meta"))
         elif mt < pmt:
             stale_ignored += 1  # starsza wersja (np. X: jeszcze nie zsynchronizowany)
 
@@ -448,6 +471,9 @@ WHERE EXCLUDED.mtime_ms > t.mtime_ms
    OR (EXCLUDED.mtime_ms = t.mtime_ms
        AND (EXCLUDED.size IS DISTINCT FROM t.size
             OR EXCLUDED.content_hash IS DISTINCT FROM t.content_hash
+            OR EXCLUDED.meta IS DISTINCT FROM t.meta
+            OR EXCLUDED.path_rel IS DISTINCT FROM t.path_rel
+            OR EXCLUDED.name IS DISTINCT FROM t.name
             OR t.deleted_at IS NOT NULL)
        AND t.rev <= %s)
 RETURNING rev

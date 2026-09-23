@@ -275,8 +275,17 @@ def _apply_reconcile(local: sqlite3.Connection, pg, tag: str, db_path: Path) -> 
         "SELECT asset_id, product_id, score, source, status, reason, updated_at, updated_by, dirty "
         "FROM asset_product_links"
     ).fetchall()
-    gone = [r for r in rows if (str(r["asset_id"]), str(r["product_id"])) not in remote
-            and int(r["dirty"] or 0) != 1]
+    missing = [r for r in rows if (str(r["asset_id"]), str(r["product_id"])) not in remote
+               and int(r["dirty"] or 0) != 1]
+    # Reczna decyzja (confirmed/rejected/skipped) nigdy nie znika przez automat -
+    # ponowne zasianie w PG jej nie odtwarza, wiec wraca do PG przez PUSH (dirty=1).
+    manual = [r for r in missing if str(r["status"]) in MANUAL]
+    if manual:
+        local.executemany(
+            "UPDATE asset_product_links SET dirty=1 WHERE asset_id=? AND product_id=?",
+            [(r["asset_id"], r["product_id"]) for r in manual],
+        )
+    gone = [r for r in missing if str(r["status"]) not in MANUAL]
     if gone:
         safe_tag = re.sub(r"[^A-Za-z0-9_.-]", "_", tag)[:60]
         out_path = Path(db_path).with_name(Path(db_path).name + f".reconcile-{safe_tag}.json")
@@ -289,7 +298,7 @@ def _apply_reconcile(local: sqlite3.Connection, pg, tag: str, db_path: Path) -> 
         )
     _set_state(local, "assoc_reconcile", tag)
     local.commit()
-    return {"tag": tag, "removed": len(gone)}
+    return {"tag": tag, "removed": len(gone), "kept_manual": len(manual)}
 
 
 def _version(row: Any) -> dict[str, Any]:

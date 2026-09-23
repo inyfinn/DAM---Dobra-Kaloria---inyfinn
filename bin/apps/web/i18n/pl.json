@@ -489,5 +489,13 @@
   "invoices.asana_title": "Zadania Asana do kosztorysu faktury",
   "invoices.asana_lead": "Szacunki z katalogu kosztów (seed). Zaznacz zadania proof/druk, wygeneruj pozycje i dodaj do faktury. Później zaktualizujesz stawki.",
   "invoices.loading": "Ładowanie faktur…",
-  "invoices.filter_project": "Filtr produktu"
+  "invoices.filter_project": "Filtr produktu",
+  "preview.thumb_tip": "Scroll: powiększ/zmniejsz. Przybliżone: przeciągnij obraz. Dwuklik: pełny ekran.",
+  "preview.thumb_hint": "Powiększ · przesuń · dwuklik",
+  "lightbox.label": "Podgląd na pełnym ekranie",
+  "lightbox.close": "Zamknij pełny ekran",
+  "lightbox.prev": "Poprzedni materiał",
+  "lightbox.next": "Następny materiał",
+  "lightbox.hint": "Scroll: powiększ. Przeciągnij: przesuń. Dwuklik: dopasuj/100%. Esc: zamknij.",
+  "lightbox.loading": "Wczytuję oryginał…"
 }

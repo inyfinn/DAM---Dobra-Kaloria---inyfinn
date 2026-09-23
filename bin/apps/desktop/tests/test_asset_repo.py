@@ -182,6 +182,13 @@ class ImportAndLiveIndexTests(unittest.TestCase):
         (live,) = asset_repo.live_index({"x": dict(entry, asset_id="x", rev=1)}, "M:")
         self.assertEqual(live["path"], f"M:/{P}/a.png")
 
+    def test_path_rel_anchored_like_key_when_root_does_not_match(self):
+        for path in (f"//nas/Marketing/{P}/a.png", f"D:/Dane/Marketing/{P}/a.png",
+                     f"/Volumes/Marketing/{P}/a.png"):
+            (entry,) = asset_repo.scan_from_index([{"path": path, "mtime_ms": 1}], "M:").values()
+            self.assertEqual(entry["path_rel"], f"{P}/a.png", path)
+            self.assertEqual(entry["asset_key"], f"{P}/a.png".casefold(), path)
+
     def test_nfd_path_kept_as_on_disk_key_in_nfc(self):
         import unicodedata
         nfd = unicodedata.normalize("NFD", f"{self.root}/{P}/cień.tif")

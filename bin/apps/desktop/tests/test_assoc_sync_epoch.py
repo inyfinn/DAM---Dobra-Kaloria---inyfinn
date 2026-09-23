@@ -198,11 +198,23 @@ class ApplyReconcileTests(unittest.TestCase):
         pg = _KeysPG("reseed-1", [("br-012345678", "ciasto")])
         tag = assoc_sync._server_reconcile(pg)
         res = assoc_sync._apply_reconcile(self.conn, pg, tag, self.db)
-        self.assertEqual(res, {"tag": "reseed-1", "removed": 1})
+        self.assertEqual(res, {"tag": "reseed-1", "removed": 1, "kept_manual": 0})
         self.assertEqual(set(_all_rows(self.conn)),
                          {("br-012345678", "ciasto"), ("br-087654321", "figa")})
         saved = json.loads(Path(str(self.db) + ".reconcile-reseed-1.json").read_text(encoding="utf-8"))
         self.assertEqual([(r["asset_id"], r["product_id"]) for r in saved], [("br-012345678", "tuba")])
+
+    def test_manual_decision_missing_in_pg_is_kept_and_pushed_back(self):
+        _insert(self.conn, [("br-022222222", "kulki", 100, "manual", "rejected", "", "t3", "u", 0)])
+        self.conn.execute("UPDATE asset_product_links SET dirty=0 WHERE product_id='kulki'")
+        self.conn.commit()
+        pg = _KeysPG("reseed-2", [("br-012345678", "ciasto")])
+        res = assoc_sync._apply_reconcile(self.conn, pg, "reseed-2", self.db)
+        self.assertEqual(res["kept_manual"], 1)
+        rows = _all_rows(self.conn)
+        self.assertIn(("br-022222222", "kulki"), rows)
+        self.assertEqual(rows[("br-022222222", "kulki")]["dirty"], 1)   # wraca do PG
+        self.assertNotIn(("br-012345678", "tuba"), rows)                # automat znika
 
     def test_same_tag_twice_and_no_tag_are_noop(self):
         pg = _KeysPG("reseed-1", [])

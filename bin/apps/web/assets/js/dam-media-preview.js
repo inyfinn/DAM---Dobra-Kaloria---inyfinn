@@ -4333,7 +4333,37 @@
     }
   }
 
+  /** Tekst z i18n/pl.json (klucz), a gdy overlay jeszcze nie wczytany - fallback PL. */
+  function i18nOr(key, fallback) {
+    var i18n = window.DamI18n;
+    if (i18n && typeof i18n.t === "function") {
+      var v = i18n.t(key);
+      if (v && v !== key) return typeof i18n.nbspPl === "function" ? i18n.nbspPl(v) : v;
+    }
+    return fallback;
+  }
+
+  /**
+   * Zrodla dla pelnoekranowego lightboxa: placeholder = to, co hero juz pokazuje
+   * (natychmiast), src = oryginal z mostu (/media; PSD/AI przez &preview=1).
+   * GIF: oryginal = animowany GIF, nigdy miniatura AVIF z cache.
+   */
+  function lightboxSourcesFor(a, img) {
+    var shown = img ? img.currentSrc || img.getAttribute("src") || "" : "";
+    if (shown === PLACEHOLDER_SVG) shown = "";
+    var path = (a && a.path) || (img && img.getAttribute("data-path")) || "";
+    var original = path ? previewUrl(path, a) : "";
+    return {
+      src: original || shown,
+      placeholderSrc: shown && shown !== original ? shown : "",
+      alt: (a && a.name) || (img && img.getAttribute("alt")) || "",
+    };
+  }
+
   function closeModal(modal) {
+    if (window.DamLightbox && typeof window.DamLightbox.isOpen === "function" && window.DamLightbox.isOpen()) {
+      window.DamLightbox.close();
+    }
     if (!modal) return;
     modal.remove();
     document.body.classList.remove("dam-media-preview-open");
@@ -4575,9 +4605,13 @@
       '<div id="damMediaPreviewAssoc" class="dam-viz-modal__variants"></div>' +
       '<div id="damMediaPreviewAllFiles" class="dam-viz-modal__all-files-host" hidden></div>';
     var thumbHtml =
-      '<div class="dam-viz-modal__thumb dam-viz-modal__thumb--panzoom" id="damMediaPreviewThumb" data-dam-tip="Scroll: powiększ/zmniejsz. Przybliżone: przeciągnij obraz.">' +
+      '<div class="dam-viz-modal__thumb dam-viz-modal__thumb--panzoom" id="damMediaPreviewThumb" data-i18n-tip="preview.thumb_tip" data-dam-tip="' +
+      esc(i18nOr("preview.thumb_tip", "Scroll: powiększ/zmniejsz. Przybliżone: przeciągnij obraz. Dwuklik: pełny ekran.")) +
+      '">' +
       (siblings.length > 1 ? '<div class="dam-viz-modal__nav">' + navPrev + navNext + "</div>" : "") +
-      '<div class="dam-viz-modal__thumb-hint" aria-hidden="true"><span>Powiększ · przesuń</span></div>' +
+      '<div class="dam-viz-modal__thumb-hint" aria-hidden="true"><span data-i18n="preview.thumb_hint">' +
+      esc(i18nOr("preview.thumb_hint", "Powiększ · przesuń · dwuklik")) +
+      "</span></div>" +
       "</div>";
     var assocPaneHtml = isAssocSplitLayout
       ? '<aside class="dam-viz-modal__assoc-pane" aria-label="Skojarzone materiały">' +
@@ -4626,6 +4660,7 @@
 
     var thumbStage = document.getElementById("damMediaPreviewThumb");
     var heroEl = null;
+    var heroAsset = null;
     var zoomCtrl = null;
 
     window.__damVariantThumbFallback = function (img) {
@@ -4824,6 +4859,7 @@
       var oldNothumb = thumb.querySelector(".dam-viz-modal__nothumb");
       if (oldNothumb) oldNothumb.remove();
       heroEl = null;
+      heroAsset = a;
       if (zoomCtrl) zoomCtrl.resetView();
 
       if (a.media_type === "video" || isVideoAsset(a)) {
@@ -4843,6 +4879,8 @@
         };
         var heroSrc = heroSrcFromAsset(a) || (a.path ? previewUrl(a.path, a) : "") || PLACEHOLDER_SVG;
         img.src = heroSrc;
+        /* fokusowalny: Enter = pelny ekran; tu wraca fokus po zamknieciu lightboxa */
+        img.tabIndex = 0;
         thumb.appendChild(img);
         heroEl = img;
         if (a.path && window.DamPreviewTruth && window.DamPreviewTruth.upgradeWhenReady) {
@@ -6090,6 +6128,61 @@
         getHero: function () {
           return heroEl;
         },
+      });
+    }
+
+    /* --- Dwuklik na duzym obrazie = pelny ekran (dam-lightbox.js) ---
+       Nie koliduje z zoomem/przesuwaniem: bindZoom slucha wheel/pointer*, nie
+       click/dblclick. Po przeciagnieciu (pan) dwuklik jest ignorowany. */
+    var lbDown = null;
+    function openHeroLightbox() {
+      if (!window.DamLightbox || typeof window.DamLightbox.open !== "function") return false;
+      if (!heroEl || heroEl.tagName !== "IMG") return false;
+      var srcs = lightboxSourcesFor(heroAsset || asset, heroEl);
+      if (!srcs.src && !srcs.placeholderSrc) return false;
+      var nav = null;
+      if (siblings.length > 1) {
+        nav = {
+          hasPrev: function () {
+            return idx > 0;
+          },
+          hasNext: function () {
+            return idx < siblings.length - 1;
+          },
+          go: function (dir) {
+            var ni = idx + dir;
+            if (ni < 0 || ni >= siblings.length) return null;
+            showAt(ni);
+            return lightboxSourcesFor(heroAsset || asset, heroEl && heroEl.tagName === "IMG" ? heroEl : null);
+          },
+        };
+      }
+      return window.DamLightbox.open({
+        src: srcs.src,
+        placeholderSrc: srcs.placeholderSrc,
+        alt: srcs.alt,
+        nav: nav,
+        returnFocusEl: function () {
+          return heroEl && heroEl.isConnected ? heroEl : thumbStage;
+        },
+      });
+    }
+    if (thumbStage) {
+      thumbStage.addEventListener("pointerdown", function (e) {
+        lbDown = { x: e.clientX, y: e.clientY };
+      });
+      thumbStage.addEventListener("dblclick", function (e) {
+        if (!heroEl || heroEl.tagName !== "IMG") return;
+        if (e.target.closest("button, a, .dam-viz-modal__nav, .dam-viz-modal__zoom")) return;
+        if (lbDown && Math.abs(e.clientX - lbDown.x) + Math.abs(e.clientY - lbDown.y) > 6) return;
+        e.preventDefault();
+        e.stopPropagation();
+        openHeroLightbox();
+      });
+      thumbStage.addEventListener("keydown", function (e) {
+        if (e.key !== "Enter" || e.target !== heroEl) return;
+        e.preventDefault();
+        openHeroLightbox();
       });
     }
 

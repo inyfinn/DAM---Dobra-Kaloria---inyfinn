@@ -1,0 +1,226 @@
+/**
+ * DAM - pelnoekranowy lightbox podgladu materialu (2.4.1). JS: dam-lightbox.js.
+ * Panel sheet: tylko tokeny z dam-tokens.css (--dam-dark, --dam-primary, --dam-anim*).
+ * Klasa .dam-fs-lightbox (nie .dam-lightbox - ta nalezy do starego studia Eksploratora).
+ * Scena zawsze ciemna, niezaleznie od motywu: tlo = --dam-dark, tekst = jasny mix.
+ */
+.dam-fs-lightbox {
+  --dam-fs-lb-scrim: color-mix(in srgb, var(--dam-dark) 96%, transparent);
+  --dam-fs-lb-ink: color-mix(in srgb, var(--dam-dark) 6%, white);
+  --dam-fs-lb-ink-muted: color-mix(in srgb, var(--dam-dark) 35%, white);
+  --dam-fs-lb-btn-bg: color-mix(in srgb, var(--dam-dark) 62%, transparent);
+  --dam-fs-lb-btn-bg-hover: color-mix(in srgb, var(--dam-dark) 82%, transparent);
+  --dam-fs-lb-btn-ring: color-mix(in srgb, white 22%, transparent);
+  --dam-fs-lb-focus: color-mix(in srgb, var(--dam-primary) 55%, white);
+  --dam-fs-lb-pad: 16px;
+
+  position: fixed;
+  inset: 0;
+  z-index: 50600;
+  background: var(--dam-fs-lb-scrim);
+  color: var(--dam-fs-lb-ink);
+  opacity: 0;
+  transition: opacity var(--dam-anim-hover, 0.22s) var(--dam-anim-ease, ease);
+  overscroll-behavior: contain;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.dam-fs-lightbox.is-open {
+  opacity: 1;
+}
+
+/* .dam-fs-lightbox > : wygrywa z .dam-cache-host { position: relative } (dam-brand.css),
+   bo dam-cache-badge.js oznacza rodzica obrazu jako host chipa "Cache". */
+.dam-fs-lightbox > .dam-fs-lightbox__stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+  cursor: zoom-in;
+}
+
+.dam-fs-lightbox__stage.is-pannable {
+  cursor: grab;
+}
+
+.dam-fs-lightbox__stage.is-panning {
+  cursor: grabbing;
+}
+
+.dam-fs-lightbox__img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: none;
+  max-height: none;
+  transform-origin: 0 0;
+  will-change: transform;
+  image-rendering: auto;
+  -webkit-user-drag: none;
+  opacity: 0;
+  transition: opacity var(--dam-anim-hover, 0.22s) var(--dam-anim-ease, ease);
+}
+
+.dam-fs-lightbox.is-ready .dam-fs-lightbox__img {
+  opacity: 1;
+}
+
+.dam-fs-lightbox__img.is-animating {
+  transition:
+    transform var(--dam-anim, 0.4s) var(--dam-anim-ease, ease),
+    opacity var(--dam-anim-hover, 0.22s) var(--dam-anim-ease, ease);
+}
+
+/* --- przyciski: min 44x44 (touch target) --- */
+.dam-fs-lightbox__btn {
+  position: absolute;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid var(--dam-fs-lb-btn-ring);
+  border-radius: 999px;
+  background: var(--dam-fs-lb-btn-bg);
+  color: var(--dam-fs-lb-ink);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: background-color var(--dam-anim-hover, 0.22s) var(--dam-anim-ease, ease);
+}
+
+.dam-fs-lightbox__btn:hover {
+  background: var(--dam-fs-lb-btn-bg-hover);
+}
+
+.dam-fs-lightbox__btn:focus-visible {
+  outline: 3px solid var(--dam-fs-lb-focus);
+  outline-offset: 2px;
+}
+
+.dam-fs-lightbox__btn[hidden] {
+  display: none;
+}
+
+.dam-fs-lightbox__close {
+  top: var(--dam-fs-lb-pad);
+  right: var(--dam-fs-lb-pad);
+}
+
+.dam-fs-lightbox__nav {
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 32px;
+}
+
+.dam-fs-lightbox__nav--prev {
+  left: var(--dam-fs-lb-pad);
+}
+
+.dam-fs-lightbox__nav--next {
+  right: var(--dam-fs-lb-pad);
+}
+
+/* --- dolny pasek: nazwa pliku, skala, podpowiedz --- */
+.dam-fs-lightbox__bar {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px calc(var(--dam-fs-lb-pad) + 56px) 12px var(--dam-fs-lb-pad);
+  background: linear-gradient(to top, var(--dam-fs-lb-scrim), transparent);
+  font-size: 12px;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.dam-fs-lightbox__caption {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--dam-fs-lb-ink);
+}
+
+.dam-fs-lightbox__zoom,
+.dam-fs-lightbox__loading {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--dam-fs-lb-ink-muted);
+}
+
+.dam-fs-lightbox__loading:empty {
+  display: none;
+}
+
+.dam-fs-lightbox__hint {
+  flex: 1 1 auto;
+  margin: 0;
+  text-align: right;
+  color: var(--dam-fs-lb-ink-muted);
+}
+
+@media (max-width: 599px) {
+  .dam-fs-lightbox {
+    --dam-fs-lb-pad: 8px;
+  }
+  .dam-fs-lightbox__hint {
+    display: none;
+  }
+  .dam-fs-lightbox__bar {
+    padding-right: var(--dam-fs-lb-pad);
+  }
+  .dam-fs-lightbox__nav {
+    top: auto;
+    bottom: 44px;
+    transform: none;
+  }
+}
+
+/* Chip "Cache" (dam-cache-badge.js, wlasciciel: dam-brand.css) nie nalezy do
+   lightboxa: lightbox podmienia miniature na oryginal, wiec chip klamalby, a na
+   1280 px wisial na przycisku zamkniecia. Specyficznosc > .dam-cache-host:hover > ... */
+.dam-fs-lightbox .dam-cache-host > .dam-cache-badge,
+.dam-fs-lightbox .dam-cache-host:hover > .dam-cache-badge.dam-cache-badge--hit,
+.dam-fs-lightbox .dam-cache-badge {
+  display: none;
+}
+
+/* Hero w modalu przyjmuje fokus po zamknieciu lightboxa (widoczny tylko z klawiatury). */
+#damMediaPreviewHero:focus {
+  outline: none;
+}
+
+#damMediaPreviewHero:focus-visible {
+  outline: 3px solid var(--dam-primary);
+  outline-offset: -3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dam-fs-lightbox,
+  .dam-fs-lightbox__img,
+  .dam-fs-lightbox__img.is-animating,
+  .dam-fs-lightbox__btn {
+    transition: none;
+  }
+}
+
+.dam-fs-lightbox--no-motion,
+.dam-fs-lightbox--no-motion .dam-fs-lightbox__img,
+.dam-fs-lightbox--no-motion .dam-fs-lightbox__img.is-animating {
+  transition: none;
+}

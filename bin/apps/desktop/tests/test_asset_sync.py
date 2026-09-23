@@ -516,5 +516,39 @@ class PureLogicTests(unittest.TestCase):
         self.assertEqual(ops, [])
 
 
+class MetaPropagationTests(unittest.TestCase):
+    """23.09: zmiana samego opisu pliku (meta, np. skojarzenia z folderu) nie trafiala do bazy."""
+
+    def _pushed_row(self, pg, meta):
+        aid, entry = asset_sync.scan_entry("M:/- POLSKA/p/a.png", size=10, mtime_ms=1000,
+                                            root="M:", meta=meta)
+        op = asset_sync._op("upsert", aid, entry, None, "M", 1, "add")
+        asset_sync.push_ops(pg, [op], now_ms=1)
+        rows = asset_sync.apply_remote({}, asset_sync.pull_since(pg, 0)["rows"])
+        return aid, rows
+
+    def test_meta_only_change_is_pushed_and_applied(self):
+        pg = FakePG()
+        aid, rows = self._pushed_row(pg, {"linked_product_ids": []})
+        _, entry = asset_sync.scan_entry("M:/- POLSKA/p/a.png", size=10, mtime_ms=1000,
+                                          root="M:", meta={"linked_product_ids": ["tuba"]})
+        ops = asset_sync.diff_scan(rows, {aid: entry}, {""}, 2000, "M", last_seen={aid})
+        self.assertEqual([o["reason"] for o in ops], ["meta"])
+        self.assertEqual(asset_sync.push_ops(pg, ops, now_ms=2)["applied"], 1)
+        rows2 = asset_sync.apply_remote(rows, asset_sync.pull_since(pg, 0)["rows"])
+        self.assertEqual(rows2[aid]["meta"]["linked_product_ids"], ["tuba"])
+        # stan zgodny - kolejny skan nie generuje operacji
+        self.assertEqual(asset_sync.diff_scan(rows2, {aid: entry}, {""}, 3000, "M",
+                                              last_seen={aid}), [])
+
+    def test_same_meta_is_zero_ops(self):
+        pg = FakePG()
+        aid, rows = self._pushed_row(pg, {"sku": "1"})
+        _, entry = asset_sync.scan_entry("M:/- POLSKA/p/a.png", size=10, mtime_ms=1000,
+                                          root="M:", meta={"sku": "1"})
+        self.assertEqual(asset_sync.diff_scan(rows, {aid: entry}, {""}, 2000, "M",
+                                              last_seen={aid}), [])
+
+
 if __name__ == "__main__":
     unittest.main()

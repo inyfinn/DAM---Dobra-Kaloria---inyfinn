@@ -71,6 +71,57 @@ def _pid_alive(pid: int) -> bool:
         return False
 
 
+def _process_start_ticks(pid: int) -> int | None:
+    """Windows process creation time as a single 64-bit tick count (FILETIME).
+
+    Windows recycles PIDs aggressively once a process exits - on a machine
+    running many short-lived pythonw.exe helpers (index/branding subprocesses)
+    a dead lock owner's PID can be reassigned to an unrelated live process
+    within minutes. ``_pid_alive`` alone then reports "alive" for a PID that
+    no longer belongs to the process that wrote the lock, and the stale lock
+    survives until the (multi-hour) TTL fallback finally kicks in - exactly
+    what produced the multi-hour-stuck branding grid publish on 2026-09-23
+    (index-rebuild.lock.json recorded pid 54616 started_at 13:03:59Z, but the
+    live process holding pid 54616 at inspection time had actually started at
+    13:11:47Z - a different, later process reusing the number).
+
+    Comparing the recorded creation time against the live process' actual
+    creation time lets us detect that mismatch immediately instead of waiting
+    for the TTL to expire. Returns None if unavailable (non-Windows, or the
+    PID doesn't exist / can't be queried).
+    """
+    if os.name != "nt" or pid <= 0:
+        return None
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+        handle = kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, int(pid))
+        if not handle:
+            return None
+        try:
+            creation = wintypes.FILETIME()
+            exit_time = wintypes.FILETIME()
+            kernel_time = wintypes.FILETIME()
+            user_time = wintypes.FILETIME()
+            ok = kernel32.GetProcessTimes(
+                handle,
+                ctypes.byref(creation),
+                ctypes.byref(exit_time),
+                ctypes.byref(kernel_time),
+                ctypes.byref(user_time),
+            )
+            if not ok:
+                return None
+            return (int(creation.dwHighDateTime) << 32) | int(creation.dwLowDateTime)
+        finally:
+            kernel32.CloseHandle(handle)
+    except Exception:
+        return None
+
+
 @dataclass
 class LockHandle:
     path: Path
@@ -122,6 +173,16 @@ def lock_is_stale(payload: dict[str, Any], ttl_sec: float = DEFAULT_TTL_SEC) -> 
     pid = int(payload.get("pid") or 0)
     if pid and not _pid_alive(pid):
         return True
+    if pid:
+        recorded_start = payload.get("proc_start")
+        if recorded_start is not None:
+            current_start = _process_start_ticks(pid)
+            # A live PID whose creation time no longer matches what we recorded
+            # means Windows recycled the PID for a different process - the
+            # original lock owner is gone. Treat as stale immediately instead
+            # of waiting out the TTL (see _process_start_ticks docstring).
+            if current_start is not None and int(recorded_start) != current_start:
+                return True
     # Wiek liczymy od NAJSWIEZSZEGO znacznika (heartbeat_at > updated_at > started_at).
     # Blad do 2026-09-18: brany byl started_at, wiec supervisor z TTL 120 s byl "stale"
     # 2 minuty po starcie mimo zywego PID i heartbeatu sprzed sekundy - /preflight
@@ -169,14 +230,18 @@ def acquire_lock(
     else:
         recovered = bool(existing)
 
+    own_pid = os.getpid()
     payload: dict[str, Any] = {
-        "pid": os.getpid(),
+        "pid": own_pid,
         "started_at": _utc_iso(),
         "updated_at": _utc_iso(),
         "stage": stage,
         "ttl_sec": float(ttl_sec),
         "recovered_stale": recovered,
     }
+    own_start = _process_start_ticks(own_pid)
+    if own_start is not None:
+        payload["proc_start"] = own_start
     if extra:
         payload.update(extra)
 
