@@ -26,6 +26,7 @@ STATUS_FILE = WEB / "data" / "branding-build-status.json"
 FILE_INDEX_PATH = WEB / "data" / "file-index.json"
 CATALOG_PATH = WEB / "data" / "product-catalog.json"
 SCAN_DIRS_OUT = WEB / "data" / "branding-scan-dirs.json"
+SCAN_COPY_OUT = WEB / "data" / "branding-index.scan.json"
 
 # Foldery faktycznie wylistowane / nieprzeczytane (bledy IO) w biezacym
 # przebiegu skanu - klucze asset_key (patrz scan_walker.py). Scalane ze
@@ -700,6 +701,13 @@ def main() -> int:
         "assets": assets,
     }
     OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    # Czysty skan obok: w trybie "rows" most nadpisuje branding-index.json wynikiem
+    # scalania z bazy, a runner (asset_sync_runner.SCAN_NAME) i naprawy potrzebuja
+    # skanu z dysku. 23.09: skan zniknal pod wierszami, zanim zostal scalony.
+    import shutil
+    scan_tmp = SCAN_COPY_OUT.with_suffix(".json.tmp")
+    shutil.copyfile(OUT, scan_tmp)
+    os.replace(scan_tmp, SCAN_COPY_OUT)
     search_idx = build_search_index(assets)
     SEARCH_OUT.write_text(
         json.dumps(search_idx, ensure_ascii=False, indent=2),

@@ -44,7 +44,13 @@ def main() -> int:
     import asset_sync
     import pg_db
 
-    idx = json.loads((app / "apps/web/data/branding-index.json").read_text(encoding="utf-8"))
+    # Czysty skan z buildera; branding-index.json w trybie "rows" to wynik scalania
+    # z bazy (23.09: naprawa z takiego pliku zapisala path_rel z litera dysku).
+    src = app / "apps/web/data/branding-index.scan.json"
+    if not src.is_file():
+        print("BLAD: brak branding-index.scan.json - najpierw przebuduj Branding")
+        return 2
+    idx = json.loads(src.read_text(encoding="utf-8"))
     assets = [x for x in (idx.get("assets") or []) if isinstance(x, dict) and x.get("path")]
     root = a.root.rstrip("/\\")
 

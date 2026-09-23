@@ -98,6 +98,12 @@ def dir_key(path: str, root: str | None = None) -> str:
     return key_of(p)
 
 
+_DRIVE_PREFIX_RE = re.compile(
+    r"^(?:[A-Za-z]:/+|//[^/]+/[^/]+/|/volumes/[^/]+/|/mnt/[^/]+/|/media/[^/]+/)(?:marketing/)?",
+    re.IGNORECASE,
+)
+
+
 def scan_entry(path: str, *, size: int | None, mtime_ms: int, root: str | None = None,
                meta: dict | None = None, content_hash: str | None = None,
                asset_id: str | None = None) -> tuple[str, dict]:
@@ -115,6 +121,11 @@ def scan_entry(path: str, *, size: int | None, mtime_ms: int, root: str | None =
         if unicodedata.normalize("NFC", p).casefold().startswith(
                 unicodedata.normalize("NFC", r).casefold() + "/"):
             rel = p[len(r) + 1:]
+    m = _DRIVE_PREFIX_RE.match(rel)
+    if m:
+        # 23.09: sciezka spoza podanego korzenia (inna litera dysku) trafiala do
+        # path_rel z litera - komputery skladaly potem "M:/M:/...".
+        rel = rel[m.end():]
     return asset_id or id_of(key), {
         "asset_key": key,
         "path_rel": rel,

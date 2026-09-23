@@ -173,6 +173,15 @@ class ImportAndLiveIndexTests(unittest.TestCase):
         scan = asset_repo.scan_from_index([a], self.root, taken={"br-000000001": key})
         self.assertEqual(list(scan), ["br-000000001"])
 
+    def test_path_outside_root_is_stored_without_drive_letter(self):
+        """23.09: indeks z M:/ i korzen X:/Marketing -> path_rel "M:/..." i sciezki M:/M:/."""
+        scan = asset_repo.scan_from_index(
+            [{"path": f"M:/{P}/a.png", "mtime_ms": 1}], "X:/Marketing")
+        (entry,) = scan.values()
+        self.assertEqual(entry["path_rel"], f"{P}/a.png")
+        (live,) = asset_repo.live_index({"x": dict(entry, asset_id="x", rev=1)}, "M:")
+        self.assertEqual(live["path"], f"M:/{P}/a.png")
+
     def test_nfd_path_kept_as_on_disk_key_in_nfc(self):
         import unicodedata
         nfd = unicodedata.normalize("NFD", f"{self.root}/{P}/cień.tif")
