@@ -7,6 +7,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from asset_ids import asset_key
+
 from brand_tag_utils import (
     merge_tags,
     norm,
@@ -735,7 +737,10 @@ def enrich_folder_groups(assets: list[dict[str, Any]], file_index: dict) -> None
         path = a.get("path") or ""
         if not path:
             continue
-        by_dir.setdefault(folder_dir(path).lower(), []).append(a)
+        # Klucz folderu wzgledny wobec ROOT (asset_ids.asset_key): "m:/- polska/x" i
+        # "x:/marketing/- polska/x" to ten sam folder. Z litera dysku nadpisania
+        # skojarzen (folder_group_id) nie trafialy na innym komputerze.
+        by_dir.setdefault(asset_key(folder_dir(path)), []).append(a)
 
     for dir_key, group in by_dir.items():
         editable_assets = [

@@ -14,6 +14,8 @@ from pathlib import Path
 SCRIPTS = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPTS))
 
+from asset_ids import asset_key, stable_asset_id  # noqa: E402
+
 WEB = Path(__file__).resolve().parents[1]
 OUT = WEB / "data" / "branding-index.json"
 SEARCH_OUT = WEB / "data" / "branding-search-index.json"
@@ -74,6 +76,12 @@ from asset_role_utils import (  # noqa: E402
 # Trwaly cache pixel-scanu (patch-branding-backgrounds.py): path -> transparent|white|none.
 # Rebuild nie gubi wynikow skanu i nie powtarza wolnego IO na NFS X:.
 _BG_SCAN_CACHE = load_background_scan_cache()
+
+# Stabilne id (asset_ids.stable_asset_id): id -> klucz sciezki, jeden slownik
+# na caly przebieg builda - rozwiazuje rzadkie kolizje hashu w obrebie indeksu.
+_ID_TAKEN: dict[str, str] = {}
+
+
 def normalize_perspective_token(raw: str) -> str:
     token = (raw or "").upper().replace("TYŁ", "TYL")
     if token in ("TYL", "TYL-ENFACE", "TYL_ENFACE"):
@@ -250,7 +258,7 @@ def make_asset(
     except OSError:
         pass
     asset = {
-        "id": f"br-{aid:06d}",
+        "id": stable_asset_id(path, _ID_TAKEN),
         "path": path,
         "name": name,
         "brand": brand,
@@ -444,17 +452,22 @@ def dedupe_by_path(*groups: list[dict]) -> list[dict]:
     """Pierwsza grupa wygrywa; kolejne tylko gdy path jeszcze nie zindeksowany."""
     if not groups:
         return []
-    out = list(groups[0])
-    seen = {a["path"].lower() for a in out if a.get("path")}
-    next_id = len(out) + 1
+    # Klucz jak w stable_asset_id: ten sam plik w NFC/NFD lub przez inna litere dysku
+    # to jeden wpis (inaczej dwa wpisy dostalyby to samo stabilne id).
+    out = []
+    seen: set[str] = set()
+    for a in groups[0]:
+        key = asset_key(a.get("path") or "")
+        if a.get("path") and key in seen:
+            continue
+        seen.add(key)
+        out.append(a)
     for group in groups[1:]:
         for a in group:
-            key = (a.get("path") or "").lower()
+            key = asset_key(a.get("path") or "") if a.get("path") else ""
             if not key or key in seen:
                 continue
-            a = dict(a)
-            a["id"] = f"br-{next_id:06d}"
-            next_id += 1
+            # id juz stabilne (z path) z make_asset - nie przenumerowywac.
             out.append(a)
             seen.add(key)
     return out

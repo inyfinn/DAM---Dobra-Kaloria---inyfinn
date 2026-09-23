@@ -1942,9 +1942,14 @@ def _snapshot_root_alive() -> bool:
 
 
 def _on_snapshot_updated(key: str, path: Path) -> None:
-    """Swiezy skan z bazy: zrzuc cache i przebuduj siatke brandingu ze skojarzeniami."""
+    """Swiezy skan z bazy: zrzuc cache i przebuduj siatke brandingu ze skojarzeniami.
+
+    Siatka (branding-grid-index/-head) buduje sie zarowno z branding-index.json
+    (surowe dane brandingu/wizualizacji), jak i z branding-search-index.json -
+    swiezosc ktoregokolwiek z nich powinna wywolac przebudowe.
+    """
     _drop_json_cache(path)
-    if key == "branding-search-index":
+    if key in ("branding-search-index", "branding-index"):
         _schedule_slim_grid_publish(delay_sec=2.0)
 
 

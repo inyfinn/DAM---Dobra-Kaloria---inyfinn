@@ -17,6 +17,7 @@ Zasady:
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 import threading
 import time
@@ -110,7 +111,26 @@ DROP TRIGGER IF EXISTS dam_assoc_history_trg ON dam_asset_product_links;
 CREATE TRIGGER dam_assoc_history_trg
   AFTER UPDATE ON dam_asset_product_links
   FOR EACH ROW EXECUTE PROCEDURE dam_assoc_log_change();
+CREATE TABLE IF NOT EXISTS dam_meta (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL DEFAULT '',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 """
+
+# Stare formaty asset_id sprzed migracji na stabilne id (br-0########).
+# Zrodlo prawdy: bin/apps/web/scripts/asset_ids.py::is_stable_id (inny katalog - nie
+# importujemy, tylko powielamy regex, zeby nie ciagnac zaleznosci web -> desktop).
+_LEGACY_ID_PATTERNS = (
+    re.compile(r"^br-\d{6}$"),                     # np. br-010745
+    re.compile(r"^M-[A-Z]+\d{6}-\d{2}-\d{2}$"),    # np. M-SHOP405510-03-26
+)
+
+
+def _is_legacy_asset_id(asset_id: Any) -> bool:
+    s = str(asset_id or "")
+    return any(p.match(s) for p in _LEGACY_ID_PATTERNS)
+
 
 _PG_UPSERT = """
 INSERT INTO dam_asset_product_links AS t
@@ -187,6 +207,50 @@ def _open_local(db_path: Path) -> sqlite3.Connection:
     return conn
 
 
+def _server_epoch(pg) -> str:
+    """Znacznik epoki migracji asset_id z PG (dam_meta.asset_id_epoch); '' = brak/nieustawiony."""
+    cur = pg.cursor()
+    cur.execute("SELECT value FROM dam_meta WHERE key='asset_id_epoch'")
+    row = cur.fetchone()
+    if not row:
+        return ""
+    return str(row["value"] or "")
+
+
+def _apply_epoch(local: sqlite3.Connection, server_epoch: str, db_path: Path) -> dict[str, Any] | None:
+    """Gdy PG ogloszil nowa epoke asset_id, wyczysc lokalne wiersze o starych id i
+    wymus pelny re-pull. Reczne decyzje (dirty, status manualny) trafiaja najpierw
+    do pliku <db>.epoch-<epoka>-lost-manual.json, zeby nic nie zniknelo po cichu."""
+    if not server_epoch:
+        return None
+    if _get_state(local, "asset_id_epoch") == server_epoch:
+        return None
+    rows = local.execute(
+        "SELECT asset_id, product_id, score, source, status, reason, updated_at, updated_by, dirty "
+        "FROM asset_product_links"
+    ).fetchall()
+    legacy = [r for r in rows if _is_legacy_asset_id(r["asset_id"])]
+    saved_manual: list[dict[str, Any]] = []
+    for r in legacy:
+        if str(r["status"]) in MANUAL and int(r["dirty"] or 0) == 1:
+            entry = _version(r)
+            entry["asset_id"] = r["asset_id"]
+            entry["product_id"] = r["product_id"]
+            saved_manual.append(entry)
+    if saved_manual:
+        out_path = Path(db_path).with_name(Path(db_path).name + f".epoch-{server_epoch}-lost-manual.json")
+        out_path.write_text(json.dumps(saved_manual, ensure_ascii=False, indent=2), encoding="utf-8")
+    for r in legacy:
+        local.execute(
+            "DELETE FROM asset_product_links WHERE asset_id=? AND product_id=?",
+            (r["asset_id"], r["product_id"]),
+        )
+    _set_state(local, "pg_rev", "0")
+    _set_state(local, "asset_id_epoch", server_epoch)
+    local.commit()
+    return {"epoch": server_epoch, "removed_legacy": len(legacy), "saved_manual": len(saved_manual)}
+
+
 def _version(row: Any) -> dict[str, Any]:
     return {k: row[k] for k in FIELDS}
 
@@ -259,7 +323,15 @@ def _pull(local: sqlite3.Connection, pg) -> tuple[int, int]:
     return applied, conflicts
 
 
-def _push(local: sqlite3.Connection, pg) -> tuple[int, int]:
+def _split_legacy(rows: list) -> tuple[list, list]:
+    """Rozdziel wiersze na (do wyslania, stare-id) - stare id nigdy nie wracaja do PG."""
+    ok, legacy = [], []
+    for r in rows:
+        (legacy if _is_legacy_asset_id(r["asset_id"]) else ok).append(r)
+    return ok, legacy
+
+
+def _push(local: sqlite3.Connection, pg, server_epoch: str = "") -> tuple[int, int]:
     import psycopg2.extras
 
     pushed = conflicts = 0
@@ -271,6 +343,18 @@ def _push(local: sqlite3.Connection, pg) -> tuple[int, int]:
         ).fetchall()
         if not rows:
             break
+        if server_epoch:
+            # Filtr bezpieczenstwa: gdyby jakis stary-id wiersz wciaz mial dirty=1
+            # (np. epoka zastosowana wczesniej), nie wysylaj go do PG.
+            rows, legacy = _split_legacy(rows)
+            if legacy:
+                local.executemany(
+                    "UPDATE asset_product_links SET dirty=0 WHERE asset_id=? AND product_id=?",
+                    [(r["asset_id"], r["product_id"]) for r in legacy],
+                )
+                local.commit()
+            if not rows:
+                continue
         values = [tuple(r) for r in rows]
         cur = pg.cursor()
         applied = psycopg2.extras.execute_values(
@@ -317,8 +401,10 @@ def sync_once(db_path: Path) -> dict[str, Any]:
         _ensure_pg(pg)
         local = _open_local(Path(db_path))
         try:
+            server_epoch = _server_epoch(pg)
+            epoch_result = _apply_epoch(local, server_epoch, Path(db_path))
             pulled, c1 = _pull(local, pg)
-            pushed, c2 = _push(local, pg)
+            pushed, c2 = _push(local, pg, server_epoch)
             pending_local = local.execute(
                 "SELECT COUNT(1) FROM asset_product_links WHERE dirty=1"
             ).fetchone()[0]
@@ -326,8 +412,11 @@ def sync_once(db_path: Path) -> dict[str, Any]:
             local.close()
     finally:
         pg.close()
-    return {"ok": True, "pulled": pulled, "pushed": pushed, "conflicts": c1 + c2,
-            "dirty_left": int(pending_local)}
+    result = {"ok": True, "pulled": pulled, "pushed": pushed, "conflicts": c1 + c2,
+              "dirty_left": int(pending_local)}
+    if epoch_result:
+        result["epoch"] = epoch_result
+    return result
 
 
 # --------------------------------------------------------------------------

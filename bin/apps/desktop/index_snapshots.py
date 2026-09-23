@@ -20,6 +20,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import threading
 import time
 from datetime import datetime, timezone
@@ -29,12 +30,25 @@ from typing import Any, Callable
 import platform_compat
 
 # klucz w bazie -> nazwa pliku w web/data
+# Kolejnosc ma znaczenie: pull_newer idzie po tym slowniku po kolei. Chcemy
+# najpierw sciagnac branding-index.json (surowe dane brandingu/wizualizacji),
+# potem branding-search-index.json - to on wyzwala w local_bridge przebudowe
+# siatki (_schedule_slim_grid_publish), a siatka czyta z branding-index.
+# Gdyby search-index przyszedl pierwszy, siatka zbudowalaby sie ze starego
+# branding-index i trzeba by czekac na kolejny cykl (10 min).
 SNAPSHOT_FILES = {
-    "branding-search-index": "branding-search-index.json",
     "file-index": "file-index.json",
+    "branding-index": "branding-index.json",
+    "branding-search-index": "branding-search-index.json",
 }
 MIN_BYTES = 1024
 REFRESH_S = 600.0
+# Powyzej tego rozmiaru nie robimy pelnego json.loads() na calej tresci -
+# branding-index.json na zlotej maszynie ma ~362 MB, a json.loads kopii w
+# pamieci (bytes -> str -> drzewo obiektow) to kilka GB RAM. Zamiast tego
+# sprawdzamy tanio, czy plik "wyglada" na kompletny JSON (patrz
+# _looks_complete_json nizej).
+FULL_PARSE_MAX_BYTES = 50 * 1024 * 1024
 
 _LOCK = threading.Lock()
 _THREAD: threading.Thread | None = None
@@ -100,6 +114,60 @@ def _machine() -> str:
     return (os.environ.get("COMPUTERNAME") or os.environ.get("HOSTNAME") or "").strip()
 
 
+_LEGACY_ID_RE = re.compile(rb'"id"\s*:\s*"br-\d{6}"')
+
+
+def _has_legacy_asset_ids(path: Path) -> bool:
+    """Lokalny indeks sprzed 2.3.6 (id z licznika skanu, br-NNNNNN) przegrywa z baza
+    nawet gdy jest nowszy - jego id nie pasuja do powiazan w bazie. Czyta tylko
+    pierwsze 256 KB (pliki branding-* zaczynaja sie od listy assets)."""
+    try:
+        with path.open("rb") as fh:
+            head = fh.read(256 * 1024)
+    except OSError:
+        return False
+    return bool(_LEGACY_ID_RE.search(head))
+
+
+def _looks_complete_json(raw: bytes) -> bool:
+    """Waliduje, ze raw to prawdopodobnie caly (nie rozdarty) JSON-obiekt, bez
+    kosztu pelnego json.loads() na duzych plikach.
+
+    Male pliki (<= FULL_PARSE_MAX_BYTES): pelny json.loads jak dotad - to
+    najpewniejsza walidacja i dla ~5 MB kosztuje ulamek sekundy.
+
+    Duze pliki (np. branding-index.json ~362 MB na zlotej maszynie): pelny
+    json.loads zaladowalby cala tresc jako str + zbudowal drzewo obiektow w
+    pamieci - to kilka GB RAM na jeden plik, co na komputerze bez folderu
+    Marketing (slabszy sprzet) moze zwiesic proces. Zamiast tego sprawdzamy
+    tanio: po obcieciu bialych znakow pierwszy bajt to "{", ostatni to "}",
+    a poczatek i koniec pliku da sie zdekodowac jako UTF-8. Dekodujemy tylko
+    koncowki (po 64 KB) z errors="ignore", bo przy obcinaniu do stalej liczby
+    bajtow mozna trafic w srodek wielobajtowego znaku UTF-8 - "ignore"
+    zjada niepelny bajt zamiast rzucac wyjatkiem, a i tak liczy sie tylko to,
+    czy dekodowanie w ogole sie udaje (brak UnicodeDecodeError na calosci).
+    To nie jest pelna walidacja skladni JSON w srodku pliku - tylko szybki
+    test "czy plik nie jest ewidentnie rozdarty w polowie zapisu".
+    """
+    if len(raw) <= FULL_PARSE_MAX_BYTES:
+        try:
+            json.loads(raw.decode("utf-8"))
+        except (UnicodeDecodeError, ValueError):
+            return False
+        return True
+    trimmed = raw.strip()
+    if not trimmed or trimmed[:1] != b"{" or trimmed[-1:] != b"}":
+        return False
+    # decode(errors="ignore") nie rzuca wyjatku nawet na przecietym bajcie
+    # wielobajtowego znaku UTF-8 na granicy wycinka - liczy sie tylko to,
+    # ze samo dekodowanie sie wykona (nie ma tu innej gwarancji do sprawdzenia).
+    head = trimmed[:65536]
+    tail = trimmed[-65536:]
+    head.decode("utf-8", errors="ignore")
+    tail.decode("utf-8", errors="ignore")
+    return True
+
+
 def publish_changed(data_dir: Path, *, root_alive: bool, force: bool = False) -> dict[str, Any]:
     """Wyslij do bazy skan zbudowany NA TYM komputerze (tylko przy dostepnym folderze Marketing)."""
     if not root_alive:
@@ -123,7 +191,8 @@ def publish_changed(data_dir: Path, *, root_alive: bool, force: bool = False) ->
             continue
         try:
             raw = path.read_bytes()
-            json.loads(raw.decode("utf-8"))  # nie wysylamy rozdartego pliku
+            if not _looks_complete_json(raw):  # nie wysylamy rozdartego pliku
+                raise ValueError("nie wyglada na kompletny JSON")
             res = pg_db.publish_index_snapshot(
                 key, raw, sha256=sha, built_at=_iso_mtime(path), built_by=_machine()
             )
@@ -167,7 +236,12 @@ def pull_newer(
             entry["source"] = "db" if entry.get("pulled_sha") == local_sha else entry.get("source") or "local"
             out["current"].append(key)
             continue
-        if root_alive and path.is_file() and _iso_mtime(path) > str(meta.get("built_at") or ""):
+        if (
+            root_alive
+            and path.is_file()
+            and _iso_mtime(path) > str(meta.get("built_at") or "")
+            and not _has_legacy_asset_ids(path)
+        ):
             out["current"].append(key)
             entry["source"] = "local"
             continue
@@ -179,7 +253,8 @@ def pull_newer(
             m2, raw = got
             if hashlib.sha256(raw).hexdigest() != m2.get("sha256"):
                 raise ValueError("sha256_mismatch")
-            json.loads(raw.decode("utf-8"))
+            if not _looks_complete_json(raw):
+                raise ValueError("nie wyglada na kompletny JSON")
             path.parent.mkdir(parents=True, exist_ok=True)
             tmp = path.with_name(path.name + f".{os.getpid()}.db.tmp")
             tmp.write_bytes(raw)

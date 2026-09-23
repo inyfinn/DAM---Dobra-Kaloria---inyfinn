@@ -6590,7 +6590,7 @@
     if (!qsText) return;
     var q = String(qsText).trim();
     if (!q) return;
-  if (!/(?:^m[-_]?[a-z]{2,8}[-_]?\d{5,6}$)|(?:img\d{5,6})|(?:^br-\d{4,8}$)|(?:^\d{5,7}$)/i.test(q.replace(/\s/g, ""))) {
+  if (!/(?:^m[-_]?[a-z]{2,8}[-_]?\d{5,9}$)|(?:img\d{5,9})|(?:^br-\d{4,9}$)|(?:^\d{5,7}$)/i.test(q.replace(/\s/g, ""))) {
       return;
     }
     window.requestAnimationFrame(function () {

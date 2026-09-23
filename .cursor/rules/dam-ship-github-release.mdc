@@ -14,7 +14,8 @@ To **zawsze** znaczy **cały łańcuch**, nie sam git i nie sam lokalny exe.
 3. `git push origin main` (gdy kazał push).
 4. Lokalny build: `bin/scripts/ops/build-installer.ps1` → `bin/instalator/DAM-Setup.exe`.
 5. **Nowy GitHub Release** na `inyfinn/DAM---Dobra-Kaloria---inyfinn`:
-   `gh release create v{VERSION} bin/instalator/DAM-Setup.exe --title "DAM {VERSION}" --target HEAD --latest`
+   `gh release create v{VERSION} bin/instalator/DAM-Setup.exe bin/instalator/DAM-Setup.exe.sig --title "DAM {VERSION}" --target HEAD --latest`
+   Sprawdz `gh release view v{VERSION} --json assets` - musi byc `DAM-Setup.exe.sig`. Bez `.sig` aktualizator pomija wydanie i proponuje starsze podpisane (tak 2.3.4 i 2.3.5 nie dotarly do nikogo). Brak klucza na maszynie budujacej = nie wydawac bez `.sig`.
 6. W odpowiedzi podaj URL: `https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v{VERSION}`
 
 **FAIL:** ogłosić done po samym pushu albo po samym `DAM-Setup.exe` na dysku. Strona Releases to nie log gita. `v1.0.74` zostawał Latest właśnie dlatego.

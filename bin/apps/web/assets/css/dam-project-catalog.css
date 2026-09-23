@@ -109,9 +109,17 @@
   );
 }
 
+/* Kafelek materialu: miniatura z pamieci podrecznej, ikona tylko po bledzie.
+   .dam-viz-thumb__noviz ma display:flex, ktory przebija atrybut hidden. */
+.dam-catalog-marketing-card__thumb [hidden] {
+  display: none !important;
+}
+
 /* Opis pod cena to jedyne miejsce, ktore mowi, ZE TO NIE JEST cena tego SKU.
-   Nie wolno go przygaszac: pelna biel, bez opacity, czytelny rozmiar. */
-.dam-catalog-price-hero__hint {
+   Nie wolno go przygaszac: pelna biel, bez opacity, czytelny rozmiar.
+   Karta siedzi w .dam-integration-card, a `.dam-integration-card p` (dam-app.css,
+   0,1,1) wygrywal z sama klasa (0,1,0) i dawal szary #6b6b6b na zielonym. */
+.dam-catalog-price-hero .dam-catalog-price-hero__hint {
   font-size: 12.5px;
   margin: 10px 0 0;
   max-width: 62ch;

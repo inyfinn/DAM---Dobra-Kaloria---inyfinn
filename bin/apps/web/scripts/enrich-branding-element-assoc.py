@@ -18,6 +18,8 @@ from pathlib import Path
 SCRIPTS = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPTS))
 
+from asset_ids import stable_asset_id  # noqa: E402
+
 WEB = SCRIPTS.parent
 DATA = WEB / "data"
 INDEX_PATH = DATA / "branding-index.json"
@@ -36,16 +38,17 @@ def _load_build_branding_index():
     return mod
 
 
-def _next_br_id(assets: list[dict]) -> int:
-    best = 0
+def _taken_ids(assets: list[dict]) -> dict[str, str]:
+    """id -> klucz sciezki, do stable_asset_id (rozwiazuje kolizje w obrebie indeksu)."""
+    from asset_ids import asset_key
+
+    taken: dict[str, str] = {}
     for a in assets:
-        aid = a.get("id") or ""
-        if isinstance(aid, str) and aid.startswith("br-"):
-            try:
-                best = max(best, int(aid[3:]))
-            except ValueError:
-                continue
-    return best + 1
+        aid = a.get("id")
+        path = a.get("path")
+        if aid and path:
+            taken.setdefault(str(aid), asset_key(path))
+    return taken
 
 
 def _link_new_elements(new_assets: list[dict], file_index: dict, catalog: dict) -> None:
@@ -124,15 +127,14 @@ def main() -> int:
     scanned = bbi.scan_product_element_assets(marketing, include_archive=False)
     print(f"disk product_element files: {len(scanned)}", flush=True)
 
-    next_id = _next_br_id(assets)
+    id_taken = _taken_ids(assets)
     new_assets: list[dict] = []
     for row in scanned:
         key = (row.get("path") or "").lower()
         if not key or key in seen:
             continue
         row = dict(row)
-        row["id"] = f"br-{next_id:06d}"
-        next_id += 1
+        row["id"] = stable_asset_id(row.get("path") or "", id_taken)
         new_assets.append(row)
         seen.add(key)
 

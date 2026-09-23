@@ -12,8 +12,10 @@ var fs = require("fs");
 var path = require("path");
 
 var assetsDir = path.join(__dirname, "..", "..", "assets", "js");
+// Kopie konfliktow Synology Drive (*_Conflict.js) nie sa ladowane przez strony
+// ani pakowane do instalatora - to nie jest kod produktu.
 var files = fs.readdirSync(assetsDir).filter(function (f) {
-  return f.endsWith(".js");
+  return f.endsWith(".js") && !/_Conflict/i.test(f);
 });
 
 var FALLBACK_CALLS = [

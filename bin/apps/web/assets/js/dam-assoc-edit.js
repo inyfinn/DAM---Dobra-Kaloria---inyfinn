@@ -619,7 +619,7 @@
         if (qd.indexOf(cores[ci]) >= 0 || cores[ci].indexOf(qd) >= 0) return true;
       }
     }
-    var mk = q.replace(/^m[-_]?/, "").match(/^([a-z]{2,8})[_-]?(\d{5,6})/);
+    var mk = q.replace(/^m[-_]?/, "").match(/^([a-z]{2,8})[_-]?(\d{5,9})/);
     if (mk) {
       var wantCore = mk[2];
       if (blob.indexOf(wantCore) >= 0 || brandingDigitsOnly(blob).indexOf(wantCore) >= 0) return true;

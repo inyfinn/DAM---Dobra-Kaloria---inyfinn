@@ -476,6 +476,24 @@
     return "branding.html?q=" + encodeURIComponent(q);
   }
 
+  function marketingIconHtml(a, hidden) {
+    var icon = a.media_type === "vector" ? "uil-vector-square" : "uil-file";
+    var label = a.media_type === "vector" ? "Wektor" : (a.media_type || "plik").toUpperCase();
+    return (
+      '<div class="dam-viz-thumb__noviz dam-branding-thumb__icon"' +
+      (hidden ? " hidden" : "") +
+      '><i class="uil ' +
+      icon +
+      '" aria-hidden="true"></i><span>' +
+      esc(label) +
+      "</span></div>"
+    );
+  }
+
+  /* Karty jak w Brandingu: miniatura z pamieci podrecznej (/thumb-cache) dla
+     KAZDEGO typu z podgladem (PNG, PDF, AI, PSD...). Dziala bez folderu Marketing.
+     Oryginal z dysku (/media) tylko gdy nie ma DamPreviewTruth. Ikona dopiero
+     po prawdziwym bledzie wczytania. */
   function marketingThumbHtml(a) {
     if (a.media_type === "video") {
       return (
@@ -483,24 +501,18 @@
         '<i class="uil uil-play-circle" aria-hidden="true"></i><span>Wideo</span></div>'
       );
     }
-    if (a.media_type === "vector") {
-      return (
-        '<div class="dam-viz-thumb__noviz dam-branding-thumb__icon">' +
-        '<i class="uil uil-vector-square" aria-hidden="true"></i><span>Wektor</span></div>'
-      );
-    }
-    if (/\.(png|jpe?g|webp)$/i.test(a.name || "")) {
-      return (
-        '<img class="dam-viz-thumb__img" src="' +
-        esc(mediaUrl(a.path)) +
-        '" alt="" loading="lazy" onerror="this.classList.add(\'dam-viz-thumb__img--placeholder\')">'
-      );
-    }
+    var src =
+      window.DamPreviewTruth && typeof DamPreviewTruth.thumbCacheUrl === "function"
+        ? DamPreviewTruth.thumbCacheUrl(a.path, "grid")
+        : /\.(png|jpe?g|webp)$/i.test(a.name || "")
+          ? mediaUrl(a.path)
+          : "";
+    if (!src) return marketingIconHtml(a, false);
     return (
-      '<div class="dam-viz-thumb__noviz dam-branding-thumb__icon">' +
-      '<i class="uil uil-file" aria-hidden="true"></i><span>' +
-      esc((a.media_type || "plik").toUpperCase()) +
-      "</span></div>"
+      '<img class="dam-viz-thumb__img" src="' +
+      esc(src) +
+      '" alt="" loading="lazy" onerror="this.hidden=true;if(this.nextElementSibling)this.nextElementSibling.hidden=false">' +
+      marketingIconHtml(a, true)
     );
   }
 
