@@ -10,10 +10,11 @@
     "data:image/svg+xml," +
     encodeURIComponent(
       '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">' +
-        '<rect width="640" height="360" fill="#ececf2"/>' +
-        '<circle cx="320" cy="168" r="42" fill="#c5c6cd"/>' +
+        /* bez wlasnego tla: w ciemnym motywie jasny prostokat byl biala plama */
+        '<rect width="640" height="360" fill="none"/>' +
+        '<circle cx="320" cy="168" r="42" fill="#7A9A8C"/>' +
         '<path d="M308 148 L308 188 L348 168 Z" fill="#fff"/>' +
-        '<text x="320" y="248" text-anchor="middle" fill="#696877" ' +
+        '<text x="320" y="248" text-anchor="middle" fill="#7A9A8C" ' +
         'font-family="Segoe UI,Arial,sans-serif" font-size="22">Wideo</text></svg>'
     );
   var TAG_COUNTS_KEY = "dam_branding_show_tag_counts";
@@ -3018,9 +3019,6 @@
     if (window.DamBadges && typeof window.DamBadges.bindClicks === "function") {
       window.DamBadges.bindClicks(host, "branding");
     }
-    if (window.DamGridReveal && typeof window.DamGridReveal.armPendingThumbs === "function") {
-      window.DamGridReveal.armPendingThumbs(host, 1200);
-    }
   }
 
   function scheduleSemanticSupplement(q, nameCount, nameIds) {
@@ -3535,6 +3533,7 @@
           : null) || "Podgląd niedostępny";
       wrap.setAttribute("aria-label", titleText + ": " + label);
       wrap.title = titleText;
+      if (path) wrap.setAttribute("data-path", path);
       wrap.innerHTML =
         '<i class="uil uil-' +
         (isOnline ? "cloud-check" : "cloud-slash") +
@@ -3551,6 +3550,27 @@
             "</span>"
           : "");
       if (img.parentNode) img.replaceWith(wrap);
+      /* Zaslepka po 404 moze sie sama naprawic - most/inny watek dociaga miniature pozniej. */
+      if (
+        path &&
+        window.DamPreviewTruth &&
+        typeof DamPreviewTruth.retryPlaceholderLater === "function"
+      ) {
+        DamPreviewTruth.retryPlaceholderLater(wrap, path, "grid", function (freshUrl) {
+          if (!wrap.isConnected) return;
+          var revived = document.createElement("img");
+          revived.className = "dam-viz-thumb__img";
+          revived.setAttribute("data-path", path);
+          revived.setAttribute("data-dam-original", path);
+          revived.alt = "";
+          revived.loading = "lazy";
+          revived.onerror = function () {
+            window.__damBrandingThumbFallback && window.__damBrandingThumbFallback(revived);
+          };
+          revived.src = freshUrl;
+          wrap.replaceWith(revived);
+        });
+      }
     }
     /* Zapasowi kandydaci z grupy - z pamieci podrecznej, przed oryginalem. */
     var alts = (img.getAttribute("data-alt-paths") || "").split("|").filter(Boolean);
@@ -5015,9 +5035,6 @@
       window.DamBadges.bindClicks(grid, "branding");
     }
     /* Branding: bez GSAP reveal kart (opacity:0 + clip = biale puste kafle przy NFS). */
-    if (slice.length && window.DamGridReveal && typeof window.DamGridReveal.armPendingThumbs === "function") {
-      window.DamGridReveal.armPendingThumbs(grid, 1200);
-    }
     if (window.DamGridReveal && window.DamGridReveal.revealBars) {
       window.DamGridReveal.revealBars(document);
     }

@@ -8877,6 +8877,7 @@ class Handler(BaseHTTPRequestHandler):
                     "module": True,
                     "warm": dam_thumb_cache.warm_status(),
                     "sync": dam_thumb_cache.sync_status(),
+                    "fill": dam_thumb_cache.fill_status(),
                 },
             )
             return
@@ -11316,6 +11317,10 @@ def main() -> None:
             # Spis miniatur z bazy - bez niego komputer bez folderu Marketing
             # nie trafia w pamiec podreczna dla nowszych materialow.
             dam_thumb_cache.start_db_index_watch()
+            # Diagnoza F: PC z folderem Marketing dopelnia pamiec dla wszystkiego,
+            # nie tylko dla tego, co ktos obejrzal. No-op (bez watku) bez roota.
+            fill = dam_thumb_cache.start_marketing_fill_watch()
+            print("thumb_cache_fill:", {k: fill.get(k) for k in ("ok", "started", "reason", "running")})
     except Exception as exc:
         print("thumb_cache_sync:", exc)
     try:

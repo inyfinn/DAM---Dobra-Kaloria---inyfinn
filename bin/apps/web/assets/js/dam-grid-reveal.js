@@ -26,8 +26,6 @@
   // Element musi wejsc ~50px w viewport zanim sie odsloni (nie tuz przy krawedzi,
   // zeby animacja byla widoczna, a nie "juz sie stala" poza ekranem).
   var VIEWPORT_MARGIN = 50;
-  /* Karty: /thumb-cache pending bez onerror (NFS) — wymus fallback po tym czasie. */
-  var THUMB_LOAD_TIMEOUT_MS = 1200;
 
   // "Belki": toolbary, paski filtrow, context bar, changelog. Animowane jako
   // bloki (nie per-element) przez revealBars(); jednorazowo (znacznik dataset).
@@ -95,92 +93,6 @@
         }
       });
     }, 900);
-  }
-
-  function clearThumbLoadWatch(img) {
-    if (!img) return;
-    if (img._damThumbTimer) {
-      clearTimeout(img._damThumbTimer);
-      img._damThumbTimer = null;
-    }
-  }
-
-  /**
-   * Gdy <img src=/thumb-cache> wisi (brak load/error), odpal istniejacy onerror
-   * fallback (__damBrandingThumbFallback / __damMediaPreviewFallback) albo /media.
-   */
-  function armThumbLoadTimeout(img, timeoutMs) {
-    if (!img || img.nodeType !== 1 || img.tagName !== "IMG") return;
-    var src = String(img.getAttribute("src") || img.src || "");
-    if (src.indexOf("/thumb-cache") < 0) return;
-    if (img.dataset.damThumbWatch === "1") return;
-    if (img.complete && img.naturalWidth > 0) return;
-    img.dataset.damThumbWatch = "1";
-    var ms = timeoutMs != null ? timeoutMs : THUMB_LOAD_TIMEOUT_MS;
-    var gen = (img._damThumbGen = (img._damThumbGen || 0) + 1);
-    function doneOk() {
-      if (img._damThumbGen !== gen) return;
-      clearThumbLoadWatch(img);
-    }
-    img.addEventListener("load", doneOk, { once: true });
-    img.addEventListener("error", doneOk, { once: true });
-    img._damThumbTimer = global.setTimeout(function () {
-      if (img._damThumbGen !== gen || !img.isConnected) return;
-      if (img.complete && img.naturalWidth > 0) {
-        clearThumbLoadWatch(img);
-        return;
-      }
-      clearThumbLoadWatch(img);
-      if (typeof global.__damBrandingThumbFallback === "function") {
-        global.__damBrandingThumbFallback(img);
-        return;
-      }
-      if (typeof global.__damMediaPreviewFallback === "function") {
-        global.__damMediaPreviewFallback(img);
-        return;
-      }
-      var path = img.getAttribute("data-path") || "";
-      if (path && global.DamPreviewTruth && typeof DamPreviewTruth.mediaPreviewUrl === "function") {
-        img.src = DamPreviewTruth.mediaPreviewUrl(path);
-      }
-    }, ms);
-  }
-
-  function armPendingThumbs(root, timeoutMs) {
-    if (!root || !root.querySelectorAll) return;
-    var list = root.querySelectorAll("img[src*='thumb-cache'], img[src*='/thumb-cache']");
-    for (var i = 0; i < list.length; i++) {
-      armThumbLoadTimeout(list[i], timeoutMs);
-    }
-  }
-
-  var thumbWatchObserver = null;
-  function ensureThumbWatchObserver() {
-    if (thumbWatchObserver || typeof global.MutationObserver !== "function") return;
-    thumbWatchObserver = new MutationObserver(function (mutations) {
-      for (var i = 0; i < mutations.length; i++) {
-        var m = mutations[i];
-        if (m.type === "attributes" && m.attributeName === "src" && m.target && m.target.tagName === "IMG") {
-          m.target.dataset.damThumbWatch = "";
-          armThumbLoadTimeout(m.target);
-        }
-        var nodes = m.addedNodes || [];
-        for (var j = 0; j < nodes.length; j++) {
-          var n = nodes[j];
-          if (!n || n.nodeType !== 1) continue;
-          if (n.tagName === "IMG") armThumbLoadTimeout(n);
-          else if (n.querySelectorAll) armPendingThumbs(n);
-        }
-      }
-    });
-    if (global.document && global.document.body) {
-      thumbWatchObserver.observe(global.document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ["src"],
-      });
-    }
   }
 
   function loadGsap(cb) {
@@ -780,8 +692,6 @@
   function autoInit() {
     initModalObserver();
     schedulePageEntranceAfterBoot();
-    ensureThumbWatchObserver();
-    if (global.document && global.document.body) armPendingThumbs(global.document.body);
   }
 
   if (document.readyState === "loading") {
@@ -799,8 +709,6 @@
     revealPageEntrance: revealPageEntrance,
     clearHeaderRevealInline: clearHeaderRevealInline,
     skeleton: skeleton,
-    armThumbLoadTimeout: armThumbLoadTimeout,
-    armPendingThumbs: armPendingThumbs,
     selectors: {
       projectCard: ".dam-project-card",
       vizCard: ".dam-viz-card",

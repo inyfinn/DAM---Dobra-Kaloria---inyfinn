@@ -1134,7 +1134,11 @@
       ) +
       "</p>" +
       lifecycleHtml +
+      '<div class="dam-catalog-kpi-bento">' +
+      '<div class="dam-catalog-kpi-bento__price">' +
       priceHeroHtml +
+      "</div>" +
+      '<div class="dam-catalog-kpi-bento__content">' +
       '<div class="dam-catalog-kpi" role="list">' +
       '<div class="dam-catalog-kpi__tile dam-catalog-kpi__tile--dims" role="listitem">' +
       '<span class="dam-catalog-kpi__label">' +
@@ -1168,7 +1172,7 @@
       "</span>" +
       (palSub ? '<span class="dam-catalog-kpi__hint">' + esc(palSub) + "</span>" : "") +
       "</div>" +
-      "</div></div>";
+      "</div></div></div></div>";
 
     var fmcgHtml = "";
     var admin = isFinanceAdmin();

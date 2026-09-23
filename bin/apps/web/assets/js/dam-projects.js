@@ -34,8 +34,6 @@
     { id: "recent", label: "Ostatnio przeglądane" },
   ];
 
-  var PROJECTS_PAGE_SIZE = 8;
-
   var state = {
     all: [],
     source: "",
@@ -44,7 +42,6 @@
     metaById: {},
     rawById: {},
     sortMode: "date_desc",
-    visibleLimit: PROJECTS_PAGE_SIZE,
   };
 
   function includeArchive() {
@@ -1008,28 +1005,7 @@
         clearBtn.addEventListener("click", clearProjectsSearchFilters);
       }
     } else {
-      if (!state.visibleLimit || state.visibleLimit < 1) {
-        state.visibleLimit = PROJECTS_PAGE_SIZE;
-      }
-      var limit = Math.min(state.visibleLimit, rows.length);
-      var slice = rows.slice(0, limit);
-      var moreHtml = "";
-      if (rows.length > limit) {
-        moreHtml =
-          '<div class="col-12 dam-projects-more-wrap">' +
-          '<button type="button" class="geex-btn geex-btn--primary-transparent dam-projects-show-more">' +
-          "Pokaż więcej (" +
-          (rows.length - limit) +
-          ")</button></div>";
-      }
-      grid.innerHTML = slice.map(renderCard).join("") + moreHtml;
-      var moreBtn = grid.querySelector(".dam-projects-show-more");
-      if (moreBtn) {
-        moreBtn.addEventListener("click", function () {
-          state.visibleLimit = (state.visibleLimit || PROJECTS_PAGE_SIZE) + PROJECTS_PAGE_SIZE;
-          renderGrid(grid, statusEl);
-        });
-      }
+      grid.innerHTML = rows.map(renderCard).join("");
       if (window.DamBadges && typeof window.DamBadges.bindClicks === "function") {
         grid._damBadgesBound = false;
         window.DamBadges.bindClicks(grid, "project");
@@ -1151,7 +1127,6 @@
       state.source = (res && res.source) || "";
       state.variantsHint = "";
       /* Paint shell immediately - never await 388MB branding-index or sync 8MB parse. */
-      state.visibleLimit = PROJECTS_PAGE_SIZE;
       renderGrid(grid, statusEl);
       try {
         if (window.DamProductCorrelation && typeof DamProductCorrelation.ensureBrandingCounts === "function") {
@@ -1185,7 +1160,6 @@
     select.value = state.sortMode;
     select.addEventListener("change", function () {
       persistSortMode(select.value);
-      state.visibleLimit = PROJECTS_PAGE_SIZE;
       scheduleRenderGrid(grid, statusEl);
     });
   }
@@ -1242,7 +1216,6 @@
       }
       var onSearch = function () {
         state.query = search.value || "";
-        state.visibleLimit = PROJECTS_PAGE_SIZE;
         persistViewState(state.query);
         scheduleRenderGrid(grid, statusEl);
       };
@@ -1276,7 +1249,6 @@
         try {
           localStorage.setItem(PROJECTS_ARCHIVE_KEY, t.checked ? "1" : "0");
         } catch (eArchStore) { /* ignore */ }
-        state.visibleLimit = PROJECTS_PAGE_SIZE;
         scheduleRenderGrid(grid, statusEl);
       });
       if (scopeEl && window.DamSearch && typeof window.DamSearch.bindScopeChips === "function") {

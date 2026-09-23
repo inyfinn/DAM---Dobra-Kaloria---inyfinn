@@ -73,6 +73,9 @@ _warm_worker_count = max(1, int(os.environ.get("DAM_WARM_WORKERS", "24") or "24"
 _warm_batch_cap = max(1, int(os.environ.get("DAM_WARM_BATCH", "200") or "200"))
 _REL_INDEX_LOCK = threading.Lock()
 _REL_INDEX: dict[str, dict] | None = None
+# UI cos wlasnie ogladalo (warm_paths = jedyna sciezka /thumb-cache/warm wywolywana
+# przez front). Uzywane przez watek uzupelniania pamieci (K-WARM-4), zeby ustapic.
+_UI_WARM_AT = 0.0
 # Indeks rel|profile -> digest: pozwala trafic w cache BEZ mtime oryginalu.
 # Istniejace pliki thumbs/{sha256}.avif zostaja; nowy indeks ich nie rusza.
 
@@ -535,16 +538,23 @@ def _serve_cached(
     rel: str,
     mt: float,
     source: str,
+    *,
+    remember_profile: Optional[str] = None,
+    extra_meta: Optional[dict] = None,
 ) -> tuple[int, bytes, str, dict]:
     try:
         body = hit_path.read_bytes()
     except OSError:
         return 404, b"", "application/json", {"ok": False, "error": "cache_read_failed"}
     rel_cache = str(hit_path.relative_to(cache_root())).replace("\\", "/")
-    _store_meta(digest, rel_cache, ctype, prof)
+    # remember_profile: pod jakim profilem NAPRAWDE jest ten digest (profil
+    # zapasowy z _thumb_404_with_fallback). `prof` w meta zostaje = to, o co
+    # klient prosil - indeks NIGDY nie zapisuje pod cudzym kluczem (diagnoza C).
+    remember_prof = remember_profile if remember_profile is not None else prof
+    _store_meta(digest, rel_cache, ctype, remember_prof)
     # Cache hit with mt=0 must not stamp the index (would hide source changes).
     if source != "cache" or mt > 0:
-        _remember_rel(rel, prof, digest, mt)
+        _remember_rel(rel, remember_prof, digest, mt)
     meta = {
         "ok": True,
         "digest": digest,
@@ -556,6 +566,8 @@ def _serve_cached(
         "bytes": len(body),
         "thumb_source": source,
     }
+    if extra_meta:
+        meta.update(extra_meta)
     return 200, body, ctype, meta
 
 
@@ -687,13 +699,19 @@ def get_or_build_thumb(
             ).start()
         return _serve_cached(cached_path, cached_ctype, cached_digest, prof, rel, 0.0, "cache")
 
+    def _fallback_or(default: tuple[int, bytes, str, dict]) -> tuple[int, bytes, str, dict]:
+        fb = _thumb_404_with_fallback(
+            path, prof, email=email, resolve_physical=resolve_physical, marketing_relative=marketing_relative
+        )
+        return fb if fb is not None else default
+
     if cache_only:
-        return 404, b"", "application/json", {
+        return _fallback_or((404, b"", "application/json", {
             "ok": False,
             "error": "not_found",
             "thumb_source": "cache",
             "cache_only": True,
-        }
+        }))
 
     miss = (404, b"", "application/json", {
         "ok": False,
@@ -702,13 +720,13 @@ def get_or_build_thumb(
         "cache_only": True,
     })
     if not _drive_letter_alive(path):
-        return miss
+        return _fallback_or(miss)
     physical, rel2 = _physical_and_rel(path, email, resolve_physical, marketing_relative)
     if not _drive_letter_alive(physical):
-        return miss
+        return _fallback_or(miss)
     mt2 = _mtime_quick(physical)
     if mt2 is None:
-        return miss
+        return _fallback_or(miss)
     if rel2:
         rel = rel2
     logical = _rel_from_logical(path)
@@ -722,12 +740,12 @@ def get_or_build_thumb(
 
     if _is_online_only(physical):
         # Never build from a cloud placeholder: reading it downloads the whole file.
-        return 404, b"", "application/json", {
+        return _fallback_or((404, b"", "application/json", {
             "ok": False,
             "error": "online_only",
             "state": "online_only",
             "thumb_source": "cache",
-        }
+        }))
 
     digest = _digest(rel, mt2, prof)
     if logical and logical != rel:
@@ -755,6 +773,8 @@ def warm_paths(
     marketing_relative: Optional[Callable[..., str]] = None,
 ) -> dict:
     """Build thumbs for a list of paths (sync, small batches)."""
+    global _UI_WARM_AT
+    _UI_WARM_AT = time.time()
     results = []
     t0 = time.time()
     for p in (paths or [])[:40]:
@@ -823,6 +843,59 @@ def is_cached_on_disk(
 
 PREVIEW_PROFILE_ORDER = ("modal", "card", "grid")
 ORIGINAL_FAST_BUDGET_S = 0.1
+
+# Diagnoza C (BRIEF-235): brak miniatury dla profilu = "Brak podgladu", mimo ze
+# ta sama sciezka ma miniature w innym profilu (np. 2 klucze modal wobec 6874
+# grid). Zamiast 404, oddaj sasiedni profil - lepszy nieostry podglad niz nic.
+PROFILE_FALLBACK_CHAIN: dict[str, tuple[str, ...]] = {
+    "modal": ("card", "grid"),
+    "card": ("modal", "grid"),
+    "grid": ("card", "modal"),
+    "poster": ("card", "grid"),
+}
+
+
+def _thumb_404_with_fallback(
+    path: str,
+    prof: str,
+    *,
+    email: str = "",
+    resolve_physical: Optional[Callable[..., str]] = None,
+    marketing_relative: Optional[Callable[..., str]] = None,
+    fallback_source: str = "cache",
+) -> Optional[tuple[int, bytes, str, dict]]:
+    """Jedyne miejsce, ktore probuje profile zapasowe zamiast 404.
+
+    Uzywane przez KAZDY dzisiejszy 404 dla /thumb-cache (get_or_build_thumb:
+    galaz cache_only i `miss`). Zwraca gotowa odpowiedz 200 (meta ma
+    profile_fallback=<uzyty>) albo None, gdy zaden profil zapasowy tez nie ma
+    miniatury w pamieci - wtedy caller zwraca swoje normalne 404.
+
+    HARD: zapamietuje digest pod kluczem uzytego profilu (remember_profile),
+    NIGDY pod kluczem `prof` zadanym przez klienta - inaczej indeks klamie
+    (rel|modal wskazywalby na miniature z grid).
+    """
+    for alt in PROFILE_FALLBACK_CHAIN.get(prof, ()):
+        hit, ctype, digest, rel, mt = lookup_cached(
+            path,
+            email=email,
+            profile=alt,
+            resolve_physical=resolve_physical,
+            marketing_relative=marketing_relative,
+        )
+        if hit is not None:
+            return _serve_cached(
+                hit,
+                ctype,
+                digest,
+                prof,
+                rel,
+                mt,
+                fallback_source,
+                remember_profile=alt,
+                extra_meta={"profile_fallback": alt},
+            )
+    return None
 
 
 def _readable_within(physical: str, budget_s: float) -> bool:
@@ -2022,12 +2095,64 @@ def merge_rel_index_from_db() -> dict:
     }
 
 
+def _rel_index_missing_digests() -> list[str]:
+    """Digesty, ktore indeks juz zna, ale ktorych pliku nie ma lokalnie na dysku."""
+    idx = _load_rel_index()
+    digests = {str((row or {}).get("digest") or "") for row in idx.values() if isinstance(row, dict)}
+    digests.discard("")
+    return [d for d in digests if not any(p.is_file() for p in _cache_paths(d))]
+
+
+def _fetch_missing_index_files() -> dict:
+    """Diagnoza E: klient docigga SPIS co 10 min (merge_rel_index_from_db), ale nie pliki.
+
+    Dla kazdego digestu ze scalonego indeksu, ktorego pliku brak lokalnie, sciagnij go z
+    NAS-u (najpierw AVIF, potem JPEG fallback) - rownolegle jak _download_listed_thumbs.
+    Bledy nie sa chowane: licznik trafia do _set_sync/sync_status.
+    """
+    missing = _rel_index_missing_digests()
+    if not missing:
+        return {"ok": True, "pending": 0, "copied": 0, "failed": 0}
+    counters = {"copied": 0, "failed": 0}
+    lock = threading.Lock()
+
+    def _one(digest: str) -> None:
+        outcome = "failed"
+        for ext in ("avif", "jpg"):
+            body = _fetch_remote_thumb(digest, ext, "https")
+            if body and _copy_bytes_atomic(cache_root() / "thumbs" / f"{digest}.{ext}", body):
+                outcome = "copied"
+                break
+        with lock:
+            counters[outcome] += 1
+
+    with ThreadPoolExecutor(max_workers=DOWNLOAD_WORKERS, thread_name_prefix="dam-bg-fetch") as ex:
+        list(ex.map(_one, missing))
+
+    extra = {"error": f"tlo: nie pobrano {counters['failed']} z {len(missing)} brakujacych plikow"} if counters["failed"] else {}
+    _set_sync(
+        bg_missing_pending=len(missing),
+        bg_missing_copied=counters["copied"],
+        bg_missing_failed=counters["failed"],
+        bg_missing_at=_utc_iso(),
+        **extra,
+    )
+    return {"ok": True, "pending": len(missing), "copied": counters["copied"], "failed": counters["failed"]}
+
+
 _DB_INDEX_THREAD: threading.Thread | None = None
 DB_INDEX_REFRESH_S = 600.0
 
 
 def start_db_index_watch() -> dict:
-    """Przy starcie mostu i co 10 min: dociagnij spis miniatur z bazy (w tle)."""
+    """Przy starcie mostu i co 10 min, w JEDNYM watku (diagnoza E, jeden nie trzeci):
+
+    1) dociagnij spis miniatur z bazy (merge_rel_index_from_db),
+    2) dociagnij PLIKI digestow, ktore spis juz zna, ale ktorych nie ma lokalnie,
+    3) sprawdz manifest NAS-u (start_cache_download) - noop, gdy juz zgodny.
+
+    Pierwsza petla leci od razu przy starcie (bez wstepnego sleep), kolejne co 10 min.
+    """
     global _DB_INDEX_THREAD
     if _DB_INDEX_THREAD is not None and _DB_INDEX_THREAD.is_alive():
         return {"ok": True, "started": False, "running": True}
@@ -2036,6 +2161,15 @@ def start_db_index_watch() -> dict:
         while True:
             res = merge_rel_index_from_db()
             print("thumb_index_db:", res, flush=True)
+            try:
+                fetch_res = _fetch_missing_index_files()
+                print("thumb_bg_fetch:", fetch_res, flush=True)
+            except Exception as exc:  # noqa: BLE001
+                print(f"[dam_thumb_cache] thumb_bg_fetch error: {exc}", flush=True)
+            try:
+                start_cache_download(force=False)
+            except Exception as exc:  # noqa: BLE001
+                print(f"[dam_thumb_cache] thumb_bg_cache_download error: {exc}", flush=True)
             time.sleep(DB_INDEX_REFRESH_S)
 
     _DB_INDEX_THREAD = threading.Thread(target=loop, daemon=True, name="dam-thumb-index-db")
@@ -2788,3 +2922,217 @@ def start_publish_after_index() -> dict:
             pass
 
     threading.Thread(target=_worker, daemon=True, name="dam-cache-publish").start()
+
+
+# ---------------------------------------------------------------------------
+# Marketing fill (diagnoza F, BRIEF-235): PC z folderem Marketing dopelnia
+# pamiec dla WSZYSTKIEGO, nie tylko dla tego, co ktos obejrzal (dzis
+# enqueue_warm leci tylko z UI - K-WARM-4 - wiec 20% z 179 brakujacych sciezek
+# w Brandingu nigdzie nie ma klucza). Ten watek NIE lamie K-WARM-4: enqueue_warm
+# nadal jest wywolywane tylko stad, jednym powolnym, throttlowanym kanalem, a
+# cel K-WARM-4 (nie zatkac CPU przy starcie / nie odbierac pierwszenstwa UI)
+# trzymaja: 60 s opoznienia startu, male paczki (50) z odpoczynkiem i czekaniem
+# na oproznienie kolejki, oraz ustepowanie realnej aktywnosci UI (_UI_WARM_AT).
+# ---------------------------------------------------------------------------
+FILL_INITIAL_DELAY_S = 60.0
+FILL_INTERVAL_S = 30 * 60.0
+FILL_BATCH_SIZE = 50
+FILL_BATCH_REST_S = 3.0
+FILL_PUBLISH_EVERY = 200
+FILL_UI_YIELD_WINDOW_S = 8.0
+FILL_UI_YIELD_MAX_WAIT_S = 30.0
+
+# Rozszerzenia, ktore _encode_thumb naprawde umie zbudowac: PIL Image.open dla
+# rastrow (ten sam zestaw, ktorym scripts/dam_warm_inventory.py juz filtruje
+# dokladnie to samo zadanie - K-WARM-1) + PDF przez galaz
+# raster_pdf_first_page_jpeg w _encode_thumb. SVG/AI/EPS pomijamy: PIL ich nie
+# otworzy, _encode_thumb i tak zwrocilby (None, "") po cichej probie.
+FILL_SUPPORTED_EXT = frozenset(
+    {".png", ".jpg", ".jpeg", ".tif", ".tiff", ".psd", ".webp", ".gif", ".bmp", ".avif", ".pdf"}
+)
+
+_FILL_THREAD: threading.Thread | None = None
+_fill_lock = threading.Lock()
+_fill_state: dict = {"phase": "idle", "queued": 0, "done": 0, "last_run": "", "error": ""}
+
+
+def fill_status() -> dict:
+    with _fill_lock:
+        snap = dict(_fill_state)
+    snap["running"] = snap.get("phase") == "running"
+    return snap
+
+
+def _fill_set(**fields) -> None:
+    with _fill_lock:
+        _fill_state.update(fields)
+
+
+def _fill_marketing_root() -> Optional[Path]:
+    """Marketing root gdy dostepny (not _marketing_cache_only()) i dysk faktycznie
+    zyje - inaczej None. Wolane przy starcie watku i przed KAZDA paczka."""
+    if _marketing_cache_only():
+        return None
+    try:
+        scripts = Path(__file__).resolve().parent.parent / "web" / "scripts"
+        if str(scripts) not in sys.path:
+            sys.path.insert(0, str(scripts))
+        import marketing_roots  # type: ignore
+
+        base = marketing_roots.resolve_marketing_base()
+    except Exception:
+        return None
+    if base is None or not _drive_letter_alive(str(base)):
+        return None
+    return base
+
+
+def _fill_is_archive(path: str) -> bool:
+    """Jak branding rozpoznaje archiwum: segment `-- ARCHIWUM --` w sciezce
+    (REQUIRED_ROOT_FOLDERS w local_bridge.py / marketing_discovery.py)."""
+    return "-- ARCHIWUM --" in path.replace("\\", "/")
+
+
+def _fill_candidate_paths() -> tuple[list[str], set[str]]:
+    """Sciezki z branding-search-index.json (entries[].path, profil grid) i
+    viz_latest z file-index.json (profil grid + card). Brak pliku = pomijamy po cichu,
+    watek liczy dalej co 30 min (indeksy odswieza osobny pipeline)."""
+    web_root = REPO_ROOT / "apps" / "web"
+    plain: list[str] = []
+    seen: set[str] = set()
+    viz: set[str] = set()
+
+    branding_p = web_root / "data" / "branding-search-index.json"
+    try:
+        data = json.loads(branding_p.read_text(encoding="utf-8"))
+        for row in data.get("entries") or []:
+            p = str((row or {}).get("path") or "").strip()
+            if p and p not in seen:
+                seen.add(p)
+                plain.append(p)
+    except (OSError, json.JSONDecodeError):
+        pass
+
+    file_index_p = web_root / "data" / "file-index.json"
+    try:
+        data = json.loads(file_index_p.read_text(encoding="utf-8"))
+        for row in data.get("viz_latest") or []:
+            p = str((row or {}).get("path") or "").strip()
+            if not p:
+                continue
+            viz.add(p)
+            if p not in seen:
+                seen.add(p)
+                plain.append(p)
+    except (OSError, json.JSONDecodeError):
+        pass
+
+    return plain, viz
+
+
+def _fill_needs(path: str, profile: str, idx: dict) -> bool:
+    rel = _rel_from_logical(path)
+    return _rel_index_key(rel, profile) not in idx
+
+
+def _fill_yield_to_ui() -> None:
+    """K-WARM-4: gdy user wlasnie ogladal (warm_paths), paczka fill czeka - ale nie
+    wiecznie (max FILL_UI_YIELD_MAX_WAIT_S), zeby dysk z Marketing nie stal w miejscu."""
+    deadline = time.time() + FILL_UI_YIELD_MAX_WAIT_S
+    while time.time() - _UI_WARM_AT < FILL_UI_YIELD_WINDOW_S and time.time() < deadline:
+        time.sleep(0.5)
+
+
+def _fill_wait_queue_drain() -> None:
+    while warm_status()["queue_len"] > 0:
+        time.sleep(0.5)
+
+
+def _fill_run_once() -> dict:
+    """Jeden przebieg: policz brakujace grid/card, wrzuc paczkami (50) do enqueue_warm
+    (nie-archiwum przed archiwum), publikuj co FILL_PUBLISH_EVERY i na koncu."""
+    if _fill_marketing_root() is None:
+        return {"ok": False, "reason": "no_marketing_root"}
+    plain, viz = _fill_candidate_paths()
+    idx = _load_rel_index()
+
+    jobs: list[tuple[str, str, bool]] = []
+    for p in plain:
+        if Path(p).suffix.lower() not in FILL_SUPPORTED_EXT:
+            continue
+        if _fill_needs(p, "grid", idx):
+            jobs.append((p, "grid", _fill_is_archive(p)))
+    for p in viz:
+        if Path(p).suffix.lower() not in FILL_SUPPORTED_EXT:
+            continue
+        if _fill_needs(p, "card", idx):
+            jobs.append((p, "card", _fill_is_archive(p)))
+    jobs.sort(key=lambda job: job[2])  # nie-archiwum (False) przed archiwum (True)
+
+    total = len(jobs)
+    _fill_set(phase="running" if total else "done", queued=total, done=0, error="", last_run=_utc_iso())
+    if not total:
+        return {"ok": True, "queued": 0, "done": 0}
+
+    since_publish = 0
+    done = 0
+    for i in range(0, total, FILL_BATCH_SIZE):
+        if _fill_marketing_root() is None:
+            _fill_set(phase="idle", error="marketing_root_lost")
+            return {"ok": False, "reason": "root_lost_mid_run", "done": done}
+        _fill_yield_to_ui()
+        _fill_wait_queue_drain()
+        batch = jobs[i : i + FILL_BATCH_SIZE]
+        by_profile: dict[str, list[str]] = {}
+        for p, profile, _arch in batch:
+            by_profile.setdefault(profile, []).append(p)
+        before = warm_status()["jobs_done"]
+        for profile, paths in by_profile.items():
+            enqueue_warm(paths, profile=profile)
+        _fill_wait_queue_drain()
+        after = warm_status()["jobs_done"]
+        done += len(batch)
+        since_publish += max(0, after - before)
+        _fill_set(done=done)
+        if since_publish >= FILL_PUBLISH_EVERY:
+            try:
+                publish_new_thumbs()
+            except Exception:
+                pass
+            since_publish = 0
+        time.sleep(FILL_BATCH_REST_S)
+
+    try:
+        publish_new_thumbs()
+    except Exception:
+        pass
+    _fill_set(phase="done", done=done, last_run=_utc_iso())
+    return {"ok": True, "queued": total, "done": done}
+
+
+def start_marketing_fill_watch() -> dict:
+    """Diagnoza F: na PC z folderem Marketing, dopelnij pamiec dla WSZYSTKIEGO -
+    nie tylko tego, co ktos obejrzal. Pierwsza petla po ~60 s (K-WARM-4: nie zatykaj
+    CPU przy starcie), potem co 30 min. NIE startuje watku bez dostepnego roota
+    (diagnoza F: musi sie nie uruchamiac na komputerze bez folderu Marketing)."""
+    global _FILL_THREAD
+    if _FILL_THREAD is not None and _FILL_THREAD.is_alive():
+        return {"ok": True, "started": False, "running": True}
+    if _fill_marketing_root() is None:
+        return {"ok": True, "started": False, "reason": "no_marketing_root"}
+
+    def loop() -> None:
+        time.sleep(FILL_INITIAL_DELAY_S)
+        while True:
+            if _fill_marketing_root() is not None:
+                try:
+                    res = _fill_run_once()
+                    print("thumb_fill:", res, flush=True)
+                except Exception as exc:  # noqa: BLE001
+                    _fill_set(phase="error", error=str(exc)[:300])
+                    print(f"[dam_thumb_cache] thumb_fill error: {exc}", flush=True)
+            time.sleep(FILL_INTERVAL_S)
+
+    _FILL_THREAD = threading.Thread(target=loop, daemon=True, name="dam-thumb-fill")
+    _FILL_THREAD.start()
+    return {"ok": True, "started": True}

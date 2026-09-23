@@ -370,6 +370,33 @@ html[data-theme="dark"] .dam-viz-icon-btn:hover:not(:disabled):not(.is-disabled)
   color: var(--dam-primary, #005A29) !important;
 }
 
+/* === SWITCHES ===
+   Master .dam-switch__track (dam-brand.css) and .dam-toggle-track (dam-settings.css)
+   painted the OFF track flat gray (#c8cad3 light / #3a3846 dark) instead of a
+   dimmed brand green, and some CTAs (Branding "OK" next to Karty slider, date
+   presets) sat on neutral --dam-border/--dam-surface/--dam-text with no theme
+   tint at all. One shared rule here (both files load before this one, or this
+   selector wins on specificity+!important) instead of a patch per page. */
+html body .dam-switch__input:not(:checked) + .dam-switch__track,
+html body .dam-toggle input:not(:checked) + .dam-toggle-track {
+  background: color-mix(in srgb, var(--dam-primary) 28%, var(--dam-surface-raised)) !important;
+}
+
+html body .dam-switch.is-off,
+html body .dam-switch:has(.dam-switch__input:not(:checked)) {
+  background: color-mix(in srgb, var(--dam-primary) 6%, var(--dam-surface)) !important;
+  border-color: color-mix(in srgb, var(--dam-primary) 22%, var(--dam-border)) !important;
+}
+
+/* Branding: OK (suwak Karty) i nieaktywne chipy dat - byly plaskie szare/biale. */
+html body .dam-branding-page-size__ok,
+html body .dam-branding-page-size .dam-int-cta,
+html body .dam-branding-date-presets button:not(.is-active) {
+  border-color: color-mix(in srgb, var(--dam-primary) 22%, var(--dam-border)) !important;
+  background: color-mix(in srgb, var(--dam-primary) 5%, var(--dam-surface)) !important;
+  color: color-mix(in srgb, var(--dam-primary) 55%, var(--dam-text)) !important;
+}
+
 /* Header cluster: one shop radius — no pill vs square mix */
 .geex-content__header__action .geex-btn,
 .geex-content__header__action .geex-btn__customizer,

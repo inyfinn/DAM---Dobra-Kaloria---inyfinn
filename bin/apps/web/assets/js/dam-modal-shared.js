@@ -585,7 +585,8 @@
             img.onerror = null;
             img.src =
               opts.placeholder ||
-              "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='90'%3E%3Crect fill='%23eceaf3' width='120' height='90'/%3E%3C/svg%3E";
+              /* bez wlasnego tla: jasny prostokat byl biala plama w ciemnym motywie */
+              "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='90'%3E%3C/svg%3E";
             img.classList.add("dam-viz-thumb__img--placeholder");
             if (state === "online_only") img.classList.add("dam-viz-thumb__img--online-only");
             if (window.DamPreviewTruth && typeof DamPreviewTruth.applyFallbackEl === "function") {

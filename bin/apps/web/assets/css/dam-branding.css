@@ -3272,7 +3272,7 @@ html[data-theme="dark"] .dam-branding-grid-count {
 html[data-theme="dark"] .dam-branding-clear-btn,
 html[data-theme="dark"] .dam-branding-clear-filters {
   background: var(--dam-surface-raised) !important;
-  color: #e2c4f5 !important;
+  color: color-mix(in srgb, var(--dam-primary) 45%, var(--dam-text)) !important;
   border-color: color-mix(in srgb, var(--dam-primary, #005A29) 42%, var(--dam-border)) !important;
 }
 

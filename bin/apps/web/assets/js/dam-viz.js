@@ -248,8 +248,10 @@
     "data:image/svg+xml," +
     encodeURIComponent(
       '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200">' +
-        '<rect fill="#f4f4f6" width="320" height="200"/>' +
-        '<text x="160" y="108" text-anchor="middle" fill="var(--dam-primary)" font-family="sans-serif" font-size="14">Brak miniatury</text>' +
+        /* bez wlasnego tla: jasny prostokat byl biala plama w ciemnym motywie;
+           fill="var(--dam-primary)" tez nie dziala - img w data-URI nie widzi CSS. */
+        '<rect fill="none" width="320" height="200"/>' +
+        '<text x="160" y="108" text-anchor="middle" fill="#7A9A8C" font-family="sans-serif" font-size="14">Brak miniatury</text>' +
       "</svg>"
     );
 
@@ -4892,6 +4894,18 @@
         img.classList.add("dam-viz-thumb__img--placeholder");
         if (avail.state === "online_only") {
           img.classList.add("dam-viz-thumb__img--online-only");
+        }
+        /* Zaslepka po 404 moze sie sama naprawic - most/inny watek dociaga miniature pozniej. */
+        if (typeof DamPreviewTruth.retryPlaceholderLater === "function") {
+          DamPreviewTruth.retryPlaceholderLater(img, path, "grid", function (freshUrl) {
+            if (!img.isConnected) return;
+            img.classList.remove("dam-viz-thumb__img--placeholder", "dam-viz-thumb__img--online-only");
+            img.removeAttribute("title");
+            img.onerror = function () {
+              onThumbError(img);
+            };
+            img.src = freshUrl;
+          });
         }
       });
       return;

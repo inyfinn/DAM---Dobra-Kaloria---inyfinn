@@ -502,12 +502,6 @@
       img.style.opacity = "1";
       img.style.visibility = "visible";
     });
-    if (
-      global.DamGridReveal &&
-      typeof DamGridReveal.armPendingThumbs === "function"
-    ) {
-      DamGridReveal.armPendingThumbs(root);
-    }
   }
 
   /** B5: dashboard-only layout safety (header wrap). Tile template lives in dam-dashboard.css. */
@@ -1187,13 +1181,13 @@
   function brandingThumbPlaceholderDataUri() {
     var label =
       (global.DamPreviewTruth && DamPreviewTruth.LABEL_HINT) || "brak podglądu";
+    /* bez wlasnego tla: jasny prostokat byl biala plama w ciemnym motywie */
     var svg =
       '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">' +
-      '<rect width="160" height="160" fill="#efeef3"/>' +
-      '<rect x="36" y="44" width="88" height="64" rx="8" fill="none" stroke="#b8b3c4" stroke-width="3"/>' +
-      '<circle cx="62" cy="68" r="8" fill="#cfc9d8"/>' +
-      '<path d="M44 96l22-20 18 16 12-10 20 22" fill="none" stroke="#cfc9d8" stroke-width="3" stroke-linecap="round"/>' +
-      '<text x="80" y="132" text-anchor="middle" font-family="Jost,sans-serif" font-size="11" fill="#6f6a7a">' +
+      '<rect x="36" y="44" width="88" height="64" rx="8" fill="none" stroke="#7A9A8C" stroke-width="3"/>' +
+      '<circle cx="62" cy="68" r="8" fill="#7A9A8C"/>' +
+      '<path d="M44 96l22-20 18 16 12-10 20 22" fill="none" stroke="#7A9A8C" stroke-width="3" stroke-linecap="round"/>' +
+      '<text x="80" y="132" text-anchor="middle" font-family="Jost,sans-serif" font-size="11" fill="#7A9A8C">' +
       String(label).replace(/[<&]/g, "") +
       "</text></svg>";
     return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);

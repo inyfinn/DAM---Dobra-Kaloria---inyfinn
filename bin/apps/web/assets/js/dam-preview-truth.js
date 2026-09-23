@@ -310,6 +310,78 @@
     if (host && host.classList) host.classList.remove("dam-thumb-wait");
   }
 
+  /*
+   * Zaslepka po wyczerpaniu retryThumbLater (prawdziwy 404, nie pending 504): most
+   * albo inny watek moze dociagnac miniature pozniej (boot sync / K-WARM). Zamiast
+   * zostawiac karte martwa do recznego przeladowania, co 60 s sprawdzamy ponownie
+   * /thumb-cache - ale TYLKO dla zaslepek aktualnie widocznych w oknie.
+   */
+  var REVIVE_INTERVAL_MS = 60000;
+  var reviveTargets = [];
+  var reviveTimer = null;
+  var reviveObserver = global.IntersectionObserver
+    ? new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          entry.target._damReviveVisible = entry.isIntersecting;
+        });
+      })
+    : null;
+
+  function isReviveTargetVisible(el) {
+    if (!el || !el.isConnected) return false;
+    if (reviveObserver) return !!el._damReviveVisible;
+    var r = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+    if (!r) return false;
+    var vh = global.innerHeight || document.documentElement.clientHeight || 0;
+    var vw = global.innerWidth || document.documentElement.clientWidth || 0;
+    return r.bottom > 0 && r.right > 0 && r.top < vh && r.left < vw;
+  }
+
+  function dropReviveTarget(t) {
+    var i = reviveTargets.indexOf(t);
+    if (i >= 0) reviveTargets.splice(i, 1);
+    if (reviveObserver) reviveObserver.unobserve(t.el);
+  }
+
+  function reviveSweep() {
+    // odpiete z DOM w miedzyczasie - przestan sledzic
+    reviveTargets = reviveTargets.filter(function (t) {
+      return t.el && t.el.isConnected;
+    });
+    reviveTargets.forEach(function (t) {
+      if (!isReviveTargetVisible(t.el)) return;
+      var url = thumbCacheUrl(t.path, t.profile);
+      if (!url) return;
+      var probe = new Image();
+      probe.decoding = "async";
+      probe.onload = function () {
+        dropReviveTarget(t);
+        t.onReady(url);
+      };
+      probe.src = url + (url.indexOf("?") >= 0 ? "&" : "?") + "_rv=" + Date.now();
+    });
+    if (!reviveTargets.length && reviveTimer) {
+      global.clearInterval(reviveTimer);
+      reviveTimer = null;
+    }
+  }
+
+  /**
+   * Zarejestruj zaslepke (img albo div) do samo-naprawy. path = sciezka pliku,
+   * profile = "grid"/"card"/"modal", onReady(freshUrl) wywolane raz, gdy
+   * /thumb-cache odda 200 podczas gdy el jest widoczny w oknie.
+   */
+  function retryPlaceholderLater(el, path, profile, onReady) {
+    if (!el || !path || typeof onReady !== "function") return;
+    var already = reviveTargets.some(function (t) {
+      return t.el === el;
+    });
+    if (already) return;
+    reviveTargets.push({ el: el, path: path, profile: profile || "grid", onReady: onReady });
+    if (reviveObserver) reviveObserver.observe(el);
+    if (!reviveTimer) reviveTimer = global.setInterval(reviveSweep, REVIVE_INTERVAL_MS);
+  }
+
   var ORIGIN_CSS_ID = "damCacheOriginCss";
 
   function ensureOriginCss() {
@@ -446,6 +518,7 @@
     applyFallbackEl: applyFallbackEl,
     retryThumbLater: retryThumbLater,
     stopThumbWait: stopThumbWait,
+    retryPlaceholderLater: retryPlaceholderLater,
   };
 
   if (document.readyState === "loading") {

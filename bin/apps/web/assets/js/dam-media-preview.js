@@ -14,18 +14,16 @@
         "</svg>"
     );
 
-  /* NFS/M: /thumb-cache bywa pending bez onerror (kulki ~14s przy cache-hit). */
-  var HERO_LOAD_TIMEOUT_MS = 1200;
-
   /** B3: lokalny poster gdy ffmpeg/bridge nie odda klatki. */
   var VIDEO_POSTER_FALLBACK =
     "data:image/svg+xml," +
     encodeURIComponent(
       '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">' +
-        '<rect width="640" height="360" fill="#ececf2"/>' +
-        '<circle cx="320" cy="168" r="42" fill="#c5c6cd"/>' +
+        /* bez wlasnego tla: w ciemnym motywie jasny prostokat byl biala plama */
+        '<rect width="640" height="360" fill="none"/>' +
+        '<circle cx="320" cy="168" r="42" fill="#7A9A8C"/>' +
         '<path d="M308 148 L308 188 L348 168 Z" fill="#fff"/>' +
-        '<text x="320" y="248" text-anchor="middle" fill="#696877" ' +
+        '<text x="320" y="248" text-anchor="middle" fill="#7A9A8C" ' +
         'font-family="Segoe UI,Arial,sans-serif" font-size="22">Wideo</text></svg>'
     );
 
@@ -1192,9 +1190,8 @@
    * sklada string i nigdy nie wie, czy plik jest. Skutkiem ubocznym bylo trwale
    * omijanie cache (galaz thumbCacheUrl stawala sie martwym kodem).
    * Teraz kolejnosc jest znowu cache-first, a pusty hero pokrywa runtime:
-   * img.onerror -> __damMediaPreviewFallback (przelacza src na /media) oraz
-   * armHeroLoadWatch() dla /thumb-cache, ktory po HERO_LOAD_TIMEOUT_MS wymusza
-   * ten sam fallback, gdy odpowiedz wisi i onerror nigdy nie przyjdzie.
+   * img.onerror -> __damMediaPreviewFallback (przelacza src na /media) na
+   * prawdziwym 404 - bez zegara na "wisi bez odpowiedzi".
    */
   function heroSrcFromAsset(a) {
     if (!a) return "";
@@ -1226,39 +1223,6 @@
 
   function mediaUrl(path, asset) {
     return previewUrl(path, asset);
-  }
-
-  function clearHeroLoadWatch(img) {
-    if (!img) return;
-    if (img._damHeroTimer) {
-      clearTimeout(img._damHeroTimer);
-      img._damHeroTimer = null;
-    }
-  }
-
-  /** Pending /thumb-cache bez onerror → po HERO_LOAD_TIMEOUT_MS wymus fallback /media. */
-  function armHeroLoadWatch(img) {
-    if (!img) return;
-    var src = String(img.getAttribute("src") || img.src || "");
-    if (src.indexOf("/thumb-cache") < 0) return;
-    clearHeroLoadWatch(img);
-    var gen = (img._damHeroGen = (img._damHeroGen || 0) + 1);
-    function finishOk() {
-      if (img._damHeroGen !== gen) return;
-      clearHeroLoadWatch(img);
-    }
-    img.addEventListener("load", finishOk, { once: true });
-    img._damHeroTimer = setTimeout(function () {
-      if (img._damHeroGen !== gen || !img.isConnected) return;
-      if (img.complete && img.naturalWidth > 0) {
-        clearHeroLoadWatch(img);
-        return;
-      }
-      clearHeroLoadWatch(img);
-      if (window.__damMediaPreviewFallback) {
-        window.__damMediaPreviewFallback(img);
-      }
-    }, HERO_LOAD_TIMEOUT_MS);
   }
 
   function isRasterPreviewable(asset) {
@@ -4875,12 +4839,10 @@
         img.loading = "eager";
         img.decoding = "async";
         img.onerror = function () {
-          clearHeroLoadWatch(img);
           window.__damMediaPreviewFallback && window.__damMediaPreviewFallback(img);
         };
         var heroSrc = heroSrcFromAsset(a) || (a.path ? previewUrl(a.path, a) : "") || PLACEHOLDER_SVG;
         img.src = heroSrc;
-        armHeroLoadWatch(img);
         thumb.appendChild(img);
         heroEl = img;
         if (a.path && window.DamPreviewTruth && window.DamPreviewTruth.upgradeWhenReady) {

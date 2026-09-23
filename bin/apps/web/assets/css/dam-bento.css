@@ -474,13 +474,11 @@
   .dam-dash-grid .dam-win-btn,
   .dam-dash-grid .dam-ql-chip,
   .dam-dash-grid .dam-widget__layout-btn,
-  .dam-projects-show-more,
   .dam-viz-show-more {
     min-height: 44px;
     min-width: 44px;
   }
 
-  .dam-projects-more-wrap,
   .dam-viz-more-wrap {
     display: flex;
     justify-content: center;

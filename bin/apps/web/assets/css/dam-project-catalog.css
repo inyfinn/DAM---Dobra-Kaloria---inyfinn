@@ -29,10 +29,44 @@
   margin-bottom: 0;
 }
 
+/* Bento: cena po lewej jako naglowek (duzy kroj, etykieta nad wartoscia),
+   porownanie/specyfikacja po prawej jako tresc. Wszystkie akapity w obu
+   kolumnach wyrownane do lewej (byly wyosrodkowane w hero ceny). */
+.dam-catalog-kpi-bento {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) minmax(0, 2fr);
+  align-items: stretch;
+  gap: var(--dam-bento-gap, 14px);
+}
+
+.dam-catalog-kpi-bento__price {
+  display: flex;
+}
+
+.dam-catalog-kpi-bento__price .dam-catalog-price-hero {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dam-catalog-kpi-bento__content {
+  min-width: 0;
+}
+
+.dam-catalog-kpi-bento__content .dam-catalog-kpi {
+  margin-top: 0;
+  height: 100%;
+}
+
+@media (max-width: 768px) {
+  .dam-catalog-kpi-bento {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .dam-catalog-price-hero {
-  margin-top: var(--dam-bento-gap, 14px);
-  margin-bottom: var(--dam-bento-gap, 14px);
-  text-align: center;
+  margin-top: 0;
+  margin-bottom: 0;
+  text-align: left;
 }
 
 /* Karta ceny referencyjnej.
@@ -79,7 +113,7 @@
    Nie wolno go przygaszac: pelna biel, bez opacity, czytelny rozmiar. */
 .dam-catalog-price-hero__hint {
   font-size: 12.5px;
-  margin: 10px auto 0;
+  margin: 10px 0 0;
   max-width: 62ch;
   line-height: 1.5;
   color: #fff;
@@ -92,7 +126,7 @@
 .dam-catalog-price-hero .dam-catalog-shop-link {
   color: #fff;
   margin-top: 10px;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 /* Link doklejony do konca zdania lamal sie na dwie linie ("Produkt /
@@ -140,7 +174,10 @@
 
 .dam-catalog-lifecycle__step.is-current {
   border-color: color-mix(in srgb, var(--dam-primary, #005A29) 45%, var(--dam-border, #e7e7e7));
-  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, #fff);
+  /* Byl hardcoded #fff: w ciemnym motywie --dam-text jest prawie biały, wiec
+     "biala pigulka" na "bialym" tle znikala. color-mix z --dam-surface
+     (biel w light, ciemna plyta w dark) trzyma kontrast w obu motywach. */
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, var(--dam-surface, #fff));
   color: var(--dam-text, #464255);
   font-weight: 600;
 }
