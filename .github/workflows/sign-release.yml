@@ -62,24 +62,26 @@ jobs:
           set -euo pipefail
           mkdir -p work
           cd work
+          # 23.09 (v2.3.8): "gh release download" przez 5 min nie widzial pliku - lista
+          # zasobow w API GitHuba odswieza sie z opoznieniem, a bezpośredni adres
+          # /releases/download/ dziala wczesniej. Pobieramy bezposrednio, 20 prob co 30 s.
+          BASE="https://github.com/${{ github.repository }}/releases/download/$TAG"
           ok=""
-          for i in $(seq 1 10); do
-            echo "Proba $i/10: gh release download $TAG -p DAM-Setup.exe ..."
-            if gh release download "$TAG" -R "${{ github.repository }}" -p 'DAM-Setup.exe' --clobber; then
-              if [ -f DAM-Setup.exe ]; then
-                ok=1
-                break
-              fi
+          for i in $(seq 1 20); do
+            echo "Proba $i/20: $BASE/DAM-Setup.exe"
+            if curl -fsSL --retry 2 -o DAM-Setup.exe "$BASE/DAM-Setup.exe" && [ -s DAM-Setup.exe ]; then
+              ok=1
+              break
             fi
-            echo "DAM-Setup.exe jeszcze niedostepny, czekam 30s..."
+            echo "DAM-Setup.exe jeszcze niedostepny, czekam 30 s..."
             sleep 30
           done
           if [ -z "$ok" ]; then
-            echo "BLAD: DAM-Setup.exe nie pojawilo sie w wydaniu $TAG po 10 probach."
+            echo "BLAD: DAM-Setup.exe niedostepny w wydaniu $TAG po 20 probach (10 min)."
             exit 1
           fi
           # .sig moze jeszcze nie istniec - to nie jest blad na tym etapie.
-          gh release download "$TAG" -R "${{ github.repository }}" -p 'DAM-Setup.exe.sig' --clobber || true
+          curl -fsSL -o DAM-Setup.exe.sig "$BASE/DAM-Setup.exe.sig" || rm -f DAM-Setup.exe.sig
           ls -la
 
       - name: Sprawdz istniejacy podpis
