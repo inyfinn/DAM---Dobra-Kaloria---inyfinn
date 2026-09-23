@@ -845,6 +845,8 @@
             device_id: (ident && ident.device_id) || deviceId(),
             machine_id: (ident && ident.machine_id) || machineId(),
             skip_password_change: skipPasswordChange,
+            save_login: !!(opts && opts.saveLogin),
+            autologin: !!(opts && opts.autologin),
           }),
         });
         var bdata = await br.json();
@@ -963,7 +965,9 @@
       if (window.DamPaths && typeof window.DamPaths.showToast === "function") {
         window.DamPaths.showToast("Wylogowano.");
       }
-      window.location.href = "signin.html";
+      // ?logout=1: reczne wylogowanie nie moze od razu uruchomic autologowania
+      // z zapisanego konta (dam-saved-logins.js sprawdza ten parametr).
+      window.location.href = "signin.html?logout=1";
       return { ok: true, mode: "logged_out" };
     },
     async changePassword(email, oldPassword, newPassword) {

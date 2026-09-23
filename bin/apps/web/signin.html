@@ -144,6 +144,131 @@
     #nameWrap.dam-auth-hidden {
       display: none !important;
     }
+    #autologinWrap[hidden] {
+      display: none !important;
+    }
+    /* Zapisane konta - jak w przegladarce: kafelki nad formularzem */
+    .dam-saved-logins {
+      /* Ta sama szerokosc i os co formularz logowania (460 px, wysrodkowany) -
+         bez tego lista rozlewala sie na cala lewa kolumne. */
+      width: 100%;
+      max-width: 460px;
+      margin: 0 auto 20px;
+    }
+    .dam-saved-logins[hidden] {
+      display: none !important;
+    }
+    .dam-saved-logins__label {
+      margin: 0 0 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--dam-text-muted, #6f6b7c);
+    }
+    .dam-saved-logins__list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .dam-saved-logins__item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--dam-border, #e7e7e7);
+      border-radius: 10px;
+      background: var(--dam-surface-muted, #fafafa);
+      padding: 8px 8px 8px 12px;
+    }
+    .dam-saved-logins__id {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      border: 0;
+      background: transparent;
+      padding: 4px 0;
+      cursor: pointer;
+      text-align: left;
+    }
+    .dam-saved-logins__name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--dam-text, #464255);
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .dam-saved-logins__email {
+      font-size: 12px;
+      color: var(--dam-text-muted, #6f6b7c);
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .dam-saved-logins__go {
+      flex: 0 0 auto;
+      min-height: 36px;
+      padding: 0 14px;
+      border-radius: 8px;
+      border: 1px solid var(--dam-primary, #AB54DB);
+      background: transparent;
+      color: var(--dam-primary, #AB54DB);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .dam-saved-logins__go:hover {
+      background: color-mix(in srgb, var(--dam-primary, #AB54DB) 10%, transparent);
+    }
+    .dam-saved-logins__remove {
+      flex: 0 0 auto;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--dam-text-muted, #6f6b7c);
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .dam-saved-logins__remove:hover {
+      border-color: var(--dam-danger, #ff5b5b);
+      color: var(--dam-danger, #ff5b5b);
+      background: color-mix(in srgb, var(--dam-danger, #ff5b5b) 8%, transparent);
+    }
+    /* Pasek autologowania - 2 s na anulowanie */
+    .dam-autologin-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 0 0 20px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--dam-primary, #AB54DB);
+      background: color-mix(in srgb, var(--dam-primary, #AB54DB) 8%, transparent);
+      font-size: 13px;
+      color: var(--dam-text, #464255);
+    }
+    .dam-autologin-bar[hidden] {
+      display: none !important;
+    }
+    .dam-autologin-bar__cancel {
+      flex: 0 0 auto;
+      min-height: 32px;
+      padding: 0 12px;
+      border-radius: 8px;
+      border: 1px solid var(--dam-border, #e7e7e7);
+      background: var(--dam-surface, #fff);
+      color: var(--dam-text, #464255);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
   </style>
 	<link rel="stylesheet" href="./assets/css/dam-dark-a.css?v=2.3.4">
 	<link rel="stylesheet" href="./assets/css/dam-dark-b.css?v=2.3.4">
@@ -159,6 +284,12 @@
               <img class="logo-lite dam-logo-dk" src="assets/img/logo-dobra-kaloria.svg" alt="Dobra Kaloria">
               <img class="logo-dark dam-logo-dk" src="assets/img/logo-dobra-kaloria.svg" alt="Dobra Kaloria">
             </a>
+          </div>
+
+          <div id="damSavedLoginsList" class="dam-saved-logins" hidden></div>
+          <div id="damAutologinBar" class="dam-autologin-bar" hidden role="status" aria-live="polite">
+            <span id="damAutologinText"></span>
+            <button type="button" class="dam-autologin-bar__cancel" id="damAutologinCancel">Anuluj</button>
           </div>
 
           <form id="damAuthForm" class="geex-content__authentication__form" autocomplete="on">
@@ -203,6 +334,22 @@
               </label>
             </div>
 
+            <div class="geex-content__authentication__form-group custom-checkbox" id="saveLoginWrap">
+              <input type="checkbox" class="geex-content__authentication__checkbox-input"
+                     id="saveLoginDevice" checked>
+              <label class="geex-content__authentication__checkbox-label" for="saveLoginDevice">
+                Zapisz hasło na tym komputerze
+              </label>
+            </div>
+
+            <div class="geex-content__authentication__form-group custom-checkbox" id="autologinWrap">
+              <input type="checkbox" class="geex-content__authentication__checkbox-input"
+                     id="autologinDevice">
+              <label class="geex-content__authentication__checkbox-label" for="autologinDevice">
+                Loguj automatycznie przy starcie
+              </label>
+            </div>
+
             <button type="submit" class="geex-content__authentication__form-submit" id="authSubmit">
               Zaloguj
             </button>
@@ -225,9 +372,10 @@
 
   <script src="./assets/js/dam-runtime.js?v=1.8.9"></script>
   <script src="./assets/js/dam-file-index.js?v=2.0.8"></script>
-  <script src="./assets/js/dam-api.js?v=2.3.1"></script>
+  <script src="./assets/js/dam-api.js?v=2.3.8"></script>
   <script src="./assets/js/dam-activation.js?v=2.3.4"></script>
   <script src="./assets/js/dam-password-change.js?v=2.1.2"></script>
+  <script src="./assets/js/dam-saved-logins.js?v=2.3.8"></script>
   <script>
     (function () {
       var mode = "login";
@@ -321,6 +469,106 @@
         });
       }
 
+      /* --- Zapisz haslo / autologowanie na tym komputerze --- */
+      var saveLoginChk = document.getElementById("saveLoginDevice");
+      var autologinChk = document.getElementById("autologinDevice");
+      var autologinWrap = document.getElementById("autologinWrap");
+
+      function syncAutologinVisibility() {
+        var show = !!(saveLoginChk && saveLoginChk.checked);
+        if (autologinWrap) autologinWrap.hidden = !show;
+        if (!show && autologinChk) autologinChk.checked = false;
+      }
+      if (saveLoginChk) {
+        saveLoginChk.addEventListener("change", syncAutologinVisibility);
+      }
+      syncAutologinVisibility();
+
+      function loginOptsFromForm(extra) {
+        var save = !!(saveLoginChk && saveLoginChk.checked);
+        return Object.assign(
+          {
+            saveLogin: save,
+            autologin: save && !!(autologinChk && autologinChk.checked),
+          },
+          extra || {}
+        );
+      }
+
+      /*
+       * Obsluga wyniku logowania - WSPOLNA dla formularza (submit) i dla
+       * zapisanych kont (dam-saved-logins.js -> mountSignin onResult), zeby nie
+       * duplikowac logiki sukcesu / password_change_required / komunikatow bledow.
+       */
+      function handleAuthSuccess() {
+        msg.className = "dam-auth-msg is-ok";
+        msg.textContent = "Zalogowano. Przekierowanie...";
+        setTimeout(function () { location.replace("dashboard.html"); }, 300);
+      }
+
+      function handleAuthError(err, ctx) {
+        ctx = ctx || {};
+        /* Logowanie zwyklym formularzem znamy haslo - mozna otworzyc zmiane hasla. */
+        if (err && err.code === "password_change_required" && window.DamPasswordChange && !ctx.savedLogin) {
+          msg.className = "dam-auth-msg";
+          msg.textContent = "";
+          submitBtn.disabled = false;
+          DamPasswordChange.open(
+            ctx.email,
+            ctx.password,
+            function (newPassword) {
+              pass.value = newPassword;
+              document.getElementById("damAuthForm").requestSubmit();
+            },
+            {
+              onSkip: err.canSkip
+                ? function () {
+                    return DamApi.login(ctx.email, ctx.password, loginOptsFromForm({ skipPasswordChange: true }))
+                      .then(handleAuthSuccess);
+                  }
+                : null,
+            }
+          );
+          return;
+        }
+        /* Zapisane konto: haslo nie jest znane w tej karcie (zaszyfrowane po stronie mostu) -
+           nie da sie otworzyc zmiany hasla bez niego. Kieruj do zwyklego logowania. */
+        if (err && err.code === "password_change_required" && ctx.savedLogin) {
+          msg.className = "dam-auth-msg is-err";
+          msg.textContent = "To haslo wymaga zmiany. Zaloguj sie recznie ponizej.";
+          document.getElementById("authEmail").value = ctx.email || "";
+          pass.value = "";
+          pass.focus();
+          submitBtn.disabled = false;
+          return;
+        }
+        msg.className = "dam-auth-msg is-err";
+        msg.textContent = (err && err.message) || "Nie udalo sie zalogowac";
+        submitBtn.disabled = false;
+      }
+
+      /* --- Zapisane konta + autologowanie (dam-saved-logins.js) --- */
+      if (window.DamSavedLogins) {
+        DamSavedLogins.mountSignin({
+          listEl: document.getElementById("damSavedLoginsList"),
+          autoBarEl: document.getElementById("damAutologinBar"),
+          autoTextEl: document.getElementById("damAutologinText"),
+          autoCancelEl: document.getElementById("damAutologinCancel"),
+          onFillEmail: function (email) {
+            document.getElementById("authEmail").value = email;
+            pass.focus();
+          },
+          onResult: function (promise, ctx) {
+            msg.className = "dam-auth-msg";
+            msg.textContent = "Logowanie...";
+            submitBtn.disabled = true;
+            return promise.then(handleAuthSuccess).catch(function (err) {
+              handleAuthError(err, Object.assign({ savedLogin: true }, ctx || {}));
+            });
+          },
+        });
+      }
+
       document.getElementById("damAuthForm").addEventListener("submit", function (e) {
         e.preventDefault();
         if (!window.DamApi) {
@@ -342,39 +590,10 @@
 
         var p = mode === "register"
           ? DamApi.register(email, password, name)
-          : DamApi.login(email, password);
+          : DamApi.login(email, password, loginOptsFromForm());
 
-        p.then(function () {
-          msg.className = "dam-auth-msg is-ok";
-          msg.textContent = "Zalogowano. Przekierowanie...";
-          setTimeout(function () { location.replace("dashboard.html"); }, 300);
-        }).catch(function (err) {
-          if (err && err.code === "password_change_required" && window.DamPasswordChange) {
-            msg.className = "dam-auth-msg";
-            msg.textContent = "";
-            submitBtn.disabled = false;
-            DamPasswordChange.open(
-              email,
-              password,
-              function (newPassword) {
-                pass.value = newPassword;
-                document.getElementById("damAuthForm").requestSubmit();
-              },
-              {
-                onSkip: err.canSkip
-                  ? function () {
-                      return DamApi.login(email, password, { skipPasswordChange: true }).then(function () {
-                        location.replace("dashboard.html");
-                      });
-                    }
-                  : null,
-              }
-            );
-            return;
-          }
-          msg.className = "dam-auth-msg is-err";
-          msg.textContent = (err && err.message) || "Nie udalo sie zalogowac";
-          submitBtn.disabled = false;
+        p.then(handleAuthSuccess).catch(function (err) {
+          handleAuthError(err, { savedLogin: false, email: email, password: password });
         });
       });
     })();

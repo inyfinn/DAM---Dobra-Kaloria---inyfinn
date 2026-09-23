@@ -99,9 +99,37 @@ def _product_indexes(product: dict) -> list[str]:
 
 
 def _disambiguate_sku_products(
-    aa, asset_blob: str, product_ids: set[str], products: dict[str, dict]
+    aa,
+    asset_blob: str,
+    product_ids: set[str],
+    products: dict[str, dict],
+    asset_name: str = "",
 ) -> list[str]:
-    """When one SKU maps to multiple products, require distinctive name/path token win."""
+    """When one SKU maps to multiple products, require distinctive name/path token win.
+
+    HARD 2026-09-23 (sku60 audit): a single-flavor file (e.g. a "babka cytrynowa"
+    visual) that physically lives inside a box/mix product's folder (e.g.
+    ".../ZESTAW MIX Ciast 1/KARTON_6xMINI_6300719/...") used to lose to the box
+    product, because the box product's own name tokens (zestaw/ciast/mixy) are
+    all sitting in the folder path and out-count the flavor's 1-2 filename
+    tokens. Fix: if exactly ONE candidate has a distinctive-token hit in the
+    FILENAME itself, that candidate wins outright (filename evidence beats
+    folder/path evidence). Only when filename evidence is absent for every
+    candidate, or tied between two-or-more candidates (e.g. a shared generic
+    ingredient word like "miod" across renamed/legacy product duplicates),
+    do we fall back to the original full-blob (name+path) token scoring.
+    """
+    name_blob = aa._norm(asset_name or "")
+    name_hits: dict[str, list[str]] = {}
+    for pid in product_ids:
+        prod = products[pid]
+        toks = aa._distinctive_tokens(pid, str(prod.get("name") or ""))
+        hits = [t for t in toks if t in name_blob]
+        if hits:
+            name_hits[pid] = hits
+    if len(name_hits) == 1:
+        return [next(iter(name_hits))]
+
     scored: list[tuple[int, str]] = []
     for pid in product_ids:
         prod = products[pid]
@@ -211,7 +239,7 @@ def collect_live_strict_evidence_rows() -> dict:
         if len(cands) == 1:
             chosen = list(cands)
         else:
-            chosen = _disambiguate_sku_products(aa, blob, cands, products)
+            chosen = _disambiguate_sku_products(aa, blob, cands, products, asset_name=name)
             if not chosen:
                 stats["reject_ambiguous_sku"] += 1
                 continue

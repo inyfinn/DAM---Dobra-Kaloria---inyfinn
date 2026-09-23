@@ -1,0 +1,141 @@
+name: Podpis wydania (DAM-Setup.exe.sig)
+
+# Cel: kazde wydanie na GitHub ma DAM-Setup.exe.sig, niezaleznie od tego,
+# na ktorym komputerze zbudowano instalator (klucz prywatny bywa tylko
+# lokalnie w bin/secrets na maszynie budujacej - patrz sign-release.py).
+#
+# Klucz prywatny lezy w sekrecie repo DAM_RELEASE_KEY (tresc pliku PEM,
+# nie sciezka). sign-release.py (key_path()) oczekuje SCIEZKI w zmiennej
+# DAM_RELEASE_KEY - wiec ten workflow zapisuje sekret do pliku tymczasowego
+# i podaje jego sciezke, zamiast podawac tresc PEM wprost.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag wydania (np. v2.3.7)'
+        required: true
+        type: string
+
+jobs:
+  sign:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Zaleznosci (tylko cryptography - bez calego requirements.txt)
+        run: python -m pip install --upgrade pip cryptography
+
+      - name: Ustal tag wydania
+        id: tag
+        env:
+          EVENT_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          TAG="${EVENT_TAG:-$INPUT_TAG}"
+          if [ -z "$TAG" ]; then
+            echo "BLAD: brak tagu wydania (ani z eventu release, ani z workflow_dispatch input)."
+            exit 1
+          fi
+          VERSION="${TAG#v}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Tag: $TAG -> wersja: $VERSION"
+
+      - name: Pobierz instalator z wydania (z ponawianiem - wyscig z uploadem)
+        id: download
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          mkdir -p work
+          cd work
+          ok=""
+          for i in $(seq 1 10); do
+            echo "Proba $i/10: gh release download $TAG -p DAM-Setup.exe ..."
+            if gh release download "$TAG" -R "${{ github.repository }}" -p 'DAM-Setup.exe' --clobber; then
+              if [ -f DAM-Setup.exe ]; then
+                ok=1
+                break
+              fi
+            fi
+            echo "DAM-Setup.exe jeszcze niedostepny, czekam 30s..."
+            sleep 30
+          done
+          if [ -z "$ok" ]; then
+            echo "BLAD: DAM-Setup.exe nie pojawilo sie w wydaniu $TAG po 10 probach."
+            exit 1
+          fi
+          # .sig moze jeszcze nie istniec - to nie jest blad na tym etapie.
+          gh release download "$TAG" -R "${{ github.repository }}" -p 'DAM-Setup.exe.sig' --clobber || true
+          ls -la
+
+      - name: Sprawdz istniejacy podpis
+        id: check
+        run: |
+          set -euo pipefail
+          cd work
+          if [ -f DAM-Setup.exe.sig ]; then
+            if python ../bin/scripts/ops/sign-release.py verify DAM-Setup.exe; then
+              echo "Podpis juz jest i przechodzi weryfikacje - nic do zrobienia."
+              echo "need_sign=false" >> "$GITHUB_OUTPUT"
+            else
+              echo "Podpis jest, ale NIE przechodzi weryfikacji - podpisze ponownie."
+              echo "need_sign=true" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "Brak .sig w wydaniu - trzeba podpisac."
+            echo "need_sign=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Podpisz instalator
+        if: steps.check.outputs.need_sign == 'true'
+        env:
+          DAM_RELEASE_KEY_PEM: ${{ secrets.DAM_RELEASE_KEY }}
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DAM_RELEASE_KEY_PEM:-}" ]; then
+            echo "BLAD: sekret repo DAM_RELEASE_KEY jest pusty. Ustaw go trescia pliku PEM klucza prywatnego (release-signing-key.pem)."
+            exit 1
+          fi
+          KEYFILE="$(mktemp /tmp/dam-release-key-XXXXXX.pem)"
+          umask 077
+          printf '%s' "$DAM_RELEASE_KEY_PEM" > "$KEYFILE"
+          chmod 600 "$KEYFILE"
+          echo "keyfile=$KEYFILE" >> "$GITHUB_ENV"
+          export DAM_RELEASE_KEY="$KEYFILE"
+          cd work
+          python ../bin/scripts/ops/sign-release.py sign DAM-Setup.exe --version "$VERSION"
+          python ../bin/scripts/ops/sign-release.py verify DAM-Setup.exe
+
+      - name: Usun klucz tymczasowy
+        if: always()
+        run: |
+          if [ -n "${keyfile:-}" ] && [ -f "${keyfile:-}" ]; then
+            shred -u "$keyfile" 2>/dev/null || rm -f "$keyfile"
+          fi
+
+      - name: Wgraj .sig do wydania
+        if: steps.check.outputs.need_sign == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          cd work
+          test -f DAM-Setup.exe.sig
+          gh release upload "$TAG" DAM-Setup.exe.sig -R "${{ github.repository }}" --clobber
+          echo "Wgrano DAM-Setup.exe.sig do wydania $TAG"

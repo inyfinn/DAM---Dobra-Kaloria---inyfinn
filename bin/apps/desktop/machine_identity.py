@@ -32,7 +32,17 @@ from typing import Any
 DESKTOP_DIR = Path(__file__).resolve().parent
 WEB_ROOT = DESKTOP_DIR.parent / "web"
 IDENTITY_RUNTIME = WEB_ROOT / "data" / "dam-identity.json"
-BOUND_SESSION = DESKTOP_DIR / "data" / "bound-session.json"
+# Powiazanie sesji z komputerem lezy w katalogu stanu uzytkownika Windows, a nie w
+# folderze instalacji: instalator podmienia folder aplikacji przy aktualizacji, a
+# uruchomienie z repo (D:, Synology Drive) moglo przywrocic stara kopie pliku.
+# Stara lokalizacja jest czytana jako zapas, zeby przeprowadzka nie wylogowala nikogo.
+LEGACY_BOUND_SESSION = DESKTOP_DIR / "data" / "bound-session.json"
+try:
+    import platform_compat as _pc
+
+    BOUND_SESSION = _pc.user_state_dir() / "bound-session.json"
+except Exception:  # noqa: BLE001
+    BOUND_SESSION = LEGACY_BOUND_SESSION
 
 
 def _utc() -> str:
@@ -148,13 +158,16 @@ def write_identity_runtime(identity: dict[str, Any] | None = None) -> Path:
 
 
 def read_bound_session() -> dict[str, Any] | None:
-    if not BOUND_SESSION.is_file():
-        return None
-    try:
-        data = json.loads(BOUND_SESSION.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None
-    return data if isinstance(data, dict) else None
+    for path in (BOUND_SESSION, LEGACY_BOUND_SESSION):
+        if not path.is_file():
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if isinstance(data, dict):
+            return data
+    return None
 
 
 def write_bound_session(payload: dict[str, Any]) -> Path:
@@ -167,11 +180,14 @@ def write_bound_session(payload: dict[str, Any]) -> Path:
 
 
 def clear_bound_session() -> None:
-    try:
-        if BOUND_SESSION.is_file():
-            BOUND_SESSION.unlink()
-    except OSError:
-        pass
+    # Obie lokalizacje - inaczej stara kopia w folderze instalacji przywrocilaby
+    # sesje po wylogowaniu (read_bound_session czyta ja jako zapas).
+    for path in (BOUND_SESSION, LEGACY_BOUND_SESSION):
+        try:
+            if path.is_file():
+                path.unlink()
+        except OSError:
+            pass
 
 
 def verify_launch_binding() -> dict[str, Any]:

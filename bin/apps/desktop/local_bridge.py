@@ -34,7 +34,12 @@ Endpoints:
   GET  /detect-marketing-bases -> kandydaci na tym komputerze (X:/D:/M:)
   GET/POST /machine-config -> baza Marketing dla tej maszyny (plik JSON)
   POST /auth/register|login  lokalne konta (bcrypt) + sesja urzadzenia
+                         login przyjmuje opcjonalne save_login/autologin (zapisane logowania)
   GET  /auth/me  Authorization: Bearer <token>
+  GET  /auth/saved  zapisane logowania NA TYM komputerze (bez hasel) + autologin_email
+  POST /auth/saved/login  {"email"} -> loguje zapisanym haslem (ta sama logika co /auth/login)
+  POST /auth/saved/delete  {"email"} -> usun zapisane logowanie
+  POST /auth/saved/autologin  {"email","enabled"} -> jedno konto na raz
   GET  /files/status?root=...  czy ROOT plikow online
   GET  /folder-images?path=...  lista obrazow w folderze Marketing (picker miniatury)
   GET  /checklist-extras?index=6300808  karty (D/G Projekty opakowań) + OK.pdf (Projekty wstępne)
@@ -102,6 +107,7 @@ from auth_store import (
     users_count,
 )
 
+import saved_logins
 import platform_compat
 
 try:
@@ -343,6 +349,10 @@ PUBLIC_FORBIDDEN_PATHS = frozenset(
         "/db/path",
         "/auth/rehydrate",
         "/auth/identity",
+        "/auth/saved",
+        "/auth/saved/login",
+        "/auth/saved/delete",
+        "/auth/saved/autologin",
         "/debug/self-test",
         "/telemetry/tail",
         "/app-update/apply",
@@ -8493,6 +8503,31 @@ class Handler(BaseHTTPRequestHandler):
             res = resolve_session(self._bearer(), device_id, machine_id)
             self._json(200 if res.get("ok") else 401, res)
             return
+        if parsed.path == "/auth/saved":
+            # Bez sesji (ekran logowania jeszcze nie ma tokena) - tylko lokalny UI,
+            # zablokowane dla PUBLIC_MODE przez PUBLIC_FORBIDDEN_PATHS wyzej.
+            try:
+                accounts = saved_logins.list_public()
+            except Exception:
+                accounts = []
+            try:
+                auto_email = saved_logins.autologin_email()
+            except Exception:
+                auto_email = ""
+            try:
+                available = saved_logins.encryption_available()
+            except Exception:
+                available = False
+            self._json(
+                200,
+                {
+                    "ok": True,
+                    "accounts": accounts,
+                    "autologin_email": auto_email,
+                    "available": bool(available),
+                },
+            )
+            return
         if parsed.path == "/auth/users":
             # lista kont (bez hasel) - tylko gdy sesja admina
             me = resolve_session(self._bearer())
@@ -9795,14 +9830,31 @@ class Handler(BaseHTTPRequestHandler):
             # skip_password_change przychodzi z UI (dam-api.js), ale do 2.2.6 nikt
             # go tu nie czytal - most gubil flage, wiec "Pomin" nic nie robil,
             # a okno "Ustaw nowe haslo" bylo nie do obejscia.
+            email_in = data.get("email") or ""
+            password_in = data.get("password") or ""
             res = auth_login(
-                data.get("email") or "",
-                data.get("password") or "",
+                email_in,
+                password_in,
                 data.get("device_id") or "",
                 data.get("machine_id") or "",
                 allow_weak_password=bool(data.get("skip_password_change")),
             )
-            self._json(200, self._ip_guard_login_result(res, data.get("email") or ""))
+            res = self._ip_guard_login_result(res, email_in)
+            # Zapisane logowania: tylko po realnym sukcesie (token wydany), nigdy
+            # przy password_change_required / invalid_credentials / too_many_attempts.
+            if res.get("ok") and res.get("token") and data.get("save_login"):
+                try:
+                    saved_ok = saved_logins.save(
+                        email_in,
+                        (res.get("user") or {}).get("name") or "",
+                        password_in,
+                        autologin=bool(data.get("autologin")),
+                    )
+                except Exception:
+                    saved_ok = False
+                res = dict(res)
+                res["saved"] = bool(saved_ok)
+            self._json(200, res)
             return
         if parsed.path == "/auth/ip-unblock":
             if self._require_admin() is None:
@@ -9831,6 +9883,53 @@ class Handler(BaseHTTPRequestHandler):
                     payload.get("machine_id") or "",
                 ),
             )
+            return
+        if parsed.path == "/auth/saved/login":
+            # Loguje zapisanym haslem: TA SAMA funkcja i te same odpowiedzi co
+            # /auth/login (lacznie z password_change_required / too_many_attempts),
+            # zeby UI nie musialo znac dwoch roznych kontraktow bledow.
+            payload = data if isinstance(data, dict) else {}
+            email_in = payload.get("email") or ""
+            pw = None
+            try:
+                pw = saved_logins.password_for(email_in)
+            except Exception:
+                pw = None
+            if pw is None:
+                self._json(200, {"ok": False, "error": "saved_login_unreadable"})
+                return
+            res = auth_login(
+                email_in,
+                pw,
+                payload.get("device_id") or "",
+                payload.get("machine_id") or "",
+                allow_weak_password=False,
+            )
+            res = self._ip_guard_login_result(res, email_in)
+            if res.get("ok") and res.get("token"):
+                try:
+                    saved_logins.touch(email_in)
+                except Exception:
+                    pass
+            self._json(200, res)
+            return
+        if parsed.path == "/auth/saved/delete":
+            payload = data if isinstance(data, dict) else {}
+            try:
+                ok = saved_logins.delete(payload.get("email") or "")
+            except Exception:
+                ok = False
+            self._json(200, {"ok": bool(ok)})
+            return
+        if parsed.path == "/auth/saved/autologin":
+            payload = data if isinstance(data, dict) else {}
+            try:
+                ok = saved_logins.set_autologin(
+                    payload.get("email") or "", bool(payload.get("enabled"))
+                )
+            except Exception:
+                ok = False
+            self._json(200, {"ok": bool(ok)})
             return
         if parsed.path == "/telemetry/batch":
             payload = data if isinstance(data, dict) else {}
