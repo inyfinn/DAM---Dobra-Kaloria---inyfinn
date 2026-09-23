@@ -344,6 +344,9 @@ PUBLIC_FORBIDDEN_PATHS = frozenset(
         "/preflight",
         "/index/snapshots",
         "/index/publish",
+        "/asset-sync/status",
+        "/asset-sync/blocked",
+        "/asset-sync/confirm",
         "/db/activate",
         "/db/activation",
         "/db/path",
@@ -1873,6 +1876,13 @@ def _run_branding_rebuild() -> None:
             _branding_rebuild_state["stage"] = "idle"
             _branding_rebuild_state["generation_id"] = _branding_generation_id()
         _write_branding_status()
+        # Faza 2: swiezy skan z dysku (build-branding-index.py wlasnie sie skonczyl)
+        # moze isc do scalania (asset_sync_runner) od razu - nie czekac na watek co 10 min.
+        # No-op dopoki dam_meta.asset_index_mode != "rows".
+        try:
+            _kick_asset_sync_after_branding_rebuild()
+        except Exception as exc:  # noqa: BLE001 - nie ma psuc udanego rebuildu
+            print("asset_sync kick after branding rebuild:", exc)
     except Exception as exc:  # noqa: BLE001
         with _branding_rebuild_lock:
             _branding_rebuild_state["last_ok"] = False
@@ -1969,6 +1979,149 @@ def _schedule_slim_grid_publish(delay_sec: float | None = None) -> None:
         return
     pub = _ensure_slim_publisher()
     pub.schedule(delay_sec=delay_sec)
+
+
+# --------------------------------------------------------------------------
+# Faza 2 "jedno zrodlo prawdy": scalanie indeksu materialow (asset_sync_runner.py).
+# Za znacznikiem w bazie (dam_meta.asset_index_mode = "rows") - dopoki kierownik
+# go nie ustawi, run_once() nizej jest no-opem (patrz asset_sync_runner.py).
+# Watek co 10 min + jednorazowo zaraz po udanej przebudowie Brandingu
+# (_run_branding_rebuild, po Stage 3 cache_invalidate - swiezy skan z dysku
+# powinien od razu isc do scalania, nie czekac az 10 minut watku).
+# --------------------------------------------------------------------------
+_ASSET_SYNC_INTERVAL_S = 600.0
+_asset_sync_lock = threading.Lock()
+_asset_sync_thread: threading.Thread | None = None
+_asset_sync_wake = threading.Event()
+_asset_sync_state: dict[str, Any] = {
+    "ok": None, "mode": "", "last_run": "", "error": "",
+    "pulled": None, "push": None, "blocked_count": 0, "blocked": {},
+}
+
+
+def _asset_sync_machine() -> str:
+    return (os.environ.get("COMPUTERNAME") or os.environ.get("HOSTNAME") or "").strip()
+
+
+def _asset_sync_root_path() -> str:
+    return str(read_machine_config().get("base_path") or "").strip()
+
+
+def run_asset_sync_once() -> dict[str, Any]:
+    """Jeden cykl scalania (Faza 2). Bezpieczny gdy tryb 'off' albo asset_repo.py
+    jeszcze nie jest gotowy - patrz asset_sync_runner.run_once."""
+    try:
+        import asset_sync_runner
+        import pg_db
+    except Exception as exc:  # noqa: BLE001
+        report = {"ok": False, "error": f"import: {exc}"[:300]}
+        with _asset_sync_lock:
+            _asset_sync_state.update(ok=False, error=report["error"], last_run=utc_now())
+        return report
+    db_path = getattr(dam_db, "DB_CANONICAL", None) if dam_db is not None else None
+    if not db_path:
+        report = {"ok": False, "error": "db_canonical_missing"}
+        with _asset_sync_lock:
+            _asset_sync_state.update(ok=False, error=report["error"], last_run=utc_now())
+        return report
+    report = asset_sync_runner.run_once(
+        db_path, WEB_ROOT / "data",
+        root_alive=_snapshot_root_alive(), root_path=_asset_sync_root_path(),
+        machine=_asset_sync_machine(), pg_connect=pg_db.connect,
+        on_index_written=lambda p: _on_snapshot_updated("branding-index", Path(p)),
+    )
+    with _asset_sync_lock:
+        _asset_sync_state.update(
+            ok=report.get("ok"),
+            mode=report.get("mode") or _asset_sync_state.get("mode") or "",
+            last_run=utc_now(),
+            error=report.get("error") or "",
+            pulled=report.get("pulled"),
+            push=report.get("push"),
+        )
+        if "blocked" in report:
+            blocked = report.get("blocked") or {}
+            _asset_sync_state["blocked"] = blocked
+            _asset_sync_state["blocked_count"] = len(blocked)
+    return report
+
+
+def asset_sync_status() -> dict[str, Any]:
+    with _asset_sync_lock:
+        state = dict(_asset_sync_state)
+    state.pop("blocked", None)  # lista osobno przez /asset-sync/blocked
+    return state
+
+
+def asset_sync_blocked() -> list[dict[str, Any]]:
+    with _asset_sync_lock:
+        blocked = dict(_asset_sync_state.get("blocked") or {})
+    return [{"folder": k, "count": v} for k, v in sorted(blocked.items())]
+
+
+def asset_sync_confirm_folder(folder: str) -> dict[str, Any]:
+    """Admin odblokowuje usuniecia z zablokowanego poddrzewa (krok 6 planu):
+    dopisuje folder do dam-local.sqlite/asset_sync_state.asset_sync_confirmed_dirs -
+    nastepny run_once() przekaze go do sync_cycle jako confirmed_dirs."""
+    folder = str(folder or "").strip()
+    if not folder:
+        return {"ok": False, "error": "folder_required"}
+    try:
+        import sqlite3  # noqa: PLC0415 - tylko tutaj, ta jedna trasa go potrzebuje
+
+        import asset_repo
+    except Exception as exc:  # noqa: BLE001 - asset_repo.py (W2) jeszcze nie gotowy
+        return {"ok": False, "error": f"asset_repo: {exc}"[:300]}
+    db_path = getattr(dam_db, "DB_CANONICAL", None) if dam_db is not None else None
+    if not db_path:
+        return {"ok": False, "error": "db_canonical_missing"}
+    conn = sqlite3.connect(str(db_path))
+    try:
+        asset_repo.ensure_local(conn)
+        raw = asset_repo.get_state(conn, "asset_sync_confirmed_dirs")
+        try:
+            confirmed = json.loads(raw) if raw else []
+            if not isinstance(confirmed, list):
+                confirmed = []
+        except ValueError:
+            confirmed = []
+        confirmed = [str(x) for x in confirmed]
+        if folder not in confirmed:
+            confirmed.append(folder)
+        asset_repo.set_state(conn, "asset_sync_confirmed_dirs",
+                              json.dumps(confirmed, ensure_ascii=False))
+        conn.commit()
+    finally:
+        conn.close()
+    return {"ok": True, "folder": folder, "confirmed_dirs": confirmed}
+
+
+def start_asset_sync_watch() -> dict[str, Any]:
+    global _asset_sync_thread
+    with _asset_sync_lock:
+        if _asset_sync_thread is not None and _asset_sync_thread.is_alive():
+            return {"ok": True, "started": False}
+
+        def _loop() -> None:
+            _asset_sync_wake.wait(15.0)  # po starcie mostu: najpierw UI, potem siec
+            while True:
+                try:
+                    run_asset_sync_once()
+                except Exception as exc:  # noqa: BLE001
+                    print("asset_sync_runner:", exc)
+                _asset_sync_wake.wait(_ASSET_SYNC_INTERVAL_S)
+                _asset_sync_wake.clear()
+
+        _asset_sync_thread = threading.Thread(target=_loop, daemon=True, name="dam-asset-sync")
+        _asset_sync_thread.start()
+        return {"ok": True, "started": True}
+
+
+def _kick_asset_sync_after_branding_rebuild() -> None:
+    """Wywolane po udanej przebudowie Brandingu (_run_branding_rebuild, Stage 3) -
+    swiezy skan z dysku moze isc do scalania od razu, bez czekania na watek co 10 min.
+    W osobnym watku (siec/PG), zeby nie wydluzac zakonczenia rebuildu."""
+    threading.Thread(target=run_asset_sync_once, daemon=True, name="dam-asset-sync-kick").start()
 
 
 _INDEX_RE = re.compile(r"^(FOL\d+|\d{5,9})(\.\d{2})?$", re.IGNORECASE)
@@ -8440,6 +8593,21 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as exc:  # noqa: BLE001
                 self._json(200, {"ok": False, "error": str(exc)[:200]})
             return
+        if parsed.path == "/asset-sync/status":
+            # Faza 2: ostatni cykl scalania (mode, ok, pulled/push, blocked_count).
+            try:
+                self._json(200, {"ok": True, **asset_sync_status()})
+            except Exception as exc:  # noqa: BLE001
+                self._json(200, {"ok": False, "error": str(exc)[:200]})
+            return
+        if parsed.path == "/asset-sync/blocked":
+            # Foldery zablokowane bezpiecznikiem poddrzewa (>20% znikajacych plikow) -
+            # panel admina "potwierdz usuniecia" (krok 6 planu).
+            try:
+                self._json(200, {"ok": True, "items": asset_sync_blocked()})
+            except Exception as exc:  # noqa: BLE001
+                self._json(200, {"ok": False, "error": str(exc)[:200]})
+            return
         if parsed.path == "/machine-config":
             self._json(200, read_machine_config())
             return
@@ -9967,6 +10135,14 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(200, index_snapshots.publish_changed(WEB_ROOT / "data", root_alive=True, force=True))
             return
+        if parsed.path == "/asset-sync/confirm":
+            # Admin potwierdza, ze usuniecia z zablokowanego poddrzewa sa prawdziwe
+            # (krok 6 planu) - dopisuje folder do confirmed_dirs na nastepny cykl.
+            if self._require_admin() is None:
+                return
+            folder = str((data.get("folder") if isinstance(data, dict) else None) or "")
+            self._json(200, asset_sync_confirm_folder(folder))
+            return
         if parsed.path == "/index/cancel":
             self._json(200, index_cancel())
             return
@@ -11434,6 +11610,12 @@ def main() -> None:
         index_snapshots.start_watch(WEB_ROOT / "data", _snapshot_root_alive, _on_snapshot_updated)
     except Exception as exc:  # noqa: BLE001
         print("index_snapshots:", exc)
+    try:
+        # Faza 2 "jedno zrodlo prawdy": scalanie indeksu materialow (dam_assets).
+        # No-op dopoki dam_meta.asset_index_mode != "rows" - patrz asset_sync_runner.py.
+        print("asset_sync_runner:", start_asset_sync_watch())
+    except Exception as exc:  # noqa: BLE001
+        print("asset_sync_runner:", exc)
     if dam_debug is not None:
         try:
             dam_debug.ensure_daemon_started(interval_sec=60.0)

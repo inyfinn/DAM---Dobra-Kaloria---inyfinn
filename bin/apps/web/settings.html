@@ -421,6 +421,20 @@ html.dam-booting{background:#F6F7F6}html.dam-booting.dark,html.dam-booting[data-
           <div class="dam-widget__body" id="damAssocHistoryBody"></div>
         </section>
 
+        <section class="dam-widget dam-sw--system dam-sw--notify" id="damAssetSync" data-section="system" hidden
+          data-search="synchronizacja indeks materiały synology drive scalanie zablokowane usunięcia bezpiecznik faza 2">
+          <div class="dam-widget__head">
+            <div class="dam-widget__head-row">
+              <h2 class="dam-widget__title"><i class="uil uil-repeat" aria-hidden="true"></i> Synchronizacja indeksu materiałów</h2>
+              <span class="dam-settings-badge-ro">Admin</span>
+            </div>
+            <p class="dam-widget__meta">Stan synchronizacji indeksu materiałów między komputerami (faza 2 - scalanie jak Synology Drive) i potwierdzanie usunięć wstrzymanych przez bezpiecznik.</p>
+          </div>
+          <div class="dam-widget__body">
+            <div id="damAssetSyncBody"><p class="dam-widget__meta">Wczytywanie...</p></div>
+          </div>
+        </section>
+
         <section class="dam-widget dam-sw--notify" id="damNotificationGroups" data-section="notify"
           data-search="powiadomienia notify email e-mail grafik odbiorcy lista">
           <div class="dam-widget__head">
@@ -589,7 +603,7 @@ html.dam-booting{background:#F6F7F6}html.dam-booting.dark,html.dam-booting[data-
   <script src="./assets/js/dam-api.js?v=2.3.8"></script>
   <script src="./assets/js/dam-i18n.js?v=5.0.196"></script>
   <script src="./assets/js/dam-runtime.js?v=1.8.9"></script>
-  <script src="./assets/js/dam-version.js?v=2.3.8"></script>
+  <script src="./assets/js/dam-version.js?v=2.3.9"></script>
   <script src="./assets/js/dam-app-update.js?v=2.1.1"></script>
 	<script src="./assets/js/dam-shell.js?v=2.1.8"></script>
   <script src="./assets/js/dam-loader.js?v=1.0.79"></script>
@@ -597,7 +611,7 @@ html.dam-booting{background:#F6F7F6}html.dam-booting.dark,html.dam-booting[data-
   <script src="./assets/js/dam-paths.js?v=2.1.2"></script>
   <script src="./assets/js/dam-labels.js?v=2.1.8"></script>
   <script src="./assets/js/dam-variant-notes.js?v=2.3.0"></script>
-  <script src="./assets/js/dam-badges.js?v=2.1.0"></script>
+  <script src="./assets/js/dam-badges.js?v=2.3.9"></script>
   <script src="./assets/js/dam-tag-edit.js?v=2.0.8"></script>
   <script src="./assets/js/dam-user-prefs.js?v=5.0.196"></script>
   <script src="./assets/js/dam-danger.js?v=1.0.79"></script>
@@ -607,11 +621,18 @@ html.dam-booting{background:#F6F7F6}html.dam-booting.dark,html.dam-booting[data-
   <script src="./assets/js/dam-ip-blocks.js?v=2.0.8"></script>
   <script src="./assets/js/dam-assoc-history.js?v=2.0.8"></script>
   <script src="./assets/js/dam-device-paths.js?v=1.0.79"></script>
-  <script src="./assets/js/dam-saved-logins.js?v=2.3.8"></script>
+  <script src="./assets/js/dam-saved-logins.js?v=2.3.9"></script>
   <script>
     (function () {
       if (!window.DamSavedLogins) return;
       DamSavedLogins.mountSettings("damSavedLoginsList");
+    })();
+  </script>
+  <script src="./assets/js/dam-asset-sync.js?v=2.3.9"></script>
+  <script>
+    (function () {
+      if (!window.DamAssetSync) return;
+      DamAssetSync.mountSettings("damAssetSyncBody");
     })();
   </script>
   <style id="damDangerZoneCss">

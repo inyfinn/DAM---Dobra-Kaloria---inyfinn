@@ -53,9 +53,47 @@ SHRINK_GUARD = 0.8
 # _looks_complete_json nizej).
 FULL_PARSE_MAX_BYTES = 50 * 1024 * 1024
 
+# Faza 2 (bin/docs/PLAN-jedno-zrodlo-prawdy.md): gdy asset_sync_runner.py ma
+# wlaczony tryb "rows" (dam_meta.asset_index_mode = "rows"), branding-index.json
+# jest budowany przez scalanie (dam_assets), nie przez snapshoty - publikacja i
+# pobieranie TEGO jednego klucza przez ten modul musza sie wtedy wylaczyc, zeby
+# swiezy wynik scalania nie zostal nadpisany starszym snapshotem (albo odwrotnie).
+ROWS_MODE_SKIP_KEY = "branding-index"
+_ROWS_MODE_CACHE_TTL_S = 600.0  # tania funkcja: co najwyzej raz na 10 min pyta baze
+_ROWS_MODE_CACHE: dict[str, Any] = {"value": False, "at": 0.0}
+
 _LOCK = threading.Lock()
 _THREAD: threading.Thread | None = None
 _LAST: dict[str, Any] = {}
+
+
+def _asset_index_mode_is_rows(*, force: bool = False) -> bool:
+    """dam_meta.asset_index_mode == "rows"? Cache 10 min - nie pytamy bazy na kazdy plik.
+
+    Blad polaczenia / brak tabeli = False (bezpieczny domyslny: snapshoty dzialaja
+    dalej jak dzisiaj, dokladnie tak samo jak w asset_sync_runner._get_mode)."""
+    now = time.monotonic()
+    if not force and (now - float(_ROWS_MODE_CACHE.get("at") or 0.0)) < _ROWS_MODE_CACHE_TTL_S:
+        return bool(_ROWS_MODE_CACHE.get("value"))
+    value = False
+    try:
+        import pg_db
+
+        pg = pg_db.connect()
+        try:
+            cur = pg.cursor()
+            cur.execute("SELECT value FROM dam_meta WHERE key = %s", ("asset_index_mode",))
+            row = cur.fetchone()
+            raw = None
+            if row:
+                raw = row.get("value") if hasattr(row, "get") else row[0]
+            value = str(raw or "") == "rows"
+        finally:
+            pg.close()
+    except Exception:  # noqa: BLE001 - offline / brak tabeli = tryb wylaczony (bezpieczny)
+        value = False
+    _ROWS_MODE_CACHE.update(value=value, at=now)
+    return value
 
 
 def _state_path() -> Path:
@@ -186,6 +224,9 @@ def publish_changed(data_dir: Path, *, root_alive: bool, force: bool = False) ->
     except Exception:  # noqa: BLE001
         db_metas = {}
     for key, fname in SNAPSHOT_FILES.items():
+        if key == ROWS_MODE_SKIP_KEY and _asset_index_mode_is_rows():
+            out.setdefault("skipped_rows_mode", []).append(key)
+            continue
         path = Path(data_dir) / fname
         if not path.is_file() or path.stat().st_size < MIN_BYTES:
             continue
@@ -240,6 +281,9 @@ def pull_newer(
     state = _load_state()
     out: dict[str, Any] = {"ok": True, "pulled": [], "current": [], "missing_in_db": []}
     for key, fname in SNAPSHOT_FILES.items():
+        if key == ROWS_MODE_SKIP_KEY and _asset_index_mode_is_rows():
+            out.setdefault("skipped_rows_mode", []).append(key)
+            continue
         meta = metas.get(key)
         if not meta:
             out["missing_in_db"].append(key)

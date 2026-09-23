@@ -94,18 +94,18 @@
   function mapSavedLoginError(data) {
     var code = data && data.error;
     if (code === "invalid_credentials") {
-      return "Zapisane haslo jest juz nieaktualne. Zaloguj sie recznie.";
+      return "Zapisane hasło jest już nieaktualne. Zaloguj się ręcznie.";
     }
     if (code === "password_change_required") {
-      return "To haslo jest za slabe. Ustaw nowe haslo, zeby sie zalogowac.";
+      return "To hasło jest za słabe. Ustaw nowe hasło, żeby się zalogowac.";
     }
     if (code === "too_many_attempts") {
-      return "Za duzo nieudanych prob. Odczekaj 5 minut.";
+      return "Za duzo nieudanych prób. Odczekaj 5 minut.";
     }
     if (code === "saved_login_unreadable") {
-      return "Nie mozna odczytac zapisanego hasla na tym koncie Windows. Zaloguj sie recznie.";
+      return "Nie mozna odczytac zapisanego hasla na tym koncie Windows. Zaloguj się ręcznie.";
     }
-    return (data && data.error) || "Nie udalo sie zalogowac.";
+    return (data && data.error) || "Nie udało się zalogowac.";
   }
 
   /**
@@ -234,7 +234,7 @@
               '">Zaloguj</button>' +
               '<button type="button" class="dam-saved-logins__remove" data-remove-saved="' +
               email +
-              '" aria-label="Usun zapisane konto" title="Usun zapisane konto">&times;</button>' +
+              '" aria-label="Usuń zapisane konto" title="Usuń zapisane konto">&times;</button>' +
               "</div>"
             );
           })
@@ -275,7 +275,7 @@
       autologinCancelled = false;
       autoBarEl.hidden = false;
       var remaining = 2;
-      autoTextEl.textContent = "Loguje jako " + email + "...";
+      autoTextEl.textContent = "Loguję jako " + email + "...";
       autologinTimer = setInterval(function () {
         remaining -= 1;
         if (autologinCancelled) {
@@ -327,18 +327,18 @@
     function render(data) {
       if (!data || !data.ok) {
         container.innerHTML =
-          '<p class="dam-widget__meta">Brak polaczenia z mostem DAM - zapisane logowania niedostepne.</p>';
+          '<p class="dam-widget__meta">Brak połączenia z mostem DAM - zapisane logowania niedostępne.</p>';
         return;
       }
       if (data.available === false) {
         container.innerHTML =
-          '<p class="dam-widget__meta">Ta wersja mostu DAM nie obsluguje jeszcze zapisanych logowan.</p>';
+          '<p class="dam-widget__meta">Ta wersja mostu DAM nie obsługuje jeszcze zapisanych logowań.</p>';
         return;
       }
       var accounts = data.accounts || [];
       if (!accounts.length) {
         container.innerHTML =
-          '<p class="dam-widget__meta">Brak zapisanych logowan na tym komputerze.</p>';
+          '<p class="dam-widget__meta">Brak zapisanych logowań na tym komputerze.</p>';
         return;
       }
       container.innerHTML = accounts
@@ -371,7 +371,7 @@
             "</label>" +
             '<button type="button" class="dam-notify-row__remove" data-remove-saved="' +
             email +
-            '" aria-label="Usun zapisane logowanie" title="Usun zapisane logowanie">' +
+            '" aria-label="Usuń zapisane logowanie" title="Usuń zapisane logowanie">' +
             '<i class="uil uil-trash-alt" aria-hidden="true"></i>' +
             "</button>" +
             "</div>"

@@ -774,6 +774,33 @@
     openTagEdit(btn);
   }
 
+  /**
+   * Klik/Ctrl+klik na plakietce WEWNATRZ okna podgladu (#damMediaPreview / #damVizModal)
+   * maja dzialac zgodnie z dymkiem (filtr / dodanie do wyszukiwania), ale strona POD
+   * oknem nie moze zmieniac sie w trakcie ogladania - najpierw zamykamy okno uzywajac
+   * jego wlasnego przycisku zamkniecia (#damMediaPreviewClose / #damVizModalClose),
+   * ktory juz ma poprawnie spiete sprzatanie (dam-media-preview.js closeSelf /
+   * dam-viz.js requestCloseVizModal), potem stosujemy filtr na odslonietej stronie.
+   * Zwraca true, jesli plakietka byla w oknie podgladu (i okno zostalo zamkniete).
+   */
+  function closeHostPreviewModal(btn) {
+    if (!btn || !btn.closest) return false;
+    var mediaPreview = btn.closest("#damMediaPreview");
+    var vizModal = btn.closest("#damVizModal");
+    if (!mediaPreview && !vizModal) return false;
+    var closeBtn = document.getElementById(
+      mediaPreview ? "damMediaPreviewClose" : "damVizModalClose"
+    );
+    if (closeBtn) {
+      closeBtn.click();
+    } else {
+      /* Brak przycisku (nietypowy stan) - fallback: usun overlay recznie. */
+      var overlay = mediaPreview || vizModal;
+      if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }
+    return true;
+  }
+
   function isAdminEditMode() {
     return (
       global.DamTagEdit &&
@@ -1130,10 +1157,11 @@
         e.preventDefault();
         e.stopPropagation();
         lastClick = { t: now, btn: btn };
-        /* HARD: tags in preview/viz modal must NOT drive page search/filters behind the modal. */
-        if (btn.closest && (btn.closest("#damMediaPreview") || btn.closest("#damVizModal"))) {
-          return;
-        }
+        /* Plakietka w oknie podgladu (#damMediaPreview / #damVizModal): dymek obiecuje
+           Klik/Ctrl+klik jak poza oknem, wiec najpierw zamykamy okno (jego wlasnym
+           zamknieciem), zeby strona pod spodem nie zmienila sie w trakcie ogladania,
+           a dopiero potem stosujemy filtr na odslonietej stronie (2026-09-23). */
+        closeHostPreviewModal(btn);
         /* Natychmiastowy filtr (AJAX-like). Ctrl/Meta = dolacz token po spacji. */
         applyTagFilter(kind, value, ctx, {
           append: wantAppend,
@@ -1606,6 +1634,7 @@
     bindCopyOnRightClick: bindCopyOnRightClick,
     copyTagText: copyTagText,
     applyTagFilter: applyTagFilter,
+    closeHostPreviewModal: closeHostPreviewModal,
     detectContext: detectContext,
     getIncludeTagTiers: getIncludeTagTiers,
     setRevealLowTags: setRevealLowTags,

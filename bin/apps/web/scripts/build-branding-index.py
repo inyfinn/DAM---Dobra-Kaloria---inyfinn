@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 import time
@@ -15,6 +16,7 @@ SCRIPTS = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPTS))
 
 from asset_ids import asset_key, stable_asset_id  # noqa: E402
+from scan_walker import walk_files  # noqa: E402
 
 WEB = Path(__file__).resolve().parents[1]
 OUT = WEB / "data" / "branding-index.json"
@@ -23,6 +25,24 @@ CAMPAIGNS_OUT = WEB / "data" / "campaigns.json"
 STATUS_FILE = WEB / "data" / "branding-build-status.json"
 FILE_INDEX_PATH = WEB / "data" / "file-index.json"
 CATALOG_PATH = WEB / "data" / "product-catalog.json"
+SCAN_DIRS_OUT = WEB / "data" / "branding-scan-dirs.json"
+
+# Foldery faktycznie wylistowane / nieprzeczytane (bledy IO) w biezacym
+# przebiegu skanu - klucze asset_key (patrz scan_walker.py). Scalane ze
+# wszystkich przejsc (marketing, wizki, elementy produktow), zapisywane
+# do branding-scan-dirs.json, zeby merge indeksu (asset_sync) mogl
+# odroznic "plik usuniety" od "folder nieprzeczytany".
+_SCANNED_DIRS: set[str] = set()
+_FAILED_DIRS: set[str] = set()
+
+
+def _walk(root: Path) -> list[Path]:
+    """rglob("*") + fp.is_file() zastapione walk_files: dodatkowo zbiera
+    scanned/failed dirs do modulowych zbiorow (patrz SCAN_DIRS_OUT)."""
+    files, scanned, failed = walk_files(root)
+    _SCANNED_DIRS.update(scanned)
+    _FAILED_DIRS.update(failed)
+    return files
 
 ARCHIVE_MARKERS = ("-- ARCHIWUM --", "00 - ARCHIWUM", "/ARCHIWUM/", "\\ARCHIWUM\\")
 LEGACY_ARCHIVE_ROOT = "-- ARCHIWUM --"
@@ -348,24 +368,22 @@ def scan_marketing_roots(
         if not root.is_dir():
             continue
         print(f"scan primary: {root}", flush=True)
-        for fp in root.rglob("*"):
-            if fp.is_file():
-                ingest_file(fp, brand, from_legacy=False)
-                if stats["primary_scanned"] and stats["primary_scanned"] % 500 == 0:
-                    print(f"  primary_scanned={stats['primary_scanned']} indexed={aid}", flush=True)
+        for fp in _walk(root):
+            ingest_file(fp, brand, from_legacy=False)
+            if stats["primary_scanned"] and stats["primary_scanned"] % 500 == 0:
+                print(f"  primary_scanned={stats['primary_scanned']} indexed={aid}", flush=True)
 
     if legacy_root.is_dir():
         print(f"scan legacy: {legacy_root}", flush=True)
-        for fp in legacy_root.rglob("*"):
-            if fp.is_file():
-                ingest_file(fp, "DK", from_legacy=True)
-                if stats["legacy_scanned"] and stats["legacy_scanned"] % 500 == 0:
-                    print(
-                        f"  legacy_scanned={stats['legacy_scanned']}"
-                        f" indexed={stats['legacy_indexed']}"
-                        f" skip_overlap={stats['legacy_skipped_overlap']}",
-                        flush=True,
-                    )
+        for fp in _walk(legacy_root):
+            ingest_file(fp, "DK", from_legacy=True)
+            if stats["legacy_scanned"] and stats["legacy_scanned"] % 500 == 0:
+                print(
+                    f"  legacy_scanned={stats['legacy_scanned']}"
+                    f" indexed={stats['legacy_indexed']}"
+                    f" skip_overlap={stats['legacy_skipped_overlap']}",
+                    flush=True,
+                )
 
     return assets, stats
 
@@ -382,9 +400,7 @@ def scan_wizki_products(marketing: Path, include_archive: bool = False) -> list[
     for products_root in scan_roots_dirs:
         if not products_root.is_dir():
             continue
-        for fp in products_root.rglob("*"):
-            if not fp.is_file():
-                continue
+        for fp in _walk(products_root):
             path = str(fp).replace("\\", "/")
             if not is_wizki_path(path):
                 continue
@@ -419,9 +435,7 @@ def scan_product_element_assets(marketing: Path, include_archive: bool = False) 
     for products_root in scan_roots_dirs:
         if not products_root.is_dir():
             continue
-        for fp in products_root.rglob("*"):
-            if not fp.is_file():
-                continue
+        for fp in _walk(products_root):
             path = str(fp).replace("\\", "/")
             if not is_product_element_path(path):
                 continue
@@ -559,6 +573,9 @@ def main() -> int:
     ap.add_argument("--include-archive", action="store_true")
     args = ap.parse_args()
     t0 = time.time()
+    t0_ms = int(t0 * 1000)
+    _SCANNED_DIRS.clear()
+    _FAILED_DIRS.clear()
     marketing = resolve_marketing_base()
     marketing_assets, scan_stats = scan_marketing_roots(marketing, include_archive=args.include_archive)
     print(
@@ -678,6 +695,30 @@ def main() -> int:
         ),
         encoding="utf-8",
     )
+    scan_dirs_payload = {
+        "version": 1,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "scan_time_ms": t0_ms,
+        "root": str(marketing).replace("\\", "/"),
+        "scanned_dirs": sorted(_SCANNED_DIRS),
+        "failed_dirs": sorted(_FAILED_DIRS),
+        "complete": not _FAILED_DIRS,
+        # Odcisk pliku skanu: w trybie "rows" most nadpisuje branding-index.json wynikiem
+        # scalania - runner uzywa pliku jako skanu tylko, gdy rozmiar i czas zapisu
+        # zgadzaja sie z tym odciskiem (asset_sync_runner._read_scan).
+        "index_size": OUT.stat().st_size if OUT.is_file() else 0,
+        "index_mtime_ns": OUT.stat().st_mtime_ns if OUT.is_file() else 0,
+    }
+    SCAN_DIRS_OUT.parent.mkdir(parents=True, exist_ok=True)
+    scan_dirs_tmp = SCAN_DIRS_OUT.with_suffix(SCAN_DIRS_OUT.suffix + f".{os.getpid()}.tmp")
+    scan_dirs_tmp.write_text(
+        json.dumps(scan_dirs_payload, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    os.replace(scan_dirs_tmp, SCAN_DIRS_OUT)
+    if _FAILED_DIRS:
+        print(f"warn: {len(_FAILED_DIRS)} folder(y) nieprzeczytane (patrz {SCAN_DIRS_OUT})")
+
     print(
         f"Wrote {OUT} assets={len(assets)} wizki={len(wizki_assets)} "
         f"perspective={with_persp} linked={with_link} elapsed={time.time()-t0:.1f}s"

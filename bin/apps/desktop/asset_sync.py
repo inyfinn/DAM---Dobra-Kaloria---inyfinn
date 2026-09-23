@@ -189,7 +189,8 @@ def _content_differs(entry: dict, prev: dict) -> bool:
 def diff_scan_report(prev_rows: dict, scan: dict, scanned_dirs: Iterable[str],
                      scan_time_ms: int, machine: str, *,
                      last_seen: Iterable[str] | None = None,
-                     failed_dirs: Iterable[str] = ()) -> dict:
+                     failed_dirs: Iterable[str] = (),
+                     confirmed_dirs: Iterable[str] = ()) -> dict:
     """Pelny raport scalania.
 
     prev_rows    asset_id -> wiersz z bazy (lokalne lustro po ostatnim pull; tombstony tez)
@@ -199,12 +200,17 @@ def diff_scan_report(prev_rows: dict, scan: dict, scanned_dirs: Iterable[str],
                  (blad, brak dostepu, wykluczenie) - nic pod nimi nie jest usuwane
     last_seen    asset_id widziane przez TEN komputer w poprzednim skanie;
                  None = pierwszy skan -> zero usuniec
+    confirmed_dirs klucze folderow, ktore admin potwierdzil jako prawdziwe usuniecie -
+                 pliki pod nimi NIE podlegaja bezpiecznikowi poddrzewa (pkt 3 nizej).
+                 Pozostale warunki usuniecia (last_seen, scanned_dirs, mtime) nadal
+                 obowiazuja. Domyslnie puste = zachowanie bez zmian.
 
     Zwraca {"ops", "blocked": {folder: liczba}, "skipped_unlisted", "stale_ignored",
             "next_last_seen"}.
     """
     listed = {str(d) for d in scanned_dirs}
     failed = {str(d) for d in failed_dirs}
+    confirmed = {str(d) for d in confirmed_dirs}
     seen_before = None if last_seen is None else set(last_seen)
     ops: list[dict] = []
     stale_ignored = 0
@@ -281,13 +287,15 @@ def diff_scan_report(prev_rows: dict, scan: dict, scanned_dirs: Iterable[str],
                if live_under.get(d, 0) >= SUBTREE_MIN_FILES
                and gone / live_under[d] > SUBTREE_SHRINK_LIMIT}
         for aid in candidates:
-            hit = [a for a in _ancestors(str(prev_rows[aid].get("asset_key") or "")) if a in bad]
-            if hit:
-                top = hit[-1]  # najwyzszy podejrzany folder - czytelniej w raporcie
-                blocked[top] = blocked.get(top, 0) + 1
-                keep_seen.add(aid)
-                continue
             prev = prev_rows[aid]
+            ancestors = _ancestors(str(prev.get("asset_key") or ""))
+            if not any(a in confirmed for a in ancestors):
+                hit = [a for a in ancestors if a in bad]
+                if hit:
+                    top = hit[-1]  # najwyzszy podejrzany folder - czytelniej w raporcie
+                    blocked[top] = blocked.get(top, 0) + 1
+                    keep_seen.add(aid)
+                    continue
             ops.append(_op(OP_TOMBSTONE, aid, {}, prev, machine, scan_time_ms, "missing"))
             ops[-1]["mtime_ms"] = _int(prev.get("mtime_ms"))
             ops[-1]["size"] = _opt_int(prev.get("size"))
@@ -299,10 +307,11 @@ def diff_scan_report(prev_rows: dict, scan: dict, scanned_dirs: Iterable[str],
 
 def diff_scan(prev_rows: dict, scan: dict, scanned_dirs: Iterable[str], scan_time_ms: int,
               machine: str, *, last_seen: Iterable[str] | None = None,
-              failed_dirs: Iterable[str] = ()) -> list[dict]:
+              failed_dirs: Iterable[str] = (), confirmed_dirs: Iterable[str] = ()) -> list[dict]:
     """Lista operacji (upsert / tombstone / restore) - patrz diff_scan_report."""
     return diff_scan_report(prev_rows, scan, scanned_dirs, scan_time_ms, machine,
-                            last_seen=last_seen, failed_dirs=failed_dirs)["ops"]
+                            last_seen=last_seen, failed_dirs=failed_dirs,
+                            confirmed_dirs=confirmed_dirs)["ops"]
 
 
 # --------------------------------------------------------------------------
@@ -560,6 +569,7 @@ def pull_since(pg, rev: int, *, limit: int = PULL_BATCH) -> dict:
 
 def sync_cycle(pg, local_rows: dict, *, scan: dict | None = None,
                scanned_dirs: Iterable[str] = (), failed_dirs: Iterable[str] = (),
+               confirmed_dirs: Iterable[str] = (),
                last_seen: Iterable[str] | None = None, scan_time_ms: int = 0,
                machine: str = "", now_ms: int | None = None) -> dict:
     """Jeden cykl jak klient Synology: pull -> (diff -> push -> pull).
@@ -578,7 +588,8 @@ def sync_cycle(pg, local_rows: dict, *, scan: dict | None = None,
     if scan is None:
         return out
     report = diff_scan_report(rows, scan, scanned_dirs, scan_time_ms, machine,
-                              last_seen=last_seen, failed_dirs=failed_dirs)
+                              last_seen=last_seen, failed_dirs=failed_dirs,
+                              confirmed_dirs=confirmed_dirs)
     out["report"] = {k: v for k, v in report.items() if k != "next_last_seen"}
     pushed = push_ops(pg, report["ops"], now_ms=now_ms)
     out["push"] = pushed

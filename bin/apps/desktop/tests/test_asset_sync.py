@@ -112,6 +112,7 @@ class Machine:
         self.last_seen: set | None = None
         self.failed: set[str] = set()      # foldery, ktorych odczyt sie nie udal
         self.hidden: set[str] = set()      # pliki niewidoczne mimo wylistowania folderu
+        self.confirmed: set[str] = set()   # foldery potwierdzone przez admina (bez bezpiecznika)
         self.clock = 10_000_000
         self.last = None
 
@@ -141,6 +142,7 @@ class Machine:
             scan, dirs = self.scan()
             res = asset_sync.sync_cycle(
                 pg, self.rows, scan=scan, scanned_dirs=dirs, failed_dirs=self.failed,
+                confirmed_dirs=self.confirmed,
                 last_seen=self.last_seen, scan_time_ms=self.clock, machine=self.name,
                 now_ms=self.clock)
         self.rows = res["rows"]
@@ -300,6 +302,68 @@ class ScenarioTests(unittest.TestCase):
         self.m.hidden.clear()                        # odczyt wrocil - nic nie zginelo
         self.m.sync(self.pg)
         self.assertEqual(self.m.ops(), [])
+
+    def test_confirmed_dirs_unblock_only_that_folder(self):
+        """Admin potwierdza usuniecie w jednym podejrzanym folderze - drugi zostaje
+        zablokowany, last_seen dla niepotwierdzonych plikow sie nie gubi."""
+        for k in range(8):
+            self.m.disk.update(_folder(f"- POLSKA/1 - PRODUKTY/Inny {k}", 12))
+        self._boot()
+        for i in range(4):                            # 4 z 12 w KAZDYM z dwoch folderow = 33 %
+            self.m.hidden.add(f"{P}/4 - WIZKI/wiz-{i:02d}.png")
+            self.m.hidden.add(f"{Q}/4 - WIZKI/wiz-{i:02d}.png")
+        self.m.sync(self.pg)
+        self.assertEqual(self.m.ops("tombstone"), [])
+        blocked1 = dict(self.m.last["report"]["blocked"])
+        self.assertEqual(sum(blocked1.values()), 8)
+        p_key = next(k for k in blocked1 if "klopsiki" in k.lower())
+        q_key = next(k for k in blocked1 if "figi" in k.lower())
+
+        # Admin potwierdza tylko folder P - Q dalej zablokowany.
+        self.m.confirmed = {p_key}
+        self.m.sync(self.pg)
+        tomb = self.m.ops("tombstone")
+        self.assertEqual(sorted(o["path_rel"] for o in tomb),
+                         sorted(f"{P}/4 - WIZKI/wiz-{i:02d}.png" for i in range(4)))
+        blocked2 = self.m.last["report"]["blocked"]
+        self.assertNotIn(p_key, blocked2)
+        self.assertEqual(blocked2.get(q_key), 4)
+        for i in range(4):
+            self.assertIsNotNone(self.pg.row(f"{P}/4 - WIZKI/wiz-{i:02d}.png")["deleted_at"])
+            self.assertIsNone(self.pg.row(f"{Q}/4 - WIZKI/wiz-{i:02d}.png")["deleted_at"])
+
+        # Bez potwierdzenia dla Q dalej nic sie nie usuwa (kolejny cykl, to samo hidden).
+        self.m.confirmed = set()
+        self.m.sync(self.pg)
+        self.assertEqual(self.m.ops("tombstone"), [])
+        self.assertEqual(sum(self.m.last["report"]["blocked"].values()), 4)
+
+        # Teraz admin potwierdza Q - odblokowuje sie tylko on.
+        self.m.confirmed = {q_key}
+        self.m.sync(self.pg)
+        tomb_q = self.m.ops("tombstone")
+        self.assertEqual(sorted(o["path_rel"] for o in tomb_q),
+                         sorted(f"{Q}/4 - WIZKI/wiz-{i:02d}.png" for i in range(4)))
+        for i in range(4):
+            self.assertIsNotNone(self.pg.row(f"{Q}/4 - WIZKI/wiz-{i:02d}.png")["deleted_at"])
+
+    def test_confirmed_dirs_default_empty_keeps_old_behavior(self):
+        """Domyslne confirmed_dirs=() - zero zmian w istniejacym zachowaniu bezpiecznika."""
+        for k in range(8):
+            self.m.disk.update(_folder(f"- POLSKA/1 - PRODUKTY/Inny {k}", 12))
+        self._boot()
+        for i in range(4):
+            self.m.hidden.add(f"{P}/4 - WIZKI/wiz-{i:02d}.png")
+        scan, dirs = self.m.scan()
+        report_default = asset_sync.diff_scan_report(
+            self.m.rows, scan, dirs, self.m.clock + 1000, self.m.name,
+            last_seen=self.m.last_seen)
+        report_explicit_empty = asset_sync.diff_scan_report(
+            self.m.rows, scan, dirs, self.m.clock + 1000, self.m.name,
+            last_seen=self.m.last_seen, confirmed_dirs=())
+        self.assertEqual(report_default["ops"], report_explicit_empty["ops"])
+        self.assertEqual(report_default["blocked"], report_explicit_empty["blocked"])
+        self.assertTrue(report_default["blocked"])   # bezpiecznik nadal dziala bez zmian
 
     def test_partial_read_like_2026_09_23_blocked_at_root(self):
         """Skan widzi 2 z 24 folderow produktow - usuniecia zablokowane."""
