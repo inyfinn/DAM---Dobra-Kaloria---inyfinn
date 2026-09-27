@@ -23,7 +23,7 @@
     .\run-parity.ps1 -OutDir "C:\...\scratchpad\parity"
 #>
 param(
-    [string]$App = "C:\Users\krzysztof.wieczorek\AppData\Local\DAM-bezroot-test",
+    [string]$App = (Join-Path $env:LOCALAPPDATA "DAM-bezroot-test"),
     [Parameter(Mandatory = $true)]
     [string]$OutDir,
     [int]$GoldPort = 8765,

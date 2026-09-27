@@ -236,6 +236,17 @@ def publish_changed(data_dir: Path, *, root_alive: bool, force: bool = False) ->
         import pg_db
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "error": f"pg_db: {exc}"}
+    # Faza 3 (decyzja kierownika 27.09.2026): ROOT lokalny nie daje prawa do
+    # zmiany wspolnego katalogu w bazie - patrz index_authority.py. None (brak
+    # klucza / blad odczytu) = zachowanie jak przed tym modulem (dozwolone).
+    try:
+        import index_authority
+
+        allowed = index_authority.may_publish(pg_db.connect)
+    except Exception:  # noqa: BLE001
+        allowed = None
+    if allowed is False:
+        return {"ok": True, "skipped": "not_authority"}
     state = _load_state()
     out: dict[str, Any] = {"ok": True, "published": [], "unchanged": []}
     try:

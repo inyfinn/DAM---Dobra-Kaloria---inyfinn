@@ -25,8 +25,7 @@
     .\start-noroot.ps1 -App "C:\Users\krzysztof.wieczorek\AppData\Local\DAM-bezroot-test"
 #>
 param(
-    [Parameter(Mandatory = $true)]
-    [string]$App,
+    [string]$App = (Join-Path $env:LOCALAPPDATA "DAM-bezroot-test"),
 
     [int]$BridgePort = 9766,
     [int]$WebPort = 9765

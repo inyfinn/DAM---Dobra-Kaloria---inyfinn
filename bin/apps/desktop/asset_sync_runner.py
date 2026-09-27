@@ -43,6 +43,11 @@ SCAN_NAME = "branding-index.scan.json"
 FALLBACK_SCAN_NAME = "branding-index.json"
 INDEX_NAME = "branding-index.json"
 
+# Faza 3 (decyzja kierownika 27.09.2026): komputer bez uprawnien (index_authority.py)
+# smie dodawac/aktualizowac materialy, ale nie kasowac ich we wspolnej bazie -
+# wybor lokalnego ROOT sluzy tylko do otwierania plikow na tym komputerze.
+NOT_AUTHORITY_BUCKET = "(wstrzymane: brak uprawnien do usuniec - not_authority)"
+
 
 def _now_ms() -> int:
     return int(time.time() * 1000)
@@ -132,6 +137,65 @@ def _accepts_confirmed_dirs(fn: Callable) -> bool:
     )
 
 
+def _sync_cycle_no_tombstones(pg, local_rows: dict, *, scan: dict | None = None,
+                               scanned_dirs=(), failed_dirs=(), confirmed_dirs=(),
+                               last_seen=None, scan_time_ms: int = 0,
+                               machine: str = "", now_ms: int | None = None) -> dict[str, Any]:
+    """Ta sama orkiestracja co asset_sync.sync_cycle (pull -> diff -> push -> pull),
+    ZLOZONA tu z publicznych funkcji asset_sync.py bez zmiany tego pliku (zakaz
+    kierownika) - jedyna roznica: operacje tombstone sa odfiltrowane PRZED
+    push_ops, bo ten komputer nie ma dzis uprawnien do kasowania we wspolnej
+    bazie (index_authority.may_publish() == False). Upsert/restore ida normalnie.
+
+    Odfiltrowane tombstony trafiaja do report["blocked"][NOT_AUTHORITY_BUCKET]
+    (istniejacy mechanizm /asset-sync/blocked, ta sama struktura {folder: count}
+    co bezpiecznik 20% w diff_scan_report) - to TYLKO raport dla admina, folder
+    nie odblokuje sie przez confirmed_dirs (to nie jest podejrzany odczyt dysku,
+    tylko brak uprawnien - odblokuje go wylacznie zmiana listy w index_authority).
+
+    ponytail: bucket jest jeden, nie per-folder jak bezpiecznik 20% - upraszcza
+    kod, kosztem mniej czytelnego raportu przy wielu roznych folderach naraz;
+    podzial per-folder do dodania, jesli admin tego zazada."""
+    import asset_sync  # noqa: PLC0415 - ten sam lazy import co run_once
+
+    rows = dict(local_rows)
+    first = asset_sync.pull_since(pg, asset_sync.max_rev(rows))
+    rows = asset_sync.apply_remote(rows, first["rows"])
+    out: dict[str, Any] = {"ok": first["ok"], "rows": rows, "report": None, "push": None,
+                           "next_last_seen": None if last_seen is None else set(last_seen)}
+    if not first["ok"]:
+        out["error"] = first.get("error", "")
+        return out
+    if scan is None:
+        return out
+    report = asset_sync.diff_scan_report(
+        rows, scan, scanned_dirs, scan_time_ms, machine,
+        last_seen=last_seen, failed_dirs=failed_dirs, confirmed_dirs=confirmed_dirs,
+    )
+    ops = report["ops"]
+    kept_ops = [op for op in ops if op.get("op") != asset_sync.OP_TOMBSTONE]
+    held_back = [op for op in ops if op.get("op") == asset_sync.OP_TOMBSTONE]
+
+    blocked = dict(report.get("blocked") or {})
+    if held_back:
+        blocked[NOT_AUTHORITY_BUCKET] = blocked.get(NOT_AUTHORITY_BUCKET, 0) + len(held_back)
+
+    out["report"] = {k: v for k, v in report.items() if k != "next_last_seen"}
+    out["report"]["blocked"] = blocked
+    out["report"]["not_authority_held"] = len(held_back)
+
+    pushed = asset_sync.push_ops(pg, kept_ops, now_ms=now_ms)
+    out["push"] = pushed
+    second = asset_sync.pull_since(pg, asset_sync.max_rev(rows))
+    out["rows"] = asset_sync.apply_remote(rows, second["rows"])
+    out["ok"] = bool(pushed["ok"] and second["ok"])
+    if out["ok"]:
+        out["next_last_seen"] = report["next_last_seen"]
+    else:
+        out["error"] = pushed.get("error") or second.get("error", "")
+    return out
+
+
 def run_once(
     db_path: str | Path,
     data_dir: str | Path,
@@ -208,14 +272,27 @@ def run_once(
         if did_scan and _accepts_confirmed_dirs(asset_sync.sync_cycle):
             scan_kwargs["confirmed_dirs"] = confirmed_dirs
 
+        # Faza 3 (decyzja kierownika 27.09.2026): ROOT lokalny nie daje prawa do
+        # kasowania we wspolnej bazie - patrz index_authority.py. None (brak
+        # klucza / blad odczytu) = jak dzis (dozwolone, bez zmiany zachowania).
         try:
-            result = asset_sync.sync_cycle(pg, rows, **scan_kwargs)
+            import index_authority
+
+            authority = index_authority.may_publish(pg_connect)
+        except Exception:  # noqa: BLE001
+            authority = None
+
+        try:
+            if did_scan and authority is False:
+                result = _sync_cycle_no_tombstones(pg, rows, **scan_kwargs)
+            else:
+                result = asset_sync.sync_cycle(pg, rows, **scan_kwargs)
         except Exception as exc:  # noqa: BLE001 - siec/baza - bez zmian lokalnych
             return {"ok": False, "error": f"sync_cycle: {exc}"[:300], "mode": "rows"}
 
         report: dict[str, Any] = {"ok": bool(result.get("ok")), "mode": "rows",
                                    "pulled": result.get("pulled"), "push": result.get("push"),
-                                   "did_scan": did_scan}
+                                   "did_scan": did_scan, "authority": authority}
         new_rows = result.get("rows")
         if new_rows is None:
             new_rows = rows
