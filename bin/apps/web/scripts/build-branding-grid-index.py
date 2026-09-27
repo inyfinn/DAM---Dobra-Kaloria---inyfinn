@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -157,6 +158,39 @@ def _atomic_write_json(path: Path, payload: dict) -> None:
     os.replace(tmp, path)
 
 
+def _prune_old_baks(out: Path, keep: int = 2) -> int:
+    """Zostaw najwyzej `keep` najnowszych kopii <out>.bak-<epoch> obok out,
+    starsze usun POJEDYNCZO (Path.unlink, zadnych katalogow, zadnych wildcardow
+    w powloce). Kazdy kandydat musi: lezec w tym samym katalogu co out, w pelni
+    pasowac do wzorca <nazwa_out>.bak-<same cyfry>, byc plikiem zwyklym."""
+    directory = out.parent
+    pattern = re.compile(re.escape(out.name) + r"\.bak-(\d+)$")
+    candidates: list[tuple[int, Path]] = []
+    try:
+        entries = list(directory.iterdir())
+    except OSError:
+        return 0
+    for p in entries:
+        if p.parent != directory:
+            continue
+        if not p.is_file():
+            continue
+        m = pattern.fullmatch(p.name)
+        if not m:
+            continue
+        candidates.append((int(m.group(1)), p))
+    candidates.sort(key=lambda t: t[0])
+    removed = 0
+    for _epoch, p in candidates[: max(0, len(candidates) - keep)]:
+        try:
+            if p.is_file() and p.parent == directory:
+                p.unlink()
+                removed += 1
+        except OSError as exc:
+            print(f"prune .bak: nie udalo sie usunac {p}: {exc}", file=sys.stderr)
+    return removed
+
+
 def _stamp_disk_mtimes(assets: list[dict]) -> int:
     """Data z dysku w chwili budowy - ta sama, ktora mostek zwraca w /branding/mtimes.
 
@@ -291,6 +325,9 @@ def main() -> int:
         out.replace(bak)
     _atomic_write_json(out, payload)
     _atomic_write_json(head_out, head_payload)
+    pruned = _prune_old_baks(out, keep=2)
+    if pruned:
+        print(f"prune .bak: usunieto {pruned} starszych kopii (zostaja 2 najnowsze)", file=sys.stderr)
 
     elapsed = time.time() - t0
     size_mb = out.stat().st_size / (1024 * 1024)

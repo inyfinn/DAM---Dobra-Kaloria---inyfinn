@@ -1,39 +1,23 @@
-﻿#Requires -Version 5.1
-# GIT_ROOT shows only: DAM.exe, URUCHOM-DAM.bat, bin/, .cursor/, .git*
-$ErrorActionPreference = "Stop"
-$GitRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
-Set-Location $GitRoot
+#Requires -Version 5.1
+# PRZESTARZALY - nie uruchamiaj. Zamienione na krotki komunikat 2026-09-27.
+#
+# Co robil dawniej (do 2026-09-27): wymuszal uklad "GIT_ROOT pokazuje tylko:
+# DAM.exe, URUCHOM-DAM.bat, bin\, .cursor\, .git*". Kasowal rekurencyjnie
+# (cmd /c rmdir /s /q) katalogi _restore_backups, _restore_snapshots,
+# _restore_stage, _qa_screenshots, build; potem przenosil root-owe "dist" do
+# "bin\dist" komenda robocopy "dist" "bin\dist" /E /MOVE (flaga /MOVE kasuje
+# zrodlo po skopiowaniu - zakazana w tym repo) i "installer" do
+# "bin\installer" plikami.
+#
+# Dlaczego zatrzymany: odtwarzal uklad sprzed porzadkow z 2026-09-27
+# (bin/dist juz nie istnieje w korzeniu - zobacz bin/docs/REPO-LAYOUT.md) i
+# uzywal /MOVE + rmdir /s, czyli dokladnie tych operacji, ktore reguly
+# bezpieczenstwa tego repo zakazuja (patrz CLAUDE.md, zasada 0).
+#
+# Aktualny uklad repo opisuje: bin/docs/REPO-LAYOUT.md
+# Aktualne porzadkowanie (przenoszenie, nigdy kasowanie) robi sie recznie,
+# z wpisem do work/_porzadek-<data>/MANIFEST.tsv PRZED kazdym ruchem -
+# patrz work/README.md.
 
-function Remove-TreeForce([string]$Path) {
-  if (-not (Test-Path -LiteralPath $Path)) { return }
-  $full = (Resolve-Path -LiteralPath $Path).Path
-  $long = if ($full.StartsWith('\\?\')) { $full } else { "\\?\$full" }
-  cmd /c "rmdir /s /q `"$long`"" | Out-Null
-}
-
-Write-Host "== cleanup-git-root =="
-
-foreach ($d in @("_restore_backups", "_restore_snapshots", "_restore_stage", "_qa_screenshots", "build")) {
-  if (Test-Path $d) { Write-Host "DELETE $d"; Remove-TreeForce $d }
-}
-
-# Legacy root folders -> bin/
-if (Test-Path "dist") {
-  New-Item -ItemType Directory -Force -Path "bin\dist" | Out-Null
-  Write-Host "MOVE dist -> bin\dist"
-  robocopy "dist" "bin\dist" /E /MOVE /NFL /NDL /NJH /NJS /nc /ns /np | Out-Null
-  if ($LASTEXITCODE -lt 8) { Remove-TreeForce "dist" }
-}
-if (Test-Path "installer") {
-  New-Item -ItemType Directory -Force -Path "bin\installer" | Out-Null
-  Write-Host "MOVE installer -> bin\installer"
-  Get-ChildItem "installer" | ForEach-Object {
-    $dst = Join-Path "bin\installer" $_.Name
-    if (Test-Path $dst) { Remove-TreeForce $dst }
-    Move-Item $_.FullName $dst -Force
-  }
-  Remove-TreeForce "installer"
-}
-
-Write-Host "OK cleanup-git-root"
-Write-Host "Root should show: DAM.exe, URUCHOM-DAM.bat, bin\, .cursor\, .git*"
+Write-Host "cleanup-git-root.ps1 jest przestarzaly i nic nie robi. Uklad repo: bin/docs/REPO-LAYOUT.md. Porzadki: work/README.md." -ForegroundColor Yellow
+exit 1

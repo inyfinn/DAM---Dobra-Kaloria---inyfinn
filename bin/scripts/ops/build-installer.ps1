@@ -211,10 +211,11 @@ New-Item -ItemType Directory -Force -Path $binDst | Out-Null
 
 $xdCommon = @(
   "__pycache__", ".pytest_cache", ".ocr-thumb-cache", ".venv", "node_modules", "webview2-profile", "logs", "_qa",
-  "vendor", "framework", "bootstrap", "thumbs", "_invoice_mail_stage", "tooling", "data"
+  "vendor", "framework", "bootstrap", "thumbs", "_invoice_mail_stage", "tooling", "data",
+  "*_Conflict*", "*conflict_current*"
 )
 $xfCommon = @(
-  "*.pyc", "*.bak*", "*backup*", "*Conflict*", "*.drifted*", "*.pre-*",
+  "*.pyc", "*.bak*", "*backup*", "*Conflict*", "*_Conflict*", "*conflict_current*", "*.drifted*", "*.pre-*",
   "index-watcher.log", "audit-log.jsonl", "branding-index.json",
   "machine-config.json", "dam-connection.env", "pg-config.json"
 )
@@ -222,7 +223,7 @@ $xfCommon = @(
 Write-Host "Staging bin (runtime + THEME + apps + scripts + docs + agents)..."
 $xdRuntime = @($xdCommon | Where-Object { $_ -ne "data" })
 Invoke-Robo (Join-Path $BinRoot "runtime") (Join-Path $binDst "runtime") $xdRuntime $xfCommon
-Invoke-Robo (Join-Path $BinRoot "THEME") (Join-Path $binDst "THEME") @("__pycache__", "documentation") @("*.zip", "*.map")
+Invoke-Robo (Join-Path $BinRoot "THEME") (Join-Path $binDst "THEME") @("__pycache__", "documentation", "*_Conflict*", "*conflict_current*") @("*.zip", "*.map", "*_Conflict*", "*conflict_current*")
 Invoke-Robo (Join-Path $BinRoot "apps\desktop") (Join-Path $binDst "apps\desktop") $xdCommon $xfCommon
 # Lustro repo w paczce: skrypty ops/qa (README do nich odsyla), dokumentacja, wykladnia agentow.
 # agents: NIE pakuj dumpow design-system/graphify (MAX_PATH w ISCC).
@@ -284,7 +285,7 @@ if (-not (Test-Path -LiteralPath $uniconsCss)) {
   throw "Brak apps/web/assets/vendor/icons/unicons-line.css — Setup NIE moze wyjechac bez ikon."
 }
 New-Item -ItemType Directory -Force -Path $webVendorDst | Out-Null
-Invoke-Robo $webVendorSrc $webVendorDst @() @()
+Invoke-Robo $webVendorSrc $webVendorDst @("*_Conflict*", "*conflict_current*") @("*_Conflict*", "*conflict_current*")
 Write-Host "Shipped apps/web/assets/vendor (fonts/icons)."
 
 $webDataSrc = Join-Path $BinRoot "apps\web\data"
@@ -301,7 +302,7 @@ $xfData = $xfCommon + @(
   "*.tmp", "*.log", "*.jsonl", "*.lock.json", "dam-runtime.json", "dam-identity.json",
   "_refilter-*.json", "_ocr_batch_ids.json", "warm-*.json"
 )
-Invoke-Robo $webDataSrc $webDataDst @("thumbs", "_invoice_mail_stage", "__pycache__", "backups", "backup") $xfData
+Invoke-Robo $webDataSrc $webDataDst @("thumbs", "_invoice_mail_stage", "__pycache__", "backups", "backup", "*_Conflict*", "*conflict_current*") $xfData
 Get-ChildItem -LiteralPath $webDataDst -File |
   Where-Object { $_.Name -match '^(branding|file|search)-index\.json\..+' } |
   Remove-Item -Force
@@ -407,7 +408,7 @@ Write-Host "Auth hero OK: $authJpg ($((Get-Item $authJpg).Length) B)"
 # widoczne od pierwszego uruchomienia, takze bez dysku Marketing. Synology tylko aktualizuje.
 $pamiecSrc = Join-Path $BinRoot "PAMIEC-PODRECZNA"
 $pamiecDst = Join-Path $binDst "PAMIEC-PODRECZNA"
-Invoke-Robo (Join-Path $pamiecSrc "thumbs") (Join-Path $pamiecDst "thumbs") @() @("*.tmp")
+Invoke-Robo (Join-Path $pamiecSrc "thumbs") (Join-Path $pamiecDst "thumbs") @() @("*.tmp", "*_Conflict*", "*conflict_current*")
 $thumbCount = @(Get-ChildItem -LiteralPath (Join-Path $pamiecDst "thumbs") -File -ErrorAction SilentlyContinue).Count
 if ($thumbCount -lt 1000) {
   throw "PAMIEC: tylko $thumbCount miniatur w staging (zrodlo: $pamiecSrc). Setup NIE moze wyjechac bez cache."

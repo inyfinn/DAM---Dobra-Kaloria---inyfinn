@@ -1,14 +1,22 @@
 # Uklad repo (od porzadkowania 2026-09-27)
 
 - **Korzen repo** (`ROOT`): `DAM.exe` (launcher), `bin\` (patrz nizej),
-  `work\` (poza repo, na dysku D:, patrz `work\README.md`), pliki samego
-  repo (`.git`, `.github`, `.cursor`, `.gitignore`, `.gitattributes`,
-  `.gitleaks.toml`, `CLAUDE.md`, `*.code-workspace`). Kilka tracked plikow
-  zostalo w korzeniu mimo ze wygladaja jak smiecie (`PLAN-INSTALATOR.md`,
-  `poprawki.jsonl`, `POPRAWKI.md`, `URUCHOM-DAM.bat`,
-  `_backup-dash-bento-2026-09-10\`, `_backup-shell-geex-2026-09-10\`,
-  `_fffd.txt`) - sa w gicie, wiec ich usuniecie/przeniesienie to `git mv`,
-  decyzja czlowieka, nie ruch plikow.
+  `work\` (wewnatrz repo na dysku, ale poza gitem - patrz `work\README.md`
+  i uwaga o Synology Drive tam), pliki samego repo (`.git`, `.github`,
+  `.cursor`, `.gitignore`, `.gitattributes`, `.gitleaks.toml`, `CLAUDE.md`,
+  `*.code-workspace`).
+
+  Dwie kategorie plikow zostaly w korzeniu CELOWO, nie przez zaniedbanie:
+  - **Zywe, uzywane przez aplikacje** (nigdy nie przenosic bez zmiany kodu):
+    `URUCHOM-DAM.bat` - launcher, do ktorego wprost odsyla
+    `bin/apps/web/assets/js/dam-api.js:686` gdy most padnie; `POPRAWKI.md` i
+    `poprawki.jsonl` - program sam tu pisze (panel Pomoc -> "Zglos
+    poprawke"), katalog zapisu ustala `reports_root()` w
+    `bin/apps/desktop/support_reports.py:115`.
+  - **Tracked smieci/notatki bez zywego odwolania w kodzie**, zostawione bo
+    przenoszenie tracked plikow to `git mv` (decyzja czlowieka, nie ruch
+    plikow): `PLAN-INSTALATOR.md`, `_backup-dash-bento-2026-09-10\`,
+    `_backup-shell-geex-2026-09-10\`, `_fffd.txt`.
 
 - **`bin\`**: wszystko, czego aplikacja (desktop + web) i build instalatora
   realnie potrzebuja - `apps\`, `agents\`, `scripts\`, `THEME\`, `docs\`,
@@ -19,11 +27,14 @@
   repo ani do Setupu w jawnej formie), `tooling\build\` (2 pliki PyInstaller
   spec, tracked).
 
-- **`work\`** (poza repo, `.gitignore`): zaleznosci lokalne budowania
-  (`tooling\go`, `tooling\downloads`, ...), wyniki starych buildow
-  (`dist\`), kopie zapasowe i stare wersje (`_kopie\`), kopie konfliktow
-  Synology Drive (`_konflikty-synology\`), luzne notatki (`_notatki\`).
-  Szczegoly i sposob cofniecia: `work\README.md`.
+- **`work\`** (`.gitignore`, ale nadal wewnatrz drzewa, ktore synchronizuje
+  Synology Drive - przenosiny tu NIE zmniejszaja ruchu/miejsca w chmurze,
+  patrz `work\README.md`): zaleznosci lokalne budowania (`tooling\go`,
+  `tooling\downloads`, ...), wyniki starych buildow (`dist\`), kopie
+  zapasowe i stare wersje (`_kopie\`), kopie konfliktow Synology Drive
+  (`_konflikty-synology\`), luzne notatki (`_notatki\`). `bin\design-system`
+  NIE jest tu - kierownik go cofnal (`DESIGN_SYSTEM.md` wymagany regulami
+  projektu), zostal w `bin\`. Pelna instrukcja cofania ruchow: `work\README.md`.
 
 ## Dlaczego niektore foldery przeniesiono z `bin\` do `work\`
 
