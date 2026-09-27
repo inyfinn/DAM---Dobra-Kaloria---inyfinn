@@ -430,15 +430,42 @@ def _save_rel_index() -> None:
                 pass
 
 
-def _remember_rel(rel: str, profile: str, digest: str, mtime: float) -> None:
+_REL_SAVE_TIMER: threading.Timer | None = None
+
+
+def _flush_rel_save() -> None:
+    global _REL_SAVE_TIMER
+    with _REL_INDEX_LOCK:
+        _REL_SAVE_TIMER = None
+    _save_rel_index()
+
+
+def _schedule_rel_save(delay_s: float = 3.0) -> None:
+    """Jeden zapis indeksu na kilka sekund zamiast zapisu 4-8 MB na kazda miniature.
+
+    Siatka bez ROOT pobiera naraz dziesiatki miniatur z NAS; pelny zapis pliku przy
+    kazdej z nich ustawial watki /thumb-cache w kolejce do blokady (limit 2.5 s)."""
+    global _REL_SAVE_TIMER
+    with _REL_INDEX_LOCK:
+        if _REL_SAVE_TIMER is not None:
+            return
+        t = threading.Timer(delay_s, _flush_rel_save)
+        t.daemon = True
+        _REL_SAVE_TIMER = t
+    t.start()
+
+
+def _remember_rel(rel: str, profile: str, digest: str, mtime: float, *, defer_save: bool = False) -> None:
     if not rel or not digest:
         return
     idx = _load_rel_index()
     key = _rel_index_key(rel, profile)
     with _REL_INDEX_LOCK:
         idx[key] = {"digest": digest, "mtime": float(mtime or 0.0)}
-        _REL_INDEX = idx
-    _save_rel_index()
+    if defer_save:
+        _schedule_rel_save()
+    else:
+        _save_rel_index()
 
 
 def _lookup_by_rel(rel: str, profile: str) -> tuple[Optional[Path], str, str]:
@@ -541,6 +568,7 @@ def _serve_cached(
     *,
     remember_profile: Optional[str] = None,
     extra_meta: Optional[dict] = None,
+    defer_save: bool = False,
 ) -> tuple[int, bytes, str, dict]:
     try:
         body = hit_path.read_bytes()
@@ -554,7 +582,7 @@ def _serve_cached(
     _store_meta(digest, rel_cache, ctype, remember_prof)
     # Cache hit with mt=0 must not stamp the index (would hide source changes).
     if source != "cache" or mt > 0:
-        _remember_rel(rel, remember_prof, digest, mt)
+        _remember_rel(rel, remember_prof, digest, mt, defer_save=defer_save)
     meta = {
         "ok": True,
         "digest": digest,
@@ -700,10 +728,18 @@ def get_or_build_thumb(
         return _serve_cached(cached_path, cached_ctype, cached_digest, prof, rel, 0.0, "cache")
 
     def _fallback_or(default: tuple[int, bytes, str, dict]) -> tuple[int, bytes, str, dict]:
+        # Bez oryginalu: najpierw lokalne pliki po kluczach z NAS/bazy, potem profil
+        # zapasowy, na koncu jeden plik z NAS po HTTPS (Faza 3).
+        local = _thumb_without_root(path, prof, network=False)
+        if local is not None:
+            return local
         fb = _thumb_404_with_fallback(
             path, prof, email=email, resolve_physical=resolve_physical, marketing_relative=marketing_relative
         )
-        return fb if fb is not None else default
+        if fb is not None:
+            return fb
+        remote = _thumb_without_root(path, prof, network=True)
+        return remote if remote is not None else default
 
     if cache_only:
         return _fallback_or((404, b"", "application/json", {
@@ -1976,7 +2012,8 @@ def _fetch_remote_thumb(digest: str, ext: str, source: str) -> bytes | None:
     return None
 
 
-def _merge_rel_index_from_remote(source: str) -> None:
+def _merge_rel_index_from_remote(source: str) -> int:
+    """Scal thumb-rel-index z NAS do lokalnego. Zwraca liczbe wpisow NAS (0 = nie odczytano)."""
     remote_idx: dict = {}
     if source == "https":
         raw = _http_get_bytes(nas_cache_url() + "/thumb-rel-index.json", timeout=40.0)
@@ -1997,7 +2034,7 @@ def _merge_rel_index_from_remote(source: str) -> None:
             except (OSError, json.JSONDecodeError):
                 remote_idx = {}
     if not remote_idx:
-        return
+        return 0
     global _REL_INDEX
     local = _load_rel_index()
     changed = False
@@ -2020,6 +2057,165 @@ def _merge_rel_index_from_remote(source: str) -> None:
         _REL_INDEX = local
     if changed:
         _save_rel_index()
+    return len(remote_idx)
+
+
+# ---------------------------------------------------------------------------
+# Faza 3 (2026-09-27): miniatura na komputerze bez ROOT.
+# Klucz (_digest) zalezy od mtime ORYGINALU, ktorego ten komputer nie zobaczy.
+# Skad wiec wziac digest dla sciezki:
+#   1) thumb-rel-index z NAS - odswiezany przy starcie i co 10 min, gdy manifest
+#      NAS jest nowszy niz ostatnio scalony (albo lokalny indeks jest mniejszy);
+#   2) dam_assets.mtime_ms z bazy -> _digest(path_rel, mtime, profil). Zmierzone
+#      27.09: 16 621 materialow ma miniature, ktora da sie trafic TYLKO tak.
+# Pliku brak lokalnie -> jeden GET thumbs/<digest>.<ext> z NAS, zapis, podanie.
+# ---------------------------------------------------------------------------
+_REMOTE_DIGESTS: dict[str, str] = {}  # digest -> ext, z manifestu NAS (pusty = nie wczytany)
+_REMOTE_MISS: dict[str, float] = {}  # digest -> kiedy NAS nie mial pliku
+REMOTE_MISS_TTL_S = 600.0
+REMOTE_FETCH_TIMEOUT_S = 1.5
+_ASSET_MT: dict[str, float] = {}  # dam_assets.path_rel -> mtime oryginalu (s)
+_ASSET_MT_KEY: dict[str, str] = {}  # asset_key(path_rel) -> path_rel
+REMOTE_INDEX_MARKER = "thumb-remote-index.json"
+
+
+def _load_asset_key() -> Callable[[str], str]:
+    try:
+        scripts = Path(__file__).resolve().parent.parent / "web" / "scripts"
+        if str(scripts) not in sys.path:
+            sys.path.insert(0, str(scripts))
+        from asset_ids import asset_key  # type: ignore
+
+        return asset_key
+    except Exception:  # noqa: BLE001
+        import unicodedata
+
+        return lambda rel: unicodedata.normalize("NFC", rel or "").replace("\\", "/").casefold().strip("/")
+
+
+_asset_key = _load_asset_key()
+
+
+def refresh_asset_mtimes() -> dict:
+    """path_rel -> mtime z dam_assets (jedno zapytanie, ~1 s na 58 tys. wierszy). Tylko odczyt."""
+    t0 = time.monotonic()
+    try:
+        import pg_db
+
+        conn = pg_db.connect()
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT path_rel, mtime_ms FROM dam_assets "
+                "WHERE deleted_at IS NULL AND mtime_ms > 0"
+            )
+            rows = cur.fetchall()
+        finally:
+            conn.close()
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)[:200]}
+    mt: dict[str, float] = {}
+    keys: dict[str, str] = {}
+    for r in rows:
+        rel = str(r.get("path_rel") or "").replace("\\", "/").strip("/")
+        if not rel:
+            continue
+        mt[rel] = float(r.get("mtime_ms") or 0) / 1000.0
+        keys[_asset_key(rel)] = rel
+    global _ASSET_MT, _ASSET_MT_KEY
+    _ASSET_MT, _ASSET_MT_KEY = mt, keys
+    return {"ok": True, "assets": len(mt), "ms": int((time.monotonic() - t0) * 1000)}
+
+
+def refresh_remote_index(*, force: bool = False) -> dict:
+    """Manifest NAS -> mapa digestow; thumb-rel-index NAS -> lokalny, gdy NAS nowszy.
+
+    Znacznik lezy w katalogu stanu uzytkownika, NIE w PAMIEC-PODRECZNA: tamten folder
+    synchronizuje Synology Drive (kopie *_Conflict*), a stary albo uszkodzony lokalny
+    manifest nie moze zablokowac odswiezenia. Dodatkowo scalamy zawsze, gdy lokalny
+    indeks ma mniej wpisow niz NAS - to lapie nieudane poprzednie scalenie."""
+    manifest, source = load_remote_manifest()
+    if not manifest:
+        return {"ok": False, "source": source}
+    global _REMOTE_DIGESTS
+    files = _manifest_files(manifest)
+    if files:
+        _REMOTE_DIGESTS = {
+            str(f.get("digest")).lower(): str(f.get("ext") or "avif").lstrip(".").lower() for f in files
+        }
+    _remote_cache.update({"at": time.time(), "manifest": manifest, "source": source})
+    gen = str(manifest.get("generated_at") or "")
+    remote_n = int(manifest.get("rel_count") or 0)
+    marker_p = platform_compat.user_state_dir() / REMOTE_INDEX_MARKER
+    seen = str(_read_json_file(marker_p).get("generated_at") or "")
+    local_n = len(_load_rel_index())
+    out = {"ok": True, "source": source, "generated_at": gen, "remote_digests": len(_REMOTE_DIGESTS),
+           "remote_rel": remote_n, "local_rel_before": local_n, "merged": False}
+    if not force and gen and gen <= seen and local_n >= remote_n:
+        return out
+    got = _merge_rel_index_from_remote("https" if source == "https" else "nas_file")
+    out["merged"] = got > 0
+    out["local_rel_after"] = len(_load_rel_index())
+    if got:
+        _write_json_atomic(marker_p, {"generated_at": gen, "rel_count": remote_n, "at": _utc_iso()})
+    return out
+
+
+def _candidate_digests(rel: str, prof: str) -> list[tuple[str, float]]:
+    """Digesty dla rel|profil bez dotykania oryginalu: z bazy (mtime) i z indeksu."""
+    out: list[tuple[str, float]] = []
+    path_rel = rel if rel in _ASSET_MT else _ASSET_MT_KEY.get(_asset_key(rel), "")
+    if path_rel:
+        mt = _ASSET_MT[path_rel]
+        out.append((_digest(path_rel, mt, prof), mt))
+    row = _load_rel_index().get(_rel_index_key(rel, prof))
+    if isinstance(row, dict) and row.get("digest"):
+        d = str(row["digest"])
+        if all(d != x for x, _ in out):
+            out.append((d, float(row.get("mtime") or 0.0)))
+    return out
+
+
+def _download_thumb(digest: str, *, may_guess: bool) -> tuple[Optional[Path], str]:
+    """Jedna miniatura z NAS po HTTPS -> PAMIEC-PODRECZNA. Tylko gdy manifest NAS jest
+    wczytany (refresh_remote_index). Digest spoza manifestu probujemy tylko dla profilu,
+    o ktory prosi klient (may_guess) - manifest bywa starszy niz pliki na NAS."""
+    if not _REMOTE_DIGESTS:
+        return None, ""
+    ext = _REMOTE_DIGESTS.get(digest)
+    if ext is None and not may_guess:
+        return None, ""
+    now = time.time()
+    if now - _REMOTE_MISS.get(digest, 0.0) < REMOTE_MISS_TTL_S:
+        return None, ""
+    for e in ([ext] if ext else ["avif", "jpg"]):
+        body = _http_get_bytes(f"{nas_cache_url()}/thumbs/{digest}.{e}", timeout=REMOTE_FETCH_TIMEOUT_S)
+        if body:
+            dest = cache_root() / "thumbs" / f"{digest}.{e}"
+            if _copy_bytes_atomic(dest, body):
+                return dest, "image/avif" if e == "avif" else "image/jpeg"
+    _REMOTE_MISS[digest] = now
+    return None, ""
+
+
+def _thumb_without_root(path: str, prof: str, *, network: bool) -> Optional[tuple[int, bytes, str, dict]]:
+    rel = _rel_from_logical(path)
+    chain = (prof,) + PROFILE_FALLBACK_CHAIN.get(prof, ())
+    for i, p in enumerate(chain):
+        for digest, mt in _candidate_digests(rel, p):
+            hit, ctype = _existing_thumb(digest)
+            source = "cache"
+            if hit is None and network:
+                hit, ctype = _download_thumb(digest, may_guess=i == 0)
+                source = "remote"
+            if hit is None:
+                continue
+            extra = {"profile_fallback": p} if p != prof else None
+            return _serve_cached(
+                hit, ctype, digest, prof, rel, mt, source,
+                remember_profile=p, extra_meta=extra, defer_save=True,
+            )
+    return None
 
 
 def _db_index_marker_path() -> Path:
@@ -2161,11 +2357,13 @@ def start_db_index_watch() -> dict:
         while True:
             res = merge_rel_index_from_db()
             print("thumb_index_db:", res, flush=True)
-            try:
-                fetch_res = _fetch_missing_index_files()
-                print("thumb_bg_fetch:", fetch_res, flush=True)
-            except Exception as exc:  # noqa: BLE001
-                print(f"[dam_thumb_cache] thumb_bg_fetch error: {exc}", flush=True)
+            # Pelne pobieranie (paczka / lista z manifestu) juz ciagnie te same pliki.
+            if not _sync_state.get("running"):
+                try:
+                    fetch_res = _fetch_missing_index_files()
+                    print("thumb_bg_fetch:", fetch_res, flush=True)
+                except Exception as exc:  # noqa: BLE001
+                    print(f"[dam_thumb_cache] thumb_bg_fetch error: {exc}", flush=True)
             try:
                 start_cache_download(force=False)
             except Exception as exc:  # noqa: BLE001
@@ -2527,8 +2725,34 @@ def start_cache_download(*, force: bool = False) -> dict:
     }
 
 
+_REMOTE_INDEX_THREAD: threading.Thread | None = None
+
+
+def start_remote_index_watch() -> dict:
+    """Faza 3: indeks NAS + mtime z bazy przy starcie mostu i co 10 min, we wlasnym
+    watku (nie w watku zapytan HTTP - rel-index ma ~8 MB JSON). Bez tego komputer bez
+    ROOT znal klucze tylko z pierwszego pobrania albo z 8000 wierszy bazy."""
+    global _REMOTE_INDEX_THREAD
+    if _REMOTE_INDEX_THREAD is not None and _REMOTE_INDEX_THREAD.is_alive():
+        return {"ok": True, "started": False, "running": True}
+
+    def loop() -> None:
+        while True:
+            for name, fn in (("thumb_remote_index", refresh_remote_index), ("thumb_asset_mtimes", refresh_asset_mtimes)):
+                try:
+                    print(f"{name}:", fn(), flush=True)
+                except Exception as exc:  # noqa: BLE001
+                    print(f"[dam_thumb_cache] {name} error: {exc}", flush=True)
+            time.sleep(DB_INDEX_REFRESH_S)
+
+    _REMOTE_INDEX_THREAD = threading.Thread(target=loop, daemon=True, name="dam-thumb-remote-index")
+    _REMOTE_INDEX_THREAD.start()
+    return {"ok": True, "started": True}
+
+
 def ensure_boot_sync() -> dict:
     """Bridge boot: compare folder + SQLite vs Synology, fetch when needed."""
+    start_remote_index_watch()
     return start_cache_download(force=False)
 
 
@@ -2539,7 +2763,9 @@ def _publisher_name() -> str:
         return "dam-pc"
 
 
-def build_local_manifest(*, publisher: str = "") -> dict:
+def build_local_manifest(*, publisher: str = "", extra_files: Optional[list[dict]] = None) -> dict:
+    """extra_files = pliki juz lezace na NAS (z jego manifestu). Manifest NAS to SUMA
+    NAS + ten komputer: 27.09 publikacja z lokalnej listy obcinala spis na NAS."""
     stats = local_thumb_stats()
     thumbs = cache_root() / "thumbs"
     files: list[dict] = []
@@ -2564,9 +2790,20 @@ def build_local_manifest(*, publisher: str = "") -> dict:
                 )
     except OSError:
         pass
+    if extra_files:
+        have = {(f["digest"], f["ext"]) for f in files}
+        for f in extra_files:
+            d = str(f.get("digest") or "")
+            e = str(f.get("ext") or "avif").lstrip(".").lower()
+            if d and (d, e) not in have:
+                have.add((d, e))
+                files.append({"digest": d, "ext": e, "size": int(f.get("size") or 0)})
+        files.sort(key=lambda f: f["digest"])
     idx = _load_rel_index()
+    with _REL_INDEX_LOCK:
+        items = list(idx.items())  # watki uzupelniania dopisuja w trakcie publikacji
     entries = []
-    for key, row in idx.items():
+    for key, row in items:
         if not isinstance(row, dict):
             continue
         digest = str(row.get("digest") or "")
@@ -2602,14 +2839,35 @@ def build_local_manifest(*, publisher: str = "") -> dict:
         "last_mtime_unix": tree["last_mtime_unix"],
         "source": "local",
         "publisher": publisher or _publisher_name(),
-        "thumb_count": stats["avif"] + stats["jpg"],
-        "avif": stats["avif"],
-        "jpg": stats["jpg"],
+        "thumb_count": len(files) if extra_files else stats["avif"] + stats["jpg"],
+        "avif": sum(1 for f in files if f["ext"] == "avif") if extra_files else stats["avif"],
+        "jpg": sum(1 for f in files if f["ext"] != "avif") if extra_files else stats["jpg"],
         "files": files,
         "rel_index": "thumb-rel-index.json",
         "rel_count": len(entries),
-        "entries": entries[:8000],
+        # Bylo entries[:8000]: dam_thumb_cache_index nigdy nie przekraczal 8009 wierszy
+        # i komputer bez ROOT nie znal z bazy kluczy reszty materialow.
+        "entries": entries,
     }
+
+
+def _remote_publish_state() -> tuple[dict[str, int], list[dict], bool]:
+    """Stan NAS przed publikacja: (nazwa->rozmiar, pliki manifestu, czy wolno pisac rel-index).
+
+    Publikacja to SUMA NAS + ten komputer, nigdy podmiana. 27.09.2026 most tego PC
+    skopiowal swoj lokalny thumb-rel-index (15 052 wpisy) na NAS, gdzie bylo 31 935 -
+    klucze 16 883 materialow zniknely dla kazdego komputera bez ROOT."""
+    manifest, src = _load_manifest_https()
+    if not manifest:
+        manifest, src = _load_manifest_nas_file()
+    files = _manifest_files(manifest or {})
+    names = {
+        f"{f.get('digest')}.{str(f.get('ext') or 'avif').lstrip('.')}": int(f.get("size") or 0) for f in files
+    }
+    remote_rel_n = int((manifest or {}).get("rel_count") or 0)
+    merged = _merge_rel_index_from_remote("https" if src == "https" else "nas_file")
+    _save_rel_index()
+    return names, files, merged > 0 or remote_rel_n == 0
 
 
 def _queue_publish(items: list[dict]) -> None:
@@ -2649,6 +2907,7 @@ def _publish_via_ssh(files: list[Path], publisher: str) -> dict:
     host = nas_ssh_host()
     dest = nas_ssh_dest()
     remote = _walk_remote_ssh()
+    _names, remote_files, rel_ok = _remote_publish_state()
     send: list[tuple[Path, str]] = []
     skipped = 0
     for p in files:
@@ -2661,17 +2920,19 @@ def _publish_via_ssh(files: list[Path], publisher: str) -> dict:
             skipped += 1
             continue
         send.append((p, rel))
-    manifest = build_local_manifest(publisher=publisher)
+    manifest = build_local_manifest(publisher=publisher, extra_files=remote_files)
     slim = {k: v for k, v in manifest.items() if k != "entries"}
-    extras: list[tuple[str, bytes]] = [
-        ("manifest.json", json.dumps(slim, ensure_ascii=False, indent=2).encode("utf-8"))
-    ]
-    try:
-        rel_index = _rel_index_path()
-        if rel_index.is_file():
-            extras.append(("thumb-rel-index.json", rel_index.read_bytes()))
-    except OSError:
-        pass
+    extras: list[tuple[str, bytes]] = []
+    # Nie udalo sie odczytac indeksu NAS -> nie nadpisuj ani indeksu, ani manifestu
+    # (lokalny widok jest niepelny). Same miniatury ida zawsze.
+    if rel_ok:
+        extras.append(("manifest.json", json.dumps(slim, ensure_ascii=False, indent=2).encode("utf-8")))
+        try:
+            rel_index = _rel_index_path()
+            if rel_index.is_file():
+                extras.append(("thumb-rel-index.json", rel_index.read_bytes()))
+        except OSError:
+            pass
     try:
         proc = subprocess.Popen(
             [
@@ -2760,6 +3021,26 @@ def _refresh_remote_sidecars(host: str, dest: str) -> str:
     return lines[-1] if lines else "unknown"
 
 
+def _entries_newer_than_db(entries: list[dict], db_rows: list[dict]) -> list[dict]:
+    """Tylko wpisy nowe albo zmienione (inny digest, mtime nie starszy niz w bazie).
+    Pelny spis co publikacje = ~33 tys. zapytan; starszy mtime nie cofa cudzej przebudowy."""
+    db = {str(r.get("store_key") or ""): r for r in db_rows or []}
+    out = []
+    for e in entries:
+        cur = db.get(str(e.get("rel_profile") or ""))
+        if cur is None:
+            out.append(e)
+            continue
+        if str(cur.get("digest") or "") == str(e.get("digest") or ""):
+            continue
+        try:
+            if float(e.get("mtime") or 0.0) >= float(cur.get("mtime") or 0.0):
+                out.append(e)
+        except (TypeError, ValueError):
+            out.append(e)
+    return out
+
+
 def _record_publish(manifest: dict, publisher: str, nas_display: str) -> tuple[bool, bool]:
     """Zapisz slad publikacji w Postgresie i w lokalnym stanie cache."""
     kv_ok = False
@@ -2782,7 +3063,12 @@ def _record_publish(manifest: dict, publisher: str, nas_display: str) -> tuple[b
                 updated_by=publisher,
             )
         )
-        table_ok = bool(pg_db.upsert_thumb_cache_rows(manifest.get("entries") or [], publisher=publisher))
+        table_ok = bool(
+            pg_db.upsert_thumb_cache_rows(
+                _entries_newer_than_db(manifest.get("entries") or [], pg_db.fetch_thumb_cache_rows()),
+                publisher=publisher,
+            )
+        )
     except Exception:  # noqa: BLE001
         kv_ok = False
         table_ok = False
@@ -2865,7 +3151,13 @@ def _publish_new_thumbs_locked(*, publisher: str) -> dict:
             continue
         seen_names.add(p.name)
         work.append(p)
+    remote_names, remote_files, rel_ok = _remote_publish_state()
     for p in work:
+        # Manifest NAS mowi, co juz tam lezy - bez stat() na W: (RaiDrive/WebDAV)
+        # dla kazdej z ~33 tys. miniatur przy kazdej publikacji.
+        if remote_names.get(p.name, 0) > 0:
+            skipped += 1
+            continue
         dest = nas_thumbs / p.name
         try:
             if dest.is_file() and dest.stat().st_size > 0:
@@ -2881,7 +3173,18 @@ def _publish_new_thumbs_locked(*, publisher: str) -> dict:
         _queue_publish(queued)
     else:
         _write_json_atomic(PUBLISH_QUEUE_FILE, {"pending": [], "updated_at": _utc_iso()})
-    manifest = build_local_manifest(publisher=publisher)
+    manifest = build_local_manifest(publisher=publisher, extra_files=remote_files)
+    if not rel_ok:
+        # Indeks NAS nieczytelny: lokalny widok jest niepelny, nie nadpisuj nim NAS.
+        kv_ok, table_ok = _record_publish(manifest, publisher, str(nas_root).replace("/", "\\"))
+        return {
+            "ok": False,
+            "error": "remote_rel_index_unreadable",
+            "copied": copied,
+            "skipped": skipped,
+            "nas_path": str(nas_root),
+            "table": table_ok,
+        }
     try:
         (nas_root / "manifest.json").write_text(
             json.dumps({k: v for k, v in manifest.items() if k != "entries"}, ensure_ascii=False, indent=2),
@@ -3126,6 +3429,12 @@ def start_marketing_fill_watch() -> dict:
         while True:
             if _fill_marketing_root() is not None:
                 try:
+                    # Najpierw materialy z bazy (dam_assets) - paczka z limitem, reszta
+                    # w nastepnym przebiegu; potem stary przebieg po indeksach JSON.
+                    print("thumb_backfill:", run_backfill(max_items=FILL_BACKFILL_PER_RUN), flush=True)
+                except Exception as exc:  # noqa: BLE001
+                    print(f"[dam_thumb_cache] thumb_backfill error: {exc}", flush=True)
+                try:
                     res = _fill_run_once()
                     print("thumb_fill:", res, flush=True)
                 except Exception as exc:  # noqa: BLE001
@@ -3136,3 +3445,205 @@ def start_marketing_fill_watch() -> dict:
     _FILL_THREAD = threading.Thread(target=loop, daemon=True, name="dam-thumb-fill")
     _FILL_THREAD.start()
     return {"ok": True, "started": True}
+
+
+# ---------------------------------------------------------------------------
+# Faza 3: uzupelnianie NAS z dam_assets (dowolny komputer z ROOT).
+# 27.09.2026: NAS mial miniatury dla 40 % materialow. Stary przebieg (_fill_run_once)
+# bral sciezki z lokalnych JSON-ow, budowal w puli 24 watkow bez limitu czasu na plik
+# i nie pamietal porazek - kazdy przebieg zaczynal te same pliki od nowa.
+# Tu: lista z bazy, klucz z prawdziwego mtime, twardy limit czasu na plik, porazki
+# zapamietane (ponawiane dopiero po zmianie mtime), publikacja co N miniatur.
+# ---------------------------------------------------------------------------
+FILL_BACKFILL_PER_RUN = 2000
+BACKFILL_FILE_TIMEOUT_S = 90.0
+BACKFILL_PUBLISH_EVERY = 300
+BACKFILL_STATE_NAME = "thumb-backfill-state.json"
+
+
+def _backfill_state_path() -> Path:
+    return platform_compat.user_state_dir() / BACKFILL_STATE_NAME
+
+
+def _encode_with_timeout(physical: str, digest: str, max_side: int, timeout_s: float) -> tuple[Optional[Path], str, bool]:
+    """(plik, ctype, timed_out). Watek daemon + join(timeout): zawieszony odczyt X:
+    nie blokuje kolejki (lekcja z sekcji 9 doktryny - shutdown(wait=True) wisial)."""
+    box: dict = {}
+    avif_p, jpg_p = _cache_paths(digest)
+
+    def work() -> None:
+        try:
+            box["r"] = _encode_thumb(physical, avif_p, jpg_p, max_side)
+        except Exception:  # noqa: BLE001
+            box["r"] = (None, "")
+
+    t = threading.Thread(target=work, daemon=True, name="dam-backfill-encode")
+    t.start()
+    t.join(timeout=max(1.0, timeout_s))
+    if t.is_alive():
+        return None, "", True
+    hit, ctype = box.get("r") or (None, "")
+    return hit, ctype, False
+
+
+def _backfill_jobs(profile: str, failed: dict) -> tuple[list[str], int]:
+    """Materialy bez miniatury na NAS. Po drodze dopisuje do indeksu klucze, ktore
+    da sie odtworzyc z mtime w bazie (plik jest na NAS, brakowalo tylko wpisu)."""
+    idx = _load_rel_index()
+    jobs: list[str] = []
+    restored = 0
+    # Bez pdftoppm kazdy PDF konczy sie porazka - nie zapisuj ich jako porazek,
+    # zeby zbudowaly sie same, gdy Poppler pojawi sie na komputerze.
+    no_pdf = _find_pdftoppm() is None
+    for rel, mt in list(_ASSET_MT.items()):
+        ext = Path(rel).suffix.lower()
+        if ext not in FILL_SUPPORTED_EXT:
+            continue
+        if _rel_index_key(rel, profile) in idx:
+            continue
+        d = _digest(rel, mt, profile)
+        if d in _REMOTE_DIGESTS or _existing_thumb(d)[0] is not None:
+            _remember_rel(rel, profile, d, mt, defer_save=True)
+            restored += 1
+            continue
+        if (no_pdf and ext == ".pdf") or failed.get(rel) == int(mt):
+            continue
+        jobs.append(rel)
+    jobs.sort(key=lambda r: (_fill_is_archive(r), r))
+    return jobs, restored
+
+
+def run_backfill(
+    *,
+    max_items: int = 0,
+    workers: int = 2,
+    profile: str = "grid",
+    file_timeout_s: float = BACKFILL_FILE_TIMEOUT_S,
+    publish_every: int = BACKFILL_PUBLISH_EVERY,
+) -> dict:
+    """Buduje brakujace miniatury z oryginalow i publikuje je na NAS. Wznawialne:
+    postep = indeks + znane porazki w katalogu stanu; kolejne wywolanie idzie dalej."""
+    root = _fill_marketing_root()
+    if root is None:
+        return {"ok": False, "reason": "no_marketing_root"}
+    refresh_remote_index()
+    am = refresh_asset_mtimes()
+    if not am.get("ok"):
+        return {"ok": False, "reason": "no_db", "detail": am}
+    state_p = _backfill_state_path()
+    state = _read_json_file(state_p)
+    failed: dict = state.get("failed") if isinstance(state.get("failed"), dict) else {}
+    jobs, restored = _backfill_jobs(profile, failed)
+    _save_rel_index()
+    pending_total = len(jobs)
+    if max_items:
+        jobs = jobs[:max_items]
+    lock = threading.Lock()
+    c = {"done": 0, "built": 0, "failed": 0, "timeout": 0, "online_only": 0, "unreachable": 0, "since_publish": 0}
+    t0 = time.time()
+    started = _utc_iso()
+    max_side = PROFILES.get(profile, 480)
+    queue = list(reversed(jobs))
+
+    def save_state(final: bool = False) -> None:
+        with lock:
+            snap = dict(c)
+            fail_copy = dict(failed)
+        rate = snap["done"] / max(0.1, time.time() - t0)
+        _write_json_atomic(state_p, {
+            "profile": profile, "started_at": started, "updated_at": _utc_iso(), "final": final,
+            "pending_total": pending_total, "batch": len(jobs), "restored_keys": restored, **snap,
+            "rate_per_s": round(rate, 3),
+            "eta_s_pending": int((pending_total - snap["done"]) / rate) if rate > 0 else None,
+            "failed": fail_copy,
+        })
+
+    def worker() -> None:
+        while True:
+            with lock:
+                if not queue:
+                    return
+                rel = queue.pop()
+            physical = str(root / Path(*rel.split("/")))
+            mt = _mtime_quick(physical, timeout_s=3.0)
+            outcome = "unreachable"
+            # ponytail: plik "tylko online" (Synology Drive na zadanie) trafia do porazek
+            # az do zmiany mtime - czytanie sciagneloby caly oryginal. Po przypieciu
+            # folderu offline trzeba wyczyscic thumb-backfill-state.json.
+            if mt is not None and _is_online_only(physical):
+                outcome = "online_only"
+            elif mt is not None:
+                digest = _digest(rel, mt, profile)
+                hit, _ctype = _existing_thumb(digest)
+                timed_out = False
+                if hit is None:
+                    hit, _ctype, timed_out = _encode_with_timeout(physical, digest, max_side, file_timeout_s)
+                if hit is not None:
+                    _remember_rel(rel, profile, digest, mt, defer_save=True)
+                    outcome = "built"
+                else:
+                    outcome = "timeout" if timed_out else "failed"
+            with lock:
+                c["done"] += 1
+                c[outcome] += 1
+                if outcome == "built":
+                    c["since_publish"] += 1
+                elif mt is not None:
+                    failed[rel] = int(mt)
+                due_publish = c["since_publish"] >= publish_every
+                if due_publish:
+                    c["since_publish"] = 0
+                due_state = c["done"] % 25 == 0
+            if due_publish:
+                _save_rel_index()
+                try:
+                    print("thumb_backfill publish:", publish_new_thumbs(), flush=True)
+                except Exception as exc:  # noqa: BLE001
+                    print(f"[dam_thumb_cache] backfill publish error: {exc}", flush=True)
+            if due_state:
+                save_state()
+
+    threads = [threading.Thread(target=worker, daemon=True, name=f"dam-backfill-{i}") for i in range(max(1, workers))]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    _save_rel_index()
+    pub: dict = {}
+    if c["built"] or restored:
+        try:
+            pub = publish_new_thumbs()
+        except Exception as exc:  # noqa: BLE001
+            pub = {"ok": False, "error": str(exc)[:200]}
+    save_state(final=True)
+    return {
+        "ok": True, "pending_total": pending_total, "batch": len(jobs), "restored_keys": restored,
+        **{k: v for k, v in c.items() if k != "since_publish"},
+        "seconds": int(time.time() - t0),
+        "publish": {k: pub.get(k) for k in ("ok", "transport", "copied", "skipped", "thumb_count", "table", "error")},
+    }
+
+
+def cli(argv: Optional[list[str]] = None) -> None:
+    """Osobny proces o niskim priorytecie (python z bin/runtime ma ._pth, wiec przez -c):
+    python -c "import sys; sys.path.insert(0, r'<bin/apps/desktop>'); import dam_thumb_cache as t; t.cli()" backfill --workers 2
+    """
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("cmd", choices=("backfill", "refresh"))
+    ap.add_argument("--max", type=int, default=0)
+    ap.add_argument("--workers", type=int, default=2)
+    ap.add_argument("--timeout", type=float, default=BACKFILL_FILE_TIMEOUT_S)
+    args = ap.parse_args(argv)
+    if sys.platform == "win32":
+        try:
+            import ctypes
+
+            ctypes.windll.kernel32.SetPriorityClass(ctypes.windll.kernel32.GetCurrentProcess(), 0x4000)
+        except Exception:  # noqa: BLE001
+            pass
+    if args.cmd == "refresh":
+        print(json.dumps({"remote": refresh_remote_index(force=True), "assets": refresh_asset_mtimes()}))
+    else:
+        print(json.dumps(run_backfill(max_items=args.max, workers=args.workers, file_timeout_s=args.timeout)))

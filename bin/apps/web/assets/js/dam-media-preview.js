@@ -4677,6 +4677,17 @@
       ph.title = alt;
       ph.innerHTML = '<i class="uil uil-image" aria-hidden="true"></i>';
       img.replaceWith(ph);
+      /* Faza 3: bez ROOT most dociaga miniature z NAS chwile pozniej - zaslepka sama
+       * wraca do /thumb-cache (jak karty viz/brandingu), zamiast zostac do konca sesji. */
+      var truth = window.DamPreviewTruth;
+      if (path && truth && typeof truth.retryPlaceholderLater === "function") {
+        truth.retryPlaceholderLater(ph, path, "grid", function (freshUrl) {
+          if (!ph.isConnected) return;
+          img.dataset.fallbackTried = "";
+          img.src = freshUrl;
+          ph.replaceWith(img);
+        });
+      }
     };
 
     window.__damMediaPreviewFallback = function (img) {
