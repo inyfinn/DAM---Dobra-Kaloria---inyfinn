@@ -11,6 +11,7 @@
   var _timer = null;
   var _lastOnline = null;
   var _refreshBusy = false;
+  var _checkSeq = 0;
 
   function bridgeBase() {
     if (window.DamRuntime && typeof window.DamRuntime.bridgeUrl === "function") {
@@ -20,6 +21,14 @@
       return window.DamPaths.bridgeUrl();
     }
     return "http://127.0.0.1:8766";
+  }
+
+  function tr(key, fallback) {
+    if (window.DamI18n && typeof window.DamI18n.t === "function") {
+      var v = window.DamI18n.t(key);
+      if (v && v !== key) return v;
+    }
+    return fallback;
   }
 
   function rootPath() {
@@ -278,19 +287,27 @@
   function check() {
     var root = rootPath();
     if (!root) {
+      _checkSeq++;
       setState(false, "Brak ROOT - ustaw ścieżkę Marketing", "no_root");
       return Promise.resolve({ online: false, reason: "no_root" });
     }
     var url = bridgeBase() + "/files/status?root=" + encodeURIComponent(root);
+    var mySeq = ++_checkSeq;
     return fetch(url, { cache: "no-store" })
       .then(function (r) { return r.json(); })
       .then(function (res) {
+        /* Po przelaczeniu ROOT starsza odpowiedz nie nadpisuje nowszej. */
+        if (mySeq !== _checkSeq) return res;
         var online = !!(res && res.online);
         var detail = online
           ? ("ROOT OK: " + (res.root || root))
-          : ("Offline: " + (res && res.missing && res.missing.length
-            ? ("brak " + res.missing.join(", "))
-            : "nie można odczytać plików"));
+          : ("Offline: " + (res && res.timeout
+            ? tr("root.status.timeout", "dysk nie odpowiada")
+            : res && res.exists === false
+              ? tr("root.status.missing", "folder nie istnieje")
+              : res && res.missing && res.missing.length
+                ? ("brak " + res.missing.join(", "))
+                : "nie można odczytać plików"));
         setState(online, detail, online ? "ok" : "path");
         return res;
       })
@@ -363,6 +380,10 @@
       check();
     });
     window.addEventListener("dam:index-refreshed", function () {
+      check();
+    });
+    /* DamPaths.setBasePath po potwierdzeniu mostu - pigulka od razu, bez F5. */
+    window.addEventListener("dam:root-changed", function () {
       check();
     });
   }

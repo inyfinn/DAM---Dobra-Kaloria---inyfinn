@@ -499,5 +499,15 @@
   "lightbox.prev": "Poprzedni materiał",
   "lightbox.next": "Następny materiał",
   "lightbox.hint": "Scroll: powiększ. Przeciągnij: przesuń. Dwuklik: dopasuj/100%. Esc: zamknij.",
-  "lightbox.loading": "Wczytuję oryginał…"
+  "lightbox.loading": "Wczytuję oryginał…",
+  "root.switch.saving": "Sprawdzam ścieżkę...",
+  "root.switch.ok": "Przełączono na {path}.",
+  "root.switch.missing": "Folder {path} nie istnieje na tym komputerze. Zostaje poprzednia ścieżka.",
+  "root.switch.timeout": "Dysk {path} nie odpowiada. Zostaje poprzednia ścieżka.",
+  "root.switch.incomplete": "W folderze {path} brakuje: {missing}. To nie jest folder Marketing. Zostaje poprzednia ścieżka.",
+  "root.switch.login": "Zaloguj się, aby zmienić ścieżkę. Zostaje poprzednia ścieżka.",
+  "root.switch.bridge": "Most lokalny (8766) nie odpowiada. Ścieżka nie została zmieniona.",
+  "root.switch.failed": "Nie udało się zmienić ścieżki ({error}). Zostaje poprzednia.",
+  "root.status.timeout": "dysk nie odpowiada",
+  "root.status.missing": "folder nie istnieje"
 }

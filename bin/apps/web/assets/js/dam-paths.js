@@ -186,6 +186,7 @@
     localStorage.setItem(BASE_KEY, win);
   }
 
+  /** Stary zapis 2x POST bez czekania - tylko migracja cache -> UDP i most bez /root/switch. */
   function persistBasePathToBridge(win, meta) {
     var body = { base_path: win };
     var did = (meta && meta.device_id) || currentDeviceId();
@@ -213,21 +214,137 @@
     return Promise.all([p1, p2]);
   }
 
+  function tr(key, fallback, vars) {
+    var s = fallback;
+    if (window.DamI18n && typeof window.DamI18n.t === "function") {
+      var v = window.DamI18n.t(key);
+      if (v && v !== key) s = v;
+    }
+    if (vars) {
+      Object.keys(vars).forEach(function (k) {
+        s = String(s).split("{" + k + "}").join(String(vars[k]));
+      });
+    }
+    return s;
+  }
+
+  /** Komunikat dla wyniku POST /root/switch (ok:false). */
+  function rootSwitchMessage(res) {
+    var r = res || {};
+    var path = r.base_path || "";
+    var err = String(r.error || "");
+    if (err === "root_missing") {
+      return tr("root.switch.missing", "Folder {path} nie istnieje na tym komputerze. Zostaje poprzednia ścieżka.", { path: path });
+    }
+    if (err === "root_timeout") {
+      return tr("root.switch.timeout", "Dysk {path} nie odpowiada. Zostaje poprzednia ścieżka.", { path: path });
+    }
+    if (err === "root_incomplete") {
+      return tr("root.switch.incomplete", "W folderze {path} brakuje: {missing}. To nie jest folder Marketing. Zostaje poprzednia ścieżka.", {
+        path: path,
+        missing: (r.missing || []).join(", ")
+      });
+    }
+    if (err === "login_required") {
+      return tr("root.switch.login", "Zaloguj się, aby zmienić ścieżkę. Zostaje poprzednia ścieżka.");
+    }
+    if (err === "bridge_offline") {
+      return tr("root.switch.bridge", "Most lokalny (8766) nie odpowiada. Ścieżka nie została zmieniona.");
+    }
+    return tr("root.switch.failed", "Nie udało się zmienić ścieżki ({error}). Zostaje poprzednia.", { error: err || "?" });
+  }
+
+  /** Stary most bez POST /root/switch: walidacja + dotychczasowy zapis. */
+  function legacySwitch(win, meta) {
+    return validateBaseRemote(win).then(function (v) {
+      if (!v || !v.ok) {
+        var missingAll = v && v.error === "not_a_directory";
+        return {
+          ok: false,
+          error: missingAll ? "root_missing" : "root_incomplete",
+          base_path: win,
+          missing: (v && v.missing) || [],
+          root_alive: false
+        };
+      }
+      return persistBasePathToBridge(win, meta).then(function () {
+        return { ok: true, base_path: win, root_alive: true, reason: "ok", legacy: true };
+      });
+    });
+  }
+
+  var _switchSeq = 0;
+
+  /** Jedno zdarzenie dla wszystkich modulow (DamRootStatus, Eksplorator, ...). */
+  function emitRootChanged(basePath, rootAlive, previous, source) {
+    try {
+      window.dispatchEvent(new CustomEvent("dam:root-changed", {
+        detail: { base_path: basePath, root_alive: !!rootAlive, previous: previous || "", source: source || "" }
+      }));
+    } catch (_e) { /* ignore */ }
+  }
+
+  /* Inna karta przelaczyla ROOT: localStorage juz ma nowa wartosc (zapisana po
+     potwierdzeniu mostu) - ta karta dostaje to samo zdarzenie, bez F5. */
+  window.addEventListener("storage", function (e) {
+    if (!e || !e.key || !e.newValue) return;
+    if (e.key !== baseStorageKey()) return;
+    if (e.newValue === e.oldValue) return;
+    emitRootChanged(e.newValue, true, e.oldValue || "", "storage");
+  });
+
+  /**
+   * Przelaczenie ROOT = jedna operacja (POST /root/switch). Zwraca Promise.
+   * localStorage zmienia sie DOPIERO po potwierdzeniu mostu; wtedy leci
+   * window "dam:root-changed" {base_path, root_alive, previous}. Blad = stary ROOT
+   * zostaje, wynik ma {ok:false, error, message}.
+   */
   function setBasePath(p, meta) {
+    meta = meta || {};
     // Zachowaj root dysku: "M:\" / "M:" -> "M:\"; inaczej bez trailing slash
     var win = normalizeMarketingRoot(p);
-    if (!win) return;
+    if (!win) {
+      return Promise.resolve({ ok: false, error: "base_path_required", message: tr("root.switch.failed", "Nie udało się zmienić ścieżki ({error}). Zostaje poprzednia.", { error: "base_path_required" }) });
+    }
     if (/^[A-Za-z]:\\?$/.test(win)) {
       win = win.charAt(0).toUpperCase() + ":\\";
     } else {
       win = win.replace(/\\+$/, "");
     }
-    setBasePathLocalCache(win, meta && meta.device_id);
-    persistBasePathToBridge(win, meta || {});
-    // Po ustawieniu ROOT - sprawdz czy fetch plikow dziala
-    if (window.DamRootStatus && typeof window.DamRootStatus.check === "function") {
-      setTimeout(function () { window.DamRootStatus.check(); }, 200);
-    }
+    var did = meta.device_id || currentDeviceId();
+    var previous = getBasePath();
+    var seq = ++_switchSeq;
+    var body = { base_path: win };
+    if (did) body.device_id = did;
+    if (meta.hostname) body.hostname = meta.hostname;
+    if (meta.label != null) body.label = meta.label;
+    return fetch(bridgeBase() + "/root/switch", {
+      method: "POST",
+      headers: bridgeAuthHeaders(),
+      body: JSON.stringify(body)
+    }).then(function (r) {
+      if (r.status === 404) return legacySwitch(win, meta);
+      return r.json().catch(function () { return { ok: false, error: "bad_response_" + r.status }; });
+    }, function () {
+      return { ok: false, error: "bridge_offline", base_path: win };
+    }).then(function (res) {
+      res = res || { ok: false, error: "empty_response" };
+      if (!res.ok) {
+        res.message = rootSwitchMessage(res);
+        return res;
+      }
+      var saved = String(res.base_path || win);
+      if (seq === _switchSeq) {
+        setBasePathLocalCache(saved, did);
+        emitRootChanged(saved, res.root_alive !== false, previous, "switch");
+      }
+      res.message = tr("root.switch.ok", "Przełączono na {path}.", { path: saved });
+      return res;
+    }).catch(function () {
+      var fail = { ok: false, error: "bridge_offline", base_path: win };
+      fail.message = rootSwitchMessage(fail);
+      return fail;
+    });
   }
 
   function fetchCurrentDevicePath() {
@@ -1168,22 +1285,18 @@
         setMsg("Podaj sciezke bazowa.", false);
         return;
       }
-      setBasePath(raw);
-      validateBaseRemote(raw).then(function (res) {
-        if (res && res.ok) {
-          setMsg("OK - zapisano Twoje ustawienie.", true);
-          logAction("set_base_path", { local_path: raw, detail: "Uzytkownik ustawil sciezke bazowa" });
-          setTimeout(function () { modal.remove(); }, 500);
-        } else if (res && res.missing && res.missing.length) {
-          setMsg("Zapisano Twoj wybor; brakuje: " + res.missing.join(", ") + ".", false);
-          setTimeout(function () { modal.remove(); }, 1800);
-        } else {
-          setMsg("Zapisano Twoj wybor (walidacja bridge offline).", true);
-          setTimeout(function () { modal.remove(); }, 700);
+      setMsg(tr("root.switch.saving", "Sprawdzam ścieżkę..."), true);
+      var saveBtn = document.getElementById("damBasePathSave");
+      if (saveBtn) saveBtn.disabled = true;
+      setBasePath(raw).then(function (res) {
+        if (saveBtn) saveBtn.disabled = false;
+        if (!res || !res.ok) {
+          setMsg((res && res.message) || rootSwitchMessage(res), false);
+          return;
         }
-      }).catch(function () {
-        setMsg("Zapisano Twoj wybor.", true);
-        setTimeout(function () { modal.remove(); }, 600);
+        setMsg(res.message, true);
+        logAction("set_base_path", { local_path: res.base_path || raw, detail: "Uzytkownik ustawil sciezke bazowa" });
+        setTimeout(function () { modal.remove(); }, 500);
       });
     }
 
@@ -1230,6 +1343,7 @@
     REQUIRED: REQUIRED,
     getBasePath: getBasePath,
     setBasePath: setBasePath,
+    rootSwitchMessage: rootSwitchMessage,
     hasBasePath: hasBasePath,
     normalizeMarketingRoot: normalizeMarketingRoot,
     pickFolder: pickFolder,

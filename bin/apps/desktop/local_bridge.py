@@ -340,6 +340,7 @@ PUBLIC_FORBIDDEN_PATHS = frozenset(
         "/open-image-resizer",
         "/synology-share",
         "/validate-base",
+        "/root/switch",
         "/detect-marketing-bases",
         "/preflight",
         "/index/snapshots",
@@ -900,12 +901,11 @@ def write_machine_config(base_path: str) -> dict:
     users[user] = {"base_path": stored, "updated_at": utc_now()}
     payload = {"users": users}
     MACHINE_CONFIG.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    if dam_db is not None:
-        try:
-            dam_db.reset_path_cache()
-            dam_db.init_db()
-        except Exception:  # noqa: BLE001
-            pass
+    # 2026-09-27: bez dam_db.reset_path_cache()+init_db(). Baza nie zalezy od ROOT
+    # (kanon bin/DATABASE, dam_db.canonical_db_path). Reset przy kazdym zapisie ROOT
+    # zrywal polaczenie z baza: pelny re-init Postgresa pod _LOCK w watku HTTP,
+    # a _migrate_sqlite_canonical czytal pliki z NOWEGO (czasem wiszacego) ROOT.
+    _invalidate_root_caches()
     return {
         "ok": True,
         "user": user,
@@ -913,6 +913,183 @@ def write_machine_config(base_path: str) -> dict:
         "updated_at": users[user]["updated_at"],
         "path": str(MACHINE_CONFIG),
         "db": dam_db.status() if dam_db else None,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Przelaczenie ROOT jedna operacja (Faza 3.1, 2026-09-27): POST /root/switch.
+# Sprawdz sciezke z twardym limitem czasu -> zapisz machine-config + UDP ->
+# uniewaznij cache mostu -> odpowiedz. Katalog (PG / indeksy) sie nie zmienia.
+# ---------------------------------------------------------------------------
+ROOT_SWITCH_PROBE_TIMEOUT_S = 3.0
+ROOT_WATCHER_POLL_S = 5.0
+_ROOT_WATCHER_RESTART_LOCK = threading.Lock()
+
+
+def _invalidate_root_caches() -> None:
+    """Zrzuc kazdy cache mostu, ktory pamieta stary ROOT / zywotnosc liter dysku."""
+    try:
+        scripts = str(WEB_ROOT / "scripts")
+        if scripts not in sys.path:
+            sys.path.append(scripts)
+        import marketing_roots  # noqa: PLC0415
+
+        marketing_roots.clear_cache()
+    except Exception:  # noqa: BLE001
+        pass
+    if marketing_discovery is not None:
+        try:
+            marketing_discovery.clear_cache()
+        except Exception:  # noqa: BLE001
+            pass
+    if dam_thumb_cache is not None:
+        # Brak publicznej funkcji w dam_thumb_cache (inny wlasciciel pliku): czyscimy
+        # slownik zywotnosci liter pod jego wlasnym zamkiem.
+        try:
+            with dam_thumb_cache._DRIVE_ALIVE_LOCK:
+                dam_thumb_cache._DRIVE_ALIVE.clear()
+        except Exception:  # noqa: BLE001
+            pass
+
+
+def _probe_root(base_path: str, timeout: float | None = None) -> dict:
+    """{ok, exists, missing, timeout} bez blokowania watku HTTP dluzej niz timeout.
+
+    Dysk sieciowy potrafi wisiec dziesiatki sekund na isdir - sonda idzie w watku
+    daemon; marketing_discovery nie startuje drugiej sondy tej samej sciezki,
+    dopoki pierwsza wisi (zwraca od razu timeout)."""
+    if timeout is None:
+        timeout = ROOT_SWITCH_PROBE_TIMEOUT_S
+    if marketing_discovery is not None:
+        status = marketing_discovery.check_paths(
+            [base_path], required=REQUIRED_ROOT_FOLDERS, timeout=timeout
+        )
+        info = status.get(marketing_discovery.path_key(base_path)) or {}
+        return {
+            "ok": bool(info.get("ok")),
+            "exists": bool(info.get("exists")),
+            "missing": list(info.get("missing") or []),
+            "timeout": bool(info.get("timeout")),
+        }
+    box: dict = {}
+
+    def _run() -> None:
+        box.update(validate_base(base_path))
+
+    t = threading.Thread(target=_run, daemon=True, name="dam-root-probe")
+    t.start()
+    t.join(timeout)
+    if t.is_alive():
+        return {"ok": False, "exists": False, "missing": list(REQUIRED_ROOT_FOLDERS), "timeout": True}
+    return {
+        "ok": bool(box.get("ok")),
+        "exists": box.get("error") != "not_a_directory",
+        "missing": list(box.get("missing") or []),
+        "timeout": False,
+    }
+
+
+def _index_rebuild_running() -> bool:
+    if _index_state.get("running") or _branding_rebuild_state.get("running"):
+        return True
+    try:
+        import index_supervisor  # noqa: PLC0415
+
+        return bool(((index_supervisor.public_status() or {}).get("progress") or {}).get("running"))
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _restart_index_watcher_for_root() -> str:
+    """Watcher (watch-file-index.py) czyta ROOT raz przy starcie - po zmianie ROOT
+    trzeba go zrestartowac. Trwajaca przebudowa konczy sie na starym ROOT (sciezki
+    w indeksie i tak sa remapowane); restart czeka w tle, az sie skonczy."""
+    if not _ROOT_WATCHER_RESTART_LOCK.acquire(blocking=False):
+        return "pending"
+    deferred = _index_rebuild_running()
+
+    def _run() -> None:
+        try:
+            deadline = time.monotonic() + 2 * 3600
+            while _index_rebuild_running() and time.monotonic() < deadline:
+                time.sleep(ROOT_WATCHER_POLL_S)
+            import index_supervisor  # noqa: PLC0415
+
+            if index_supervisor._owner is None:
+                return  # watcher nalezy do innego procesu albo nie dziala - nie ruszamy
+            index_supervisor.stop_index_supervisor()
+            index_supervisor.ensure_index_supervisor(interval=2.0, depth=5)
+        except Exception as exc:  # noqa: BLE001
+            print("root switch watcher restart:", exc)
+        finally:
+            _ROOT_WATCHER_RESTART_LOCK.release()
+
+    threading.Thread(target=_run, daemon=True, name="dam-root-watcher-restart").start()
+    return "deferred" if deferred else "restarting"
+
+
+def switch_root(
+    base_path: str,
+    email: str = "",
+    device_id: str = "",
+    hostname: str = "",
+    label: str | None = None,
+    *,
+    write: bool = True,
+) -> dict:
+    """Jedna operacja przelaczenia ROOT. write=False = tylko walidacja (bez sesji)."""
+    raw = str(base_path or "").strip()
+    checked_at = utc_now()
+    if not raw:
+        return {"ok": False, "error": "base_path_required", "reason": "empty",
+                "base_path": "", "root_alive": False, "checked_at": checked_at}
+    stored = _normalize_base_path(raw)
+    probe = _probe_root(stored)
+    if not probe["ok"]:
+        if probe["timeout"]:
+            reason = "timeout"
+        elif not probe["exists"]:
+            reason = "missing"
+        else:
+            reason = "incomplete"
+        return {
+            "ok": False,
+            "error": "root_" + reason,
+            "reason": reason,
+            "base_path": stored,
+            "missing": probe["missing"],
+            "root_alive": False,
+            "checked_at": checked_at,
+        }
+    if not write:
+        return {"ok": True, "base_path": stored, "root_alive": True, "reason": "ok",
+                "checked_at": checked_at, "validated_only": True}
+    previous = str(read_machine_config().get("base_path") or "").strip()
+    write_machine_config(stored)  # sam wola _invalidate_root_caches()
+    udp: dict = {"ok": False, "skipped": True}
+    ident = _udp_current_identity()
+    did = str(device_id or "").strip() or str(ident.get("device_id") or "").strip()
+    host = str(hostname or "").strip() or str(ident.get("hostname") or "").strip()
+    if email and did:
+        try:
+            udp = upsert_user_device_path(email, did, stored, hostname=host, label=label)
+        except Exception as exc:  # noqa: BLE001 - PG offline: machine-config i tak zapisany
+            udp = {"ok": False, "error": str(exc)[:200]}
+    changed = _normalize_base_path(previous).lower() != stored.lower() if previous else True
+    watcher = _restart_index_watcher_for_root() if changed else "unchanged"
+    return {
+        "ok": True,
+        "base_path": stored,
+        "previous": previous,
+        "changed": changed,
+        "root_alive": True,
+        "reason": "ok",
+        "checked_at": checked_at,
+        "device_id": did,
+        "udp_ok": bool(udp.get("ok")),
+        "udp_error": "" if udp.get("ok") else str(udp.get("error") or ""),
+        "watcher": watcher,
+        "rebuild_running": _index_rebuild_running(),
     }
 
 
@@ -2133,15 +2310,11 @@ def _is_under_marketing(path: Path) -> bool:
     except OSError:
         return False
     candidates = list(MARKETING_CANDIDATES)
-    cfg = MACHINE_CONFIG
-    if cfg.is_file():
-        try:
-            data = json.loads(cfg.read_text(encoding="utf-8"))
-            base = (data.get("base_path") or data.get("path") or "").strip()
-            if base:
-                candidates.insert(0, Path(base))
-        except (OSError, json.JSONDecodeError):
-            pass
+    # users[USERNAME].base_path (read_machine_config) - stary kod czytal tylko
+    # nieuzywany klucz top-level, wiec ROOT spoza M:/X:/D: dawal path_outside_marketing.
+    base = str(read_machine_config().get("base_path") or "").strip()
+    if base:
+        candidates.insert(0, Path(base))
     for root in candidates:
         try:
             resolved.relative_to(root.resolve())
@@ -8711,7 +8884,9 @@ class Handler(BaseHTTPRequestHandler):
             if not root:
                 self._json(400, {"ok": False, "online": False, "error": "root_required"})
                 return
-            info = validate_base(root)
+            # Sonda z limitem czasu: wiszacy dysk sieciowy nie blokuje watku HTTP.
+            info = _probe_root(root)
+            info["path"] = _normalize_base_path(root)
             online = bool(info.get("ok"))
             # Dodatkowy probe: czy da sie listowac POLSKA
             probe_ok = False
@@ -8730,6 +8905,8 @@ class Handler(BaseHTTPRequestHandler):
                     "missing": info.get("missing") or [],
                     "probe": "list_-POLSKA",
                     "probe_ok": probe_ok,
+                    "exists": bool(info.get("exists")),
+                    "timeout": bool(info.get("timeout")),
                 },
             )
             return
@@ -9853,6 +10030,30 @@ class Handler(BaseHTTPRequestHandler):
                 data.get("start") or data.get("path") or data.get("directory") or ""
             ).strip()
             self._json(200, pick_folder_dialog(start))
+            return
+        if parsed.path == "/root/switch":
+            # Jedna operacja: walidacja z limitem czasu (bez sesji, jak /validate-base),
+            # zapis machine-config + UDP i uniewaznienie cache (z sesja).
+            payload = data if isinstance(data, dict) else {}
+            path = str(payload.get("base_path") or payload.get("path") or "").strip()
+            checked = switch_root(path, write=False)
+            if not checked.get("ok"):
+                self._json(200, checked)
+                return
+            user = self._require_login()
+            if user is None:
+                return
+            label = payload.get("label") if "label" in payload else None
+            self._json(
+                200,
+                switch_root(
+                    path,
+                    email=str(user.get("email") or "").strip(),
+                    device_id=str(payload.get("device_id") or ""),
+                    hostname=str(payload.get("hostname") or ""),
+                    label=label,
+                ),
+            )
             return
         if parsed.path == "/machine-config":
             # Zapis sciezki Marketing tylko dla zalogowanego uzytkownika

@@ -809,6 +809,19 @@
       });
     }
 
+    window.addEventListener("dam:root-changed", function (e) {
+      var p = e && e.detail && e.detail.base_path;
+      if (p) basePathEl.value = p;
+    });
+
+    function i18nOr(key, fallback) {
+      if (window.DamI18n && typeof DamI18n.t === "function") {
+        var v = DamI18n.t(key);
+        if (v && v !== key) return v;
+      }
+      return fallback;
+    }
+
     function showBaseMsg(text, ok) {
       if (!baseMsg) return;
       baseMsg.classList.add("is-on");
@@ -917,17 +930,33 @@
             ? DamUserPrefs.setSafeDelete(safeDelEl ? !!safeDelEl.checked : true)
             : Promise.resolve();
         var raw = (basePathEl.value || "").trim();
-        if (raw && window.DamPaths) {
-          DamPaths.setBasePath(raw);
-          DamPaths.logAction("set_base_path", {
-            local_path: raw,
-            detail: "Zapisano w Ustawieniach",
+        var rootP = Promise.resolve(null);
+        var cur = window.DamPaths && typeof DamPaths.getBasePath === "function" ? DamPaths.getBasePath() : "";
+        if (raw && window.DamPaths && raw !== cur) {
+          /* Jedna operacja: most sprawdza sciezke, zapisuje, uniewaznia cache; dopiero
+             potem localStorage + "dam:root-changed". Blad = poprzedni ROOT zostaje. */
+          saveBtn.disabled = true;
+          showBaseMsg(i18nOr("root.switch.saving", "Sprawdzam ścieżkę..."), true);
+          rootP = DamPaths.setBasePath(raw).then(function (res) {
+            saveBtn.disabled = false;
+            if (!res || !res.ok) {
+              showBaseMsg((res && res.message) || "", false);
+              basePathEl.value = DamPaths.getBasePath() || "";
+              return res;
+            }
+            basePathEl.value = res.base_path || raw;
+            showBaseMsg(res.message || "", true);
+            DamPaths.logAction("set_base_path", {
+              local_path: res.base_path || raw,
+              detail: "Zapisano w Ustawieniach",
+            });
+            return res;
           });
-        } else if (raw) {
+        } else if (raw && !window.DamPaths) {
           localStorage.setItem("dam_base_path", raw);
         }
         saveProfile();
-        Promise.all([saveNotifications(), saveElementyConversion(), safeP]).then(function () {
+        Promise.all([saveNotifications(), saveElementyConversion(), safeP, rootP]).then(function () {
           var msg = document.getElementById("settingsSaveMsg");
           if (msg) {
             msg.classList.add("is-on");

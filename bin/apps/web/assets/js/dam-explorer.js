@@ -9650,6 +9650,13 @@
        startExplorerIndexBind so pageshow/reentry can re-arm them. */
     startExplorerIndexBind("init");
 
+    /* Przelaczenie ROOT (DamPaths.setBasePath po potwierdzeniu mostu): katalog
+       ten sam, zmienia sie mapowanie sciezek i dostepnosc - wczytaj i narysuj
+       drzewo od nowa (bez przebudowy indeksu z dysku, bez F5). */
+    window.addEventListener("dam:root-changed", function () {
+      refreshIndex({ silent: true, skipRebuild: true }).catch(function () { /* status juz ustawiony */ });
+    });
+
     var refreshBtn = document.getElementById("damIndexRefresh");
     if (refreshBtn && !refreshBtn._damBound) {
       refreshBtn._damBound = true;

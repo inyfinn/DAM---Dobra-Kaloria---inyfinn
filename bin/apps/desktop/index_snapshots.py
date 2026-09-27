@@ -65,6 +65,25 @@ _ROWS_MODE_CACHE: dict[str, Any] = {"value": False, "at": 0.0}
 _LOCK = threading.Lock()
 _THREAD: threading.Thread | None = None
 _LAST: dict[str, Any] = {}
+# Faza 3 (PLAN-jedno-zrodlo-prawdy.md, zadanie 3.4): stan pierwszej synchronizacji
+# po starcie procesu, do wystawienia w /health / banerze UI "pobieram dane".
+_FIRST_SYNC: dict[str, Any] = {"done": False, "ok": None, "started_at": "", "finished_at": ""}
+
+
+def _sync_meta_store_from_file_index(path: Path) -> None:
+    """meta_store.sync_from_file_index() budowal FK tylko po LOKALNYM skanie dysku
+    (local_bridge.py po build-file-index.py). Komputer bez ROOT nigdy nie robi
+    lokalnego skanu - metadane produktow (meta_products/meta_revisions/...) zostawaly
+    puste na zawsze, mimo ze file-index.json przyszedl swiezy z bazy (patrz PLAN
+    Faza 3, zadanie 3.4: "metadane produktow z bazy, nie tylko z lokalnie zbudowanego
+    pliku"). Wolamy sync tutaj - zaraz po kazdym pobraniu file-index.json z PG,
+    niezaleznie od tego, czy komputer ma ROOT."""
+    try:
+        import meta_store
+
+        meta_store.sync_from_file_index(path)
+    except Exception as exc:  # noqa: BLE001 - nie wolno wywrocic pull_newer przez to
+        print("index_snapshots: meta_store sync po pull failed:", exc, flush=True)
 
 
 def _asset_index_mode_is_rows(*, force: bool = False) -> bool:
@@ -327,6 +346,8 @@ def pull_newer(
         entry.update(pulled_sha=sha, local_sha=sha, local_sig=list(_file_sig(path) or ()), source="db",
                      pulled_at=datetime.now(timezone.utc).isoformat(), generation=m2.get("generation"))
         out["pulled"].append({"key": key, "ms": int((time.monotonic() - t0) * 1000), "bytes": len(raw)})
+        if key == "file-index":
+            _sync_meta_store_from_file_index(path)
         if on_updated is not None:
             try:
                 on_updated(key, path)
@@ -351,12 +372,22 @@ def status() -> dict[str, Any]:
             "db_built_by": db.get("built_by") or "",
             "pulled_at": e.get("pulled_at") or "",
         }
-    return {"ok": True, "keys": keys, "last": dict(_LAST)}
+    return {"ok": True, "keys": keys, "last": dict(_LAST), "first_sync": dict(_FIRST_SYNC)}
+
+
+def first_sync_state() -> dict[str, Any]:
+    """Do banera UI "pobieram dane" / /health: czy pierwszy cykl po starcie procesu
+    juz sie skonczyl, i czy sie udal. Zanim sie skonczy: done=False - UI ma wtedy
+    pokazac stan ladowania zamiast danych z instalatora/pustych list (PLAN Faza 3)."""
+    return dict(_FIRST_SYNC)
 
 
 def run_once(data_dir: Path, root_alive_fn: Callable[[], bool],
              on_updated: Callable[[str, Path], None] | None = None) -> dict[str, Any]:
     with _LOCK:
+        is_first = not _FIRST_SYNC["done"]
+        if is_first and not _FIRST_SYNC["started_at"]:
+            _FIRST_SYNC["started_at"] = datetime.now(timezone.utc).isoformat()
         try:
             alive = bool(root_alive_fn())
         except Exception:  # noqa: BLE001
@@ -364,6 +395,12 @@ def run_once(data_dir: Path, root_alive_fn: Callable[[], bool],
         pub = publish_changed(data_dir, root_alive=alive)
         pull = pull_newer(data_dir, root_alive=alive, on_updated=on_updated)
         _LAST.update(at=datetime.now(timezone.utc).isoformat(), root_alive=alive, publish=pub, pull=pull)
+        if is_first:
+            _FIRST_SYNC.update(
+                done=True,
+                ok=bool(pull.get("ok")),
+                finished_at=datetime.now(timezone.utc).isoformat(),
+            )
         return dict(_LAST)
 
 

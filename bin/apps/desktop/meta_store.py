@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -94,11 +95,56 @@ def _utc() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _connect() -> sqlite3.Connection:
+def _is_corruption_error(exc: Exception) -> bool:
+    msg = str(exc).lower()
+    return "malformed" in msg or "disk image" in msg or "corrupt" in msg
+
+
+def _quarantine_corrupt_db() -> Path | None:
+    """Odloz uszkodzony plik z timestampem, NIGDY nie kasuj (zasada bezpieczenstwa
+    repo). meta_store odbudowuje sie sama nastepnym sync_from_file_index() - dane
+    zrodlowe to apps/web/data/file-index.json (patrz naglowek modulu), nie ten plik."""
+    if not DB_PATH.is_file():
+        return None
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    dest = DB_PATH.with_name(f"{DB_PATH.name}.corrupt-{stamp}.bak")
+    try:
+        DB_PATH.rename(dest)
+        for suffix in ("-wal", "-shm"):
+            side = DB_PATH.with_name(DB_PATH.name + suffix)
+            if side.is_file():
+                try:
+                    side.rename(dest.with_name(dest.name + suffix))
+                except OSError:
+                    pass
+        print(f"meta_store: baza uszkodzona, odlozona do {dest}", flush=True)
+        return dest
+    except OSError as exc:  # noqa: BLE001
+        print(f"meta_store: nie udalo sie odlozyc uszkodzonej bazy: {exc}", flush=True)
+        return None
+
+
+def _connect(*, _retry: bool = True) -> sqlite3.Connection:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+    try:
+        # quick_check(1): tania proba integralnosci (jedna strona bledu wystarcza
+        # do wykrycia - pelny integrity_check byłby zbyt kosztowny na kazde polaczenie).
+        row = conn.execute("PRAGMA quick_check(1)").fetchone()
+        ok = bool(row) and str(row[0]).lower() == "ok"
+    except sqlite3.DatabaseError as exc:
+        conn.close()
+        if _retry and _is_corruption_error(exc):
+            _quarantine_corrupt_db()
+            return _connect(_retry=False)
+        raise
+    else:
+        if not ok and _retry:
+            conn.close()
+            _quarantine_corrupt_db()
+            return _connect(_retry=False)
     return conn
 
 

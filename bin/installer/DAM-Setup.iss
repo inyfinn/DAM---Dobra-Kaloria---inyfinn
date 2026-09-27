@@ -3,7 +3,7 @@
   #define MyAppVersion "2.4.2"
 #endif
 #ifndef StageDir
-  #define StageDir "..\dist\staging\DAM-install"
+  #define StageDir "..\..\work\dist\staging\DAM-install"
 #endif
 #ifndef ReleaseDir
   #define ReleaseDir "..\instalator"

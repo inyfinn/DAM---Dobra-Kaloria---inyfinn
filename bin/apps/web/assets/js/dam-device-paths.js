@@ -412,6 +412,8 @@
 
             syncLegacySettingsField("");
 
+            if (global.DamRootStatus && typeof DamRootStatus.check === "function") DamRootStatus.check();
+
           }
 
           reload();
@@ -876,6 +878,40 @@
 
       setMsg("Zapisuje...", true);
 
+      var curDev = DamPaths.currentDeviceId && DamPaths.currentDeviceId();
+
+      if (curDev && curDev === deviceId && DamPaths.setBasePath) {
+
+        /* To urzadzenie = przelaczenie ROOT jedna operacja (most sprawdza, zapisuje
+
+           machine-config + UDP, dopiero potem localStorage + dam:root-changed). */
+
+        DamPaths.setBasePath(base, { device_id: deviceId, hostname: hostname, label: label }).then(function (res) {
+
+          if (!res || !res.ok) {
+
+            setMsg((res && res.message) || "Blad zapisu", false);
+
+            return;
+
+          }
+
+          syncLegacySettingsField(res.base_path || base);
+
+          setMsg(res.message || "Zapisano.", true);
+
+          toast(res.message || "Zapisano ścieżke urządzeńia");
+
+          closeForm();
+
+          reload();
+
+        });
+
+        return;
+
+      }
+
       DamPaths.upsertUserDevicePath({
 
         device_id: deviceId,
@@ -901,14 +937,6 @@
         if (DamPaths.normalizeMarketingRoot) {
 
           saved = DamPaths.normalizeMarketingRoot(saved) || saved;
-
-        }
-
-        var cur = DamPaths.currentDeviceId && DamPaths.currentDeviceId();
-
-        if (cur && cur === deviceId && DamPaths.setBasePath) {
-
-          DamPaths.setBasePath(saved, { device_id: deviceId, hostname: hostname, label: label });
 
         }
 

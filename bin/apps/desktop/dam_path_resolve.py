@@ -56,6 +56,29 @@ def _exists_file_or_dir(path: str | Path) -> bool:
         return False
 
 
+def machine_config_base(machine_config_path: Optional[Path]) -> str:
+    """ROOT of the current Windows user from machine-config.json ("" when unset).
+
+    Format {"users": {USERNAME: {"base_path": ...}}} (legacy top-level base_path
+    still read). Before 2026-09-27 only the legacy key was read, so the root the
+    user picked never took part in remapping - the fixed M:/X:/D: order won.
+    """
+    try:
+        if not machine_config_path or not machine_config_path.is_file():
+            return ""
+        import json
+
+        data = json.loads(machine_config_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, TypeError):
+        return ""
+    if not isinstance(data, dict):
+        return ""
+    user = (os.environ.get("USERNAME") or os.environ.get("USER") or "default").strip() or "default"
+    users = data.get("users") if isinstance(data.get("users"), dict) else {}
+    entry = users.get(user) if isinstance(users.get(user), dict) else {}
+    return str(entry.get("base_path") or data.get("base_path") or data.get("path") or "").strip()
+
+
 def marketing_roots(
     *,
     email: str = "",
@@ -87,14 +110,8 @@ def marketing_roots(
         except Exception:
             pass
 
-    if machine_config_path and machine_config_path.is_file():
-        try:
-            import json
-
-            data = json.loads(machine_config_path.read_text(encoding="utf-8"))
-            add((data.get("base_path") or data.get("path") or "").strip())
-        except (OSError, ValueError, TypeError):
-            pass
+    if machine_config_path:
+        add(machine_config_base(machine_config_path))
 
     for c in _candidates(marketing_candidates):
         add(c)

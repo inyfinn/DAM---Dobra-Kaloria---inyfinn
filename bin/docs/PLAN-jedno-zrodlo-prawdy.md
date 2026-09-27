@@ -161,3 +161,45 @@ Wejście jednego skanu na komputerze z ROOT:
   znaczenia, przy imporcie i dużych przenosinach folderów - użyć paczek (migracja krok 1).
 - **Atrapa to SQLite**, nie PostgreSQL: ta sama treść SQL, ale inny silnik (np. `nextval` zastąpione
   `MAX(rev)+1`, JSONB jako tekst). Przed włączeniem: jeden test na kopii bazy PG (nie produkcyjnej).
+
+## Faza 3 - ten sam obraz na każdym komputerze (start 2026-09-27)
+
+Kierownik: Fable 5.1. Workerzy: 2x Opus 5.5 (ROOT, miniatury), 2x Sonnet 5 (porządek repo, parytet indeksu i metadanych).
+
+### Zmierzone 2026-09-27 (przed pracą)
+
+| Co | Wartość | Skąd |
+|----|---------|------|
+| `dam_meta.asset_index_mode` | `rows` (od 2026-09-23 10:22 UTC) | PG `dam_meta` |
+| `dam_assets` | 58 531 wierszy, 193 tombstony, max rev 327 247 | PG |
+| `dam_asset_product_links` | 11 526 | PG |
+| `dam_index_snapshots` | file-index (9,6 MB, INYFINN 26.09), branding-index (366 MB, KINGAUR 24.09), branding-search-index (47,8 MB, INYFINN 26.09) | PG |
+| Miniatury na NAS (`Panel-DAM/bin/PAMIEC-PODRECZNA`) | 32 900 plików, 31 935 wpisów rel-index, manifest 27.09 09:50 UTC, publisher INYFINN | HTTPS manifest.json |
+| `dam_thumb_cache_index` w PG | 8 009 wierszy | PG |
+| Miniatury lokalnie (ten PC) | 14 268 plików, rel-index 13 246 | `bin/PAMIEC-PODRECZNA` |
+| Klucz miniatury | `_digest(rel, mtime, profil)` - zależy od mtime oryginału | `dam_thumb_cache.py:104` |
+| Przełączenie ROOT | `DamPaths.setBasePath`: localStorage + 2 POST bez czekania + `DamRootStatus.check` po 200 ms; brak zdarzenia dla modułów; most ma cache `_DRIVE_ALIVE`, `_marketing_cache_only`, `_asset_index_mode_is_rows` (10 min) | `dam-paths.js:170-230`, `local_bridge.py`, `index_snapshots.py:62` |
+| Klon D: | 15 GB: `.git` 2,6 GB, `bin/dist` 4,1 GB (staging), `bin/apps/web/data` 3,6 GB (kopie branding-index 260-394 MB x6), `bin/tooling` 1,7 GB, `bin/runtime` 632 MB, `bin/instalator` 516 MB, `bin/_restore_backups` 345 MB; 306 plików `*_Conflict*` Synology | `du` |
+
+Wniosek: architektura docelowa z diagramu (jeden katalog w PG, wspólne podglądy, ROOT tylko jako lokalne mapowanie) jest już w kodzie od 2.3.6-2.4.2. Nie działa **pokrycie i moment**: NAS ma miniatury dla 56 % materiałów, komputer bez ROOT nie ma klucza (mtime) do reszty, ROOT przełącza się „na wiarę”, a pierwsze pobranie z bazy czeka do 10 min.
+
+### Mapa diagramu na kod
+
+| Element diagramu | Dziś w kodzie | Luka |
+|------------------|---------------|------|
+| Jeden indeksator z dostępem do plików | każdy komputer z ROOT skanuje i wysyła różnice (`asset_sync_runner`), bezpieczniki 20 % | brak jednego właściciela; akceptowalne, dopóki reguły scalania trzymają (Faza 2) |
+| Wspólny katalog w PostgreSQL | `dam_assets` + `dam_index_snapshots` + `dam_asset_product_links` | metadane produktów (`meta_store.py`) nadal z lokalnego `file-index.json` |
+| Wspólne podglądy | NAS cache + `thumb-rel-index.json` + HTTPS fetch | 56 % pokrycia, klucz zależny od mtime, publikacja tylko z INYFINN |
+| Jedno API DAM | most `:8766` na każdym komputerze czyta PG/NAS | pull dopiero po 10 min, brak stanu „synchronizuję” |
+| ROOT wybrany na tym komputerze | `machine-config.json` + `user-device-paths` | brak jednej operacji przełączenia z unieważnieniem cache i odświeżeniem UI |
+
+### Zadania
+
+| # | Worker | Cel | WRITE |
+|---|--------|-----|-------|
+| 3.1 | Opus A | ROOT przełącza się jedną operacją: most sprawdza ścieżkę, zapisuje, unieważnia cache, odpowiada; UI czeka na odpowiedź, emituje `dam:root-changed`, moduły przeliczają dostępność bez F5 | `dam-paths.js`, `dam-root-status.js`, `dam-device-paths.js`, `dam-settings.js`, `dam-explorer.js` (tylko nasłuch), `local_bridge.py` (jedyny pisarz), `dam_path_resolve.py`, `marketing_roots.py` |
+| 3.2 | Opus B | Miniatury na świeżym komputerze: klucz rozwiązywalny bez ROOT (rel-index z NAS + `dam_assets`), pokrycie NAS z 56 % do ~100 %, publikacja z każdego komputera z ROOT | `dam_thumb_cache.py`, `branding_publish.py`, `dam-media-preview.js`, `dam-viz.js`, `dam-branding.js` (tylko ścieżka miniatur), `bin/apps/web/scripts/*thumb*` |
+| 3.3 | Sonnet C | Porządek: korzeń = `DAM.exe` + `bin` (+ `.git`, `.cursor`, `.github`, pliki repo); zależności, buildy, kopie, konflikty Synology do `work/` (przenoszenie, zero kasowania) | system plików poza `bin/apps/**/*.py|js`, `.gitignore`, `build-installer.ps1`, `DAM-Setup.iss` (ścieżki) |
+| 3.4 | Sonnet D | Parytet bez ROOT: pierwsze uruchomienie pobiera indeksy, wiersze i rel-index od razu (nie po 10 min), metadane produktów z bazy, harness `qa/noroot` jako dowód | `index_snapshots.py`, `asset_sync_runner.py`, `meta_store.py`, `bin/scripts/qa/noroot/*` |
+
+Zasada: `local_bridge.py` ma jednego pisarza (3.1). Pozostali zgłaszają potrzebne zmiany w moście jako gotowy diff w raporcie; wprowadza kierownik.

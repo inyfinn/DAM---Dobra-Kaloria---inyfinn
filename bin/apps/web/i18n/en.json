@@ -402,5 +402,15 @@
   "lightbox.prev": "Previous item",
   "lightbox.next": "Next item",
   "lightbox.hint": "Scroll: zoom. Drag: pan. Double-click: fit/100%. Esc: close.",
-  "lightbox.loading": "Loading original…"
+  "lightbox.loading": "Loading original…",
+  "root.switch.saving": "Checking the path...",
+  "root.switch.ok": "Switched to {path}.",
+  "root.switch.missing": "Folder {path} does not exist on this computer. The previous path stays active.",
+  "root.switch.timeout": "Drive {path} is not responding. The previous path stays active.",
+  "root.switch.incomplete": "Folder {path} is missing: {missing}. This is not a Marketing folder. The previous path stays active.",
+  "root.switch.login": "Sign in to change the path. The previous path stays active.",
+  "root.switch.bridge": "The local bridge (8766) is not responding. The path was not changed.",
+  "root.switch.failed": "Could not change the path ({error}). The previous one stays active.",
+  "root.status.timeout": "drive not responding",
+  "root.status.missing": "folder does not exist"
 }

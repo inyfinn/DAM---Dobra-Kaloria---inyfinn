@@ -14,6 +14,22 @@
 *.pem
 *.p12
 
+# Porzadek 2026-09-27: zaleznosci, wyniki buildow, kopie zapasowe i konflikty
+# Synology Drive trafiaja poza repo, do /work (patrz work/README.md).
+/work/
+
+# Kopie konfliktow Synology Drive (nigdy nie sa wejsciem aplikacji ani builda)
+*_INYFINN_*_Conflict*
+*_KRZYSZTOFWI_*_Conflict*
+*conflict_current*
+# Wzorce plikow kopii zapasowych rozrzuconych po repo (patrz work/_kopie)
+*.bak-[0-9]*
+*.pre-fullrebuild-*
+*.pre-reseed-*
+*.pre-stable-ids-*
+*.drifted-*
+*.broken-restore-*
+
 # Layout: GIT_ROOT = DAM.exe + DAM-Setup.exe + bin/ (CONTENT_ROOT). Source lives IN bin/.
 /bin/*
 !/bin/apps/

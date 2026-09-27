@@ -13,11 +13,11 @@ $ErrorActionPreference = "Stop"
 
 $GitRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $BinRoot = Join-Path $GitRoot "bin"
-$GoExe = Join-Path $GitRoot "bin\tooling\go\bin\go.exe"
+$GoExe = Join-Path $GitRoot "work\tooling\go\bin\go.exe"
 if (-not (Test-Path -LiteralPath $GoExe)) { $GoExe = "go" }
 $RuntimePyw = Join-Path $BinRoot "runtime\win\python\pythonw.exe"
-$Staging = Join-Path $GitRoot "dist\staging\DAM"
-$ReleaseDir = Join-Path $GitRoot "dist\release\portable"
+$Staging = Join-Path $GitRoot "work\dist\staging\DAM"
+$ReleaseDir = Join-Path $GitRoot "work\dist\release\portable"
 
 function Invoke-Robocopy([string]$src, [string]$dst, [string[]]$xd, [string[]]$xf) {
   if (-not (Test-Path -LiteralPath $src)) { throw "Missing source: $src" }
@@ -29,7 +29,7 @@ function Invoke-Robocopy([string]$src, [string]$dst, [string[]]$xd, [string[]]$x
   if ($LASTEXITCODE -ge 8) { throw "robocopy failed ($LASTEXITCODE): $src -> $dst" }
 }
 
-foreach ($d in @("dist\evidence", "dist\evidence\cm", "dist\prep", "dist\manifests", "dist\release\portable")) {
+foreach ($d in @("work\dist\evidence", "work\dist\evidence\cm", "work\dist\prep", "work\dist\manifests", "work\dist\release\portable")) {
   New-Item -ItemType Directory -Force -Path (Join-Path $GitRoot $d) | Out-Null
 }
 
@@ -56,7 +56,7 @@ try {
   if ($LASTEXITCODE -ne 0) { throw "go build exit $LASTEXITCODE" }
 } finally { Pop-Location }
 
-Write-Host "== 5/7 stage dist/staging/DAM =="
+Write-Host "== 5/7 stage work/dist/staging/DAM =="
 # Zasada 0: bez kasowania rekurencyjnego - poprzedni staging tylko przemianowany.
 if (Test-Path -LiteralPath $Staging) {
   Rename-Item -LiteralPath $Staging -NewName ((Split-Path $Staging -Leaf) + ".old-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
@@ -85,7 +85,7 @@ $appsXd = $xdCommon + @("api")
 Invoke-Robocopy (Join-Path $BinRoot "apps") (Join-Path $binDst "apps") $appsXd $xfCommon
 
 Write-Host "== 6/7 manifests + secret scan =="
-$manifestDir = Join-Path $GitRoot "dist\manifests"
+$manifestDir = Join-Path $GitRoot "work\dist\manifests"
 $hashFile = Join-Path $manifestDir "portable-sha256.json"
 $files = Get-ChildItem -LiteralPath $Staging -Recurse -File
 $manifest = [ordered]@{
@@ -119,7 +119,7 @@ if (-not $SkipZip) {
 }
 
 $rtSize = (Get-ChildItem (Join-Path $Staging "bin\runtime\win\python") -Recurse -File -ErrorAction SilentlyContinue | Measure-Object Length -Sum).Sum
-$evidence = Join-Path $GitRoot "dist\evidence\portable-build.log"
+$evidence = Join-Path $GitRoot "work\dist\evidence\portable-build.log"
 @(
   "built_at=$(Get-Date -Format o)",
   "zip=$zipPath",

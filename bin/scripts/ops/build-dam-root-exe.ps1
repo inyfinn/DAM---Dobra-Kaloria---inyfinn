@@ -21,7 +21,7 @@ if (-not $SkipEngine) {
   & (Join-Path $PSScriptRoot "build-engine-onedir.ps1")
 }
 
-$GoExe = Join-Path $BinRoot "tooling\go\bin\go.exe"
+$GoExe = Join-Path $GitRoot "work\tooling\go\bin\go.exe"
 if (-not (Test-Path -LiteralPath $GoExe)) { $GoExe = "go" }
 
 $env:CGO_ENABLED = "0"
