@@ -203,3 +203,38 @@ Wniosek: architektura docelowa z diagramu (jeden katalog w PG, wspólne podgląd
 | 3.4 | Sonnet D | Parytet bez ROOT: pierwsze uruchomienie pobiera indeksy, wiersze i rel-index od razu (nie po 10 min), metadane produktów z bazy, harness `qa/noroot` jako dowód | `index_snapshots.py`, `asset_sync_runner.py`, `meta_store.py`, `bin/scripts/qa/noroot/*` |
 
 Zasada: `local_bridge.py` ma jednego pisarza (3.1). Pozostali zgłaszają potrzebne zmiany w moście jako gotowy diff w raporcie; wprowadza kierownik.
+
+### Stan Fazy 3 na 2026-09-27 wieczor (przekazanie)
+
+Commity na main, bez podbicia wersji i bez wydania: d3345fc, 69dcc8b, 84c4e17, 9556b6d, e786e83.
+
+| Zadanie | Stan | Dowod |
+|---------|------|-------|
+| 3.1 ROOT jedna operacja, trzy stany | przyjete | test_root_switch.py 33 OK; przebieg na kopii testowej 64 ms / 820-1026 ms |
+| 3.2 Miniatury bez ROOT | przyjete z zastrzezeniem | pokrycie 40,1 % -> 43,9 %; swiezy komputer 213/400 zaraz po starcie |
+| 3.3 Porzadek repo | przyjete | 649 przeniesien, 0 usunietych plikow sledzonych, MANIFEST.tsv |
+| 3.4 Parytet i wlasciciel katalogu | W TOKU (worker D) | - |
+
+Korekty do pomiarow z poczatku Fazy 3:
+- "56 % pokrycia miniatur" bylo bledne (pliki / wiersze). Zmierzone per material: 40,1 %.
+- "Pierwsze pobranie czeka do 10 min" bylo bledne. Pierwszy cykl startuje po 8 s.
+
+NIE WYDAWAC z commita e786e83. Otwarte, w tej kolejnosci:
+1. Wycofac wywolanie meta_store z index_snapshots.pull_newer i kwarantanne z meta_store._connect
+   (testy pisza do prawdziwego bin/apps/desktop/data/dam-local.sqlite, w ktorym sa konta).
+2. built_here_sha: komputer publikuje tylko indeks, ktory sam zbudowal; pull przed publish;
+   watch-file-index.py musi oznaczac wlasne buildy, inaczej katalog przestanie sie aktualizowac.
+3. index_authority: ostatnia znana wartosc przy bledzie odczytu, nazwy bez wzgledu na wielkosc
+   liter, restore i recreate tylko dla uprawnionych. Klucz dam_meta.index_authority NIE jest ustawiony.
+4. Zlota aplikacja z ROOT pokazuje 0 materialow produktu: branding-index.json ma version 2
+   (skan) zamiast wierszy z bazy. Swieza kopia bez ROOT pokazuje 43. Przyczyna nieustalona.
+5. program-instructions.json regula assoc.sqlite_sot_unified_write jest sprzeczna z ADR-011.
+6. Restart zlotego mostu (dziala na kodzie z pierwszej rundy), pelny zestaw testow.
+7. Wersja 2.4.3, build z czystego drzewa (prepare-clean-build.ps1), wydanie z .sig,
+   dowod z zainstalowanego DAM.exe (bez ROOT i z ROOT).
+
+Poza zasiegiem tego komputera:
+- ok. 13,5 tys. oryginalow jest tylko w chmurze (X:\Marketing to Synology Drive na zadanie);
+  miniatury trzeba zbudowac tam, gdzie leza pliki.
+- repo lezy w folderze synchronizowanym przez Synology Drive: uszkodzony SQLite,
+  wracajace pliki _Conflict. Przeniesienie repo poza Drive to decyzja wlasciciela.
