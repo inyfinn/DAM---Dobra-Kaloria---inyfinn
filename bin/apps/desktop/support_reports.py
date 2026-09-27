@@ -117,8 +117,9 @@ def reports_root() -> Path:
     override = (os.environ.get("DAM_REPORTS_ROOT") or "").strip()
     if override:
         return Path(override)
-    # bin/apps/desktop -> bin/apps -> bin -> korzen repo
-    repo_root = DESKTOP_DIR.parents[2]
+    # bin/apps/desktop -> bin/apps -> bin
+    # Korzen repo zostaje czysty (DAM.exe + bin) - zgloszenia laduja w bin/.
+    repo_root = DESKTOP_DIR.parents[1]
     if _under_test_runner():
         # Piaskownica na czas testow - nigdy korzen repo.
         import tempfile  # noqa: PLC0415 - tylko sciezka testowa

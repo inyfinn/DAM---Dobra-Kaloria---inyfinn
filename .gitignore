@@ -40,6 +40,7 @@
 !/bin/installer/
 !/bin/instalator/
 !/bin/DATABASE/
+!/bin/POSTĘP PRAC.md
 /DAM.exe
 /DAM-Setup.exe
 /DAM-Setup-*.exe
@@ -378,3 +379,6 @@ bin/apps/web/data/branding-index.scan.json
 bin/apps/web/data/file-index.rejected.json
 bin/apps/web/data/*.pre-reseed-*
 bin/apps/web/data/*.pre-stable-ids-*
+
+# Stan sesji Claude Code (blokada zaplanowanych zadan)
+/.claude/

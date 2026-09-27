@@ -683,7 +683,7 @@
     if (plat.indexOf("linux") !== -1 && plat.indexOf("android") === -1) {
       return "Uruchom aplikację DAM.";
     }
-    return "Uruchom URUCHOM-DAM.bat / skrót na pulpicie.";
+    return "Uruchom DAM.exe / skrót na pulpicie.";
   }
 
   function token() {
