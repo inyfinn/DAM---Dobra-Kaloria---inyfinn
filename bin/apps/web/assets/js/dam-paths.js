@@ -239,8 +239,8 @@
     if (err === "root_timeout") {
       return tr("root.switch.timeout", "Dysk {path} nie odpowiada. Zostaje poprzednia ścieżka.", { path: path });
     }
-    if (err === "root_incomplete") {
-      return tr("root.switch.incomplete", "W folderze {path} brakuje: {missing}. To nie jest folder Marketing. Zostaje poprzednia ścieżka.", {
+    if (err === "root_unrecognized") {
+      return tr("root.switch.unrecognized", "W folderze {path} nie ma żadnego z folderów Marketing ({missing}). Sprawdź, czy ścieżka nie ma literówki. Zostaje poprzednia ścieżka.", {
         path: path,
         missing: (r.missing || []).join(", ")
       });
@@ -254,21 +254,70 @@
     return tr("root.switch.failed", "Nie udało się zmienić ścieżki ({error}). Zostaje poprzednia.", { error: err || "?" });
   }
 
+  /** Ostrzezenie po udanym zapisie (czesciowa struktura / potwierdzony nietypowy folder). */
+  function rootWarningMessage(res) {
+    var r = res || {};
+    return tr("root.switch.warn_incomplete", "Zapisano {path}, ale brakuje w nim: {missing}. Pliki z tych folderów będą oznaczone jako niedostępne lokalnie.", {
+      path: r.base_path || "",
+      missing: (r.missing || []).join(", ")
+    });
+  }
+
+  function ensureWarnCss() {
+    if (document.getElementById("damRootWarnCss")) return;
+    var s = document.createElement("style");
+    s.id = "damRootWarnCss";
+    s.textContent =
+      ".dam-root-warn,.dam-sw-msg.dam-root-warn,.dam-basepath-msg.dam-root-warn{display:block;color:var(--dam-text);background:color-mix(in srgb,var(--dam-warn) 20%,transparent);" +
+      "border-left:3px solid var(--dam-warn);border-radius:6px;padding:8px 10px;}" +
+      ".dam-root-confirm{margin-top:8px;}";
+    document.head.appendChild(s);
+  }
+
+  /**
+   * Wspolny render wyniku setBasePath w elemencie komunikatu (modal + Ustawienia).
+   * opts: {okClass, errClass, onConfirm} - onConfirm() dla root_unrecognized
+   * ("Zapisz mimo to" = ponowny setBasePath z meta.confirm).
+   */
+  function showSwitchResult(el, res, opts) {
+    if (!el) return;
+    opts = opts || {};
+    ensureWarnCss();
+    var r = res || {};
+    var kind = !r.ok ? "err" : (r.warning ? "warn" : "ok");
+    el.hidden = false;
+    el.classList.remove(opts.okClass || "is-ok", opts.errClass || "is-err", "dam-root-warn");
+    el.classList.add(kind === "ok" ? (opts.okClass || "is-ok") : kind === "err" ? (opts.errClass || "is-err") : "dam-root-warn");
+    while (el.firstChild) el.removeChild(el.firstChild);
+    el.appendChild(document.createTextNode(r.message || rootSwitchMessage(r)));
+    if (!r.ok && r.error === "root_unrecognized" && r.needs_confirm && typeof opts.onConfirm === "function") {
+      el.classList.remove(opts.errClass || "is-err");
+      el.classList.add("dam-root-warn");
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "geex-btn geex-btn--primary-transparent dam-root-confirm";
+      btn.textContent = tr("root.switch.confirm_btn", "Zapisz mimo to");
+      btn.addEventListener("click", function () {
+        btn.disabled = true;
+        opts.onConfirm();
+      });
+      el.appendChild(document.createElement("br"));
+      el.appendChild(btn);
+    }
+  }
+
   /** Stary most bez POST /root/switch: walidacja + dotychczasowy zapis. */
   function legacySwitch(win, meta) {
     return validateBaseRemote(win).then(function (v) {
-      if (!v || !v.ok) {
-        var missingAll = v && v.error === "not_a_directory";
-        return {
-          ok: false,
-          error: missingAll ? "root_missing" : "root_incomplete",
-          base_path: win,
-          missing: (v && v.missing) || [],
-          root_alive: false
-        };
+      if (!v || v.error === "not_a_directory") {
+        return { ok: false, error: "root_missing", base_path: win, missing: (v && v.missing) || [], root_alive: false };
       }
+      var missing = v.missing || [];
       return persistBasePathToBridge(win, meta).then(function () {
-        return { ok: true, base_path: win, root_alive: true, reason: "ok", legacy: true };
+        return {
+          ok: true, base_path: win, root_alive: true, reason: "ok", legacy: true,
+          warning: missing.length ? "root_incomplete" : "", missing: missing
+        };
       });
     });
   }
@@ -276,10 +325,11 @@
   var _switchSeq = 0;
 
   /** Jedno zdarzenie dla wszystkich modulow (DamRootStatus, Eksplorator, ...). */
-  function emitRootChanged(basePath, rootAlive, previous, source) {
+  function emitRootChanged(basePath, rootAlive, previous, source, rootState) {
     try {
       window.dispatchEvent(new CustomEvent("dam:root-changed", {
-        detail: { base_path: basePath, root_alive: !!rootAlive, previous: previous || "", source: source || "" }
+        detail: { base_path: basePath, root_alive: !!rootAlive, previous: previous || "", source: source || "",
+          root_state: rootState || "" }
       }));
     } catch (_e) { /* ignore */ }
   }
@@ -318,6 +368,7 @@
     if (did) body.device_id = did;
     if (meta.hostname) body.hostname = meta.hostname;
     if (meta.label != null) body.label = meta.label;
+    if (meta.confirm === true) body.confirm = true;
     return fetch(bridgeBase() + "/root/switch", {
       method: "POST",
       headers: bridgeAuthHeaders(),
@@ -336,9 +387,11 @@
       var saved = String(res.base_path || win);
       if (seq === _switchSeq) {
         setBasePathLocalCache(saved, did);
-        emitRootChanged(saved, res.root_alive !== false, previous, "switch");
+        emitRootChanged(saved, res.root_alive !== false, previous, "switch", res.root_state);
       }
-      res.message = tr("root.switch.ok", "Przełączono na {path}.", { path: saved });
+      res.message = res.warning
+        ? rootWarningMessage(res)
+        : tr("root.switch.ok", "Przełączono na {path}.", { path: saved });
       return res;
     }).catch(function () {
       var fail = { ok: false, error: "bridge_offline", base_path: win };
@@ -1280,7 +1333,7 @@
       document.head.appendChild(s);
     }
 
-    function saveBase(raw) {
+    function saveBase(raw, confirm) {
       if (!raw) {
         setMsg("Podaj sciezke bazowa.", false);
         return;
@@ -1288,15 +1341,14 @@
       setMsg(tr("root.switch.saving", "Sprawdzam ścieżkę..."), true);
       var saveBtn = document.getElementById("damBasePathSave");
       if (saveBtn) saveBtn.disabled = true;
-      setBasePath(raw).then(function (res) {
+      setBasePath(raw, confirm ? { confirm: true } : null).then(function (res) {
         if (saveBtn) saveBtn.disabled = false;
-        if (!res || !res.ok) {
-          setMsg((res && res.message) || rootSwitchMessage(res), false);
-          return;
-        }
-        setMsg(res.message, true);
+        showSwitchResult(document.getElementById("damBasePathMsg"), res, {
+          onConfirm: function () { saveBase(raw, true); }
+        });
+        if (!res || !res.ok) return;
         logAction("set_base_path", { local_path: res.base_path || raw, detail: "Uzytkownik ustawil sciezke bazowa" });
-        setTimeout(function () { modal.remove(); }, 500);
+        setTimeout(function () { modal.remove(); }, res.warning ? 4000 : 500);
       });
     }
 
@@ -1344,6 +1396,7 @@
     getBasePath: getBasePath,
     setBasePath: setBasePath,
     rootSwitchMessage: rootSwitchMessage,
+    showSwitchResult: showSwitchResult,
     hasBasePath: hasBasePath,
     normalizeMarketingRoot: normalizeMarketingRoot,
     pickFolder: pickFolder,

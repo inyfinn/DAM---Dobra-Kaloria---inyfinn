@@ -191,6 +191,11 @@ def _kill_stale_dam_processes() -> int:
             "    ($_.CommandLine.ToLower().Contains('http.server') -and "
             "     $_.CommandLine.ToLower().Contains('8765') -and "
             "     $_.CommandLine.ToLower().Contains('web'))"
+            "  ) -and ("
+            # 2026-09-27: tylko procesy BIEZACEGO konta Windows - drugie konto na tym
+            # samym PC ma wlasny most/UI i nie wolno mu go ubijac. GetOwner = WMI, bez
+            # nowych zaleznosci; brak odpowiedzi = nie ruszamy procesu.
+            "    (Invoke-CimMethod -InputObject $_ -MethodName GetOwner -ErrorAction SilentlyContinue).User -eq $env:USERNAME"
             "  )"
             "} | ForEach-Object { "
             "  Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue; $_.ProcessId "

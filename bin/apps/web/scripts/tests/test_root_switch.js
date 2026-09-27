@@ -193,6 +193,50 @@ function run() {
     });
   });
 
+  // 6b) Czesciowa struktura: zapis + ostrzezenie (nie odrzucenie)
+  chain = chain.then(function () {
+    var env = makeEnv({
+      "/root/switch": function () {
+        return { body: { ok: true, base_path: "E:\\Kopia", root_alive: true, warning: "root_incomplete", missing: ["- EKSPORT"] } };
+      }
+    });
+    env.store["dam_base_path::dev-1"] = "X:\\Marketing";
+    return env.DamPaths.setBasePath("E:\\Kopia").then(function (res) {
+      ok(res.ok === true, "incomplete -> ok");
+      eq(env.store["dam_base_path::dev-1"], "E:\\Kopia", "incomplete: zapisany");
+      eq(env.events.length, 1, "incomplete: zdarzenie");
+      ok(/brakuje/.test(res.message) && /- EKSPORT/.test(res.message), "incomplete: ostrzezenie z lista brakow");
+    });
+  });
+
+  // 6c) Folder bez zadnego folderu Marketing: brak zapisu, needs_confirm; confirm:true wysylany
+  chain = chain.then(function () {
+    var sent = [];
+    var env = makeEnv({
+      "/root/switch": function (body) {
+        sent.push(body.confirm === true);
+        if (body.confirm !== true) {
+          return { body: { ok: false, error: "root_unrecognized", needs_confirm: true, base_path: "C:\\Windows",
+            missing: ["-- ARCHIWUM --", "- EKSPORT", "- POLSKA"], root_alive: true } };
+        }
+        return { body: { ok: true, base_path: "C:\\Windows", root_alive: true, warning: "root_unrecognized",
+          missing: ["-- ARCHIWUM --", "- EKSPORT", "- POLSKA"] } };
+      }
+    });
+    env.store["dam_base_path::dev-1"] = "X:\\Marketing";
+    return env.DamPaths.setBasePath("C:\\Windows").then(function (res) {
+      ok(res.ok === false && res.needs_confirm === true, "unrecognized -> needs_confirm");
+      eq(env.store["dam_base_path::dev-1"], "X:\\Marketing", "unrecognized: bez zapisu");
+      eq(env.events.length, 0, "unrecognized: bez zdarzenia");
+      ok(/liter/.test(res.message), "unrecognized: komunikat o literowce");
+      return env.DamPaths.setBasePath("C:\\Windows", { confirm: true });
+    }).then(function (res2) {
+      eq(sent, [false, true], "confirm:true tylko w drugim zadaniu");
+      ok(res2.ok === true, "po potwierdzeniu ok");
+      eq(env.store["dam_base_path::dev-1"], "C:\\Windows", "po potwierdzeniu zapisany");
+    });
+  });
+
   // 7) Inna karta zmienila ROOT (storage) -> ta karta dostaje dam:root-changed
   chain = chain.then(function () {
     var env = makeEnv({});

@@ -43,6 +43,7 @@ def _make_root(parent: Path, name: str = "Marketing", folders=REQUIRED) -> Path:
     root = parent / name
     for f in folders:
         (root / f).mkdir(parents=True, exist_ok=True)
+        (root / f / "produkt.txt").write_text("x", encoding="utf-8")
     return root
 
 
@@ -55,14 +56,19 @@ class RootSwitchBase(unittest.TestCase):
         self.cfg.write_text(
             json.dumps({"users": {"tester": {"base_path": str(self.old_root)}}}), encoding="utf-8"
         )
+        self.state_cfg = self.tmp / "state" / "machine-config.json"
         self.patches = [
             mock.patch.object(lb, "MACHINE_CONFIG", self.cfg),
+            mock.patch.object(lb, "MACHINE_CONFIG_STATE", self.state_cfg),
             mock.patch.dict(os.environ, {"USERNAME": "tester"}),
             mock.patch.object(lb, "_udp_current_identity",
                               return_value={"device_id": "dev-1", "hostname": "pc-1"}),
             mock.patch.object(lb, "upsert_user_device_path",
                               return_value={"ok": True, "entry": {}}),
             mock.patch.object(lb, "ROOT_SWITCH_PROBE_TIMEOUT_S", 0.5),
+            # Prawdziwe reset_scan_memory czysci last_seen w bin/DATABASE - w testach
+            # zawsze temp: DB_CANONICAL wskazuje na plik w katalogu tymczasowym.
+            mock.patch.object(lb.dam_db, "DB_CANONICAL", self.tmp / "never-real.sqlite"),
         ]
         for p in self.patches:
             p.start()
@@ -74,6 +80,10 @@ class RootSwitchBase(unittest.TestCase):
         self.td.cleanup()
 
     def cfg_base(self) -> str:
+        """Skuteczny ROOT: nowy plik (katalog stanu) wygrywa, stary to zapas."""
+        return lb.read_machine_config()["base_path"]
+
+    def legacy_base(self) -> str:
         return json.loads(self.cfg.read_text(encoding="utf-8"))["users"]["tester"]["base_path"]
 
 
@@ -113,13 +123,30 @@ class SwitchRootTests(RootSwitchBase):
         self.assertEqual(self.cfg_base(), str(self.old_root))
         lb.upsert_user_device_path.assert_not_called()
 
-    def test_folder_without_marketing_tree_is_not_saved(self):
+    def test_partial_structure_is_saved_with_warning(self):
         half = _make_root(self.tmp, "Half", folders=("- POLSKA",))
-        res = lb.switch_root(str(half), email="a@b.pl")
-        self.assertFalse(res["ok"])
-        self.assertEqual(res["error"], "root_incomplete")
+        with mock.patch.object(lb, "_restart_index_watcher_for_root", return_value="restarting"):
+            res = lb.switch_root(str(half), email="a@b.pl")
+        self.assertTrue(res["ok"], res)
+        self.assertTrue(res["root_alive"])
+        self.assertEqual(res["warning"], "root_incomplete")
         self.assertEqual(sorted(res["missing"]), sorted(["-- ARCHIWUM --", "- EKSPORT"]))
+        self.assertEqual(self.cfg_base(), str(half))
+
+    def test_unrecognized_folder_needs_confirm(self):
+        other = self.tmp / "Windows"
+        other.mkdir()
+        res = lb.switch_root(str(other), email="a@b.pl")
+        self.assertFalse(res["ok"])
+        self.assertEqual(res["error"], "root_unrecognized")
+        self.assertTrue(res["needs_confirm"])
+        self.assertEqual(len(res["missing"]), 3)
         self.assertEqual(self.cfg_base(), str(self.old_root))
+        with mock.patch.object(lb, "_restart_index_watcher_for_root", return_value="restarting"):
+            res2 = lb.switch_root(str(other), email="a@b.pl", confirm=True)
+        self.assertTrue(res2["ok"], res2)
+        self.assertEqual(res2["warning"], "root_unrecognized")
+        self.assertEqual(self.cfg_base(), str(other))
 
     def test_hanging_drive_answers_within_timeout(self):
         hang = str(self.tmp / "Hang")
@@ -236,6 +263,28 @@ class RootSwitchHttpTests(RootSwitchBase):
         self.assertEqual(data["device_id"], "dev-9")
         self.assertEqual(self.cfg_base(), str(new_root))
 
+    def test_unrecognized_over_http_confirm_flow(self):
+        other = self.tmp / "Windows"
+        other.mkdir()
+        user = {"email": "a@b.pl", "role": "user"}
+        with mock.patch.object(lb.Handler, "_session_user", return_value=user), \
+                mock.patch.object(lb, "_restart_index_watcher_for_root", return_value="restarting"):
+            s1, d1 = self._post("/root/switch", {"base_path": str(other)})
+            self.assertEqual(self.cfg_base(), str(self.old_root))
+            s2, d2 = self._post("/root/switch", {"base_path": str(other), "confirm": True})
+        self.assertEqual((s1, d1["error"], d1["needs_confirm"]), (200, "root_unrecognized", True))
+        self.assertTrue(d2["ok"], d2)
+        self.assertEqual(self.cfg_base(), str(other))
+
+    def test_partial_root_counts_as_online(self):
+        half = _make_root(self.tmp, "Half", folders=("- EKSPORT",))
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=10)
+        conn.request("GET", "/files/status?root=" + str(half).replace("\\", "/"))
+        data = json.loads(conn.getresponse().read().decode("utf-8"))
+        conn.close()
+        self.assertTrue(data["online"], data)
+        self.assertIn("- POLSKA", data["missing"])
+
     def test_legacy_machine_config_still_works_and_keeps_db(self):
         new_root = _make_root(self.tmp, "New")
         user = {"email": "a@b.pl", "role": "user"}
@@ -257,6 +306,233 @@ class RootSwitchHttpTests(RootSwitchBase):
         self.assertFalse(data["online"])
         self.assertFalse(data["exists"])
         self.assertFalse(data["timeout"])
+
+
+class RootStateTests(RootSwitchBase):
+    """Poprawka 4: jedna definicja zywotnosci ROOT (full / partial / none)."""
+
+    def test_three_states(self):
+        full = _make_root(self.tmp, "Full")
+        half = _make_root(self.tmp, "Half", folders=("- POLSKA",))
+        empty_polska = self.tmp / "EmptyPolska"
+        for f in REQUIRED:
+            (empty_polska / f).mkdir(parents=True)
+        self.assertEqual(lb._root_state(str(full))["state"], "full")
+        st = lb._root_state(str(half))
+        self.assertEqual((st["state"], sorted(st["missing"])), ("partial", sorted(["-- ARCHIWUM --", "- EKSPORT"])))
+        self.assertEqual(lb._root_state(str(empty_polska))["state"], "partial")
+        self.assertEqual(lb._root_state(str(self.tmp / "Nope"))["state"], "none")
+        self.assertEqual(lb._root_state("")["state"], "none")
+
+    def test_hanging_polska_listing_is_bounded(self):
+        full = _make_root(self.tmp, "Full")
+        release = threading.Event()
+        real_iterdir = Path.iterdir
+
+        def slow_iterdir(p):
+            if str(p).startswith(str(full)):
+                release.wait(30)
+            return real_iterdir(p)
+
+        try:
+            with mock.patch.object(Path, "iterdir", slow_iterdir):
+                t0 = time.monotonic()
+                st = lb._root_state(str(full))
+                elapsed = time.monotonic() - t0
+        finally:
+            release.set()
+        self.assertLess(elapsed, 2.0)
+        self.assertEqual(st["state"], "none")
+        self.assertTrue(st["timeout"])
+
+    def test_publication_and_scan_only_from_full(self):
+        half = _make_root(self.tmp, "Half", folders=("- POLSKA",))
+        self.assertTrue(lb._snapshot_root_alive())  # Old = full
+        self.assertEqual(lb._scan_blocked_reason(), "")
+        with mock.patch.object(lb, "_restart_index_watcher_for_root", return_value="stopped") as rw:
+            res = lb.switch_root(str(half), email="a@b.pl")
+        self.assertEqual(res["root_state"], "partial")
+        self.assertFalse(res["scan_allowed"])
+        rw.assert_called_once_with(scan_allowed=False)
+        self.assertFalse(lb._snapshot_root_alive())
+        self.assertEqual(lb._scan_blocked_reason(), "root_partial")
+        with mock.patch.object(lb, "_run_index_rebuild") as ri,                 mock.patch.object(lb, "_run_branding_rebuild") as rb:
+            r1 = lb.start_index_rebuild()
+            r2 = lb.start_branding_rebuild()
+            time.sleep(0.1)
+        ri.assert_not_called()
+        rb.assert_not_called()
+        self.assertEqual((r1["error"], r2["error"]), ("root_partial", "root_partial"))
+
+    def test_partial_switch_stops_watcher_without_restart(self):
+        calls = []
+        with mock.patch.object(lb, "_index_rebuild_running", return_value=False), \
+                mock.patch.object(index_supervisor, "_owner", object()), \
+                mock.patch.object(index_supervisor, "stop_index_supervisor",
+                                  side_effect=lambda: calls.append("stop")), \
+                mock.patch.object(index_supervisor, "ensure_index_supervisor",
+                                  side_effect=lambda **_k: calls.append("ensure")):
+            self.assertEqual(lb._restart_index_watcher_for_root(scan_allowed=False), "stopped")
+            deadline = time.monotonic() + 2.0
+            while not calls and time.monotonic() < deadline:
+                time.sleep(0.02)
+            time.sleep(0.1)
+        self.assertEqual(calls, ["stop"])
+        lb._ROOT_WATCHER_STOPPED_BY_SWITCH.clear()
+
+
+class ScanMemoryAndBuiltHereTests(RootSwitchBase):
+    """Poprawka 6: wywolania warunkowe funkcji workera D."""
+
+    def test_reset_scan_memory_called_on_change(self):
+        """Sygnatura workera D: (db_path, reason); db_path = dam_db.DB_CANONICAL."""
+        import asset_sync_runner
+
+        calls = []
+
+        def fake(db_path, reason):
+            calls.append((db_path, reason))
+            return {"ok": True, "reason": reason}
+
+        new_root = _make_root(self.tmp, "New")
+        fake_db = self.tmp / "dam-local.sqlite"
+        with mock.patch.object(asset_sync_runner, "reset_scan_memory", fake, create=True),                 mock.patch.object(lb.dam_db, "DB_CANONICAL", fake_db),                 mock.patch.object(lb, "_restart_index_watcher_for_root", return_value="restarting"):
+            res = lb.switch_root(str(new_root), email="a@b.pl")
+            same = lb.switch_root(str(new_root), email="a@b.pl")
+        self.assertEqual(calls, [(fake_db, "root_switch")])
+        self.assertEqual(res["scan_memory"], {"ok": True, "reason": "root_switch"})
+        self.assertIsNone(same["scan_memory"])  # bez zmiany ROOT - bez resetu
+
+    def test_reset_scan_memory_single_arg_variant(self):
+        import asset_sync_runner
+
+        new_root = _make_root(self.tmp, "New")
+        with mock.patch.object(asset_sync_runner, "reset_scan_memory",
+                               lambda reason: {"ok": True, "r": reason}, create=True),                 mock.patch.object(lb, "_restart_index_watcher_for_root", return_value="restarting"):
+            res = lb.switch_root(str(new_root), email="a@b.pl")
+        self.assertEqual(res["scan_memory"], {"ok": True, "r": "root_switch"})
+
+    def test_reset_scan_memory_missing_or_failing(self):
+        import asset_sync_runner
+
+        def boom(db_path, reason):
+            raise RuntimeError("boom")
+
+        new_root = _make_root(self.tmp, "New")
+        with mock.patch.object(lb, "_restart_index_watcher_for_root", return_value="restarting"):
+            with mock.patch.object(asset_sync_runner, "reset_scan_memory", None, create=True):
+                res = lb.switch_root(str(new_root), email="a@b.pl")
+            self.assertTrue(res["ok"])
+            self.assertIsNone(res["scan_memory"])
+            other = _make_root(self.tmp, "Other")
+            with mock.patch.object(asset_sync_runner, "reset_scan_memory", boom, create=True):
+                res2 = lb.switch_root(str(other), email="a@b.pl")
+        self.assertTrue(res2["ok"])
+        self.assertEqual(res2["scan_memory"]["ok"], False)
+
+    def test_mark_built_here_conditional(self):
+        import index_snapshots
+
+        with mock.patch.object(index_snapshots, "mark_built_here", create=True) as fn:
+            self.assertEqual(lb._mark_built_here("file-index", Path("x.json")), "ok")
+        fn.assert_called_once_with("file-index", Path("x.json"))
+        with mock.patch.object(index_snapshots, "mark_built_here", None, create=True):
+            self.assertEqual(lb._mark_built_here("file-index", Path("x.json")), "missing")
+
+
+class MachineConfigLocationTests(RootSwitchBase):
+    """Poprawka 8 + 7: zapis w katalogu stanu, stary plik jako zapas, jedna regula usera."""
+
+    def test_legacy_file_read_when_state_missing(self):
+        self.assertFalse(self.state_cfg.exists())
+        self.assertEqual(lb.read_machine_config()["base_path"], str(self.old_root))
+
+    def test_write_goes_to_state_and_wins_legacy_untouched(self):
+        new_root = _make_root(self.tmp, "New")
+        before = self.cfg.read_bytes()
+        lb.write_machine_config(str(new_root))
+        self.assertTrue(self.state_cfg.is_file())
+        self.assertEqual(lb.read_machine_config()["base_path"], str(new_root))
+        self.assertEqual(lb.read_machine_config()["path"], str(self.state_cfg))
+        self.assertEqual(self.cfg.read_bytes(), before)
+
+    def test_user_name_case_insensitive_and_no_foreign_root(self):
+        self.cfg.write_text(json.dumps({"users": {"TESTER": {"base_path": "E:/Mine"},
+                                                  "other": {"base_path": "Z:/Foreign"}}}), encoding="utf-8")
+        self.assertEqual(lb.read_machine_config()["base_path"], "E:/Mine")
+        self.cfg.write_text(json.dumps({"users": {"other": {"base_path": "Z:/Foreign"}}}), encoding="utf-8")
+        self.assertEqual(lb.read_machine_config()["base_path"], "")
+        with mock.patch.object(dam_path_resolve, "state_machine_config_path", return_value=None):
+            self.assertEqual(dam_path_resolve.machine_config_base(self.cfg), "")
+
+    def test_dam_db_never_takes_other_users_root(self):
+        import dam_db
+
+        foreign = _make_root(self.tmp, "Foreign")
+        mine = _make_root(self.tmp, "Mine")
+        with mock.patch.object(dam_db, "MACHINE_CONFIG", self.cfg), \
+                mock.patch.object(dam_path_resolve, "state_machine_config_path", return_value=None):
+            self.cfg.write_text(json.dumps({"users": {"other": {"base_path": str(foreign)}}}), encoding="utf-8")
+            self.assertIsNone(dam_db._marketing_base_from_config())
+            self.cfg.write_text(json.dumps({"users": {"other": {"base_path": str(foreign)},
+                                                      "Tester": {"base_path": str(mine)}}}), encoding="utf-8")
+            self.assertEqual(dam_db._marketing_base_from_config(), mine)
+
+
+class IndexAuthorityRouteTests(RootSwitchBase):
+    def setUp(self):
+        super().setUp()
+        self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), lb.Handler)
+        self.port = self.httpd.server_address[1]
+        threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
+
+    def tearDown(self):
+        self.httpd.shutdown()
+        self.httpd.server_close()
+        super().tearDown()
+
+    def _get(self, path):
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=10)
+        conn.request("GET", path)
+        r = conn.getresponse()
+        body = json.loads(r.read().decode("utf-8") or "{}")
+        conn.close()
+        return r.status, body
+
+    def test_status_when_module_present(self):
+        import index_authority
+
+        with mock.patch.object(index_authority, "status",
+                               return_value={"ok": True, "may_publish": None}) as st:
+            status, body = self._get("/index-authority/status")
+        self.assertEqual((status, body["may_publish"]), (200, None))
+        st.assert_called_once_with(root_path=str(self.old_root))
+
+    def test_404_when_module_missing(self):
+        with mock.patch.dict(sys.modules, {"index_authority": None}):
+            status, _ = self._get("/index-authority/status")
+        self.assertEqual(status, 404)
+
+
+class LaunchKillsOnlyOwnProcessesTests(unittest.TestCase):
+    """Poprawka 9: _kill_stale_dam_processes filtruje po wlascicielu procesu."""
+
+    def test_powershell_filter_has_owner_check(self):
+        import launch
+
+        seen = []
+
+        def fake_run(cmd, **_kw):
+            seen.append(cmd[-1])
+            return mock.Mock(stdout="", returncode=0)
+
+        with mock.patch.object(launch.sys, "platform", "win32"), \
+                mock.patch.object(launch.subprocess, "run", side_effect=fake_run), \
+                mock.patch.object(launch, "_kill_listeners_on_dam_ports", return_value=0):
+            self.assertEqual(launch._kill_stale_dam_processes(), 0)
+        self.assertTrue(seen)
+        self.assertIn("GetOwner", seen[0])
+        self.assertIn("$env:USERNAME", seen[0])
 
 
 class PathResolveReadsUserRootTests(unittest.TestCase):

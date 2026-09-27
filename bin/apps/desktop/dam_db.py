@@ -264,29 +264,16 @@ DB_CANONICAL = DB_REPO
 
 
 def _marketing_base_from_config() -> Path | None:
-    if not MACHINE_CONFIG.is_file():
-        return None
+    """ROOT biezacego uzytkownika Windows - ta sama regula co most i
+    dam_path_resolve (katalog stanu, potem stary plik; nazwa bez wzgledu na
+    wielkosc liter). Nigdy ROOT innego uzytkownika (do 2026-09-27 brany byl
+    pierwszy wpis z pliku)."""
     try:
-        data = json.loads(MACHINE_CONFIG.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None
-    users = data.get("users") or {}
-    import getpass
+        import dam_path_resolve
 
-    me = (getpass.getuser() or "").strip().lower()
-    entry = None
-    if me and isinstance(users, dict):
-        for k, v in users.items():
-            if str(k).strip().lower() == me:
-                entry = v
-                break
-    if entry is None and isinstance(users, dict) and users:
-        entry = next(iter(users.values()))
-    base = ""
-    if isinstance(entry, dict):
-        base = str(entry.get("base_path") or "").strip()
-    if not base:
-        base = str(data.get("base_path") or "").strip()
+        base = dam_path_resolve.machine_config_base(MACHINE_CONFIG)
+    except Exception:  # noqa: BLE001
+        return None
     if not base:
         return None
     p = Path(base)

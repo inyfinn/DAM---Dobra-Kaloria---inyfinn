@@ -249,7 +249,9 @@ IMAGE_RESIZER_ROOT = Path(
     )
 )
 BUILD_INDEX = WEB_ROOT / "scripts" / "build-file-index.py"
-MACHINE_CONFIG = DESKTOP_DIR / "machine-config.json"
+MACHINE_CONFIG = DESKTOP_DIR / "machine-config.json"  # stara lokalizacja: tylko odczyt zapasowy
+# Nowy zapis ROOT: katalog stanu uzytkownika (None = platform_compat.user_state_dir()).
+MACHINE_CONFIG_STATE: Path | None = None
 USER_DEVICE_PATHS_FILE = DESKTOP_DIR / "data" / "user-device-paths.json"
 USER_PREFS_FILE = DESKTOP_DIR / "data" / "user-prefs.json"
 SYNOLOGY_SCRIPT = DESKTOP_DIR / "synology_get_link.ps1"
@@ -864,43 +866,75 @@ def build_preflight_report() -> dict:
     return report
 
 
-def read_machine_config() -> dict:
-    """Preferencja Marketing dla biezacego konta Windows (nie globalna stala)."""
-    user = _windows_username()
-    if not MACHINE_CONFIG.is_file():
-        return {"ok": True, "user": user, "base_path": "", "path": str(MACHINE_CONFIG)}
+def _machine_config_state_path() -> Path | None:
+    if MACHINE_CONFIG_STATE is not None:
+        return MACHINE_CONFIG_STATE
+    return dam_path_resolve.state_machine_config_path() if dam_path_resolve else None
+
+
+def _read_machine_config_file(path: Path | None) -> dict | None:
+    """Wpis biezacego usera z jednego pliku (nazwa bez wzgledu na wielkosc liter).
+    None = brak wpisu. Nigdy wpis innego uzytkownika."""
+    if not path or not path.is_file():
+        return None
     try:
-        data = json.loads(MACHINE_CONFIG.read_text(encoding="utf-8"))
+        data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        data = {}
+        return None
+    if not isinstance(data, dict):
+        return None
     users = data.get("users") if isinstance(data.get("users"), dict) else {}
-    entry = users.get(user) if isinstance(users.get(user), dict) else None
+    key = dam_path_resolve.user_key(users, _windows_username()) if dam_path_resolve else (
+        _windows_username() if _windows_username() in users else None)
+    entry = users.get(key) if key is not None and isinstance(users.get(key), dict) else None
     # Migracja starego formatu {base_path: ...} -> biezacy user
     if not entry and data.get("base_path"):
         entry = {"base_path": data.get("base_path"), "updated_at": data.get("updated_at") or ""}
-    return {
-        "ok": True,
-        "user": user,
-        "base_path": str((entry or {}).get("base_path") or "").strip(),
-        "updated_at": (entry or {}).get("updated_at") or "",
-        "path": str(MACHINE_CONFIG),
-    }
+    if not entry or not str(entry.get("base_path") or "").strip():
+        return None
+    return entry
+
+
+def read_machine_config() -> dict:
+    """Preferencja Marketing dla biezacego konta Windows (nie globalna stala).
+
+    2026-09-27: najpierw katalog stanu uzytkownika (tam idzie zapis), potem stary
+    plik obok aplikacji (MACHINE_CONFIG) jako zapas - stary plik zostaje nietkniety."""
+    user = _windows_username()
+    for path in (_machine_config_state_path(), MACHINE_CONFIG):
+        entry = _read_machine_config_file(path)
+        if entry:
+            return {
+                "ok": True,
+                "user": user,
+                "base_path": str(entry.get("base_path") or "").strip(),
+                "updated_at": entry.get("updated_at") or "",
+                "path": str(path),
+            }
+    return {"ok": True, "user": user, "base_path": "", "path": str(_machine_config_state_path() or MACHINE_CONFIG)}
 
 
 def write_machine_config(base_path: str) -> dict:
-    """Zapis tylko dla biezacego konta Windows - nie nadpisuje innych userow."""
+    """Zapis tylko dla biezacego konta Windows - nie nadpisuje innych userow.
+
+    Cel: katalog stanu uzytkownika (bundle Mac bywa tylko do odczytu, klon dev
+    synchronizuje Drive miedzy komputerami). Gdy katalogu stanu brak - stary plik."""
     user = _windows_username()
     stored = _normalize_base_path(base_path)
+    target = _machine_config_state_path() or MACHINE_CONFIG
     data: dict = {}
-    if MACHINE_CONFIG.is_file():
+    if target.is_file():
         try:
-            data = json.loads(MACHINE_CONFIG.read_text(encoding="utf-8"))
+            data = json.loads(target.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             data = {}
     users = data.get("users") if isinstance(data.get("users"), dict) else {}
-    users[user] = {"base_path": stored, "updated_at": utc_now()}
+    key = (dam_path_resolve.user_key(users, user) if dam_path_resolve else None) or user
+    users[key] = {"base_path": stored, "updated_at": utc_now()}
+    user = key
     payload = {"users": users}
-    MACHINE_CONFIG.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     # 2026-09-27: bez dam_db.reset_path_cache()+init_db(). Baza nie zalezy od ROOT
     # (kanon bin/DATABASE, dam_db.canonical_db_path). Reset przy kazdym zapisie ROOT
     # zrywal polaczenie z baza: pelny re-init Postgresa pod _LOCK w watku HTTP,
@@ -911,7 +945,7 @@ def write_machine_config(base_path: str) -> dict:
         "user": user,
         "base_path": stored,
         "updated_at": users[user]["updated_at"],
-        "path": str(MACHINE_CONFIG),
+        "path": str(target),
         "db": dam_db.status() if dam_db else None,
     }
 
@@ -924,6 +958,8 @@ def write_machine_config(base_path: str) -> dict:
 ROOT_SWITCH_PROBE_TIMEOUT_S = 3.0
 ROOT_WATCHER_POLL_S = 5.0
 _ROOT_WATCHER_RESTART_LOCK = threading.Lock()
+# Watcher zatrzymany przez przelaczenie na ROOT "partial" - powrot na "full" go wznawia.
+_ROOT_WATCHER_STOPPED_BY_SWITCH = threading.Event()
 
 
 def _invalidate_root_caches() -> None:
@@ -989,6 +1025,98 @@ def _probe_root(base_path: str, timeout: float | None = None) -> dict:
     }
 
 
+def _root_state(base_path: str, timeout: float | None = None) -> dict:
+    """JEDNA definicja zywotnosci ROOT dla calego mostu (switch, /files/status,
+    publikacja): {state: "full"|"partial"|"none", missing, exists, timeout, root}.
+
+    full    = trzy foldery Marketing + "- POLSKA" da sie wylistowac (niepusty);
+    partial = folder odpowiada, ale czegos brakuje (albo "- POLSKA" pusty) -
+              otwieranie/podglad plikow tak, skan i publikacja NIE;
+    none    = brak sciezki, folderu albo dysk nie odpowiada w limicie czasu.
+    Listowanie "- POLSKA" tez idzie w watku z limitem (wiszacy NFS)."""
+    base = str(base_path or "").strip()
+    out = {"state": "none", "missing": list(REQUIRED_ROOT_FOLDERS), "exists": False,
+           "timeout": False, "root": _normalize_base_path(base) if base else ""}
+    if not base:
+        return out
+    if timeout is None:
+        timeout = ROOT_SWITCH_PROBE_TIMEOUT_S
+    probe = _probe_root(out["root"], timeout)
+    out.update(missing=list(probe["missing"]), exists=bool(probe["exists"]), timeout=bool(probe["timeout"]))
+    if probe["timeout"] or not probe["exists"]:
+        return out
+    listable = False
+    if "- POLSKA" not in out["missing"]:
+        box: dict = {}
+
+        def _list() -> None:
+            try:
+                box["ok"] = any((Path(out["root"]) / "- POLSKA").iterdir())
+            except OSError:
+                box["ok"] = False
+
+        t = threading.Thread(target=_list, daemon=True, name="dam-root-list")
+        t.start()
+        t.join(timeout)
+        if t.is_alive():
+            out.update(timeout=True, exists=False)
+            return out
+        listable = bool(box.get("ok"))
+    out["listable"] = listable
+    out["state"] = "full" if (not out["missing"] and listable) else "partial"
+    return out
+
+
+def _scan_blocked_reason() -> str:
+    """Skan dysku (file-index / branding) tylko z pelnego ROOT. Niepelny folder
+    nie moze byc zrodlem indeksu ani usuniec. ROOT nieustawiony / martwy =
+    zachowanie jak dotad (skrypty szukaja rootu same)."""
+    base = str(read_machine_config().get("base_path") or "").strip()
+    if not base:
+        return ""
+    return "root_partial" if _root_state(base)["state"] == "partial" else ""
+
+
+def _mark_built_here(key: str, path: Path) -> str:
+    """Faza 3 (worker D): index_snapshots.mark_built_here(key, path) po udanym
+    LOKALNYM buildzie. Brak funkcji / wyjatek = zachowanie jak dotad."""
+    try:
+        import index_snapshots  # noqa: PLC0415
+
+        fn = getattr(index_snapshots, "mark_built_here", None)
+        if not callable(fn):
+            return "missing"
+        res = fn(key, path)
+        if isinstance(res, dict) and res.get("ok") is False:
+            return f"not_ok: {res.get('error') or ''}"[:200]
+        return "ok"
+    except Exception as exc:  # noqa: BLE001
+        return f"error: {exc}"[:200]
+
+
+def _reset_scan_memory(reason: str) -> dict | None:
+    """Faza 3 (worker D): asset_sync_runner.reset_scan_memory przy zmianie ROOT.
+    Sygnatura workera D: (db_path, reason) - db_path jak w run_asset_sync_once
+    (dam_db.DB_CANONICAL); wariant (reason) tez obslugiwany. Brak funkcji = None
+    (zachowanie jak dotad), wyjatek = {ok: False, error}."""
+    try:
+        import asset_sync_runner as _asr  # noqa: PLC0415
+
+        fn = getattr(_asr, "reset_scan_memory", None)
+        if not callable(fn):
+            return None
+        import inspect  # noqa: PLC0415
+
+        if len(inspect.signature(fn).parameters) >= 2:
+            db_path = getattr(dam_db, "DB_CANONICAL", None) if dam_db is not None else None
+            if not db_path:
+                return {"ok": False, "error": "db_canonical_missing"}
+            return fn(db_path, reason)
+        return fn(reason)
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)[:200]}
+
+
 def _index_rebuild_running() -> bool:
     if _index_state.get("running") or _branding_rebuild_state.get("running"):
         return True
@@ -1000,10 +1128,12 @@ def _index_rebuild_running() -> bool:
         return False
 
 
-def _restart_index_watcher_for_root() -> str:
+def _restart_index_watcher_for_root(scan_allowed: bool = True) -> str:
     """Watcher (watch-file-index.py) czyta ROOT raz przy starcie - po zmianie ROOT
     trzeba go zrestartowac. Trwajaca przebudowa konczy sie na starym ROOT (sciezki
-    w indeksie i tak sa remapowane); restart czeka w tle, az sie skonczy."""
+    w indeksie i tak sa remapowane); restart czeka w tle, az sie skonczy.
+    scan_allowed=False (ROOT "partial") = watcher tylko zatrzymany, bez ponownego
+    startu: niepelny folder nie skanuje. Wraca przy przelaczeniu na pelny ROOT."""
     if not _ROOT_WATCHER_RESTART_LOCK.acquire(blocking=False):
         return "pending"
     deferred = _index_rebuild_running()
@@ -1015,16 +1145,23 @@ def _restart_index_watcher_for_root() -> str:
                 time.sleep(ROOT_WATCHER_POLL_S)
             import index_supervisor  # noqa: PLC0415
 
-            if index_supervisor._owner is None:
+            if index_supervisor._owner is not None:
+                index_supervisor.stop_index_supervisor()
+            elif not (scan_allowed and _ROOT_WATCHER_STOPPED_BY_SWITCH.is_set()):
                 return  # watcher nalezy do innego procesu albo nie dziala - nie ruszamy
-            index_supervisor.stop_index_supervisor()
-            index_supervisor.ensure_index_supervisor(interval=2.0, depth=5)
+            if scan_allowed:
+                _ROOT_WATCHER_STOPPED_BY_SWITCH.clear()
+                index_supervisor.ensure_index_supervisor(interval=2.0, depth=5)
+            else:
+                _ROOT_WATCHER_STOPPED_BY_SWITCH.set()
         except Exception as exc:  # noqa: BLE001
             print("root switch watcher restart:", exc)
         finally:
             _ROOT_WATCHER_RESTART_LOCK.release()
 
     threading.Thread(target=_run, daemon=True, name="dam-root-watcher-restart").start()
+    if not scan_allowed:
+        return "stopping_deferred" if deferred else "stopped"
     return "deferred" if deferred else "restarting"
 
 
@@ -1036,33 +1173,54 @@ def switch_root(
     label: str | None = None,
     *,
     write: bool = True,
+    confirm: bool = False,
 ) -> dict:
-    """Jedna operacja przelaczenia ROOT. write=False = tylko walidacja (bez sesji)."""
+    """Jedna operacja przelaczenia ROOT. write=False = tylko walidacja (bez sesji).
+
+    Odrzuca tylko folder, ktorego nie ma (root_missing) albo ktory nie odpowiada
+    (root_timeout). Zawartosc ROOT rozni sie miedzy komputerami: czesciowa
+    struktura = zapis z warning "root_incomplete". Folder bez ZADNEGO z trzech
+    folderow Marketing (literowka?) = root_unrecognized, zapis dopiero z confirm."""
     raw = str(base_path or "").strip()
     checked_at = utc_now()
     if not raw:
         return {"ok": False, "error": "base_path_required", "reason": "empty",
                 "base_path": "", "root_alive": False, "checked_at": checked_at}
     stored = _normalize_base_path(raw)
-    probe = _probe_root(stored)
-    if not probe["ok"]:
-        if probe["timeout"]:
-            reason = "timeout"
-        elif not probe["exists"]:
-            reason = "missing"
-        else:
-            reason = "incomplete"
+    rs = _root_state(stored)
+    missing = list(rs["missing"])
+    warning = ""
+    if rs["state"] == "none":
+        reason = "timeout" if rs["timeout"] else "missing"
         return {
             "ok": False,
             "error": "root_" + reason,
             "reason": reason,
             "base_path": stored,
-            "missing": probe["missing"],
+            "missing": missing,
             "root_alive": False,
+            "root_state": "none",
             "checked_at": checked_at,
         }
+    if rs["state"] == "partial":
+        if len(missing) >= len(REQUIRED_ROOT_FOLDERS) and not confirm:
+            return {
+                "ok": False,
+                "error": "root_unrecognized",
+                "reason": "unrecognized",
+                "needs_confirm": True,
+                "base_path": stored,
+                "missing": missing,
+                "root_alive": True,
+                "root_state": "partial",
+                "checked_at": checked_at,
+            }
+        warning = "root_unrecognized" if len(missing) >= len(REQUIRED_ROOT_FOLDERS) else "root_incomplete"
+        if not missing:
+            warning = "root_empty_polska"
     if not write:
         return {"ok": True, "base_path": stored, "root_alive": True, "reason": "ok",
+                "root_state": rs["state"], "warning": warning, "missing": missing,
                 "checked_at": checked_at, "validated_only": True}
     previous = str(read_machine_config().get("base_path") or "").strip()
     write_machine_config(stored)  # sam wola _invalidate_root_caches()
@@ -1076,14 +1234,20 @@ def switch_root(
         except Exception as exc:  # noqa: BLE001 - PG offline: machine-config i tak zapisany
             udp = {"ok": False, "error": str(exc)[:200]}
     changed = _normalize_base_path(previous).lower() != stored.lower() if previous else True
-    watcher = _restart_index_watcher_for_root() if changed else "unchanged"
+    watcher = _restart_index_watcher_for_root(scan_allowed=rs["state"] == "full") if changed else "unchanged"
+    scan_memory = _reset_scan_memory("root_switch") if changed else None
     return {
         "ok": True,
         "base_path": stored,
         "previous": previous,
         "changed": changed,
         "root_alive": True,
+        "root_state": rs["state"],
+        "scan_allowed": rs["state"] == "full",
+        "scan_memory": scan_memory,
         "reason": "ok",
+        "warning": warning,
+        "missing": missing,
         "checked_at": checked_at,
         "device_id": did,
         "udp_ok": bool(udp.get("ok")),
@@ -1841,6 +2005,7 @@ def _run_index_rebuild() -> None:
         )
         if rc == 0:
             _drop_json_cache(INDEX_FILE)
+            _append_rebuild_log(f"mark_built_here file-index {_mark_built_here('file-index', INDEX_FILE)}")
             try:
                 import meta_store
 
@@ -1896,6 +2061,10 @@ def start_index_rebuild() -> dict:
     with _index_lock:
         if _index_state["running"]:
             return {"ok": True, "started": False, "running": True, "rebuild": dict(_index_state)}
+    blocked = _scan_blocked_reason()
+    if blocked:
+        return {"ok": False, "started": False, "running": False, "error": blocked,
+                "rebuild": dict(_index_state)}
     threading.Thread(target=_run_index_rebuild, daemon=True).start()
     # Daj watkowi chwile na ustawienie flagi
     time.sleep(0.05)
@@ -2053,6 +2222,12 @@ def _run_branding_rebuild() -> None:
             _branding_rebuild_state["stage"] = "idle"
             _branding_rebuild_state["generation_id"] = _branding_generation_id()
         _write_branding_status()
+        # Klucz od workera D: branding-search-index (branding-index w trybie rows i tak
+        # nie jest publikowany snapshotem - index_snapshots.ROWS_MODE_SKIP_KEY).
+        _append_rebuild_log(
+            "mark_built_here branding-search-index "
+            + _mark_built_here("branding-search-index", WEB_ROOT / "data" / "branding-search-index.json")
+        )
         # Faza 2: swiezy skan z dysku (build-branding-index.py wlasnie sie skonczyl)
         # moze isc do scalania (asset_sync_runner) od razu - nie czekac na watek co 10 min.
         # No-op dopoki dam_meta.asset_index_mode != "rows".
@@ -2087,6 +2262,11 @@ def start_branding_rebuild() -> dict:
                 "running": True,
                 "rebuild": dict(_branding_rebuild_state),
             }
+    blocked = _scan_blocked_reason()
+    if blocked:
+        with _branding_rebuild_lock:
+            state = dict(_branding_rebuild_state)
+        return {"ok": False, "started": False, "running": False, "error": blocked, "rebuild": state}
     threading.Thread(target=_run_branding_rebuild, daemon=True).start()
     time.sleep(0.05)
     with _branding_rebuild_lock:
@@ -2135,7 +2315,8 @@ def _snapshot_root_alive() -> bool:
             return False
     except Exception:  # noqa: BLE001
         return False
-    return bool(validate_base(base).get("ok"))
+    # Ta sama definicja co switch_root / /files/status; publikacja tylko z "full".
+    return _root_state(base)["state"] == "full"
 
 
 def _on_snapshot_updated(key: str, path: Path) -> None:
@@ -8678,8 +8859,12 @@ class Handler(BaseHTTPRequestHandler):
             if not path:
                 self._json(400, {"ok": False, "error": "path_required"})
                 return
-            bases = detect_marketing_bases()
-            has_root = bool(bases.get("recommended"))
+            # ROOT ustawiony = root jest (brak pliku to "missing", nie "root_unset").
+            # Skan wszystkich liter tylko gdy ROOT nie ustawiony - zimny skan po
+            # przelaczeniu ROOT dawal "root_unset" dla rownoleglych zapytan.
+            has_root = bool(str(read_machine_config().get("base_path") or "").strip())
+            if not has_root:
+                has_root = bool(detect_marketing_bases().get("recommended"))
             out = dam_file_availability.classify_path(
                 path,
                 email="",
@@ -8877,6 +9062,19 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(200, {"ok": True, "users": list_users()})
             return
+        if parsed.path == "/index-authority/status":
+            # Tylko odczyt: prawo publikacji do wspolnego katalogu (index_authority.py).
+            try:
+                import index_authority  # noqa: PLC0415
+            except ImportError:
+                self._json(404, {"ok": False, "error": "index_authority_missing"})
+                return
+            base = str(read_machine_config().get("base_path") or "").strip()
+            try:
+                self._json(200, index_authority.status(root_path=base))
+            except Exception as exc:  # noqa: BLE001
+                self._json(200, {"ok": False, "error": str(exc)[:200]})
+            return
         if parsed.path == "/files/status":
             # Status ROOT plikow - bez loginu (pill "Pliki online/offline")
             qs = parse_qs(parsed.query)
@@ -8884,27 +9082,19 @@ class Handler(BaseHTTPRequestHandler):
             if not root:
                 self._json(400, {"ok": False, "online": False, "error": "root_required"})
                 return
-            # Sonda z limitem czasu: wiszacy dysk sieciowy nie blokuje watku HTTP.
-            info = _probe_root(root)
-            info["path"] = _normalize_base_path(root)
-            online = bool(info.get("ok"))
-            # Dodatkowy probe: czy da sie listowac POLSKA
-            probe_ok = False
-            if online:
-                try:
-                    polska = Path(normalize_path(root)) / "- POLSKA"
-                    probe_ok = polska.is_dir() and any(polska.iterdir())
-                except OSError:
-                    probe_ok = False
+            # _root_state: sonda + listowanie "- POLSKA" z limitem czasu (wiszacy dysk
+            # sieciowy nie blokuje watku HTTP). online = full albo partial.
+            info = _root_state(root)
             self._json(
                 200,
                 {
                     "ok": True,
-                    "online": online and probe_ok,
-                    "root": info.get("path") or root,
+                    "online": info["state"] in ("full", "partial"),
+                    "state": info["state"],
+                    "root": info.get("root") or root,
                     "missing": info.get("missing") or [],
                     "probe": "list_-POLSKA",
-                    "probe_ok": probe_ok,
+                    "probe_ok": bool(info.get("listable")),
                     "exists": bool(info.get("exists")),
                     "timeout": bool(info.get("timeout")),
                 },
@@ -10036,7 +10226,8 @@ class Handler(BaseHTTPRequestHandler):
             # zapis machine-config + UDP i uniewaznienie cache (z sesja).
             payload = data if isinstance(data, dict) else {}
             path = str(payload.get("base_path") or payload.get("path") or "").strip()
-            checked = switch_root(path, write=False)
+            confirm = payload.get("confirm") is True
+            checked = switch_root(path, write=False, confirm=confirm)
             if not checked.get("ok"):
                 self._json(200, checked)
                 return
@@ -10052,6 +10243,7 @@ class Handler(BaseHTTPRequestHandler):
                     device_id=str(payload.get("device_id") or ""),
                     hostname=str(payload.get("hostname") or ""),
                     label=label,
+                    confirm=confirm,
                 ),
             )
             return

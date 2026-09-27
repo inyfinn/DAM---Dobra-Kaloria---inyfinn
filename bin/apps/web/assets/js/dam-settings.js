@@ -909,6 +909,36 @@
     }
 
     var saveBtn = document.getElementById("settingsSave");
+
+    function switchRootFromSettings(raw, confirm) {
+      if (saveBtn) saveBtn.disabled = true;
+      showBaseMsg(i18nOr("root.switch.saving", "Sprawdzam ścieżkę..."), true);
+      return DamPaths.setBasePath(raw, confirm ? { confirm: true } : null).then(function (res) {
+        if (saveBtn) saveBtn.disabled = false;
+        if (baseMsg) baseMsg.classList.add("is-on");
+        if (DamPaths.showSwitchResult) {
+          DamPaths.showSwitchResult(baseMsg, res, {
+            okClass: "dam-sw-msg--ok",
+            errClass: "dam-sw-msg--err",
+            onConfirm: function () { switchRootFromSettings(raw, true); }
+          });
+        } else {
+          showBaseMsg((res && res.message) || "", !!(res && res.ok));
+        }
+        if (!res || !res.ok) {
+          /* Literowka do potwierdzenia zostaje w polu; inne bledy = poprzedni ROOT. */
+          if (!(res && res.needs_confirm)) basePathEl.value = DamPaths.getBasePath() || "";
+          return res;
+        }
+        basePathEl.value = res.base_path || raw;
+        DamPaths.logAction("set_base_path", {
+          local_path: res.base_path || raw,
+          detail: "Zapisano w Ustawieniach",
+        });
+        return res;
+      });
+    }
+
     if (saveBtn) {
       saveBtn.addEventListener("click", function () {
         localStorage.setItem("dam_tooltips", tooltipEl.checked ? "on" : "off");
@@ -935,23 +965,7 @@
         if (raw && window.DamPaths && raw !== cur) {
           /* Jedna operacja: most sprawdza sciezke, zapisuje, uniewaznia cache; dopiero
              potem localStorage + "dam:root-changed". Blad = poprzedni ROOT zostaje. */
-          saveBtn.disabled = true;
-          showBaseMsg(i18nOr("root.switch.saving", "Sprawdzam ścieżkę..."), true);
-          rootP = DamPaths.setBasePath(raw).then(function (res) {
-            saveBtn.disabled = false;
-            if (!res || !res.ok) {
-              showBaseMsg((res && res.message) || "", false);
-              basePathEl.value = DamPaths.getBasePath() || "";
-              return res;
-            }
-            basePathEl.value = res.base_path || raw;
-            showBaseMsg(res.message || "", true);
-            DamPaths.logAction("set_base_path", {
-              local_path: res.base_path || raw,
-              detail: "Zapisano w Ustawieniach",
-            });
-            return res;
-          });
+          rootP = switchRootFromSettings(raw, false);
         } else if (raw && !window.DamPaths) {
           localStorage.setItem("dam_base_path", raw);
         }

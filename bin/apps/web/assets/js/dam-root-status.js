@@ -189,11 +189,24 @@
     return el;
   }
 
+  function ensurePartialCss() {
+    if (document.getElementById("damRootPartialCss")) return;
+    var s = document.createElement("style");
+    s.id = "damRootPartialCss";
+    s.textContent =
+      ".dam-root-status.is-partial .dam-root-status__dot{background:var(--dam-warn);" +
+      "box-shadow:0 0 0 3px color-mix(in srgb,var(--dam-warn) 25%,transparent);}";
+    document.head.appendChild(s);
+  }
+
   function setState(online, detail, reason) {
     var el = ensureUi();
     if (!el) return;
+    var partial = !!online && reason === "partial";
+    ensurePartialCss();
     el.classList.toggle("is-offline", !online);
-    el.classList.toggle("is-online", !!online);
+    el.classList.toggle("is-online", !!online && !partial);
+    el.classList.toggle("is-partial", partial);
     el.title = detail || (online ? "ROOT plików online" : "ROOT plików offline");
     var label = el.querySelector(".dam-root-status__label");
     var btn = el.querySelector("#damRootResetBtn");
@@ -201,7 +214,9 @@
     if (label) {
       var line1 = "Pliki";
       var line2 = online ? "online" : "offline";
-      if (!online && reason === "bridge") {
+      if (partial) {
+        line2 = tr("root.status.partial_short", "niepełne");
+      } else if (!online && reason === "bridge") {
         line1 = "Most";
         line2 = "offline";
       } else if (!online && reason === "no_root") {
@@ -215,7 +230,8 @@
         line2 +
         "</span>";
     }
-    if (refreshBtn) refreshBtn.hidden = !online;
+    /* Skan z dysku tylko z pelnego ROOT (most i tak odmowi: root_partial). */
+    if (refreshBtn) refreshBtn.hidden = !online || partial;
     if (btn) {
       btn.hidden = !!online;
       btn.setAttribute("data-reason", reason || "");
@@ -299,7 +315,13 @@
         /* Po przelaczeniu ROOT starsza odpowiedz nie nadpisuje nowszej. */
         if (mySeq !== _checkSeq) return res;
         var online = !!(res && res.online);
-        var detail = online
+        /* Trzy stany z mostu: full / partial / none (_root_state w local_bridge.py). */
+        var partial = online && res.state === "partial";
+        var detail = partial
+          ? tr("root.status.partial", "ROOT niepełny: {root}. Brak: {missing}. Otwieranie plików działa, skan i publikacja wyłączone.")
+              .split("{root}").join(res.root || root)
+              .split("{missing}").join((res.missing && res.missing.length) ? res.missing.join(", ") : "- POLSKA (pusty)")
+          : online
           ? ("ROOT OK: " + (res.root || root))
           : ("Offline: " + (res && res.timeout
             ? tr("root.status.timeout", "dysk nie odpowiada")
@@ -308,7 +330,7 @@
               : res && res.missing && res.missing.length
                 ? ("brak " + res.missing.join(", "))
                 : "nie można odczytać plików"));
-        setState(online, detail, online ? "ok" : "path");
+        setState(online, detail, partial ? "partial" : online ? "ok" : "path");
         return res;
       })
       .catch(function () {

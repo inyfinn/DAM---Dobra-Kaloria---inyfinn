@@ -63,19 +63,43 @@ def _looks_like_marketing_root(base: Path) -> bool:
         return False
 
 
+def _state_config() -> Path | None:
+    """machine-config w katalogu stanu uzytkownika (tam zapisuje most od 2026-09-27)."""
+    raw = (os.environ.get("DAM_STATE_DIR") or "").strip()
+    if raw:
+        return Path(raw) / "machine-config.json"
+    base = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA") or ""
+    if sys.platform == "win32" and base:
+        return Path(base) / "DAM" / "state" / "machine-config.json"
+    try:
+        if _DESKTOP_DIR.is_dir() and str(_DESKTOP_DIR) not in sys.path:
+            sys.path.append(str(_DESKTOP_DIR))
+        import platform_compat  # type: ignore
+
+        return platform_compat.user_state_dir() / "machine-config.json"
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def _machine_config_bases() -> list[Path]:
-    """Read base_path from desktop machine-config (current Windows user only)."""
-    out: list[Path] = []
-    user = (os.environ.get("USERNAME") or os.environ.get("USER") or "").strip()
-    candidates = [
-        _DESKTOP_DIR / "machine-config.json",
-        Path(r"P:/DAM/bin/apps/desktop/machine-config.json"),
-    ]
+    """Read base_path from machine-config (current Windows user only).
+
+    Order: DAM_MACHINE_CONFIG (explicit) -> user state dir (bridge writes there
+    since 2026-09-27) -> legacy file next to the app. First file with an entry
+    for THIS user wins; user name compared case-insensitively (same rule as the
+    bridge and dam_path_resolve)."""
+    user = (os.environ.get("USERNAME") or os.environ.get("USER") or "").strip().lower()
     env_cfg = os.environ.get("DAM_MACHINE_CONFIG", "").strip()
     if env_cfg:
-        candidates.insert(0, Path(env_cfg))
+        candidates = [Path(env_cfg)]
+    else:
+        candidates = [
+            _state_config(),
+            _DESKTOP_DIR / "machine-config.json",
+            Path(r"P:/DAM/bin/apps/desktop/machine-config.json"),
+        ]
     for cfg in candidates:
-        if not cfg.is_file():
+        if cfg is None or not cfg.is_file():
             continue
         try:
             data = json.loads(cfg.read_text(encoding="utf-8"))
@@ -84,16 +108,19 @@ def _machine_config_bases() -> list[Path]:
         if not isinstance(data, dict):
             continue
         users = data.get("users") if isinstance(data.get("users"), dict) else {}
-        entry = users.get(user) if user and isinstance(users.get(user), dict) else None
+        entry = None
+        for k, v in users.items():
+            if user and str(k).strip().lower() == user and isinstance(v, dict):
+                entry = v
+                break
         # Machine-wide base_path is this install's own default, not another user.
         if not entry and isinstance(data.get("base_path"), str) and data.get("base_path").strip():
             entry = {"base_path": data["base_path"]}
         # HARD: no inheritance from a different Windows user.
         base = str((entry or {}).get("base_path") or "").strip()
         if base:
-            out.append(Path(base))
-        break
-    return out
+            return [Path(base)]
+    return []
 
 
 def _fallback_override() -> list[Path] | None:

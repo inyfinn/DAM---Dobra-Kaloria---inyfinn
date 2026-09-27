@@ -504,10 +504,14 @@
   "root.switch.ok": "Przełączono na {path}.",
   "root.switch.missing": "Folder {path} nie istnieje na tym komputerze. Zostaje poprzednia ścieżka.",
   "root.switch.timeout": "Dysk {path} nie odpowiada. Zostaje poprzednia ścieżka.",
-  "root.switch.incomplete": "W folderze {path} brakuje: {missing}. To nie jest folder Marketing. Zostaje poprzednia ścieżka.",
+  "root.switch.unrecognized": "W folderze {path} nie ma żadnego z folderów Marketing ({missing}). Sprawdź, czy ścieżka nie ma literówki. Zostaje poprzednia ścieżka.",
+  "root.switch.warn_incomplete": "Zapisano {path}, ale brakuje w nim: {missing}. Pliki z tych folderów będą oznaczone jako niedostępne lokalnie.",
+  "root.switch.confirm_btn": "Zapisz mimo to",
   "root.switch.login": "Zaloguj się, aby zmienić ścieżkę. Zostaje poprzednia ścieżka.",
   "root.switch.bridge": "Most lokalny (8766) nie odpowiada. Ścieżka nie została zmieniona.",
   "root.switch.failed": "Nie udało się zmienić ścieżki ({error}). Zostaje poprzednia.",
   "root.status.timeout": "dysk nie odpowiada",
-  "root.status.missing": "folder nie istnieje"
+  "root.status.missing": "folder nie istnieje",
+  "root.status.partial": "ROOT niepełny: {root}. Brak: {missing}. Otwieranie plików działa, skan i publikacja wyłączone.",
+  "root.status.partial_short": "niepełne"
 }

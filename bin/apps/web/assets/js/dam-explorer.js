@@ -9654,6 +9654,9 @@
        ten sam, zmienia sie mapowanie sciezek i dostepnosc - wczytaj i narysuj
        drzewo od nowa (bez przebudowy indeksu z dysku, bez F5). */
     window.addEventListener("dam:root-changed", function () {
+      /* Listingi folderow z mostu zaleza od ROOT - stare wyniki nie moga przezyc. */
+      state.materialRoots = null;
+      state.materialBrowseCache = {};
       refreshIndex({ silent: true, skipRebuild: true }).catch(function () { /* status juz ustawiony */ });
     });
 

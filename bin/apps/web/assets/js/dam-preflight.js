@@ -117,7 +117,11 @@
 
   function useDetected(path) {
     if (window.DamPaths && typeof window.DamPaths.setBasePath === "function") {
-      window.DamPaths.setBasePath(path);
+      window.DamPaths.setBasePath(path).then(function (res) {
+        if (res && res.message && window.DamPaths.showToast) {
+          window.DamPaths.showToast(res.message, !res.ok ? "error" : res.warning ? "info" : "success");
+        }
+      });
     }
     scheduleRecheck(1200);
   }
@@ -316,6 +320,7 @@
   function start() {
     setTimeout(check, FIRST_CHECK_DELAY_MS);
     window.addEventListener("dam:index-refreshed", function () { scheduleRecheck(500); });
+    window.addEventListener("dam:root-changed", function () { scheduleRecheck(300); });
   }
 
   if (document.readyState === "loading") {

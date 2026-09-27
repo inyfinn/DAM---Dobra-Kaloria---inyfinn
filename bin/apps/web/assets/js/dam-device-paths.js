@@ -886,11 +886,37 @@
 
            machine-config + UDP, dopiero potem localStorage + dam:root-changed). */
 
-        DamPaths.setBasePath(base, { device_id: deviceId, hostname: hostname, label: label }).then(function (res) {
+        var runSwitch = function (confirm) {
+
+        return DamPaths.setBasePath(base, { device_id: deviceId, hostname: hostname, label: label, confirm: !!confirm }).then(function (res) {
 
           if (!res || !res.ok) {
 
             setMsg((res && res.message) || "Blad zapisu", false);
+
+            if (res && res.needs_confirm && DamPaths.showSwitchResult) {
+
+              DamPaths.showSwitchResult(document.getElementById("damDevPathMsg"), res, {
+
+                onConfirm: function () { runSwitch(true); }
+
+              });
+
+            }
+
+            return;
+
+          }
+
+          if (res.warning && DamPaths.showSwitchResult) {
+
+            DamPaths.showSwitchResult(document.getElementById("damDevPathMsg"), res);
+
+            toast(res.message);
+
+            syncLegacySettingsField(res.base_path || base);
+
+            reload();
 
             return;
 
@@ -907,6 +933,10 @@
           reload();
 
         });
+
+        };
+
+        runSwitch(false);
 
         return;
 

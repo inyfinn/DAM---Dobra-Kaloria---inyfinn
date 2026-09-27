@@ -56,27 +56,63 @@ def _exists_file_or_dir(path: str | Path) -> bool:
         return False
 
 
-def machine_config_base(machine_config_path: Optional[Path]) -> str:
-    """ROOT of the current Windows user from machine-config.json ("" when unset).
+MACHINE_CONFIG_NAME = "machine-config.json"
 
-    Format {"users": {USERNAME: {"base_path": ...}}} (legacy top-level base_path
-    still read). Before 2026-09-27 only the legacy key was read, so the root the
-    user picked never took part in remapping - the fixed M:/X:/D: order won.
-    """
+
+def windows_user() -> str:
+    return (os.environ.get("USERNAME") or os.environ.get("USER") or "default").strip() or "default"
+
+
+def user_key(users: dict, user: str | None = None) -> str | None:
+    """Klucz wpisu biezacego uzytkownika w users{} - bez wzgledu na wielkosc liter.
+    Nigdy nie zwraca klucza INNEGO uzytkownika (zadnego "pierwszego z brzegu")."""
+    want = (user or windows_user()).strip().lower()
+    for k in (users or {}):
+        if str(k).strip().lower() == want:
+            return k
+    return None
+
+
+def read_user_base(path: Optional[Path], user: str | None = None) -> str:
+    """base_path biezacego uzytkownika z JEDNEGO pliku machine-config ("" gdy brak).
+    Format {"users": {USERNAME: {"base_path": ...}}}; stary top-level base_path
+    (instalacja jednoosobowa) nadal czytany."""
     try:
-        if not machine_config_path or not machine_config_path.is_file():
+        if not path or not Path(path).is_file():
             return ""
         import json
 
-        data = json.loads(machine_config_path.read_text(encoding="utf-8"))
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
     except (OSError, ValueError, TypeError):
         return ""
     if not isinstance(data, dict):
         return ""
-    user = (os.environ.get("USERNAME") or os.environ.get("USER") or "default").strip() or "default"
     users = data.get("users") if isinstance(data.get("users"), dict) else {}
-    entry = users.get(user) if isinstance(users.get(user), dict) else {}
+    key = user_key(users, user)
+    entry = users.get(key) if key is not None and isinstance(users.get(key), dict) else {}
     return str(entry.get("base_path") or data.get("base_path") or data.get("path") or "").strip()
+
+
+def state_machine_config_path() -> Optional[Path]:
+    """machine-config w katalogu stanu uzytkownika (2026-09-27): poza folderem
+    aplikacji (bundle Mac tylko do odczytu, klon synchronizowany przez Drive)."""
+    try:
+        return platform_compat.user_state_dir() / MACHINE_CONFIG_NAME
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def machine_config_base(machine_config_path: Optional[Path] = None) -> str:
+    """ROOT biezacego uzytkownika Windows ("" gdy nieustawiony).
+
+    Kolejnosc: katalog stanu uzytkownika (nowy zapis), potem podany plik (stara
+    lokalizacja obok aplikacji). Przed 2026-09-27 czytany byl tylko top-level
+    base_path, wiec wybrany ROOT nie bral udzialu w remapowaniu."""
+    for p in (state_machine_config_path(), machine_config_path):
+        base = read_user_base(p)
+        if base:
+            return base
+    return ""
 
 
 def marketing_roots(
