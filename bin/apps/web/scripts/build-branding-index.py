@@ -609,6 +609,32 @@ def build_search_index(assets: list[dict]) -> dict:
     }
 
 
+def _rows_mode_active() -> bool:
+    """dam_meta.asset_index_mode == 'rows'? Ta sama semantyka co
+    index_snapshots._asset_index_mode_is_rows() / asset_sync_runner._get_mode -
+    blad odczytu / brak polaczenia / brak pg_db (skrypt web/scripts moze biec
+    bez zaleznosci desktop) = False (bezpieczny domyslny: pisz OUT jak dawniej)."""
+    try:
+        desktop_dir = Path(__file__).resolve().parents[2] / "desktop"
+        if str(desktop_dir) not in sys.path:
+            sys.path.insert(0, str(desktop_dir))
+        import pg_db  # noqa: PLC0415
+
+        pg = pg_db.connect()
+        try:
+            cur = pg.cursor()
+            cur.execute("SELECT value FROM dam_meta WHERE key = %s", ("asset_index_mode",))
+            row = cur.fetchone()
+            raw = None
+            if row:
+                raw = row.get("value") if hasattr(row, "get") else row[0]
+            return str(raw or "") == "rows"
+        finally:
+            pg.close()
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--include-archive", action="store_true")
@@ -700,13 +726,25 @@ def main() -> int:
         "linked_product_count": with_link,
         "assets": assets,
     }
-    OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    # 27.09.2026 (incydent: karta produktu pokazywala 0 materialow): w trybie
+    # "rows" most (asset_sync_runner) buduje branding-index.json ZE SCALANIA
+    # wierszy z bazy (format v1, "source":"rows"). Ten builder pisal do OUT
+    # BEZWARUNKOWO - kazde jego uruchomienie (reczne albo watcher) nadpisywalo
+    # swiezy wynik scalania starym/legacy skanem (v2), az do nastepnego cyklu
+    # runnera. W trybie rows builder pisze TYLKO skan obok (SCAN_COPY_OUT) -
+    # patrz _rows_mode_active(). Poza trybem rows (albo gdy nie da sie ustalic
+    # trybu - blad/offline) zachowanie jest jak dawniej: OUT tez sie pisze.
+    rows_mode = _rows_mode_active()
+    if not rows_mode:
+        OUT.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     # Czysty skan obok: w trybie "rows" most nadpisuje branding-index.json wynikiem
     # scalania z bazy, a runner (asset_sync_runner.SCAN_NAME) i naprawy potrzebuja
     # skanu z dysku. 23.09: skan zniknal pod wierszami, zanim zostal scalony.
-    import shutil
+    # Pisany wprost z payload (nie kopiowany z OUT) - dziala rowniez gdy OUT
+    # celowo nie zostal napisany (tryb rows, powyzej).
+    SCAN_COPY_OUT.parent.mkdir(parents=True, exist_ok=True)
     scan_tmp = SCAN_COPY_OUT.with_suffix(".json.tmp")
-    shutil.copyfile(OUT, scan_tmp)
+    scan_tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     os.replace(scan_tmp, SCAN_COPY_OUT)
     search_idx = build_search_index(assets)
     SEARCH_OUT.write_text(
@@ -755,8 +793,11 @@ def main() -> int:
         # Odcisk pliku skanu: w trybie "rows" most nadpisuje branding-index.json wynikiem
         # scalania - runner uzywa pliku jako skanu tylko, gdy rozmiar i czas zapisu
         # zgadzaja sie z tym odciskiem (asset_sync_runner._read_scan).
-        "index_size": OUT.stat().st_size if OUT.is_file() else 0,
-        "index_mtime_ns": OUT.stat().st_mtime_ns if OUT.is_file() else 0,
+        # Odcisk SCAN_COPY_OUT, nie OUT: w trybie rows OUT celowo nie jest pisany
+        # (patrz _rows_mode_active powyzej) - SCAN_COPY_OUT jest jedynym plikiem,
+        # ktory ten builder ZAWSZE zapisuje, niezaleznie od trybu.
+        "index_size": SCAN_COPY_OUT.stat().st_size if SCAN_COPY_OUT.is_file() else 0,
+        "index_mtime_ns": SCAN_COPY_OUT.stat().st_mtime_ns if SCAN_COPY_OUT.is_file() else 0,
     }
     SCAN_DIRS_OUT.parent.mkdir(parents=True, exist_ok=True)
     scan_dirs_tmp = SCAN_DIRS_OUT.with_suffix(SCAN_DIRS_OUT.suffix + f".{os.getpid()}.tmp")

@@ -58,14 +58,34 @@ DEFAULT_STATUS = STATE_DIR / "index-watcher-status.json"
 DEFAULT_LOCK = STATE_DIR / "index-rebuild.lock.json"
 BIN_ROOT = SCRIPT.parents[3]
 BRANDING_PIPELINE = BIN_ROOT / "scripts" / "ops" / "rebuild-branding-pipeline.py"
+WEB_DATA = SCRIPT.parents[1] / "data"
 
 # Ensure sibling marketing_roots import works when cwd differs
 if str(SCRIPT.parent) not in sys.path:
     sys.path.insert(0, str(SCRIPT.parent))
-# Desktop helpers (rebuild_lock) for shared lock
+# Desktop helpers (rebuild_lock, index_snapshots) for shared lock / mark_built_here
 _DESKTOP = SCRIPT.parents[2] / "desktop"
 if _DESKTOP.is_dir() and str(_DESKTOP) not in sys.path:
     sys.path.insert(0, str(_DESKTOP))
+
+
+def _mark_built_here_safe(key: str, path: Path) -> None:
+    """PLAN Faza 3, zadanie 3.4/3.6 (27.09.2026): most (local_bridge.py) oznacza
+    built_here_sha TYLKO po buildach, ktore SAM uruchamia - ten watcher (godzinowy
+    i wyzwalany zmiana na dysku) buduje NIEZALEZNIE i nigdy nie oznaczal swoich
+    plikow. Bez tego index_snapshots.publish_changed odrzucalby KAZDY wynik tego
+    watchera jako "not_built_here" - caly mechanizm publikacji migawek by ucichl.
+
+    Import warunkowy (desktop/ moze byc niedostepny w fixture/testach spoza repo);
+    wyjatek NIGDY nie wywraca watchera - to tylko oznaczenie, nie krok krytyczny."""
+    try:
+        import index_snapshots
+
+        res = index_snapshots.mark_built_here(key, path)
+        if not res.get("ok"):
+            print(f"[watch] mark_built_here({key}) skip: {res}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"[watch] mark_built_here({key}) error: {exc}")
 
 
 def resolve_marketing_base() -> Path:
@@ -309,6 +329,24 @@ def spawn_branding_pipeline(*, status_file: Path | None = None) -> None:
                     "stage": "branding_hook_spawned",
                 },
             )
+
+        def _wait_and_mark(p: subprocess.Popen) -> None:
+            # rebuild-branding-pipeline.py zwraca 0 TYLKO gdy fat (build-branding-index.py,
+            # ktory pisze branding-search-index.json bezwarunkowo - patrz jego glowny
+            # zapis) I grid (build-branding-grid-index.py) obie sie udaly - kazdy
+            # blad czesciowy propaguje sie jako rc != 0 (sprawdzone w tym skrypcie).
+            try:
+                rc = p.wait(timeout=1800)
+            except Exception as exc:  # noqa: BLE001
+                print(f"[watch] branding hook wait error: {exc}")
+                return
+            if rc == 0:
+                _mark_built_here_safe("branding-search-index", WEB_DATA / "branding-search-index.json")
+            else:
+                print(f"[watch] branding hook finished rc={rc} - nie oznaczam built_here")
+
+        threading.Thread(target=_wait_and_mark, args=(proc,), daemon=True,
+                          name="dam-branding-hook-wait").start()
     except Exception as exc:  # noqa: BLE001
         print(f"[watch] branding hook spawn error: {exc}")
 
@@ -542,6 +580,13 @@ def rebuild_with_lock(
             idx_sup.complete_run_report(ok=(rc == 0), cancelled=cancelled, rc=rc)
         except Exception:
             pass
+    if rc == 0 and out_dir is None:
+        # Build odrzucony przez bezpiecznik (rejected.json) konczy sie rc != 0 -
+        # NIE jest oznaczany. out_dir!=None = fixture/test, nie prawdziwy build
+        # w apps/web/data - nie oznaczamy cudzej/testowej sciezki jako "built_here"
+        # dla globalnego klucza produkcyjnego.
+        _mark_built_here_safe("file-index", WEB_DATA / "file-index.json")
+        _mark_built_here_safe("search-index", WEB_DATA / "search-index.json")
     if rc == 0 and branding_hook:
         spawn_branding_pipeline(status_file=status_file)
     if rc == 0:

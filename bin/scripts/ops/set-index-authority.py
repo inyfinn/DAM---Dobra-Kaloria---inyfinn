@@ -39,6 +39,10 @@ def main() -> int:
                      help="Lista COMPUTERNAME oddzielona przecinkami, np. INYFINN,KRZYSZTOFWI")
     ap.add_argument("--apply", action="store_true", help="Naprawde zapisz do bazy (domyslnie: nie)")
     ap.add_argument("--dry-run", action="store_true", help="Jawne 'nie zapisuj' (domyslne zachowanie)")
+    ap.add_argument("--allow-unknown", action="store_true",
+                     help="Pozwol zapisac nazwy, ktorych nie ma w dam_assets.updated_by "
+                          "ani dam_index_snapshots.built_by (literowka w nazwie komputera "
+                          "inaczej cicho zablokowalaby publikacje na zawsze)")
     args = ap.parse_args()
 
     machines = [m.strip() for m in args.machines.split(",") if m.strip()]
@@ -47,6 +51,7 @@ def main() -> int:
         return 2
 
     import pg_db  # noqa: PLC0415 - import po ustawieniu sys.path
+    import index_authority  # noqa: PLC0415 - ta sama definicja "znanej maszyny" co status()
 
     pg = pg_db.connect()
     try:
@@ -56,6 +61,22 @@ def main() -> int:
         current_raw = (row.get("value") if hasattr(row, "get") else row[0]) if row else None
         print("Biezaca wartosc dam_meta['index_authority']:")
         print(current_raw if current_raw else "(brak klucza)")
+
+        if not args.allow_unknown:
+            # Wlasne, OSOBNE polaczenie - _known_machines_and_last_publish zamyka
+            # (pg.close()) polaczenie, ktore dostaje; nie wolno mu dac tego samego
+            # `pg`, ktorego main() uzywa pozniej do zapisu.
+            known, _last_built = index_authority._known_machines_and_last_publish(pg_db.connect)
+            if known:  # zapytanie sie udalo - inaczej nie ma jak sprawdzic, nie blokuj na slepo
+                unknown = [m for m in machines if m.strip().casefold() not in known]
+                if unknown:
+                    print(f"\nBlad: nieznane komputery (nie widziane w dam_assets.updated_by "
+                          f"ani dam_index_snapshots.built_by): {unknown}")
+                    print("Uzyj --allow-unknown, jesli to naprawde nowy komputer.")
+                    return 4
+            else:
+                print("\nUwaga: nie udalo sie sprawdzic znanych maszyn (offline?) - "
+                      "kontynuuje bez tej walidacji.")
 
         new_value = {
             "machines": machines,

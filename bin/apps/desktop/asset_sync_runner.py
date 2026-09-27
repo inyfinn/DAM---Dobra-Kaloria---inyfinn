@@ -53,6 +53,20 @@ def _now_ms() -> int:
     return int(time.time() * 1000)
 
 
+def _index_looks_like_rows(index_path: Path) -> bool:
+    """Tania proba (pierwsze 300 bajtow, bez pelnego json.loads - plik bywa
+    >300 MB) - czy branding-index.json wyglada na wynik scalania z wierszy
+    (payload zapisywany nizej: {"version": 1, ..., "source": "rows", ...}), a
+    nie na cos innego (np. legacy skan v2 z build-branding-index.py, nadpisany
+    z zewnatrz miedzy cyklami runnera - patrz incydent 27.09.2026 w run_once)."""
+    try:
+        with index_path.open("rb") as fh:
+            head = fh.read(300)
+    except OSError:
+        return False
+    return b'"version": 1' in head and b'"source": "rows"' in head
+
+
 def _read_json(path: Path) -> Any:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -137,19 +151,40 @@ def _accepts_confirmed_dirs(fn: Callable) -> bool:
     )
 
 
-def _sync_cycle_no_tombstones(pg, local_rows: dict, *, scan: dict | None = None,
-                               scanned_dirs=(), failed_dirs=(), confirmed_dirs=(),
-                               last_seen=None, scan_time_ms: int = 0,
-                               machine: str = "", now_ms: int | None = None) -> dict[str, Any]:
+def _is_allowed_without_authority(op: dict[str, Any]) -> bool:
+    """Faza 3, zadanie 3.3 (utwardzenie 27.09.2026): komputer BEZ uprawnien
+    (index_authority.may_publish() == False) smie wyslac TYLKO:
+      - dodanie pliku, ktorego w bazie nie ma (op=upsert, reason="add"),
+      - zmiane z mtime SCISLE nowszym na zywym wierszu (op=upsert, reason="change").
+    Wszystko inne trafia do potwierdzenia jak tombstone:
+      - tombstone (usuniecie),
+      - restore (op=restore, reason="reappeared" - ten sam plik "wraca" na
+        komputerze, ktory go wczesniej nie widzial),
+      - recreate (op=upsert, reason="recreate" - ponowne utworzenie NA WIERSZU
+        Z TOMBSTONEM; nawet z genialnie nowszym mtime - to wskrzeszenie czegos,
+        co inny komputer uznal za usuniete, decyzja kierownika 27.09 traktuje to
+        jak usuniecie, nie jak zwykla zmiane),
+      - meta (op=upsert, reason="meta" - ten sam mtime, sama zmiana opisu -
+        to NIE jest "zmiana z mtime nowszym", wiec tez jest wstrzymywana).
+    Reason-y sa zdefiniowane w asset_sync.py::diff_scan_report (_op wywolania) -
+    ten plik nie jest modyfikowany, tylko czytany."""
+    reason = op.get("reason")
+    return op.get("op") == "upsert" and reason in ("add", "change")
+
+
+def _sync_cycle_restricted_ops(pg, local_rows: dict, *, scan: dict | None = None,
+                                scanned_dirs=(), failed_dirs=(), confirmed_dirs=(),
+                                last_seen=None, scan_time_ms: int = 0,
+                                machine: str = "", now_ms: int | None = None) -> dict[str, Any]:
     """Ta sama orkiestracja co asset_sync.sync_cycle (pull -> diff -> push -> pull),
     ZLOZONA tu z publicznych funkcji asset_sync.py bez zmiany tego pliku (zakaz
-    kierownika) - jedyna roznica: operacje tombstone sa odfiltrowane PRZED
-    push_ops, bo ten komputer nie ma dzis uprawnien do kasowania we wspolnej
-    bazie (index_authority.may_publish() == False). Upsert/restore ida normalnie.
+    kierownika) - jedyna roznica: operacje spoza _is_allowed_without_authority sa
+    odfiltrowane PRZED push_ops, bo ten komputer nie ma dzis uprawnien do zmiany
+    wspolnej bazy (index_authority.may_publish() == False).
 
-    Odfiltrowane tombstony trafiaja do report["blocked"][NOT_AUTHORITY_BUCKET]
+    Odfiltrowane operacje trafiaja do report["blocked"][NOT_AUTHORITY_BUCKET]
     (istniejacy mechanizm /asset-sync/blocked, ta sama struktura {folder: count}
-    co bezpiecznik 20% w diff_scan_report) - to TYLKO raport dla admina, folder
+    co bezpiecznik 20% w diff_scan_report) - to TYLKO raport dla admina, bucket
     nie odblokuje sie przez confirmed_dirs (to nie jest podejrzany odczyt dysku,
     tylko brak uprawnien - odblokuje go wylacznie zmiana listy w index_authority).
 
@@ -173,8 +208,8 @@ def _sync_cycle_no_tombstones(pg, local_rows: dict, *, scan: dict | None = None,
         last_seen=last_seen, failed_dirs=failed_dirs, confirmed_dirs=confirmed_dirs,
     )
     ops = report["ops"]
-    kept_ops = [op for op in ops if op.get("op") != asset_sync.OP_TOMBSTONE]
-    held_back = [op for op in ops if op.get("op") == asset_sync.OP_TOMBSTONE]
+    kept_ops = [op for op in ops if _is_allowed_without_authority(op)]
+    held_back = [op for op in ops if not _is_allowed_without_authority(op)]
 
     blocked = dict(report.get("blocked") or {})
     if held_back:
@@ -194,6 +229,38 @@ def _sync_cycle_no_tombstones(pg, local_rows: dict, *, scan: dict | None = None,
     else:
         out["error"] = pushed.get("error") or second.get("error", "")
     return out
+
+
+def reset_scan_memory(db_path: str | Path, reason: str) -> dict[str, Any]:
+    """Faza 3, zadanie 3.4 (27.09.2026): wolane po zmianie ROOT (most,
+    switch_root, gdy changed == True - patrz ready diff w raporcie). Czysci
+    last_seen i czas ostatniego skanu (asset_repo.clear_last_seen +
+    STATE_KEY_LAST_SCAN_TIME=0) - lustro wierszy (asset_rows) i rev ZOSTAJA
+    nietkniete. Po resecie pierwszy skan na nowym ROOT zachowuje sie jak
+    pierwszy skan swiezego komputera: nic nie usuwa (last_seen=None wylacza
+    tombstony w diff_scan_report), nic nie przywraca (last_seen=None wylacza
+    tez "reappeared"/restore - patrz asset_sync.py, warunek `seen_before is not
+    None and aid not in seen_before`). Bez tego kazdy plik obecny w nowym ROOT,
+    a nieobecny w last_seen starego ROOT, wygladalby jak "pojawil sie" i mogl
+    przywrocic material, ktory inny komputer uznal za usuniety."""
+    try:
+        import asset_repo  # noqa: PLC0415 - ten sam lazy import co run_once
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": f"asset_repo: {exc}"[:300]}
+    try:
+        conn = sqlite3.connect(str(db_path))
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)[:300]}
+    try:
+        asset_repo.ensure_local(conn)
+        asset_repo.clear_last_seen(conn)
+        asset_repo.set_state(conn, STATE_KEY_LAST_SCAN_TIME, "0")
+        conn.commit()
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)[:300]}
+    finally:
+        conn.close()
+    return {"ok": True, "reason": str(reason)[:200]}
 
 
 def run_once(
@@ -284,7 +351,7 @@ def run_once(
 
         try:
             if did_scan and authority is False:
-                result = _sync_cycle_no_tombstones(pg, rows, **scan_kwargs)
+                result = _sync_cycle_restricted_ops(pg, rows, **scan_kwargs)
             else:
                 result = asset_sync.sync_cycle(pg, rows, **scan_kwargs)
         except Exception as exc:  # noqa: BLE001 - siec/baza - bez zmian lokalnych
@@ -325,7 +392,16 @@ def run_once(
             report.setdefault("warnings", []).append(f"save_rows: {exc}"[:300])
 
         index_path = data_dir / INDEX_NAME
-        should_write_index = changed or not index_path.is_file()
+        # 27.09.2026, incydent: karta produktu pokazywala 0 materialow. Miedzy
+        # cyklami runnera cos (build-branding-index.py, race z watcherem) nadpisalo
+        # branding-index.json legacy skanem (v2) - runner nie odbudowal go z
+        # wierszy, bo `changed` bylo False (zaden NOWY wiersz w tym cyklu). Tania
+        # proba (pierwsze 300 bajtow, bez pelnego json.loads - plik bywa >300 MB):
+        # jesli plik nie wyglada na wynik scalania ("version":1,"source":"rows"),
+        # odbuduj go z aktualnych wierszy NIEZALEZNIE od `changed`.
+        needs_rebuild_wrong_version = index_path.is_file() and not _index_looks_like_rows(index_path)
+        should_write_index = changed or not index_path.is_file() or needs_rebuild_wrong_version
+        report["index_rebuilt_wrong_version"] = needs_rebuild_wrong_version
         if did_scan and not result.get("ok"):
             # 23.09: nieudany PUSH nadpisal wynik buildera wierszami - skan z dysku
             # przepadl i nastepny cykl nie mial czego ponowic. Skan zostaje do ponowienia.

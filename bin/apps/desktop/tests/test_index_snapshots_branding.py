@@ -70,10 +70,17 @@ def _write(path: Path, raw: bytes, mtime: float | None = None) -> bytes:
 
 class SnapshotFilesTests(unittest.TestCase):
     def test_branding_index_w_snapshot_files_i_kolejnosc(self):
+        # Kolejnosc krytyczna TYLKO dla pierwszych trzech (branding-index przed
+        # branding-search-index - patrz komentarz przy SNAPSHOT_FILES). Zadanie
+        # 3.6 (27.09.2026) dopisalo search-index/campaigns NA KONCU - to pliki w
+        # calosci generowane przez build, bez zaleznosci kolejnosci miedzy soba
+        # ani z trojka brandingowa.
         keys = list(ix.SNAPSHOT_FILES.keys())
         self.assertIn("branding-index", keys)
         self.assertEqual(ix.SNAPSHOT_FILES["branding-index"], "branding-index.json")
-        self.assertEqual(keys, ["file-index", "branding-index", "branding-search-index"])
+        self.assertEqual(keys[:3], ["file-index", "branding-index", "branding-search-index"])
+        self.assertEqual(ix.SNAPSHOT_FILES.get("search-index"), "search-index.json")
+        self.assertEqual(ix.SNAPSHOT_FILES.get("campaigns"), "campaigns.json")
 
 
 class LooksCompleteJsonTests(unittest.TestCase):
@@ -124,6 +131,7 @@ class BrandingSnapshotFlowTests(unittest.TestCase):
         raw = _big_json_bytes(60 * 1024 * 1024)
         self.assertGreater(len(raw), 50 * 1024 * 1024)
         _write(self.pc_firmowy / "branding-index.json", raw)
+        ix.mark_built_here("branding-index", self.pc_firmowy / "branding-index.json")
 
         real_loads = json.loads
 
@@ -155,10 +163,12 @@ class BrandingSnapshotFlowTests(unittest.TestCase):
         self._as("pc")
         full = _big_json_bytes(40_000)
         _write(self.pc_firmowy / "file-index.json", full)
+        ix.mark_built_here("file-index", self.pc_firmowy / "file-index.json")
         res = ix.publish_changed(self.pc_firmowy, root_alive=True)
         self.assertIn("file-index", res["published"])
         small = _big_json_bytes(4_000)
         _write(self.pc_firmowy / "file-index.json", small, mtime=time.time() + 5)
+        ix.mark_built_here("file-index", self.pc_firmowy / "file-index.json")
         res2 = ix.publish_changed(self.pc_firmowy, root_alive=True)
         self.assertNotIn("file-index", res2["published"])
         self.assertEqual(res2["refused_shrink"][0]["key"], "file-index")
@@ -170,6 +180,7 @@ class BrandingSnapshotFlowTests(unittest.TestCase):
         self._as("pc")
         raw = _big_json_bytes(4000)  # maly plik (> MIN_BYTES) wystarczy do sprawdzenia przeplywu
         _write(self.pc_firmowy / "branding-index.json", raw)
+        ix.mark_built_here("branding-index", self.pc_firmowy / "branding-index.json")
         res_pub = ix.publish_changed(self.pc_firmowy, root_alive=True)
         self.assertIn("branding-index", res_pub["published"])
 

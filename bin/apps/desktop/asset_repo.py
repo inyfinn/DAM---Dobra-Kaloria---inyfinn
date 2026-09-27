@@ -136,6 +136,22 @@ def save_last_seen(conn: sqlite3.Connection, ids: Iterable[str]) -> None:
     set_state(conn, "last_seen", json.dumps(sorted(str(i) for i in ids), ensure_ascii=False))
 
 
+def clear_last_seen(conn: sqlite3.Connection) -> None:
+    """Faza 3, zadanie 3.4 (27.09.2026): usuwa 'last_seen' (pliki widziane przez
+    TEN komputer w poprzednim skanie). Lustro wierszy (asset_rows) i rev NIE sa
+    ruszane - to tylko pamiec "co komputer juz widzial", nie kopia danych.
+
+    Wolane przy zmianie ROOT (asset_sync_runner.reset_scan_memory): po
+    przelaczeniu na inna kopie kazdy plik obecny w NOWYM ROOT, a nieobecny w
+    STARYM last_seen, wygladalby jak "pojawil sie" i (przy tombstone gdzie
+    indziej) przywracal material uznany za usuniety. Po czyszczeniu
+    load_last_seen() znow zwraca None (jak swiezy komputer) - pierwszy kolejny
+    skan nic nie usuwa i nic nie przywraca (asset_sync.diff_scan_report:
+    last_seen=None wylacza tombstony i "reappeared", patrz tam)."""
+    with conn:
+        conn.execute("DELETE FROM asset_sync_state WHERE key = 'last_seen'")
+
+
 def get_pg_rev(conn: sqlite3.Connection) -> int:
     try:
         return int(get_state(conn, "pg_rev", "0") or 0)

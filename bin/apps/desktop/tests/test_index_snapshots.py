@@ -84,6 +84,7 @@ class SnapshotTests(unittest.TestCase):
     def test_pc_z_folderem_publikuje_laptop_pobiera(self):
         self._as("pc")
         fresh = _write(self.pc_firmowy / "branding-search-index.json", {"skan": "22.09"})
+        ix.mark_built_here("branding-search-index", self.pc_firmowy / "branding-search-index.json")
         res = ix.publish_changed(self.pc_firmowy, root_alive=True)
         self.assertEqual(res["published"], ["branding-search-index"])
 
@@ -107,6 +108,7 @@ class SnapshotTests(unittest.TestCase):
     def test_pobrany_skan_nie_wraca_do_bazy(self):
         self._as("pc")
         _write(self.pc_firmowy / "file-index.json", {"v": 1})
+        ix.mark_built_here("file-index", self.pc_firmowy / "file-index.json")
         ix.publish_changed(self.pc_firmowy, root_alive=True)
         gen = self.db.rows["file-index"]["generation"]
         self._as("laptop")
@@ -119,6 +121,7 @@ class SnapshotTests(unittest.TestCase):
     def test_druga_proba_nie_pobiera_ponownie(self):
         self._as("pc")
         _write(self.pc_firmowy / "file-index.json", {"v": 2})
+        ix.mark_built_here("file-index", self.pc_firmowy / "file-index.json")
         ix.publish_changed(self.pc_firmowy, root_alive=True)
         self._as("laptop")
         ix.pull_newer(self.laptop, root_alive=False)
@@ -128,11 +131,13 @@ class SnapshotTests(unittest.TestCase):
     def test_komputer_z_folderem_nie_bierze_starszego(self):
         self._as("pc")
         _write(self.pc_firmowy / "file-index.json", {"v": "z bazy"}, mtime=time.time() - 3600)
+        ix.mark_built_here("file-index", self.pc_firmowy / "file-index.json")
         ix.publish_changed(self.pc_firmowy, root_alive=True)
         self._as("pc2")
         pc2 = self.base / "pc2" / "data"
         pc2.mkdir(parents=True)
         mine = _write(pc2 / "file-index.json", {"v": "swiezy lokalny"})
+        ix.mark_built_here("file-index", pc2 / "file-index.json")
         res = ix.pull_newer(pc2, root_alive=True)
         self.assertEqual(res["pulled"], [])
         self.assertEqual((pc2 / "file-index.json").read_bytes(), mine)
@@ -140,6 +145,7 @@ class SnapshotTests(unittest.TestCase):
     def test_rozdarty_plik_nie_idzie_do_bazy(self):
         self._as("pc")
         (self.pc_firmowy / "file-index.json").write_bytes(b'{"urwany": ' + b"x" * 2000)
+        ix.mark_built_here("file-index", self.pc_firmowy / "file-index.json")
         res = ix.publish_changed(self.pc_firmowy, root_alive=True)
         self.assertFalse(res["ok"])
         self.assertEqual(self.db.rows, {})
