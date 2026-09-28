@@ -587,6 +587,16 @@ class CanonicalMetaAcrossRootsTests(unittest.TestCase):
                                  {"name": "b", "path": "M:/- POLSKA/x/b.png"}]}
         self.assertEqual(asset_sync.normalize_meta(a), asset_sync.normalize_meta(b))
 
+    def test_root_inside_search_blob_is_ignored(self):
+        """28.09: search_blob ma sciezke z ROOT budujacego - 33 723 falszywe "meta"."""
+        a = {"search_blob": "plik.tif m:/- polska/01 - produkty/plik.tif dk raster"}
+        b = {"search_blob": "plik.tif c:/marketing/- polska/01 - produkty/plik.tif dk raster"}
+        c = {"search_blob": "plik.tif /volumes/marketing/- polska/01 - produkty/plik.tif dk raster"}
+        self.assertEqual(asset_sync.normalize_meta(a), asset_sync.normalize_meta(b))
+        self.assertEqual(asset_sync.normalize_meta(a), asset_sync.normalize_meta(c))
+        self.assertNotEqual(asset_sync.normalize_meta(a),
+                            asset_sync.normalize_meta({"search_blob": "plik.tif m:/- polska/inny.tif"}))
+
     def test_linked_product_order_is_a_real_change(self):
         a = {"linked_product_ids": ["p1", "p2"]}
         b = {"linked_product_ids": ["p2", "p1"]}

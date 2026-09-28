@@ -1,7 +1,7 @@
 # Postęp prac DAM - Faza 3 „ten sam obraz na każdym komputerze”
 
-Stan na 2026-09-28, 12:00 (KRZYSZTOFWI). Wydanie: **2.4.4**
-(https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v2.4.4).
+Stan na 2026-09-28, 12:00 (KRZYSZTOFWI). Wydanie: **2.4.5**
+(https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v2.4.5).
 Szczegóły techniczne i pomiary: `bin/docs/PLAN-jedno-zrodlo-prawdy.md`, sekcja „Faza 3”.
 Materiały z debaty kierowników 28.09: `%LOCALAPPDATA%\DAM-repair\kierownicy\` (A-propozycja, B-krytyka, B-przeglad).
 
@@ -19,7 +19,13 @@ Materiały z debaty kierowników 28.09: `%LOCALAPPDATA%\DAM-repair\kierownicy\` 
 
 Testy przy wydaniu: 617 Python desktop OK, wszystkie `test_*.js` OK, `tests-touch-guard.py` OK.
 
-## 28.09 - otwarte po 2.4.4
+## 28.09 - 2.4.5 (poprawka po pomiarze)
+
+Pomiar na pełnym zbiorze (61 832 wiersze w bazie, skan 57 803) pokazał po 2.4.4 **33 723 fałszywe operacje „meta”**: `search_blob` i ścieżki w meta zawierają ROOT komputera, który zbudował indeks. Komputer **KINGAUR** (ROOT `C:\Marketing`) zapisał dziś 37 062 wierszy z `c:/marketing/...`, a KRZYSZTOFWI (ROOT `M:\`) nadpisywał je z `m:/...` - ping-pong na żywo. 2.4.5: porównanie usuwa prefiks ROOT także w środku tekstu (Windows, UNC, /Volumes, /mnt, /media). Po poprawce: 2 892 operacje - prawdziwe różnice zawartości folderów (listy plików edytowalnych, pliki `._`, nowe pliki) i 89 nowych plików. Czas porównania pełnego zbioru: ok. 20 s na cykl ze skanem (raz na przebudowę Brandingu).
+
+Instalacja 2.4.4/2.4.5 na aplikacji KRZYSZTOFWI: zablokowana przez klasyfikator (instalator zatrzymuje działający most) - do zrobienia przez użytkownika banerem „Zainstaluj”. **Na KINGAUR też trzeba zainstalować 2.4.5**, inaczej ping-pong trwa od jego strony.
+
+## 28.09 - otwarte po 2.4.5
 
 - **Dowód z aktywowanej czystej instalacji** wymaga kodu aktywacyjnego od admina (kopiowania poświadczeń bazy z tej instalacji odmówiono - słusznie). Alternatywa: zaktualizować aplikację na tym komputerze do 2.4.4 banerem i sprawdzić Figę/miniatury ponownie.
 - **Stare klienty (<= 2.4.3) z ROOT nadal wyślą co cykl materiały z odwróconą kolejnością list** - do czasu aktualizacji do 2.4.4 (nowy klient nie odpowiada na ich zapis, więc pętla nie rośnie).

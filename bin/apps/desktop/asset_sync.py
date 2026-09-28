@@ -217,6 +217,10 @@ def _content_differs(entry: dict, prev: dict) -> bool:
 # dam-branding.js) - porownywane w kolejnosci, bez sortowania.
 _ORDERED_META_LISTS = frozenset({"linked_product_ids", "folder_linked_product_ids"})
 _ABS_PATH_RE = re.compile(r"^(?:[A-Za-z]:[\\/]|\\\\|//|/volumes/|/mnt/|/media/)", re.IGNORECASE)
+_ROOT_IN_TEXT_RE = re.compile(
+    r"(?<![A-Za-z0-9])[A-Za-z]:[\\/]+(?:marketing[\\/]+)?|(?:/volumes|/mnt|/media)/[^/\s]+/(?:marketing/)?",
+    re.IGNORECASE,
+)
 
 
 def _canonical_json(v: Any, key: str = "") -> Any:
@@ -238,6 +242,11 @@ def _canonical_json(v: Any, key: str = "") -> Any:
         return items
     if isinstance(v, str) and _ABS_PATH_RE.match(v):
         return key_of(v)
+    if isinstance(v, str) and ("/" in v or "\\" in v):
+        # search_blob i podobne teksty maja sciezke z ROOT komputera, ktory budowal
+        # indeks, w srodku tekstu ("... m:/- polska/..." vs "... c:/marketing/- polska/...").
+        # 28.09: 33 723 falszywe operacje "meta" miedzy komputerami z roznym ROOT.
+        return _ROOT_IN_TEXT_RE.sub("", v)
     return v
 
 
