@@ -14,8 +14,8 @@ wszystko robi Claude). Decyzje wykonawcze: `work\kierownicy\2026-09-28b\DECYZJE.
 | 1 | 4.2 przepychanka M/X, listy wariantów liczone ze wspólnego katalogu | zrobione w kodzie (`e45615fd`), jw. |
 | 2 | 5 przełączanie ROOT (numer generacji, `/Volumes`, UNC, dostępność) | zrobione w kodzie (`2a738de3`), dostępność 359 ms; zrzut UI - przy teście instalacji |
 | - | Instalator: stare foldery DAM do Kosza, deinstalacja sprząta, bez zabijania nowego DAM | zrobione w skrypcie (`3732cced`, `ac89e199`), testy piaskownicy OK; pełny test instalacji - przy wydaniu |
-| 3 | Jeden katalog dla wszystkich paneli: właściciel katalogu = `index_authority` (na start KRZYSZTOFWI z M:), bramka w bazie działa też na stare wersje, klient bez uprawnień bierze wersję z bazy, sprawdzanie zmian co ~30 s | decyzja: ADR-012 (`25ca6493`); wdrożenie i testy na `dam_eta_test`: w toku (W5) |
-| 4 | Podglądy: jeden magazyn, stany gotowy/czeka/błąd | po kroku 3 |
+| 3 | Jeden katalog dla wszystkich paneli: właściciel katalogu = `index_authority` (KRZYSZTOFWI z M:), bramka w bazie działa też na stare wersje, klient bez uprawnień bierze wersję z bazy, zmiany co 30 s | **włączone na produkcji 28.09 ~15:50** (kopia przed: `dam_eta-przed-bramka.dump`); kod `2c538c07`, testy PG 22/22; wycofanie: `work/2026-09-28/W5/rollback-production.sql` (pusta lista + DISABLE TRIGGER) |
+| 4 | Podglądy: stany gotowy/czeka/błąd/format bez podglądu, `/preview/status`, opis na karcie | zrobione (`0833cbd9`, `35195626`); pokrycie produkcji (grid): 24 361 gotowe / 23 778 czekają / 13 506 bez podglądu - uzupełnianie brakujących z M: porcjami: do zrobienia po instalacji 2.4.6 |
 | 5 | Test 3 izolowanych instancji A/B/C na tym PC + test paczki | po krokach 1-4 |
 | 6 | Porządek (21 GB) i wydanie 2.4.6 | na końcu |
 
