@@ -9,18 +9,18 @@ wszystko robi Claude). Decyzje wykonawcze: `work\kierownicy\2026-09-28b\DECYZJE.
 
 | Krok | Co | Stan (28.09) |
 |---|---|---|
-| 0 | Mapa kto zapisuje / kto czyta, testowa baza PostgreSQL na tym PC (`D:\DAM-lokalne`, poza Synology Drive), kopie SQLite | w toku (W1, mapa) |
-| 1 | 4.1 starsza kopia kasuje nowszy plik | w toku (W2): test najpierw czerwony, potem naprawa |
-| 1 | 4.2 przepychanka M/X, listy wariantów liczone ze wspólnego katalogu | w toku (W2) |
-| 2 | 5 przełączanie ROOT (numer generacji, `/Volumes`, UNC, dostępność) | w toku (W3) |
-| - | Instalator: stare foldery DAM do Kosza, deinstalacja sprząta, bez zabijania nowego DAM | w toku (W4), dzisiejsze zmiany .iss/.ps1 NIE w commicie do czasu testów |
+| 0 | Mapa kto zapisuje / kto czyta; kopie SQLite (8/8 OK, `D:\DAM-lokalneackup`); izolacja testów od bazy produkcyjnej | kopie i izolacja: zrobione (`5db5aea7`); mapa: w toku; kopia produkcji (pg_dump): zablokowana przez klasyfikator |
+| 1 | 4.1 starsza kopia kasuje nowszy plik | zrobione w kodzie (`e45615fd`), testy czerwone na 2.4.5 / zielone teraz, na atrapie bazy |
+| 1 | 4.2 przepychanka M/X, listy wariantów liczone ze wspólnego katalogu | zrobione w kodzie (`e45615fd`), jw. |
+| 2 | 5 przełączanie ROOT (numer generacji, `/Volumes`, UNC, dostępność) | zrobione w kodzie (`2a738de3`), dostępność 359 ms; zrzut UI - przy teście instalacji |
+| - | Instalator: stare foldery DAM do Kosza, deinstalacja sprząta, bez zabijania nowego DAM | zrobione w skrypcie (`3732cced`, `ac89e199`), testy piaskownicy OK; pełny test instalacji - przy wydaniu |
 | 3 | Jeden katalog dla wszystkich paneli (panele z bazy, nie z lokalnych JSON; jeden indeksator) | po krokach 1-2 |
 | 4 | Podglądy: jeden magazyn, stany gotowy/czeka/błąd | po kroku 3 |
 | 5 | Test 3 izolowanych instancji A/B/C na tym PC + test paczki | po krokach 1-4 |
 | 6 | Porządek (21 GB) i wydanie 2.4.6 | na końcu |
 
 Ograniczenia dowodu (stan 28.09): odczyt i kopia produkcyjnej bazy zablokowane przez
-klasyfikator Claude Code - testy na lokalnym testowym PostgreSQL i danych syntetycznych.
+klasyfikator Claude Code (odczyt faktów działa); lokalnej bazy testowej nie stawiamy (decyzja właściciela), bazy testowej na NAS też (klasyfikator) - testy na atrapie, integracja z prawdziwym PG niewykonana. Pełny zestaw: 683 testy Python + 27 JS OK. Przy okazji: test `test_index_assoc_backend` uruchamiał prawdziwą przebudowę Brandingu jako sierotę (błąd od 2.4.5) - naprawione (`6a7f1fd2`).
 
 Stan na 2026-09-28, 12:00 (KRZYSZTOFWI). Wydanie: **2.4.5**
 (https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v2.4.5).
