@@ -29,10 +29,12 @@ $env:GOOS = "windows"
 $env:GOARCH = "amd64"
 
 # X:/OneDrive: DAM.exe bywa placeholderem (attrib A O P) - build na lokalny dysk, potem kopia.
-$outLocalDir = Join-Path $env:LOCALAPPDATA "DAM\build"
+# 28.09: korzen repo = tylko to, co sledzi git + work\ (polecenie wlasciciela) - DAM.exe
+# jest wynikiem budowania, wiec lezy w work\build (nie w korzeniu, nie w %LOCALAPPDATA%).
+$outLocalDir = Join-Path $GitRoot "work\build\go-out"
 New-Item -ItemType Directory -Force -Path $outLocalDir | Out-Null
 $outLocal = Join-Path $outLocalDir "DAM.exe"
-$outExe = Join-Path $GitRoot "DAM.exe"
+$outExe = Join-Path $GitRoot "work\build\DAM.exe"
 $bootstrapDir = Join-Path $BinRoot "apps\desktop\bootstrap"
 if (-not (Test-Path -LiteralPath $bootstrapDir)) {
   throw "Brak $bootstrapDir"

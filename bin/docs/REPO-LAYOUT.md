@@ -1,4 +1,14 @@
-# Uklad repo (od porzadkowania 2026-09-27)
+# Uklad repo (od porzadkowania 2026-09-27, aktualizacja 2026-09-28)
+
+**Obowiazuje od 2026-09-28 (polecenie wlasciciela): korzen repo = to, co sledzi git
+(`bin\`, `.github\`, `.cursor\`, `.gitignore`, `.gitattributes`, `.gitleaks.toml`, `CLAUDE.md`,
+`*.code-workspace`) + `.git\`, `.claude\` i `work\`. Nic wiecej.** `DAM.exe` jest wynikiem
+budowania i lezy w `work\build\DAM.exe` (skrypty `build-dam-root-exe.ps1`,
+`build-installer.ps1`, `prepare-clean-build.ps1` czytaja/pisza tam). Aplikacje uruchamia sie z
+instalacji, nie dwuklikiem w korzeniu repo. W `bin\` tylko pliki projektu i celowo nieśledzone
+skladniki aplikacji (`runtime\`, `secrets\`, `PAMIEC-PODRECZNA\`, `design-system\`,
+`DATABASE\dam-local.sqlite`). Uklad i zawartosc `work\`: `work\README.md`. Ponizej opis z 27.09
+(czesc o `DAM.exe`, `URUCHOM-DAM.bat`, `POPRAWKI.md` w korzeniu jest nieaktualna).
 
 - **Korzen repo** (`ROOT`): `DAM.exe` (launcher), `bin\` (patrz nizej),
   `work\` (wewnatrz repo na dysku, ale poza gitem - patrz `work\README.md`

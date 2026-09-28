@@ -158,7 +158,9 @@ if ($rtSiteCount -lt 500) {
 if ($LASTEXITCODE -ne 0) { throw "Runtime bez bibliotek ($rtModules). Setup NIE moze wyjechac." }
 Write-Host "Runtime OK: $rtSiteCount plikow w site-packages."
 
-if ($SkipExeBuild -and (Test-Path (Join-Path $GitRoot "DAM.exe"))) {
+# DAM.exe = wynik budowania w work\build (28.09: korzen repo tylko git + work).
+$damBuilt = Join-Path $GitRoot "work\build\DAM.exe"
+if ($SkipExeBuild -and (Test-Path -LiteralPath $damBuilt)) {
   Write-Host "Skip DAM.exe build."
 } else {
   & (Join-Path $BinRoot "scripts\ops\build-dam-root-exe.ps1")
@@ -177,7 +179,7 @@ $oldStages = @(Get-ChildItem -LiteralPath (Split-Path $stageRoot -Parent) -Direc
 if ($oldStages.Count) {
   Write-Host ("Stare katalogi staging do recznego usuniecia: " + (($oldStages | ForEach-Object { $_.FullName }) -join "; "))
 }
-$damSrc = Join-Path $GitRoot "DAM.exe"
+$damSrc = $damBuilt
 $damDst = Join-Path $stageRoot "DAM.exe"
 $damReadable = $false
 if (Test-Path -LiteralPath $damSrc) {

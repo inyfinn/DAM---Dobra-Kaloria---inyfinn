@@ -87,12 +87,13 @@ Copy-GitignoredTree "bin\PAMIEC-PODRECZNA" "bin\PAMIEC-PODRECZNA" @() @("*_Confl
 Copy-GitignoredTree "bin\installer\redist" "bin\installer\redist" @() @()
 Copy-GitignoredTree "work\tooling\go" "work\tooling\go" @() @()
 
-$damSrc = Join-Path $GitRoot "DAM.exe"
+$damSrc = Join-Path $GitRoot "work\build\DAM.exe"
 if (Test-Path -LiteralPath $damSrc) {
-  Copy-Item -LiteralPath $damSrc -Destination (Join-Path $dst "DAM.exe") -Force
+  New-Item -ItemType Directory -Force -Path (Join-Path $dst "work\build") | Out-Null
+  Copy-Item -LiteralPath $damSrc -Destination (Join-Path $dst "work\build\DAM.exe") -Force
   Write-Host "Skopiowano DAM.exe (build-installer.ps1 -SkipExeBuild moglby go uzyc jesli aktualny; domyslnie i tak przebuduje z work\tooling\go)."
 } else {
-  Write-Warning "Brak GIT_ROOT\DAM.exe - build-dam-root-exe.ps1 zbuduje go od nowa z work\tooling\go\bin\go.exe."
+  Write-Warning "Brak work\build\DAM.exe - build-dam-root-exe.ps1 zbuduje go od nowa z work\tooling\go\bin\go.exe."
 }
 
 # Pliki indeksow, ktorych build potrzebuje, a nie ma ich w commicie (zywy stan
