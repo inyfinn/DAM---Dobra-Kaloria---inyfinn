@@ -2474,6 +2474,9 @@ def _schedule_slim_grid_publish(delay_sec: float | None = None) -> None:
 # powinien od razu isc do scalania, nie czekac az 10 minut watku).
 # --------------------------------------------------------------------------
 _ASSET_SYNC_INTERVAL_S = 600.0
+# ADR-012 pkt 4: co tyle sekund tani odczyt max(rev) z dam_assets; pelny cykl
+# (run_asset_sync_once) od razu przy zmianie w bazie, inaczej co _ASSET_SYNC_INTERVAL_S.
+_ASSET_SYNC_LIGHT_CHECK_S = 30.0
 _asset_sync_lock = threading.Lock()
 _asset_sync_thread: threading.Thread | None = None
 _asset_sync_wake = threading.Event()
@@ -2588,12 +2591,27 @@ def start_asset_sync_watch() -> dict[str, Any]:
 
         def _loop() -> None:
             _asset_sync_wake.wait(15.0)  # po starcie mostu: najpierw UI, potem siec
+            try:  # bez LightWatch (import sie nie udal) - dawna petla co _ASSET_SYNC_INTERVAL_S
+                import asset_sync_runner as _asr
+                import pg_db as _pg
+
+                watch = _asr.LightWatch(_ASSET_SYNC_INTERVAL_S,
+                                        lambda: _asr.remote_max_rev(_pg.connect))
+            except Exception:  # noqa: BLE001
+                watch = None
             while True:
                 try:
-                    run_asset_sync_once()
+                    if watch is None or watch.due():
+                        report = None
+                        try:
+                            report = run_asset_sync_once()
+                        finally:
+                            if watch is not None:
+                                watch.done((report or {}).get("max_rev"))
                 except Exception as exc:  # noqa: BLE001
                     print("asset_sync_runner:", exc)
-                _asset_sync_wake.wait(_ASSET_SYNC_INTERVAL_S)
+                _asset_sync_wake.wait(_ASSET_SYNC_LIGHT_CHECK_S if watch is not None
+                                      else _ASSET_SYNC_INTERVAL_S)
                 _asset_sync_wake.clear()
 
         _asset_sync_thread = threading.Thread(target=_loop, daemon=True, name="dam-asset-sync")

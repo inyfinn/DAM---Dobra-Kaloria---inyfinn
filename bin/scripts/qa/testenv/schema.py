@@ -81,6 +81,10 @@ def apply_schema(conn) -> dict:
     # 3) assoc_sync._ensure_pg(pg) - funkcja aplikacji (prywatna, ale realna).
     import assoc_sync
 
+    # _ensure_pg pamieta "juz zrobione" w globalnej fladze na caly proces - bez
+    # zerowania drugi i kolejny swiezy schemat (realpg.fresh_db) w tym samym
+    # procesie nie dostawal dam_meta ani reszty _PG_SQL (znalezione przez W5, 28.09).
+    assoc_sync._pg_ready = False
     try:
         assoc_sync._ensure_pg(conn)
         steps.append({"step": "assoc_sync._ensure_pg", "ok": True})

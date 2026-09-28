@@ -198,9 +198,119 @@ def _is_allowed_without_authority(op: dict[str, Any]) -> bool:
       - meta (op=upsert, reason="meta" - ten sam mtime, sama zmiana opisu -
         to NIE jest "zmiana z mtime nowszym", wiec tez jest wstrzymywana).
     Reason-y sa zdefiniowane w asset_sync.py::diff_scan_report (_op wywolania) -
-    ten plik nie jest modyfikowany, tylko czytany."""
+    ten plik nie jest modyfikowany, tylko czytany.
+
+    ADR-012 (28.09): reason="change" obejmuje w diff_scan_report takze ten sam
+    mtime z innym rozmiarem/skrotem - bramka w bazie (sql/authority_gate.sql)
+    przepuszcza od maszyny spoza listy tylko mtime SCISLE nowszy, wiec taka
+    operacja tez jest wstrzymywana tutaj (inaczej baza pomijalaby ja w kazdym
+    cyklu, a obserwacja bylaby zuzyta jak po udanym zapisie)."""
     reason = op.get("reason")
-    return op.get("op") == "upsert" and reason in ("add", "change")
+    if op.get("op") != "upsert" or reason not in ("add", "change"):
+        return False
+    if reason == "change" and "mtime_ms" in op and "base_mtime_ms" in op:
+        try:
+            return int(op.get("mtime_ms") or 0) > int(op.get("base_mtime_ms") or 0)
+        except (TypeError, ValueError):
+            return False
+    return True
+
+
+def _keep_prior_observations(nls: dict, ids, last_seen: Any) -> None:
+    """Operacja wstrzymana / pominieta przez bramke nie "zuzywa" obserwacji: zostaje
+    poprzednia (albo zadna), zeby po nadaniu uprawnien zostala wykryta ponownie."""
+    import asset_sync  # noqa: PLC0415
+
+    before = asset_sync.observations(last_seen) or {}
+    for aid in ids:
+        if aid in before:
+            nls[aid] = dict(before[aid])
+        else:
+            nls.pop(aid, None)
+
+
+def _refused_held_ids(result: dict) -> list[str]:
+    """asset_id operacji spoza _is_allowed_without_authority, ktorych baza nie
+    zastosowala (push_ops: applied False). Dotyczy tombstone, restore, recreate,
+    meta i "change" bez nowszego mtime - to, co bramka ADR-012 pomija."""
+    ops = ((result or {}).get("report") or {}).get("ops") or []
+    results = ((result or {}).get("push") or {}).get("results") or []
+    refused = {r.get("asset_id") for r in results if not r.get("applied")}
+    if not refused:
+        return []
+    return [op.get("asset_id") for op in ops
+            if op.get("asset_id") in refused and not _is_allowed_without_authority(op)]
+
+
+def remote_max_rev(pg_connect: Callable[[], Any]) -> int | None:
+    """ADR-012 pkt 4: tani odczyt max(rev) z dam_assets (indeks dam_assets_rev_idx).
+    None = odczyt sie nie udal (siec, brak tabeli) - wolajacy czeka na zwykly cykl."""
+    try:
+        pg = pg_connect()
+    except Exception:  # noqa: BLE001
+        return None
+    try:
+        cur = pg.cursor()
+        cur.execute("SELECT COALESCE(MAX(rev), 0) AS m FROM dam_assets")
+        row = cur.fetchone()
+        try:
+            pg.rollback()
+        except Exception:  # noqa: BLE001
+            pass
+        if row is None:
+            return None
+        return int(row["m"] if hasattr(row, "keys") else row[0])
+    except Exception:  # noqa: BLE001
+        return None
+    finally:
+        try:
+            pg.close()
+        except Exception:  # noqa: BLE001
+            pass
+
+
+class LightWatch:
+    """ADR-012 pkt 4: kiedy uruchomic pelny cykl, gdy petla budzi sie co kilkadziesiat
+    sekund. Pelny cykl: pierwszy raz, co `full_interval_s` (jak dotad) albo od razu,
+    gdy tani odczyt (`probe`: max(rev) / generacje migawek) zwrocil inna wartosc niz
+    ostatnio przetworzona. Blad odczytu (None) nie wyzwala cyklu - czeka na interwal."""
+
+    def __init__(self, full_interval_s: float, probe: Callable[[], Any], *,
+                 clock: Callable[[], float] = time.monotonic):
+        self.full_interval_s = float(full_interval_s)
+        self.probe = probe
+        self.clock = clock
+        self.last_full_at: float | None = None
+        self.seen: Any = None
+        self.reason = ""
+        self._probed: Any = None
+
+    def due(self) -> bool:
+        try:
+            value = self.probe()
+        except Exception:  # noqa: BLE001
+            value = None
+        self._probed = value
+        now = self.clock()
+        if self.last_full_at is None:
+            self.reason = "first"
+        elif now - self.last_full_at >= self.full_interval_s:
+            self.reason = "interval"
+        elif value is not None and value != self.seen:
+            self.reason = "remote_changed"
+        else:
+            self.reason = "probe_failed" if value is None else "unchanged"
+            return False
+        return True
+
+    def done(self, seen: Any = None) -> None:
+        """Po pelnym cyklu. `seen` = stan faktycznie przetworzony (np. max_rev lustra
+        po cyklu); bez niego - wartosc odczytana PRZED cyklem (zmiana w trakcie cyklu
+        zostanie wykryta przy nastepnym sprawdzeniu, nie zgubiona)."""
+        self.last_full_at = self.clock()
+        value = seen if seen is not None else self._probed
+        if value is not None:
+            self.seen = value
 
 
 def _sync_cycle_restricted_ops(pg, local_rows: dict, *, scan: dict | None = None,
@@ -264,12 +374,7 @@ def _sync_cycle_restricted_ops(pg, local_rows: dict, *, scan: dict | None = None
             # 28.09 (W2): wstrzymana operacja nie "zuzywa" obserwacji - zostaje
             # poprzednia, zeby po nadaniu uprawnien zmiana (np. samego opisu)
             # zostala wykryta ponownie, a nie uznana za juz wyslana.
-            before = asset_sync.observations(last_seen) or {}
-            for aid in held_ids:
-                if aid in before:
-                    nls[aid] = dict(before[aid])
-                else:
-                    nls.pop(aid, None)
+            _keep_prior_observations(nls, held_ids, last_seen)
         out["next_last_seen"] = asset_sync.stamp_observed_rev(
             nls, out["rows"], [aid for aid in scan if aid not in held_ids])
     else:
@@ -422,12 +527,43 @@ def run_once(
         except Exception as exc:  # noqa: BLE001 - siec/baza - bez zmian lokalnych
             return {"ok": False, "error": f"sync_cycle: {exc}"[:300], "mode": "rows"}
 
+        # ADR-012 (runda 2): bramka w bazie POMIJA operacje spoza uprawnien bez bledu
+        # (wyzwalacz RETURN NULL -> push_ops liczy je jako "refused", jak odmowy WHERE).
+        # Gdy ten komputer nie jest wlascicielem, a lokalna decyzja may_publish byla
+        # nieaktualna (cache 60 s) albo klucza jeszcze nie znal, sync_cycle "zuzylby"
+        # obserwacje pominietych operacji (tombstone: znika wpis zniknietego pliku,
+        # restore/meta: nowa obserwacja). Odswiez decyzje i - jesli False - przywroc
+        # poprzednie obserwacje tych plikow, jak robi _sync_cycle_restricted_ops.
+        # Nastepny cykl idzie juz sciezka z filtrem (nic nie wysyla, bez petli).
+        refused_held = _refused_held_ids(result) if did_scan and authority is not False else []
+        if refused_held and result.get("ok"):
+            try:
+                import index_authority
+
+                authority = index_authority.may_publish(pg_connect, force=True)
+            except Exception:  # noqa: BLE001
+                pass
+            if authority is False:
+                nls = result.get("next_last_seen")
+                if isinstance(nls, dict):
+                    _keep_prior_observations(nls, refused_held, scan_kwargs.get("last_seen"))
+                rep = result.get("report")
+                if isinstance(rep, dict):
+                    blocked = dict(rep.get("blocked") or {})
+                    blocked[NOT_AUTHORITY_BUCKET] = blocked.get(NOT_AUTHORITY_BUCKET, 0) + len(refused_held)
+                    rep["blocked"] = blocked
+                    rep["not_authority_held"] = len(refused_held)
+                print(f"asset_sync_runner: {len(refused_held)} operacji pominietych przez baze "
+                      "(not_authority) - obserwacje zachowane", flush=True)
+
         report: dict[str, Any] = {"ok": bool(result.get("ok")), "mode": "rows",
                                    "pulled": result.get("pulled"), "push": result.get("push"),
                                    "did_scan": did_scan, "authority": authority,
                                    "observations": seen_state.get("source"),
                                    "root_gen_changed": root_gen_changed,
                                    "manifest_root_mismatch": manifest_root_mismatch}
+        if refused_held and authority is False:
+            report["not_authority_refused"] = len(refused_held)
         diff_report = result.get("report") or {}
         if "conflicts" in diff_report:
             report["conflicts"] = diff_report.get("conflicts")
@@ -437,6 +573,7 @@ def run_once(
             new_rows = rows
         changed_ids = [aid for aid, row in new_rows.items() if rows.get(aid) != row]
         changed = bool(changed_ids)
+        report["max_rev"] = asset_sync.max_rev(new_rows)  # dla LightWatch.done()
 
         if result.get("ok"):
             if did_scan and result.get("next_last_seen") is not None:

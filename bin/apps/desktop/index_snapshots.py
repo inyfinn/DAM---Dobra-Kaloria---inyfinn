@@ -9,8 +9,9 @@ skanu na komputerze, ktory zbudowal instalator (u uzytkownika: skan z 14.09).
 Model:
   * komputer Z folderem Marketing po przebudowie skanu publikuje go do bazy
     (tabela dam_index_snapshots, gzip, ~5 MB na trzy pliki);
-  * kazdy inny komputer co 10 min sprawdza generacje (bez pobierania tresci) i sciaga
-    tylko nowsza; plik lokalny zostaje kopia na czas, gdy bazy nie ma;
+  * kazdy inny komputer co 30 s sprawdza generacje (bez pobierania tresci; ADR-012
+    pkt 4, dawniej co 10 min) i sciaga tylko nowsza; plik lokalny zostaje kopia na
+    czas, gdy bazy nie ma;
   * tresc sciagnieta z bazy nigdy nie jest odsylana z powrotem (pulled_sha).
 
 Zadna funkcja nie rzuca wyjatkiem na zewnatrz.
@@ -52,7 +53,13 @@ SNAPSHOT_FILES = {
     "campaigns": "campaigns.json",
 }
 MIN_BYTES = 1024
+# Pelny cykl (pull_newer + publish_changed) co najmniej raz na REFRESH_S; miedzy nimi
+# ADR-012 pkt 4: co LIGHT_CHECK_S tani odczyt generacji (index_snapshot_meta, bez
+# payload) - pelny cykl od razu, gdy w bazie jest nowa generacja.
 REFRESH_S = 600.0
+LIGHT_CHECK_S = 30.0
+# Przedrostek komunikatu bramki w bazie (bin/apps/desktop/sql/authority_gate.sql).
+NOT_AUTHORITY_MARK = "dam_not_authority:"
 # Publikacja odmawia pliku mniejszego niz 80% wersji w bazie (niepelny skan; 23.09
 # branding-index spadl z 265 do 151 MB = 57% - prog 50% by go przepuscil).
 SHRINK_GUARD = 0.8
@@ -78,6 +85,24 @@ _LAST: dict[str, Any] = {}
 # Faza 3 (PLAN-jedno-zrodlo-prawdy.md, zadanie 3.4): stan pierwszej synchronizacji
 # po starcie procesu, do wystawienia w /health / banerze UI "pobieram dane".
 _FIRST_SYNC: dict[str, Any] = {"done": False, "ok": None, "started_at": "", "finished_at": ""}
+
+
+def is_not_authority_error(err: Any) -> bool:
+    """Odmowa bramki ADR-012 (wyzwalacz w bazie), nie blad sieci/bazy."""
+    return NOT_AUTHORITY_MARK in str(err or "")
+
+
+def generations_signature() -> tuple | None:
+    """Tani odcisk stanu migawek w bazie: (klucz, generacja, sha256) bez payload.
+    None = odczyt sie nie udal (siec) - wolajacy czeka na zwykly cykl REFRESH_S."""
+    try:
+        import pg_db
+
+        metas = pg_db.index_snapshot_meta()
+    except Exception:  # noqa: BLE001
+        return None
+    return tuple(sorted((str(k), str((m or {}).get("generation")), str((m or {}).get("sha256")))
+                        for k, m in (metas or {}).items()))
 
 
 def _asset_index_mode_is_rows(*, force: bool = False) -> bool:
@@ -387,6 +412,21 @@ def publish_changed(data_dir: Path, *, root_alive: bool, force: bool = False) ->
                     key, raw, sha256=sha, built_at=_iso_mtime(path), built_by=_machine()
                 )
             except Exception as exc:  # noqa: BLE001
+                if is_not_authority_error(exc):
+                    # ADR-012: bramka w bazie odrzucila (lista index_authority nas nie
+                    # obejmuje, a lokalna pamiec may_publish byla nieaktualna). To nie
+                    # jest blad sieci: odswiez decyzje i nie wysylaj kolejnych kluczy
+                    # (branding-index to setki MB - kazdy i tak zostalby odrzucony).
+                    out["skipped"] = "not_authority"
+                    out.setdefault("refused_not_authority", []).append(key)
+                    try:
+                        import index_authority
+
+                        index_authority.may_publish(pg_db.connect, force=True)
+                    except Exception:  # noqa: BLE001
+                        pass
+                    print(f"index_snapshots: {key} odrzucony przez baze (not_authority)", flush=True)
+                    break
                 out["ok"] = False
                 out.setdefault("errors", {})[key] = str(exc)[:300]
                 continue
@@ -412,6 +452,18 @@ def pull_newer(
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "error": str(exc)[:300]}
     out: dict[str, Any] = {"ok": True, "pulled": [], "current": [], "missing_in_db": []}
+    # ADR-012 pkt 3: "lokalny nowszy plik wygrywa" tylko dla wlasciciela katalogu
+    # (may_publish True) albo gdy listy nie ma (None = jak dotad). Komputer spoza
+    # listy zawsze bierze wersje z bazy - jego ROOT bywa opozniona kopia Drive.
+    try:
+        import index_authority
+
+        authority = index_authority.may_publish(pg_db.connect)
+    except Exception:  # noqa: BLE001
+        authority = None
+    local_may_win = authority is not False
+    if not local_may_win:
+        out["authority"] = False
     # Blokada miedzyprocesowa: most i watch-file-index.py (mark_built_here) pisza
     # do tego samego pliku stanu - patrz _state_lock().
     with _state_lock():
@@ -433,7 +485,8 @@ def pull_newer(
                 out["current"].append(key)
                 continue
             if (
-                root_alive
+                local_may_win
+                and root_alive
                 and path.is_file()
                 and _iso_mtime(path) > str(meta.get("built_at") or "")
                 and not _has_legacy_asset_ids(path)
@@ -530,11 +583,28 @@ def start_watch(data_dir: Path, root_alive_fn: Callable[[], bool],
 
     def loop() -> None:
         time.sleep(8.0)  # po starcie mostu: najpierw UI, potem siec
+        # ADR-012 pkt 4: co LIGHT_CHECK_S tylko generacje (bez payload); pelny cykl
+        # przy zmianie w bazie albo co REFRESH_S jak dotad. Bez LightWatch (import
+        # sie nie udal) - dawna petla co REFRESH_S.
+        try:
+            from asset_sync_runner import LightWatch
+
+            watch = LightWatch(REFRESH_S, generations_signature)
+        except Exception:  # noqa: BLE001
+            watch = None
         while True:
-            res = run_once(data_dir, root_alive_fn, on_updated)
-            print("index_snapshots:", {"root": res.get("root_alive"),
-                                       "publish": res.get("publish"), "pull": res.get("pull")}, flush=True)
-            time.sleep(REFRESH_S)
+            if watch is None or watch.due():
+                try:
+                    res = run_once(data_dir, root_alive_fn, on_updated)
+                except Exception as exc:  # noqa: BLE001 - watek nie moze umrzec
+                    res = {"error": str(exc)[:300]}
+                if watch is not None:
+                    watch.done()
+                print("index_snapshots:", {"why": getattr(watch, "reason", "interval"),
+                                           "root": res.get("root_alive"),
+                                           "publish": res.get("publish"), "pull": res.get("pull")},
+                      flush=True)
+            time.sleep(LIGHT_CHECK_S if watch is not None else REFRESH_S)
 
     _THREAD = threading.Thread(target=loop, daemon=True, name="dam-index-snapshots")
     _THREAD.start()
