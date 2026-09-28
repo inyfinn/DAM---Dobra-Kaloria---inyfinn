@@ -117,6 +117,18 @@ Type: files; Name: "{app}\bin\apps\desktop\*.py"
 Type: files; Name: "{app}\bin\apps\desktop\*.html"
 Type: filesandordirs; Name: "{app}\bin\apps\desktop\scripts"
 Type: filesandordirs; Name: "{app}\bin\apps\desktop\tests"
+; 28.09 (mapowanie kod/dane, W4 runda 2): jedyny znaleziony brak. DAM.exe importuje moduly
+; *.py wprost z {app}\bin\apps\desktop (launch.py itp.) - CPython tworzy tam __pycache__
+; w RUNTIME na kazdej stacji (nie pochodzi ze stagingu - build-installer.ps1 go
+; wyklucza z kopiowania, ten sam wzorzec $xdCommon co powyzej). Po podmianie *.py
+; nowa wersja moglaby razem ze starym .pyc siedziec w tym samym folderze (CPython sam
+; sprawdza mtime/hash, wiec ryzyko jest niskie, ale to jednak "stary kod obok nowego").
+; .pytest_cache dodany dla symetrii z tym samym powodem, gdyby ktos uruchomil testy na
+; zainstalowanej kopii. Oba to WYLACZNIE generowany bajtkod/cache narzedzi - nigdy dane
+; uzytkownika (machine-config.json, ktory tez lezy w tym folderze, zostaje nietkniety -
+; nie jest to wzorzec plikow, tylko dwa konkretne foldery cache).
+Type: filesandordirs; Name: "{app}\bin\apps\desktop\__pycache__"
+Type: filesandordirs; Name: "{app}\bin\apps\desktop\.pytest_cache"
 
 [Files]
 Source: "{#StageDir}\DAM.exe"; DestDir: "{app}"; Flags: ignoreversion
