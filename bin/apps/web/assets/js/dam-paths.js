@@ -44,6 +44,7 @@
 
   var BASE_KEY = "dam_base_path";
   var BASE_KEY_PREFIX = "dam_base_path::";
+  var GEN_KEY_PREFIX = "dam_base_path_gen::";
   var INDEX_BASE_KEY = "dam_index_base";
   var AUDIT_KEY = "dam_audit_log";
   var REQUIRED = ["-- ARCHIWUM --", "- EKSPORT", "- POLSKA"];
@@ -88,34 +89,23 @@
     return normSlashes(p).replace(/\//g, "\\");
   }
 
-  /**
-   * Normalizuj wskazanie do rootu Marketing.
-   * Przyklad: X:\Marketing\- POLSKA -> X:\Marketing
-   * Struktura znana: -- ARCHIWUM --, - EKSPORT, - POLSKA.
-   */
-  function normalizeMarketingRoot(raw) {
-    var win = String(raw || "").trim().replace(/\//g, "\\");
-    if (!win) return "";
-    if (/^[A-Za-z]:\\?$/.test(win)) {
-      return win.charAt(0).toUpperCase() + ":\\";
-    }
-    win = win.replace(/\\+$/, "");
-    var parts = win.split("\\").filter(function (seg) { return seg !== ""; });
-    if (!parts.length) return win;
+  function _isMarketChild(name) {
+    var n = String(name || "").replace(/^\s+|\s+$/g, "").toLowerCase();
+    if (!n) return false;
+    if (n === "-- archiwum --" || n === "- archiwum -" || n === "archiwum") return true;
+    if (n === "- eksport" || n === "eksport") return true;
+    if (n === "- polska" || n === "polska") return true;
+    // warianty z wiodacym myslnikiem / spacja
+    if (/^-+\s*archiwum/.test(n)) return true;
+    if (/^-+\s*eksport/.test(n)) return true;
+    if (/^-+\s*polska/.test(n)) return true;
+    return false;
+  }
 
-    function isMarketChild(name) {
-      var n = String(name || "").replace(/^\s+|\s+$/g, "").toLowerCase();
-      if (!n) return false;
-      if (n === "-- archiwum --" || n === "- archiwum -" || n === "archiwum") return true;
-      if (n === "- eksport" || n === "eksport") return true;
-      if (n === "- polska" || n === "polska") return true;
-      // warianty z wiodacym myslnikiem / spacja
-      if (/^-+\s*archiwum/.test(n)) return true;
-      if (/^-+\s*eksport/.test(n)) return true;
-      if (/^-+\s*polska/.test(n)) return true;
-      return false;
-    }
-
+  /** Utnij do segmentu "Marketing" albo zdejmij koncowy POLSKA/EKSPORT/ARCHIWUM.
+   * Dziala na juz rozbitej liscie segmentow - separator-agnostyczne. */
+  function _trimToMarketingRoot(parts) {
+    if (!parts.length) return parts;
     var mIdx = -1;
     for (var i = 0; i < parts.length; i++) {
       if (String(parts[i]).toLowerCase() === "marketing") {
@@ -124,14 +114,47 @@
       }
     }
     if (mIdx >= 0) {
-      return parts.slice(0, mIdx + 1).join("\\");
+      return parts.slice(0, mIdx + 1);
+    }
+    var out = parts.slice();
+    while (out.length > 1 && _isMarketChild(out[out.length - 1])) {
+      out.pop();
+    }
+    return out;
+  }
+
+  /**
+   * Normalizuj wskazanie do rootu Marketing.
+   * Przyklad: X:\Marketing\- POLSKA -> X:\Marketing
+   * Struktura znana: -- ARCHIWUM --, - EKSPORT, - POLSKA.
+   *
+   * 2026-09-28 (usterka 5, kontrakt G): funkcja kiedys zawsze robila
+   * `.replace(/\//g, "\\")` na starcie - dla POSIX (`/Volumes/Marketing`,
+   * `/mnt/x`, `/media/x`, np. klient macOS) dawalo to zle `\Volumes\Marketing`.
+   * Teraz POSIX i UNC (`\\serwer\udzial` / `//serwer/udzial`) sa rozpoznawane
+   * PRZED zamiana separatora i wracaja w swoim wlasnym formacie.
+   */
+  function normalizeMarketingRoot(raw) {
+    var input = String(raw || "").trim();
+    if (!input) return "";
+
+    // POSIX absolute path - NIGDY nie zamieniaj "/" na "\".
+    if (input.charAt(0) === "/" && input.charAt(1) !== "/") {
+      var psegs = _trimToMarketingRoot(input.split("/").filter(function (s) { return s !== ""; }));
+      return "/" + psegs.join("/");
     }
 
-    // Brak segmentu Marketing: jesli ostatni segment to POLSKA/EKSPORT/ARCHIWUM - wez rodzica
-    while (parts.length > 1 && isMarketChild(parts[parts.length - 1])) {
-      parts.pop();
+    var uncLike = input.replace(/\//g, "\\");
+    var isUnc = uncLike.slice(0, 2) === "\\\\";
+    var win = uncLike;
+    if (!isUnc && /^[A-Za-z]:\\?$/.test(win)) {
+      return win.charAt(0).toUpperCase() + ":\\";
     }
-    return parts.join("\\");
+    win = win.replace(/\\+$/, "");
+    var parts = win.split("\\").filter(function (seg) { return seg !== ""; });
+    if (!parts.length) return isUnc ? "\\\\" : win;
+    parts = _trimToMarketingRoot(parts);
+    return (isUnc ? "\\\\" : "") + parts.join("\\");
   }
 
   function getIndexBase() {
@@ -184,6 +207,45 @@
     }
     // Legacy key = cache TYLKO biezacego urzadzenia (kompatybilnosc starych readerow)
     localStorage.setItem(BASE_KEY, win);
+  }
+
+  function getAppliedGeneration(deviceId) {
+    var did = String(deviceId || currentDeviceId() || "").trim() || "_default";
+    try {
+      var n = parseInt(localStorage.getItem(GEN_KEY_PREFIX + did), 10);
+      return isNaN(n) ? 0 : n;
+    } catch (_e) {
+      return 0;
+    }
+  }
+
+  function setAppliedGeneration(gen, deviceId) {
+    var did = String(deviceId || currentDeviceId() || "").trim() || "_default";
+    try {
+      localStorage.setItem(GEN_KEY_PREFIX + did, String(gen || 0));
+    } catch (_e) { /* ignore */ }
+  }
+
+  /**
+   * Kontrakt G (usterka 5, 2026-09-28): stosuj wynik przelaczenia ROOT tylko
+   * gdy jego `root_generation` >= ostatnio zastosowanej. Bez tego dwa
+   * nakladajace sie przelaczenia (X wolne, pozniejsze M szybkie) moglyby
+   * skonczyc z UI pokazujacym wolniejsza odpowiedz, mimo ze backend juz ma
+   * nowsza (albo odwrotnie) - "stale_request" z mostu tez przechodzi tedy,
+   * co zbiega OBA okna do tej samej, najnowszej wartosci. Brak pola (starszy
+   * most bez kontraktu G) = zawsze stosuj, jak dotad.
+   */
+  function applyRootResultIfNewer(basePath, rootGeneration, deviceId, previous, source, rootState) {
+    if (rootGeneration != null && rootGeneration !== "") {
+      var gen = parseInt(rootGeneration, 10);
+      if (!isNaN(gen)) {
+        if (gen < getAppliedGeneration(deviceId)) return false;
+        setAppliedGeneration(gen, deviceId);
+      }
+    }
+    setBasePathLocalCache(basePath, deviceId);
+    emitRootChanged(basePath, true, previous, source, rootState);
+    return true;
   }
 
   /** Stary zapis 2x POST bez czekania - tylko migracja cache -> UDP i most bez /root/switch. */
@@ -244,6 +306,9 @@
         path: path,
         missing: (r.missing || []).join(", ")
       });
+    }
+    if (err === "stale_request") {
+      return tr("root.switch.stale", "Ścieżkę zmieniono w międzyczasie na {path} (inne okno lub urządzenie). Zastosowano nowszą wersję.", { path: path });
     }
     if (err === "login_required") {
       return tr("root.switch.login", "Zaloguj się, aby zmienić ścieżkę. Zostaje poprzednia ścieżka.");
@@ -381,13 +446,18 @@
     }).then(function (res) {
       res = res || { ok: false, error: "empty_response" };
       if (!res.ok) {
+        // "stale_request" niesie BIEZACY stan (kogos innego, kto zapisal jako
+        // pierwszy) - zastosuj go tu tez, zeby to okno zbieglo sie do tego
+        // samego wyniku zamiast zostac z mysla, ze nic sie nie zmienilo.
+        if (res.error === "stale_request" && seq === _switchSeq && res.base_path) {
+          applyRootResultIfNewer(res.base_path, res.root_generation, did, previous, "switch", res.root_state || "");
+        }
         res.message = rootSwitchMessage(res);
         return res;
       }
       var saved = String(res.base_path || win);
       if (seq === _switchSeq) {
-        setBasePathLocalCache(saved, did);
-        emitRootChanged(saved, res.root_alive !== false, previous, "switch", res.root_state);
+        applyRootResultIfNewer(saved, res.root_generation, did, previous, "switch", res.root_state);
       }
       res.message = res.warning
         ? rootWarningMessage(res)

@@ -60,8 +60,15 @@ _FILE_ATTRIBUTE_PINNED = 0x00080000
 _FILE_ATTRIBUTE_UNPINNED = 0x00100000
 
 
-def _sha_key(path: str) -> str:
-    h = hashlib.sha256((path or "").strip().lower().encode("utf-8", errors="replace")).hexdigest()
+def _sha_key(path: str, root_generation: int = 0) -> str:
+    """Klucz cache dostepnosci - zawiera generacje ROOT (kontrakt G, usterka 5).
+
+    Bez tego wpis sprzed przelaczenia ROOT (TTL 30 s) moglby jeszcze chwile
+    odpowiadac za NOWY ROOT, bo klucz zalezalby wylacznie od samej sciezki.
+    Generacja w kluczu = przelaczenie samo w sobie uniewaznia cache (inny klucz),
+    bez potrzeby jawnego kasowania wpisow Redis."""
+    raw = f"{int(root_generation or 0)}:{(path or '').strip().lower()}"
+    h = hashlib.sha256(raw.encode("utf-8", errors="replace")).hexdigest()
     return "avail:" + h
 
 
@@ -125,6 +132,7 @@ def classify_path(
     email: str = "",
     resolve_physical: Optional[Callable[..., str]] = None,
     has_marketing_root: Optional[bool] = None,
+    root_generation: int = 0,
 ) -> dict:
     """Return availability JSON for one path."""
     raw = (path or "").strip()
@@ -133,7 +141,7 @@ def classify_path(
             "ok": True,
             "path": raw,
             "state": "root_unset",
-            "label_pl": "Ustaw sciezke Marketing w ustawieniach dysku",
+            "label_pl": "Ustaw ścieżkę Marketing w ustawieniach dysku",
             "cta": "settings.html#damDisk",
             "treat_as_local": False,
         }
@@ -142,11 +150,11 @@ def classify_path(
             "ok": True,
             "path": "",
             "state": "missing",
-            "label_pl": "Brak sciezki pliku",
+            "label_pl": "Brak ścieżki pliku",
             "treat_as_local": False,
         }
 
-    cache_key = _sha_key(raw)
+    cache_key = _sha_key(raw, root_generation)
     if dam_redis is not None:
         cached = dam_redis.get(cache_key)
         if cached:
@@ -174,12 +182,20 @@ def classify_path(
         exists = False
 
     if not exists:
+        # Kontrakt G (usterka 5): ROOT ustawiony, tylko TEN plik jeszcze nie
+        # dotarl na ten komputer (np. swiezy skan / dysk czesciowo zsynchronizowany)
+        # - inna etykieta niz "brak ROOT" (root_unset wyzej) i niz stary ogolnik.
+        label = (
+            "Oryginał jeszcze niedostępny na tym komputerze"
+            if has_marketing_root
+            else "Plik niedostępny lokalnie"
+        )
         out = {
             "ok": True,
             "path": raw,
             "resolved": physical,
             "state": "missing",
-            "label_pl": "Plik niedostepny lokalnie",
+            "label_pl": label,
             "treat_as_local": False,
             "cached": False,
         }
@@ -192,7 +208,7 @@ def classify_path(
             "path": raw,
             "resolved": physical,
             "state": "online_only",
-            "label_pl": "Element z dysku dostepny tylko online - Synology",
+            "label_pl": "Element z dysku dostępny tylko online - Synology",
             "treat_as_local": False,
             "cached": False,
         }
@@ -207,7 +223,7 @@ def classify_path(
             "path": raw,
             "resolved": physical,
             "state": "online_only",
-            "label_pl": "Element z dysku dostepny tylko online - Synology",
+            "label_pl": "Element z dysku dostępny tylko online - Synology",
             "treat_as_local": False,
             "cached": False,
         }
@@ -219,7 +235,7 @@ def classify_path(
         "path": raw,
         "resolved": physical,
         "state": "local",
-        "label_pl": "Dostepny lokalnie",
+        "label_pl": "Dostępny lokalnie",
         "treat_as_local": True,
         "cached": False,
     }
@@ -243,6 +259,7 @@ def classify_batch(
     email: str = "",
     resolve_physical: Optional[Callable[..., str]] = None,
     has_marketing_root: Optional[bool] = None,
+    root_generation: int = 0,
 ) -> dict:
     items = []
     for p in paths or []:
@@ -252,6 +269,7 @@ def classify_batch(
                 email=email,
                 resolve_physical=resolve_physical,
                 has_marketing_root=has_marketing_root,
+                root_generation=root_generation,
             )
         )
     return {"ok": True, "count": len(items), "items": items}

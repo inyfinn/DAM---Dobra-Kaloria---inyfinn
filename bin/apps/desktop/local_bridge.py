@@ -785,7 +785,30 @@ def _windows_username() -> str:
 
 
 def _normalize_base_path(base_path: str) -> str:
-    win = normalize_path(base_path).strip()
+    """Normalizuj ROOT bez utraty formatu obcego systemowi Windows tego mostu.
+
+    Bug naprawiony 2026-09-28 (usterka 5, kontrakt G): `normalize_path()` robi
+    `str(Path(p)).replace("/", "\\")` bezwarunkowo - dla `/Volumes/Marketing`
+    (macOS) dawalo to `\\Volumes\\Marketing`, bo WindowsPath nie zna wiodacego
+    "/" jako korzenia i po prostu podmienia separator. Ta funkcja rozpoznaje
+    POSIX (`/Volumes/...`, `/mnt/...`, `/media/...`) i UNC (`\\\\serwer\\udzial`
+    / `//serwer/udzial`) PRZED wejsciem w logike dyskow Windows i zwraca je bez
+    zmiany rodziny separatorow - tylko z domknieciem powielonych separatorow
+    i bez koncowego separatora (poza samym "/")."""
+    raw = str(base_path or "").strip()
+    if not raw:
+        return ""
+    # POSIX absolute path (macOS/Linux mount) - NIGDY nie zamieniaj "/" na "\".
+    if raw.startswith("/") and not raw.startswith("//"):
+        segs = [s for s in raw.split("/") if s != ""]
+        return "/" + "/".join(segs)
+    # UNC: \\serwer\udzial lub //serwer/udzial -> zawsze \\serwer\udzial,
+    # niezaleznie od mieszanych separatorow wejsciowych.
+    unc_like = raw.replace("/", "\\")
+    if unc_like.startswith("\\\\"):
+        segs = [s for s in unc_like.split("\\") if s != ""]
+        return "\\\\" + "\\".join(segs)
+    win = normalize_path(raw).strip()
     if re.match(r"^[A-Za-z]:\\?$", win):
         return win[0].upper() + ":\\"
     return win.rstrip("\\")
@@ -895,46 +918,107 @@ def _read_machine_config_file(path: Path | None) -> dict | None:
     return entry
 
 
+def _entry_generation(entry: dict | None) -> int:
+    """`root_generation` z wpisu machine-config; brak pola = 0 (kontrakt G)."""
+    try:
+        return int((entry or {}).get("root_generation") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+# Podbijane przy KAZDYM udanym zapisie ROOT (ktoregokolwiek z trzech szlakow).
+# Trzyma najwyzsza znana generacje w pamieci procesu, zeby starsza wersja
+# aplikacji nadpisujaca caly plik {"users": ...} bez pola root_generation
+# (wraca do 0) nie cofnela licznika i nie oszukala CAS w write_machine_config
+# (decyzja wlasciciela 28.09, DECYZJE.md pkt 7.8: "porownaj z maksimum
+# (plik, pamiec) i nie odrzucaj wszystkiego po cofnieciu licznika").
+_ROOT_GENERATION_LOCK = threading.Lock()
+_ROOT_GENERATION_MEMORY: dict[str, int] = {}
+
+
+def _root_generation_baseline(user: str | None = None) -> int:
+    """max(plik, pamiec) - generacja, na ktorej ma sie oprzec NOWA proba zapisu."""
+    user = user or _windows_username()
+    file_gen = 0
+    for path in (_machine_config_state_path(), MACHINE_CONFIG):
+        entry = _read_machine_config_file(path)
+        if entry:
+            file_gen = _entry_generation(entry)
+            break
+    with _ROOT_GENERATION_LOCK:
+        mem_gen = _ROOT_GENERATION_MEMORY.get(user, 0)
+    return max(file_gen, mem_gen)
+
+
 def read_machine_config() -> dict:
     """Preferencja Marketing dla biezacego konta Windows (nie globalna stala).
 
     2026-09-27: najpierw katalog stanu uzytkownika (tam idzie zapis), potem stary
-    plik obok aplikacji (MACHINE_CONFIG) jako zapas - stary plik zostaje nietkniety."""
+    plik obok aplikacji (MACHINE_CONFIG) jako zapas - stary plik zostaje nietkniety.
+    2026-09-28: dolaczona `root_generation` (kontrakt G) - max(plik, pamiec), zeby
+    UI zawsze widzialo generacje nie starsza niz backend faktycznie zastosowal."""
     user = _windows_username()
     for path in (_machine_config_state_path(), MACHINE_CONFIG):
         entry = _read_machine_config_file(path)
         if entry:
+            with _ROOT_GENERATION_LOCK:
+                mem_gen = _ROOT_GENERATION_MEMORY.get(user, 0)
             return {
                 "ok": True,
                 "user": user,
                 "base_path": str(entry.get("base_path") or "").strip(),
                 "updated_at": entry.get("updated_at") or "",
+                "root_generation": max(_entry_generation(entry), mem_gen),
                 "path": str(path),
             }
-    return {"ok": True, "user": user, "base_path": "", "path": str(_machine_config_state_path() or MACHINE_CONFIG)}
+    with _ROOT_GENERATION_LOCK:
+        mem_gen = _ROOT_GENERATION_MEMORY.get(user, 0)
+    return {"ok": True, "user": user, "base_path": "", "root_generation": mem_gen,
+             "path": str(_machine_config_state_path() or MACHINE_CONFIG)}
 
 
-def write_machine_config(base_path: str) -> dict:
+def write_machine_config(base_path: str, *, expected_generation: int | None = None) -> dict:
     """Zapis tylko dla biezacego konta Windows - nie nadpisuje innych userow.
 
     Cel: katalog stanu uzytkownika (bundle Mac bywa tylko do odczytu, klon dev
-    synchronizuje Drive miedzy komputerami). Gdy katalogu stanu brak - stary plik."""
+    synchronizuje Drive miedzy komputerami). Gdy katalogu stanu brak - stary plik.
+
+    Kontrakt G (2026-09-28, usterka 5): `expected_generation` = generacja, na
+    ktorej PROSBA o przelaczenie ROOT faktycznie sie oparla (przechwycona PRZED
+    ewentualnym powolnym sondowaniem folderu w switch_root). Caly odczyt+zapis
+    idzie pod jednym zamkiem - porownaj-i-zapisz: jesli w miedzyczasie ktos inny
+    juz zapisal nowsza generacje, ta proba jest `stale_request` i NIC nie zapisuje
+    (dwa nakladajace sie przelaczenia: wolniejsze konczy sie po szybszym -> ostatni
+    faktyczny zapis wygrywa, a "przegrany" dostaje w odpowiedzi biezacy stan)."""
     user = _windows_username()
     stored = _normalize_base_path(base_path)
     target = _machine_config_state_path() or MACHINE_CONFIG
-    data: dict = {}
-    if target.is_file():
-        try:
-            data = json.loads(target.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            data = {}
-    users = data.get("users") if isinstance(data.get("users"), dict) else {}
-    key = (dam_path_resolve.user_key(users, user) if dam_path_resolve else None) or user
-    users[key] = {"base_path": stored, "updated_at": utc_now()}
-    user = key
-    payload = {"users": users}
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    with _ROOT_GENERATION_LOCK:
+        data: dict = {}
+        if target.is_file():
+            try:
+                data = json.loads(target.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                data = {}
+        users = data.get("users") if isinstance(data.get("users"), dict) else {}
+        key = (dam_path_resolve.user_key(users, user) if dam_path_resolve else None) or user
+        existing = users.get(key) if isinstance(users.get(key), dict) else {}
+        current_gen = max(_entry_generation(existing), _ROOT_GENERATION_MEMORY.get(user, 0))
+        if expected_generation is not None and expected_generation < current_gen:
+            return {
+                "ok": False,
+                "error": "stale_request",
+                "base_path": str(existing.get("base_path") or "").strip(),
+                "root_generation": current_gen,
+                "path": str(target),
+            }
+        new_gen = current_gen + 1
+        users[key] = {"base_path": stored, "updated_at": utc_now(), "root_generation": new_gen}
+        user = key
+        payload = {"users": users}
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        _ROOT_GENERATION_MEMORY[user] = new_gen
     # 2026-09-27: bez dam_db.reset_path_cache()+init_db(). Baza nie zalezy od ROOT
     # (kanon bin/DATABASE, dam_db.canonical_db_path). Reset przy kazdym zapisie ROOT
     # zrywal polaczenie z baza: pelny re-init Postgresa pod _LOCK w watku HTTP,
@@ -945,9 +1029,22 @@ def write_machine_config(base_path: str) -> dict:
         "user": user,
         "base_path": stored,
         "updated_at": users[user]["updated_at"],
+        "root_generation": new_gen,
         "path": str(target),
         "db": dam_db.status() if dam_db else None,
     }
+
+
+def _apply_root_switch_effects(previous: str, stored: str, *, root_state: str = "full") -> dict:
+    """Wspolne dla WSZYSTKICH trzech drog zapisu ROOT (`/root/switch`,
+    `/machine-config`, `/user-device-paths` biezacego urzadzenia): restart
+    watchera + reset pamieci skanu, spojnie i tylko gdy sciezka faktycznie
+    sie zmienila. Naprawa usterki 5 / DECYZJE.md 7.8: przed 2026-09-28
+    `/machine-config` robil WYLACZNIE zapis pliku, bez tych dwoch efektow."""
+    changed = _normalize_base_path(previous).lower() != stored.lower() if previous else True
+    watcher = _restart_index_watcher_for_root(scan_allowed=root_state == "full") if changed else "unchanged"
+    scan_memory = _reset_scan_memory("root_switch") if changed else None
+    return {"changed": changed, "watcher": watcher, "scan_memory": scan_memory}
 
 
 # ---------------------------------------------------------------------------
@@ -1180,12 +1277,20 @@ def switch_root(
     Odrzuca tylko folder, ktorego nie ma (root_missing) albo ktory nie odpowiada
     (root_timeout). Zawartosc ROOT rozni sie miedzy komputerami: czesciowa
     struktura = zapis z warning "root_incomplete". Folder bez ZADNEGO z trzech
-    folderow Marketing (literowka?) = root_unrecognized, zapis dopiero z confirm."""
+    folderow Marketing (literowka?) = root_unrecognized, zapis dopiero z confirm.
+
+    Kontrakt G (usterka 5): generacja bazowa przechwycona TU, na samym wejsciu,
+    PRZED sonda folderu (`_root_state` moze wisiec do ROOT_SWITCH_PROBE_TIMEOUT_S).
+    Dwa nakladajace sie przelaczenia (X wolne, pozniejsze M szybkie) czytaja tu
+    ta sama generacje startowa; ktokolwiek zapisze pierwszy pod zamkiem w
+    write_machine_config wygrywa, a przegrany dostaje "stale_request" z JUZ
+    biezacym stanem (base_path/generacja) zamiast po cichu nadpisac wynik."""
     raw = str(base_path or "").strip()
     checked_at = utc_now()
     if not raw:
         return {"ok": False, "error": "base_path_required", "reason": "empty",
                 "base_path": "", "root_alive": False, "checked_at": checked_at}
+    start_generation = _root_generation_baseline()
     stored = _normalize_base_path(raw)
     rs = _root_state(stored)
     missing = list(rs["missing"])
@@ -1223,7 +1328,23 @@ def switch_root(
                 "root_state": rs["state"], "warning": warning, "missing": missing,
                 "checked_at": checked_at, "validated_only": True}
     previous = str(read_machine_config().get("base_path") or "").strip()
-    write_machine_config(stored)  # sam wola _invalidate_root_caches()
+    write_res = write_machine_config(stored, expected_generation=start_generation)
+    if not write_res.get("ok"):
+        # Ktos inny (druga karta / rownolegle okno) juz zapisal nowsza generacje,
+        # podczas gdy TA proba sondowala folder. Nie dotykamy UDP/watchera/pamieci
+        # skanu - tamten zapis juz to zrobil. Zwrocony base_path/root_generation to
+        # BIEZACY stan, zeby wywolujacy (UI) mogl sie do niego zbiec zamiast myslec,
+        # ze wygral wlasna, przestarzala probe.
+        return {
+            "ok": False,
+            "error": "stale_request",
+            "reason": "stale_request",
+            "base_path": write_res.get("base_path") or previous,
+            "root_generation": write_res.get("root_generation"),
+            "root_alive": True,
+            "root_state": rs["state"],
+            "checked_at": checked_at,
+        }
     udp: dict = {"ok": False, "skipped": True}
     ident = _udp_current_identity()
     did = str(device_id or "").strip() or str(ident.get("device_id") or "").strip()
@@ -1233,18 +1354,17 @@ def switch_root(
             udp = upsert_user_device_path(email, did, stored, hostname=host, label=label)
         except Exception as exc:  # noqa: BLE001 - PG offline: machine-config i tak zapisany
             udp = {"ok": False, "error": str(exc)[:200]}
-    changed = _normalize_base_path(previous).lower() != stored.lower() if previous else True
-    watcher = _restart_index_watcher_for_root(scan_allowed=rs["state"] == "full") if changed else "unchanged"
-    scan_memory = _reset_scan_memory("root_switch") if changed else None
+    effects = _apply_root_switch_effects(previous, stored, root_state=rs["state"])
     return {
         "ok": True,
         "base_path": stored,
         "previous": previous,
-        "changed": changed,
+        "changed": effects["changed"],
         "root_alive": True,
         "root_state": rs["state"],
+        "root_generation": write_res.get("root_generation"),
         "scan_allowed": rs["state"] == "full",
-        "scan_memory": scan_memory,
+        "scan_memory": effects["scan_memory"],
         "reason": "ok",
         "warning": warning,
         "missing": missing,
@@ -1252,7 +1372,7 @@ def switch_root(
         "device_id": did,
         "udp_ok": bool(udp.get("ok")),
         "udp_error": "" if udp.get("ok") else str(udp.get("error") or ""),
-        "watcher": watcher,
+        "watcher": effects["watcher"],
         "rebuild_running": _index_rebuild_running(),
     }
 
@@ -8868,14 +8988,20 @@ class Handler(BaseHTTPRequestHandler):
             # ROOT ustawiony = root jest (brak pliku to "missing", nie "root_unset").
             # Skan wszystkich liter tylko gdy ROOT nie ustawiony - zimny skan po
             # przelaczeniu ROOT dawal "root_unset" dla rownoleglych zapytan.
-            has_root = bool(str(read_machine_config().get("base_path") or "").strip())
+            mc = read_machine_config()
+            has_root = bool(str(mc.get("base_path") or "").strip())
             if not has_root:
                 has_root = bool(detect_marketing_bases().get("recommended"))
+            # Kontrakt G: klucz cache dostepnosci zawiera generacje ROOT - po
+            # przelaczeniu (nowa generacja) stary wpis Redis po prostu nie trafia
+            # (inny klucz), wiec dostepnosc jest przeliczana od razu, bez czekania
+            # na TTL 30 s starego cache przypisanego do poprzedniego ROOT.
             out = dam_file_availability.classify_path(
                 path,
                 email="",
                 resolve_physical=lambda p, _e="": _coerce_media_target(p),
                 has_marketing_root=has_root,
+                root_generation=int(mc.get("root_generation") or 0),
             )
             self._json(200, out)
             return
@@ -10254,7 +10380,12 @@ class Handler(BaseHTTPRequestHandler):
             )
             return
         if parsed.path == "/machine-config":
-            # Zapis sciezki Marketing tylko dla zalogowanego uzytkownika
+            # Zapis sciezki Marketing tylko dla zalogowanego uzytkownika.
+            # 2026-09-28 (usterka 5, DECYZJE.md 7.8): ta droga zapisu ROOT dawniej
+            # tylko pisala plik - bez resetu pamieci skanu i bez restartu watchera,
+            # przez co skan po przelaczeniu tu mogl zostac na starym ROOT. Teraz
+            # resetuje sie SPOJNIE z /root/switch (ten sam _apply_root_switch_effects)
+            # i przechodzi przez to samo porownaj-i-zapisz (kontrakt G).
             user = self._require_login()
             if user is None:
                 return
@@ -10262,7 +10393,22 @@ class Handler(BaseHTTPRequestHandler):
             if not path:
                 self._json(400, {"ok": False, "error": "base_path_required"})
                 return
-            result = write_machine_config(path)
+            previous = str(read_machine_config().get("base_path") or "").strip()
+            result = write_machine_config(path, expected_generation=_root_generation_baseline())
+            if not result.get("ok"):
+                self._json(200, result)
+                return
+            stored = str(result.get("base_path") or "")
+            root_state = _root_state(stored)["state"]
+            effects = _apply_root_switch_effects(previous, stored, root_state=root_state)
+            result.update(
+                previous=previous,
+                changed=effects["changed"],
+                root_state=root_state,
+                scan_allowed=root_state == "full",
+                scan_memory=effects["scan_memory"],
+                watcher=effects["watcher"],
+            )
             # Lustro do bazy per-urzadzenie (biezacy device_id)
             try:
                 ident = _udp_current_identity()
@@ -10272,7 +10418,7 @@ class Handler(BaseHTTPRequestHandler):
                     upsert_user_device_path(
                         email,
                         did,
-                        path,
+                        stored,
                         hostname=str(ident.get("hostname") or ""),
                     )
             except Exception as exc:  # noqa: BLE001
@@ -10308,12 +10454,20 @@ class Handler(BaseHTTPRequestHandler):
                 hostname=hostname,
                 label=label,
             )
-            # Gdy zapis dotyczy biezacego urzadzenia - odswiez lokalny machine-config
+            # Gdy zapis dotyczy biezacego urzadzenia - odswiez lokalny machine-config.
+            # 2026-09-28 (usterka 5, DECYZJE.md 7.8): trzecia droga zapisu ROOT -
+            # ta sama naprawa co /machine-config (reset + restart + generacja),
+            # zeby zapis stad tez nie zostawial watchera/pamieci skanu na starym ROOT.
             if res.get("ok"):
                 try:
                     ident = _udp_current_identity()
                     if did == str(ident.get("device_id") or "").strip() and path:
-                        write_machine_config(path)
+                        mc_previous = str(read_machine_config().get("base_path") or "").strip()
+                        mc_result = write_machine_config(path, expected_generation=_root_generation_baseline())
+                        if mc_result.get("ok"):
+                            mc_stored = str(mc_result.get("base_path") or "")
+                            mc_root_state = _root_state(mc_stored)["state"]
+                            _apply_root_switch_effects(mc_previous, mc_stored, root_state=mc_root_state)
                 except Exception:  # noqa: BLE001
                     pass
             self._json(200 if res.get("ok") else 400, res)

@@ -115,6 +115,47 @@ def machine_config_base(machine_config_path: Optional[Path] = None) -> str:
     return ""
 
 
+def read_user_generation(path: Optional[Path], user: str | None = None) -> int:
+    """`root_generation` biezacego uzytkownika z JEDNEGO pliku machine-config
+    (kontrakt G, usterka 5, 2026-09-28). Brak pola / brak pliku / wpisu = 0 -
+    zgodnie z read_machine_config() w local_bridge.py (most)."""
+    try:
+        if not path or not Path(path).is_file():
+            return 0
+        import json
+
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError, TypeError):
+        return 0
+    if not isinstance(data, dict):
+        return 0
+    users = data.get("users") if isinstance(data.get("users"), dict) else {}
+    key = user_key(users, user)
+    entry = users.get(key) if key is not None and isinstance(users.get(key), dict) else {}
+    try:
+        return int(entry.get("root_generation") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def current_root_generation(machine_config_path: Optional[Path] = None, user: str | None = None) -> int:
+    """Generacja ROOT biezacego uzytkownika (0 = brak wpisu albo brak pola).
+
+    Dla innych modulow (np. asset_sync_runner/W2), zeby moc odrzucic wynik
+    zadania rozpoczetego na starej generacji ROOT - "wynik starego zadania
+    nie moze nadpisac stanu nowego ROOT" (plan, etap 2). Czyta TYLKO plik(i) -
+    w przeciwienstwie do mostu (local_bridge._root_generation_baseline) nie zna
+    wewnetrznego cache pamieciowego mostu, bo dziala w INNYM procesie/module;
+    plik jest tu jedynym wspolnym zrodlem prawdy.
+
+    Kolejnosc identyczna jak machine_config_base(): pierwszy plik z NIEPUSTYM
+    base_path wygrywa (spojnie z read_machine_config() w moscie)."""
+    for p in (state_machine_config_path(), machine_config_path):
+        if p and Path(p).is_file() and read_user_base(p, user):
+            return read_user_generation(p, user)
+    return 0
+
+
 def marketing_roots(
     *,
     email: str = "",
