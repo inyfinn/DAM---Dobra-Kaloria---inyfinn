@@ -19,7 +19,7 @@ wszystko robi Claude). Decyzje wykonawcze: `work\kierownicy\2026-09-28b\DECYZJE.
 | 5 | Test 3 izolowanych instancji A/B/C na tym PC + test paczki | po krokach 1-4 |
 | 6 | Porządek (21 GB) i wydanie 2.4.6 | na końcu |
 
-Ograniczenia dowodu (stan 28.09): kopia produkcji zrobiona przez SSH (`D:\DAM-lokalneackup\pg6-09-28\dam_eta.dump`, 45,5 MB, test odtworzenia: liczby wierszy zgodne); testowa baza `dam_eta_test` + rola `dam_test` na inyfinn-syno; 4.1 i 4.2 na prawdziwym PG: czerwone na 2.4.5, zielone teraz (`b69d2833`). Na serwerze została baza `dam_restore_test` (kopia z testu odtworzenia) - hook blokuje DROP, do usunięcia ręcznie. Pełny zestaw: 683 testy Python + 27 JS OK. Przy okazji: test `test_index_assoc_backend` uruchamiał prawdziwą przebudowę Brandingu jako sierotę (błąd od 2.4.5) - naprawione (`6a7f1fd2`).
+Ograniczenia dowodu (stan 28.09): kopia produkcji zrobiona przez SSH (`D:\DAM-lokalne\backup\pg\2026-09-28\dam_eta.dump`, 45,5 MB, test odtworzenia: liczby wierszy zgodne); testowa baza `dam_eta_test` + rola `dam_test` na inyfinn-syno; 4.1 i 4.2 na prawdziwym PG: czerwone na 2.4.5, zielone teraz (`b69d2833`). Na serwerze została baza `dam_restore_test` (kopia z testu odtworzenia) - hook blokuje DROP, do usunięcia ręcznie. Pełny zestaw: 683 testy Python + 27 JS OK. Przy okazji: test `test_index_assoc_backend` uruchamiał prawdziwą przebudowę Brandingu jako sierotę (błąd od 2.4.5) - naprawione (`6a7f1fd2`).
 
 Stan na 2026-09-28, 12:00 (KRZYSZTOFWI). Wydanie: **2.4.5**
 (https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v2.4.5).
