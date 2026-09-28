@@ -23,6 +23,7 @@ import hashlib
 import json
 import os
 import re
+import sys
 import threading
 import time
 from datetime import datetime, timezone
@@ -58,6 +59,11 @@ MIN_BYTES = 1024
 # payload) - pelny cykl od razu, gdy w bazie jest nowa generacja.
 REFRESH_S = 600.0
 LIGHT_CHECK_S = 30.0
+# W8 28.09.2026 (W7 znalezisko 5, S8): swiezy LOKALNY build (mark_built_here albo nowy
+# plik migawki na dysku) -> pelny cykl po krotkim debounce, nie po 600 s. Podpis to
+# tylko plik stanu (built_here_sha) i stat() kilku lokalnych plikow w web/data.
+LOCAL_CHECK_S = 2.0
+LOCAL_DEBOUNCE_S = 2.0
 # Przedrostek komunikatu bramki w bazie (bin/apps/desktop/sql/authority_gate.sql).
 NOT_AUTHORITY_MARK = "dam_not_authority:"
 # Publikacja odmawia pliku mniejszego niz 80% wersji w bazie (niepelny skan; 23.09
@@ -575,36 +581,147 @@ def run_once(data_dir: Path, root_alive_fn: Callable[[], bool],
         return dict(_LAST)
 
 
+def local_signature(data_dir: Path) -> tuple:
+    """Odcisk LOKALNEGO stanu migawek: built_here_sha z pliku stanu (mark_built_here,
+    takze z procesu watch-file-index.py) + (rozmiar, mtime) plikow w web/data.
+    Bez branding-index (w trybie rows przepisywany przez scalanie, setki MB)."""
+    state = _load_state()
+    out = []
+    for key, fname in SNAPSHOT_FILES.items():
+        if key == ROWS_MODE_SKIP_KEY:
+            continue
+        built = str((state.get(key) or {}).get("built_here_sha") or "")
+        out.append((key, built, _file_sig(Path(data_dir) / fname)))
+    return tuple(out)
+
+
+def _authority_decision() -> bool | None:
+    """index_authority.may_publish() (cache 60 s). Blad importu/odczytu = None.
+    Proces testow (unittest w sys.modules): None bez polaczenia - testy podmieniaja."""
+    if "unittest" in sys.modules:
+        return None
+    try:
+        import index_authority
+        import pg_db
+
+        return index_authority.may_publish(pg_db.connect)
+    except Exception:  # noqa: BLE001
+        return None
+
+
+class LocalBuildWatch:
+    """Nowy lokalny build -> due() po LOCAL_DEBOUNCE_S spokoju (kilka plikow jednego
+    builda = jeden cykl). Stan poczatkowy jest bazowy (start nie wyzwala)."""
+
+    def __init__(self, sig_fn: Callable[[], Any], *, debounce_s: float = LOCAL_DEBOUNCE_S,
+                 clock: Callable[[], float] = time.monotonic):
+        self.sig_fn = sig_fn
+        self.debounce_s = float(debounce_s)
+        self.clock = clock
+        self.seen = self._sig()
+        self._pending: Any = None
+        self._pending_since = 0.0
+
+    def _sig(self) -> Any:
+        try:
+            return self.sig_fn()
+        except Exception:  # noqa: BLE001
+            return None
+
+    def due(self) -> bool:
+        sig = self._sig()
+        if sig is None or sig == self.seen:
+            self._pending = None
+            return False
+        now = self.clock()
+        if sig != self._pending:
+            self._pending, self._pending_since = sig, now
+            return False
+        return now - self._pending_since >= self.debounce_s
+
+    def done(self) -> None:
+        self.seen = self._sig()
+        self._pending = None
+
+
+class SnapshotLoop:
+    """Jeden krok petli watku migawek (testowalny bez watku i bez sieci).
+
+    remote_watch = LightWatch (ADR-012 pkt 4: co LIGHT_CHECK_S generacje w bazie, pelny
+    cykl przy zmianie albo co REFRESH_S) albo None (dawna petla co REFRESH_S).
+    Lokalny build: cykl od razu po debounce, gdy lista wlascicieli istnieje -
+    wlasciciel (True) publikuje, klient (False) wraca do wersji z bazy. None = jak dotad."""
+
+    def __init__(self, data_dir: Path, *, run_cycle: Callable[[str], Any], remote_watch: Any,
+                 clock: Callable[[], float] = time.monotonic):
+        self.run_cycle = run_cycle
+        self.remote_watch = remote_watch
+        self.clock = clock
+        self.local = LocalBuildWatch(lambda: local_signature(data_dir), clock=clock)
+        self._next_remote = 0.0
+        self._last_full: float | None = None
+
+    def tick(self) -> str:
+        why = ""
+        now = self.clock()
+        if self.local.due():
+            if _authority_decision() is not None:
+                why = "local_build"
+            else:
+                self.local.done()
+        if not why and now >= self._next_remote:
+            self._next_remote = now + LIGHT_CHECK_S
+            if self.remote_watch is not None:
+                if self.remote_watch.due():
+                    why = str(getattr(self.remote_watch, "reason", "") or "remote")
+            elif self._last_full is None:
+                why = "first"
+            elif now - self._last_full >= REFRESH_S:
+                why = "interval"
+        if why:
+            try:
+                self.run_cycle(why)
+            finally:
+                self._last_full = self.clock()
+                if self.remote_watch is not None:
+                    self.remote_watch.done()
+                self.local.done()
+        return why
+
+
 def start_watch(data_dir: Path, root_alive_fn: Callable[[], bool],
                 on_updated: Callable[[str, Path], None] | None = None) -> dict[str, Any]:
     global _THREAD
     if _THREAD is not None and _THREAD.is_alive():
         return {"ok": True, "started": False}
 
+    def cycle(why: str) -> None:
+        try:
+            res = run_once(data_dir, root_alive_fn, on_updated)
+        except Exception as exc:  # noqa: BLE001 - watek nie moze umrzec
+            res = {"error": str(exc)[:300]}
+        print("index_snapshots:", {"why": why, "root": res.get("root_alive"),
+                                   "publish": res.get("publish"), "pull": res.get("pull")},
+              flush=True)
+
     def loop() -> None:
         time.sleep(8.0)  # po starcie mostu: najpierw UI, potem siec
         # ADR-012 pkt 4: co LIGHT_CHECK_S tylko generacje (bez payload); pelny cykl
         # przy zmianie w bazie albo co REFRESH_S jak dotad. Bez LightWatch (import
-        # sie nie udal) - dawna petla co REFRESH_S.
+        # sie nie udal) - dawna petla co REFRESH_S. W8: plus lokalny build (SnapshotLoop).
         try:
             from asset_sync_runner import LightWatch
 
             watch = LightWatch(REFRESH_S, generations_signature)
         except Exception:  # noqa: BLE001
             watch = None
+        stepper = SnapshotLoop(data_dir, run_cycle=cycle, remote_watch=watch)
         while True:
-            if watch is None or watch.due():
-                try:
-                    res = run_once(data_dir, root_alive_fn, on_updated)
-                except Exception as exc:  # noqa: BLE001 - watek nie moze umrzec
-                    res = {"error": str(exc)[:300]}
-                if watch is not None:
-                    watch.done()
-                print("index_snapshots:", {"why": getattr(watch, "reason", "interval"),
-                                           "root": res.get("root_alive"),
-                                           "publish": res.get("publish"), "pull": res.get("pull")},
-                      flush=True)
-            time.sleep(LIGHT_CHECK_S if watch is not None else REFRESH_S)
+            try:
+                stepper.tick()
+            except Exception as exc:  # noqa: BLE001 - watek nie moze umrzec
+                print("index_snapshots: tick error", str(exc)[:300], flush=True)
+            time.sleep(LOCAL_CHECK_S)
 
     _THREAD = threading.Thread(target=loop, daemon=True, name="dam-index-snapshots")
     _THREAD.start()

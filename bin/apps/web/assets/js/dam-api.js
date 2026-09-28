@@ -871,6 +871,20 @@
           tma.code = "too_many_attempts";
           throw tma;
         }
+        /* Most dziala, ale baza nie odpowiada / blad logowania po stronie aplikacji -
+           nie wolno tego pokazac jako "Most DAM niedostepny" (zgloszenie 28.09.2026). */
+        if (bdata && bdata.error === "db_offline") {
+          var dbo = new Error(bdata.message || "Baza chwilowo niedostępna, spróbuj za chwilę.");
+          dbo.code = "db_offline";
+          throw dbo;
+        }
+        if (bdata && bdata.error === "login_failed") {
+          var lf = new Error(
+            bdata.message || "Logowanie nie powiodło się po stronie aplikacji. Spróbuj ponownie za chwilę."
+          );
+          lf.code = "login_failed";
+          throw lf;
+        }
         if (bdata && bdata.error) {
           throw new Error(String(bdata.error));
         }

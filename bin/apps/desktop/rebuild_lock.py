@@ -154,11 +154,31 @@ def _read_json(path: Path) -> dict[str, Any]:
         return {}
 
 
+_REPLACE_RETRIES = 10
+_REPLACE_RETRY_SLEEP_S = 0.05
+
+
 def _write_atomic(path: Path, payload: dict[str, Any]) -> None:
+    """W8 28.09.2026 (W7 znalezisko 8): na Windows os.replace rzuca [WinError 5], gdy inny
+    watek/proces akurat czyta plik docelowy - krotkie ponowienia zamiast przerwania
+    rebuildu; tmp unikalny per proces+watek (wspolny ".tmp" depcza sie przy dwoch zapisach)."""
+    import threading  # noqa: PLC0415
+
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
     tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    os.replace(tmp, path)
+    for attempt in range(_REPLACE_RETRIES):
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError:
+            if attempt == _REPLACE_RETRIES - 1:
+                try:
+                    tmp.unlink()
+                except OSError:
+                    pass
+                raise
+            time.sleep(_REPLACE_RETRY_SLEEP_S)
 
 
 def read_lock(path: Path) -> dict[str, Any]:

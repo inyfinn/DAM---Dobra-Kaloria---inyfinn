@@ -62,6 +62,36 @@ def _connect():
     return dam_connect()
 
 
+DB_OFFLINE_ERROR = {
+    "ok": False,
+    "error": "db_offline",
+    "message": "Baza chwilowo niedostępna, spróbuj za chwilę.",
+}
+
+
+def _pg_configured_but_offline() -> bool:
+    """PG skonfigurowany i dozwolony, a dam_db jest w trybie offline. Tylko stan w
+    pamieci - zero nowych polaczen (pierwszy warunek is_offline() jest najtanszy)."""
+    try:
+        import dam_db
+
+        return bool(dam_db.is_offline() and dam_db.synology_allowed() and dam_db.pg_configured())
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _retry_pg_now_if_offline() -> None:
+    """Logowanie to akcja uzytkownika: zamiast czekac na okno ponowien dam_db,
+    nastepne dam_db.connect() od razu probuje Postgres."""
+    try:
+        import dam_db
+
+        if dam_db.is_offline():
+            dam_db.force_retry_now()
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def _hash_password(password: str) -> str:
     if bcrypt is None:
         salt = secrets.token_hex(16)
@@ -396,9 +426,15 @@ def login(
     except Exception:
         session_id = "dam-sid-" + secrets.token_urlsafe(24)
 
+    # W8 28.09.2026: PG skonfigurowany, ale offline -> jedna proba teraz (nie czekaj na
+    # okno ponowien), a gdy dalej offline: czytelny blad zamiast cichego logowania do
+    # lokalnej SQLite (konta seed z haslem startowym, "haslo za slabe").
+    _retry_pg_now_if_offline()
     with _LOCK:
         conn = _connect()
         try:
+            if not _use_pg() and _pg_configured_but_offline():
+                return dict(DB_OFFLINE_ERROR)
             if _use_pg():
                 cur = conn.cursor()
                 cur.execute(

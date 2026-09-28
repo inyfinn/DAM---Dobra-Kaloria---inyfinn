@@ -296,7 +296,7 @@ def scan_from_index(index_assets: list[dict], root: str, *,
 # Lustro -> lokalny branding-index.json
 # --------------------------------------------------------------------------
 
-def live_index(rows: dict[str, dict], root: str) -> list[dict]:
+def live_index(rows: dict[str, dict], root: str | None) -> list[dict]:
     """Assety (bez usunietych) do zapisu jako branding-index.json, sciezka z
     korzeniem TEGO komputera. Kazdy ma "id", "path", "name" i pola z meta.
     Kolejnosc stabilna po path."""

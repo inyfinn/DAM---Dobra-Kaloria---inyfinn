@@ -622,14 +622,15 @@ def run_once(
             should_write_index = False
         if should_write_index:
             try:
-                assets = asset_repo.live_index(new_rows, root_path or "")
+                # W8: bez ROOT None (sciezka wzgledna), nie "" ("/- POLSKA/..." = sciezka wzgledem biezacego dysku)
+                assets = asset_repo.live_index(new_rows, root_path or None)
                 # Kontrakt R: relacje folderu z katalogu (ta sama rewizja = ten sam
                 # wynik na kazdym komputerze), nie z meta ostatniego skanu.
                 try:
                     import folder_relations  # noqa: PLC0415
 
                     report["relations_computed"] = folder_relations.apply_to_entries(
-                        assets, new_rows, root_path or "", _load_overrides(data_dir))
+                        assets, new_rows, root_path or None, _load_overrides(data_dir))
                 except Exception as exc:  # noqa: BLE001 - zostaja wartosci z bazy
                     report.setdefault("warnings", []).append(f"folder_relations: {exc}"[:300])
                 payload = {

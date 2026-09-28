@@ -694,7 +694,17 @@ def handle_get(handler: Any, parsed: Any) -> bool:
             if not a:
                 missing.append(aid)
                 continue
-            ms, iso = _stat_mtime(str(a.get("path") or ""))
+            # W8 28.09.2026 (S1 A/B/C): data z katalogu (branding-index z wierszy PG)
+            # wygrywa - UI nadpisuje nia mtime_ms karty, a dysk tego komputera bywa
+            # opozniona kopia. Stat na dysku tylko, gdy katalog daty nie zna.
+            try:
+                ms = int(a.get("mtime_ms") or 0)
+            except (TypeError, ValueError):
+                ms = 0
+            if ms > 0:
+                iso = datetime.fromtimestamp(ms / 1000, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            else:
+                ms, iso = _stat_mtime(str(a.get("path") or ""))
             row = {
                 "id": aid,
                 "path": a.get("path") or "",

@@ -378,6 +378,14 @@ def _rel_from_logical(path: str) -> str:
     idx = low.find(marker)
     if idx >= 0:
         return s[idx + len(marker) :].lstrip("/")
+    # W8 28.09.2026: ROOT bez segmentu "Marketing" (np. sciezki z migawki file-index
+    # wlasciciela katalogu): stale foldery najwyzszego poziomu wyznaczaja poczatek klucza
+    # (ta sama regula co dam-paths.js isMarketingTail).
+    probe = "/" + low.lstrip("/")
+    for top in ("/- polska/", "/- eksport/", "/-- archiwum --/"):
+        j = probe.find(top)
+        if j >= 0:
+            return ("/" + s.lstrip("/"))[j + 1 :]
     if len(s) >= 3 and s[1] == ":" and s[2] == "/":
         return s[3:].lstrip("/")
     return s.lstrip("/")
@@ -701,6 +709,33 @@ def _asset_mtime_for(rel: str) -> float:
     return _ASSET_MT.get(key, 0.0) if key else 0.0
 
 
+def _outdated(rel: str, version_mtime: float) -> bool:
+    """W8 28.09.2026: miniatura wersji `version_mtime` (s) jest starsza niz wersja pliku w
+    katalogu (_ASSET_MT, z bazy)? Nieznana wersja z ktorejkolwiek strony = False (jak dotad).
+    Czysto z pamieci - wolno w hot path."""
+    if not rel:
+        return False
+    asset_mt = _asset_mtime_for(rel)
+    try:
+        vm = float(version_mtime or 0.0)
+    except (TypeError, ValueError):
+        vm = 0.0
+    return bool(asset_mt and vm and int(asset_mt) > int(vm))
+
+
+def _pending_outdated(rel: str, prof: str) -> tuple[int, bytes, str, dict]:
+    """404 zamiast starej wersji: UI pyta /preview/status i pokazuje "Podglad wkrotce"."""
+    return 404, b"", "application/json", {
+        "ok": False,
+        "error": "preview_outdated",
+        "state": "pending",
+        "stale": True,
+        "profile": prof,
+        "rel": rel,
+        "thumb_source": "cache",
+    }
+
+
 def get_or_build_thumb(
     path: str,
     *,
@@ -741,23 +776,24 @@ def get_or_build_thumb(
         # miniatury jako aktualnej"): ta galaz serwuje cache NATYCHMIAST, bez
         # stat() na oryginale (celowo - stat() na odlaczonym udziale sieciowym
         # kosztuje sekundy przy KAZDEJ karcie siatki, patrz _drive_letter_alive
-        # wyzej). Odswiezenie idzie w tle (_revalidate_thumb) i naprawia sie
-        # dopiero PRZY NASTEPNYM zadaniu - do tego czasu odpowiedz moze byc
-        # stara wersja pliku. Tu tylko OZNACZAMY ten fakt (meta["stale"]),
-        # zeby przestac go ukrywac - porownanie z _ASSET_MT jest w pamieci
-        # (odswiezanej przez refresh_asset_mtimes/run_backfill), wiec zero
-        # dodatkowego IO. Nie zmienia to serwowanych bajtow ani czasu odpowiedzi.
+        # wyzej). Odswiezenie idzie w tle (_revalidate_thumb). Wersja z katalogu
+        # (_ASSET_MT, w pamieci, odswiezana przez refresh_asset_mtimes) rozstrzyga,
+        # czy wpis indeksu jest aktualny - zero dodatkowego IO.
         idx_row = _load_rel_index().get(_rel_index_key(rel, prof)) or {}
         try:
             idx_mtime = float(idx_row.get("mtime") or 0.0)
         except (TypeError, ValueError):
             idx_mtime = 0.0
-        asset_mtime = _asset_mtime_for(rel)
-        stale = bool(asset_mtime and idx_mtime and int(asset_mtime) > int(idx_mtime))
-        return _serve_cached(
-            cached_path, cached_ctype, cached_digest, prof, rel, 0.0, "cache",
-            extra_meta={"stale": True} if stale else None,
-        )
+        if not _outdated(rel, idx_mtime):
+            return _serve_cached(cached_path, cached_ctype, cached_digest, prof, rel, 0.0, "cache")
+        # W8 28.09.2026: katalog zna nowsza wersje niz ta miniatura. Nie serwuj jej jako
+        # aktualnej (zrzuty W7: B i C pokazywaly V1 dla V2). Wersja z katalogu: lokalnie
+        # albo z magazynu centralnego (po digescie z _ASSET_MT), inaczej 404 "pending".
+        # Zero stat() na oryginale; PC z ROOT i tak przebuduje w tle (_revalidate_thumb).
+        fresh = _thumb_without_root(path, prof, network=True)
+        if fresh is not None:
+            return fresh
+        return _pending_outdated(rel, prof)
 
     def _fallback_or(default: tuple[int, bytes, str, dict]) -> tuple[int, bytes, str, dict]:
         # Bez oryginalu: najpierw lokalne pliki po kluczach z NAS/bazy, potem profil
@@ -795,6 +831,10 @@ def get_or_build_thumb(
     mt2 = _mtime_quick(physical)
     if mt2 is None:
         return _fallback_or(miss)
+    if _outdated(rel, mt2) or (rel2 and _outdated(rel2, mt2)):
+        # W8: plik na tym dysku to starsza wersja niz w katalogu (opozniona kopia) - nie
+        # buduj z niego podgladu "aktualnego"; wersja z katalogu albo "pending".
+        return _fallback_or(_pending_outdated(rel2 or rel, prof))
     if rel2:
         rel = rel2
     logical = _rel_from_logical(path)
@@ -953,6 +993,15 @@ def _thumb_404_with_fallback(
             marketing_relative=marketing_relative,
         )
         if hit is not None:
+            version = mt
+            if not version:
+                row = _load_rel_index().get(_rel_index_key(rel, alt)) or {}
+                try:
+                    version = float(row.get("mtime") or 0.0)
+                except (TypeError, ValueError):
+                    version = 0.0
+            if _outdated(rel, version):
+                continue  # W8: starsza wersja z innego profilu tez nie jest "aktualna"
             return _serve_cached(
                 hit,
                 ctype,
@@ -2204,8 +2253,13 @@ def _candidate_digests(rel: str, prof: str) -> list[tuple[str, float]]:
     row = _load_rel_index().get(_rel_index_key(rel, prof))
     if isinstance(row, dict) and row.get("digest"):
         d = str(row["digest"])
-        if all(d != x for x, _ in out):
-            out.append((d, float(row.get("mtime") or 0.0)))
+        try:
+            row_mt = float(row.get("mtime") or 0.0)
+        except (TypeError, ValueError):
+            row_mt = 0.0
+        # W8: wpis indeksu starszy niz wersja w katalogu nie jest kandydatem
+        if all(d != x for x, _ in out) and not (path_rel and _outdated(path_rel, row_mt)):
+            out.append((d, row_mt))
     return out
 
 
@@ -2371,6 +2425,19 @@ def _fetch_missing_index_files() -> dict:
 
 _DB_INDEX_THREAD: threading.Thread | None = None
 DB_INDEX_REFRESH_S = 600.0
+DB_INDEX_LIGHT_S = 30.0
+
+
+def _thumb_index_signature():
+    """pg_db.thumb_cache_index_signature() albo None (siec/brak tabeli)."""
+    if "unittest" in sys.modules:
+        return None
+    try:
+        import pg_db
+
+        return pg_db.thumb_cache_index_signature()
+    except Exception:  # noqa: BLE001
+        return None
 
 
 def start_db_index_watch() -> dict:
@@ -2387,21 +2454,33 @@ def start_db_index_watch() -> dict:
         return {"ok": True, "started": False, "running": True}
 
     def loop() -> None:
+        # W8 28.09.2026: co DB_INDEX_LIGHT_S tani odcisk tabeli (liczba, max published_at);
+        # pelny przebieg przy zmianie albo co DB_INDEX_REFRESH_S jak dotad. Bez tego klient
+        # widzial nowa miniature wlasciciela katalogu dopiero po 10 min ("Podglad wkrotce").
+        last_full: float | None = None
+        seen = None
         while True:
-            res = merge_rel_index_from_db()
-            print("thumb_index_db:", res, flush=True)
-            # Pelne pobieranie (paczka / lista z manifestu) juz ciagnie te same pliki.
-            if not _sync_state.get("running"):
+            sig = _thumb_index_signature() if last_full is not None else None
+            due = (last_full is None or time.monotonic() - last_full >= DB_INDEX_REFRESH_S
+                   or (sig is not None and sig != seen))
+            if due:
+                res = merge_rel_index_from_db()
+                print("thumb_index_db:", res, flush=True)
+                # Pelne pobieranie (paczka / lista z manifestu) juz ciagnie te same pliki.
+                if not _sync_state.get("running"):
+                    try:
+                        fetch_res = _fetch_missing_index_files()
+                        print("thumb_bg_fetch:", fetch_res, flush=True)
+                    except Exception as exc:  # noqa: BLE001
+                        print(f"[dam_thumb_cache] thumb_bg_fetch error: {exc}", flush=True)
                 try:
-                    fetch_res = _fetch_missing_index_files()
-                    print("thumb_bg_fetch:", fetch_res, flush=True)
+                    start_cache_download(force=False)
                 except Exception as exc:  # noqa: BLE001
-                    print(f"[dam_thumb_cache] thumb_bg_fetch error: {exc}", flush=True)
-            try:
-                start_cache_download(force=False)
-            except Exception as exc:  # noqa: BLE001
-                print(f"[dam_thumb_cache] thumb_bg_cache_download error: {exc}", flush=True)
-            time.sleep(DB_INDEX_REFRESH_S)
+                    print(f"[dam_thumb_cache] thumb_bg_cache_download error: {exc}", flush=True)
+                last_full = time.monotonic()
+                if sig is not None:
+                    seen = sig
+            time.sleep(DB_INDEX_LIGHT_S)
 
     _DB_INDEX_THREAD = threading.Thread(target=loop, daemon=True, name="dam-thumb-index-db")
     _DB_INDEX_THREAD.start()
@@ -3109,8 +3188,36 @@ def _record_publish(manifest: dict, publisher: str, nas_display: str) -> tuple[b
     return kv_ok, table_ok
 
 
+def _network_blocked_in_tests() -> bool:
+    """Proces testow (unittest w sys.modules - kod aplikacji go nie importuje, ten sam
+    wzorzec co index_supervisor._real_spawn_blocked_in_tests): nowe sciezki W8 nie lacza
+    sie z baza z konfiguracji drzewa (pg-config.json = produkcja). Testy podmieniaja
+    _thumb_publish_authority / _catalog_changed_once jawnie."""
+    return "unittest" in sys.modules
+
+
+def _thumb_publish_authority() -> Optional[bool]:
+    """index_authority.may_publish() (cache 60 s): True/False, None = brak listy
+    wlascicieli albo blad odczytu (wtedy jak dotad - kazdy PC z ROOT publikuje)."""
+    if _network_blocked_in_tests():
+        return None
+    try:
+        import index_authority
+        import pg_db
+
+        return index_authority.may_publish(pg_db.connect)
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def publish_new_thumbs(*, publisher: str = "") -> dict:
-    """Copy local thumbs missing on NAS. Use SSH when W: is absent."""
+    """Copy local thumbs missing on NAS. Use SSH when W: is absent.
+
+    W8 28.09.2026: gdy lista wlascicieli katalogu istnieje, publikuje TYLKO wlasciciel -
+    opozniona kopia (B) wypychala do magazynu centralnego i dam_thumb_cache_index
+    miniatury starych wersji (thumb-rel-index.json NAS nadpisywany jej widokiem)."""
+    if _thumb_publish_authority() is False:
+        return {"ok": True, "skipped": "not_authority", "copied": 0}
     with _publish_lock:
         return _publish_new_thumbs_locked(publisher=publisher or _publisher_name())
 
@@ -3619,6 +3726,7 @@ def _backfill_jobs(profile: str, failed: dict) -> tuple[list[str], int]:
     da sie odtworzyc z mtime w bazie (plik jest na NAS, brakowalo tylko wpisu)."""
     idx = _load_rel_index()
     jobs: list[str] = []
+    new_version: set[str] = set()
     restored = 0
     # Bez pdftoppm kazdy PDF konczy sie porazka - nie zapisuj ich jako porazek,
     # zeby zbudowaly sie same, gdy Poppler pojawi sie na komputerze.
@@ -3627,8 +3735,17 @@ def _backfill_jobs(profile: str, failed: dict) -> tuple[list[str], int]:
         ext = Path(rel).suffix.lower()
         if ext not in FILL_SUPPORTED_EXT:
             continue
-        if _rel_index_key(rel, profile) in idx:
-            continue
+        row = idx.get(_rel_index_key(rel, profile))
+        if isinstance(row, dict):
+            # W8: wpis jest, ale dla starszej wersji niz w katalogu -> zbuduj nowa
+            # (wczesniej sam wpis wystarczal i nowa wersja nigdy nie powstawala).
+            try:
+                row_mt = float(row.get("mtime") or 0.0)
+            except (TypeError, ValueError):
+                row_mt = 0.0
+            if not (row_mt and int(mt) > int(row_mt)):
+                continue
+            new_version.add(rel)
         d = _digest(rel, mt, profile)
         if d in _REMOTE_DIGESTS or _existing_thumb(d)[0] is not None:
             _remember_rel(rel, profile, d, mt, defer_save=True)
@@ -3637,7 +3754,7 @@ def _backfill_jobs(profile: str, failed: dict) -> tuple[list[str], int]:
         if (no_pdf and ext == ".pdf") or failed.get(rel) == int(mt):
             continue
         jobs.append(rel)
-    jobs.sort(key=lambda r: (_fill_is_archive(r), r))
+    jobs.sort(key=lambda r: (r not in new_version, _fill_is_archive(r), r))
     return jobs, restored
 
 
@@ -3667,7 +3784,8 @@ def run_backfill(
     if max_items:
         jobs = jobs[:max_items]
     lock = threading.Lock()
-    c = {"done": 0, "built": 0, "failed": 0, "timeout": 0, "online_only": 0, "unreachable": 0, "since_publish": 0}
+    c = {"done": 0, "built": 0, "failed": 0, "timeout": 0, "online_only": 0, "unreachable": 0,
+         "outdated_local": 0, "since_publish": 0}
     t0 = time.time()
     started = _utc_iso()
     max_side = PROFILES.get(profile, 480)
@@ -3698,7 +3816,12 @@ def run_backfill(
             # ponytail: plik "tylko online" (Synology Drive na zadanie) trafia do porazek
             # az do zmiany mtime - czytanie sciagneloby caly oryginal. Po przypieciu
             # folderu offline trzeba wyczyscic thumb-backfill-state.json.
-            if mt is not None and _is_online_only(physical):
+            cat_mt = _ASSET_MT.get(rel, 0.0)
+            if mt is not None and cat_mt and int(mt) < int(cat_mt):
+                # W8: dysk tego PC ma starsza wersje niz katalog (opozniona kopia) -
+                # podglad starej wersji nie jest podgladem tego materialu.
+                outcome = "outdated_local"
+            elif mt is not None and _is_online_only(physical):
                 outcome = "online_only"
             elif mt is not None:
                 digest = _digest(rel, mt, profile)
@@ -3717,7 +3840,7 @@ def run_backfill(
                 c[outcome] += 1
                 if outcome == "built":
                     c["since_publish"] += 1
-                elif mt is not None:
+                elif mt is not None and outcome != "outdated_local":
                     failed[rel] = int(mt)
                 due_publish = c["since_publish"] >= publish_every
                 if due_publish:
@@ -3751,6 +3874,57 @@ def run_backfill(
         "seconds": int(time.time() - t0),
         "publish": {k: pub.get(k) for k in ("ok", "transport", "copied", "skipped", "thumb_count", "table", "error")},
     }
+
+
+# W8 28.09.2026: po zmianie katalogu (asset_sync zapisal branding-index z nowymi
+# wierszami) nie czekaj 10-30 min: od razu odswiez wersje z bazy (_ASSET_MT - od tego
+# zalezy "stara wersja nie jest aktualna"), dociagnij spis miniatur z bazy, a na
+# komputerze wlasciciela katalogu zbuduj i opublikuj podglady nowych wersji.
+CATALOG_BACKFILL_MAX = 200
+CATALOG_KICK_DELAY_S = 1.0
+_CATALOG_KICK_LOCK = threading.Lock()
+_CATALOG_KICK: dict = {"running": False, "again": False, "last": {}}
+
+
+def _catalog_changed_once() -> dict:
+    out: dict = {"asset_mtimes": refresh_asset_mtimes()}
+    try:
+        out["db_index"] = merge_rel_index_from_db()
+    except Exception as exc:  # noqa: BLE001
+        out["db_index"] = {"ok": False, "error": str(exc)[:200]}
+    if _thumb_publish_authority() is True and _fill_marketing_root() is not None:
+        out["backfill"] = run_backfill(max_items=CATALOG_BACKFILL_MAX)
+    return out
+
+
+def on_catalog_changed() -> dict:
+    """Jeden watek naraz; kolejne wywolania w trakcie = jeszcze jeden przebieg po nim."""
+    if _network_blocked_in_tests():
+        return {"ok": True, "skipped": "unittest"}
+    with _CATALOG_KICK_LOCK:
+        if _CATALOG_KICK["running"]:
+            _CATALOG_KICK["again"] = True
+            return {"ok": True, "queued": True}
+        _CATALOG_KICK["running"] = True
+
+    def worker() -> None:
+        while True:
+            time.sleep(CATALOG_KICK_DELAY_S)
+            try:
+                res = _catalog_changed_once()
+            except Exception as exc:  # noqa: BLE001
+                res = {"ok": False, "error": str(exc)[:200]}
+            print("thumb_catalog_changed:", res, flush=True)
+            with _CATALOG_KICK_LOCK:
+                _CATALOG_KICK["last"] = res
+                if _CATALOG_KICK["again"]:
+                    _CATALOG_KICK["again"] = False
+                    continue
+                _CATALOG_KICK["running"] = False
+                return
+
+    threading.Thread(target=worker, daemon=True, name="dam-thumb-catalog-changed").start()
+    return {"ok": True, "started": True}
 
 
 def cli(argv: Optional[list[str]] = None) -> None:

@@ -85,6 +85,7 @@ import subprocess
 import sys
 import threading
 import time
+import traceback
 from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -1172,6 +1173,50 @@ def _scan_blocked_reason() -> str:
     if not base:
         return ""
     return "root_partial" if _root_state(base)["state"] == "partial" else ""
+
+
+def _auth_login_safe(*args, **kwargs) -> dict:
+    """W8 28.09.2026 (instalacja 2.4.6): wyjatek w auth_login (np. sqlite3
+    "no such table: device_sessions") zrywal polaczenie w watku HTTP, a UI pokazywalo
+    mylace "Most DAM niedostepny (port 8766)". Teraz: JSON z kodem bledu (trasa oddaje 500)."""
+    try:
+        res = auth_login(*args, **kwargs)
+        return res if isinstance(res, dict) else {"ok": False, "error": "login_failed"}
+    except Exception as exc:  # noqa: BLE001
+        traceback.print_exc()
+        return {
+            "ok": False,
+            "error": "login_failed",
+            "message": "Logowanie nie powiodło się po stronie aplikacji. Spróbuj ponownie za chwilę.",
+            "detail": f"{type(exc).__name__}: {exc}"[:300],
+        }
+
+
+def _media_local_copy_outdated(target: str) -> dict | None:
+    """W8 28.09.2026 (zrzuty A/B/C): /media czyta oryginal z dysku TEGO komputera, a UI
+    (dam-preview-truth.js preferOriginal) podmienia nim miniature karty. Na opoznionej
+    kopii (B) karta pokazywala stara wersje mimo katalogu z nowsza. Plik starszy niz
+    wersja w katalogu (dam_thumb_cache._ASSET_MT, w pamieci) nie jest "tym" materialem:
+    dict z bledem. Nowszy / rowny / nieznany = None (jak dotad). Jeden stat, ktory
+    i tak zaraz robi odczyt pliku."""
+    if not target or dam_thumb_cache is None:
+        return None
+    try:
+        rel = dam_thumb_cache._rel_from_logical(str(target))
+        if not dam_thumb_cache._asset_mtime_for(rel):
+            return None
+        mt = os.path.getmtime(target)
+    except (OSError, AttributeError, TypeError, ValueError):
+        return None
+    if dam_thumb_cache._outdated(rel, mt):
+        return {
+            "ok": False,
+            "error": "local_copy_outdated",
+            "message": "Plik na tym komputerze to starsza wersja niż w katalogu.",
+            "local_mtime": int(mt),
+            "catalog_mtime": int(dam_thumb_cache._asset_mtime_for(rel)),
+        }
+    return None
 
 
 def _mark_built_here(key: str, path: Path) -> str:
@@ -2317,7 +2362,13 @@ def _run_branding_rebuild() -> None:
         if rc != 0:
             raise RuntimeError(f"fat_build_rc_{rc}")
         # Stage 2: slim grid from SQLite (explicit Path — argparse requires it)
-        if BUILD_BRANDING_GRID_INDEX.is_file():
+        # W8 28.09.2026 (W7 znalezisko 2): w trybie rows build-branding-index.py nie pisze
+        # branding-index.json (pisze go scalanie). Swieza instancja nie ma jeszcze pliku -
+        # siatka konczyla sie rc=1 i caly bieg padal PRZED kickiem scalania. Bez pliku
+        # siatke zbuduje publikacja po zapisie indeksu (_on_snapshot_updated).
+        if BUILD_BRANDING_GRID_INDEX.is_file() and not BRANDING_INDEX_FILE.is_file():
+            _append_rebuild_log("full_grid skipped: brak branding-index.json (zbuduje go scalanie)")
+        elif BUILD_BRANDING_GRID_INDEX.is_file():
             with _branding_rebuild_lock:
                 _branding_rebuild_state["stage"] = "grid_from_sqlite"
             lock_handle.update(stage="branding:grid_from_sqlite")
@@ -2455,6 +2506,13 @@ def _on_snapshot_updated(key: str, path: Path) -> None:
     _drop_json_cache(path)
     if key in ("branding-search-index", "branding-index"):
         _schedule_slim_grid_publish(delay_sec=2.0)
+    if key == "branding-index" and dam_thumb_cache is not None:
+        # W8 28.09.2026: nowy katalog -> wersje plikow dla podgladow od razu (nie za 10 min),
+        # u wlasciciela katalogu od razu podglady nowych wersji (nie przez watek co 30 min).
+        try:
+            dam_thumb_cache.on_catalog_changed()
+        except Exception as exc:  # noqa: BLE001
+            print("thumb on_catalog_changed:", exc)
 
 
 def _schedule_slim_grid_publish(delay_sec: float | None = None) -> None:
@@ -9681,6 +9739,11 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(400, {"ok": False, "error": "path_required"})
                 return
             target = _coerce_media_target(path)
+            outdated = _media_local_copy_outdated(target)
+            if outdated is not None:
+                # W8: lokalny oryginal starszy niz katalog - UI zostaje przy miniaturze wersji z katalogu
+                self._json(409, {**outdated, "path": path})
+                return
             ext = Path(target).suffix.lower() if target else ""
             range_hdr = self.headers.get("Range") or ""
             # Wideo: Range + stream bez wczytywania calego pliku do RAM
@@ -10588,13 +10651,16 @@ class Handler(BaseHTTPRequestHandler):
             # a okno "Ustaw nowe haslo" bylo nie do obejscia.
             email_in = data.get("email") or ""
             password_in = data.get("password") or ""
-            res = auth_login(
+            res = _auth_login_safe(
                 email_in,
                 password_in,
                 data.get("device_id") or "",
                 data.get("machine_id") or "",
                 allow_weak_password=bool(data.get("skip_password_change")),
             )
+            if res.get("error") == "login_failed":
+                self._json(500, res)
+                return
             res = self._ip_guard_login_result(res, email_in)
             # Zapisane logowania: tylko po realnym sukcesie (token wydany), nigdy
             # przy password_change_required / invalid_credentials / too_many_attempts.
@@ -10654,13 +10720,16 @@ class Handler(BaseHTTPRequestHandler):
             if pw is None:
                 self._json(200, {"ok": False, "error": "saved_login_unreadable"})
                 return
-            res = auth_login(
+            res = _auth_login_safe(
                 email_in,
                 pw,
                 payload.get("device_id") or "",
                 payload.get("machine_id") or "",
                 allow_weak_password=False,
             )
+            if res.get("error") == "login_failed":
+                self._json(500, res)
+                return
             res = self._ip_guard_login_result(res, email_in)
             if res.get("ok") and res.get("token"):
                 try:

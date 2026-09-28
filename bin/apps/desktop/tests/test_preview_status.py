@@ -298,13 +298,19 @@ class StaleMetaFlagTests(unittest.TestCase):
         (self.cache_dir / "thumbs" / f"{digest}.avif").write_bytes(b"fake-avif-bytes")
 
     def test_flaga_stale_gdy_baza_zna_nowsza_wersje(self):
+        """W8 28.09.2026: stara wersja nie jest juz serwowana z flaga (zrzuty W7: B i C
+        pokazywaly V1 dla V2) - 404 ze stanem pending, UI pokazuje "Podglad wkrotce".
+        Pelny kontrakt: tests/test_thumb_catalog_version.py."""
         rel = "- polska/x/plik.png"
         self._seed_index(rel, "grid", "olddigest", mtime=100.0)
         tc._ASSET_MT[rel] = 200.0  # dam_assets zna nowsza wersje (200 s) niz indeks (100 s)
-        with mock.patch.object(tc, "_marketing_cache_only", return_value=True):
-            code, _body, _ctype, meta = tc.get_or_build_thumb(f"D:/Marketing/{rel}", profile="grid")
-        self.assertEqual(code, 200)
+        with mock.patch.object(tc, "_marketing_cache_only", return_value=True), \
+                mock.patch.object(tc, "_http_get_bytes", return_value=None):
+            code, body, _ctype, meta = tc.get_or_build_thumb(f"D:/Marketing/{rel}", profile="grid")
+        self.assertEqual(code, 404)
+        self.assertNotEqual(body, b"fake-avif-bytes")
         self.assertTrue(meta.get("stale"))
+        self.assertEqual(meta.get("state"), "pending")
 
     def test_brak_flagi_stale_gdy_wersje_sie_zgadzaja(self):
         rel = "- polska/x/plik2.png"

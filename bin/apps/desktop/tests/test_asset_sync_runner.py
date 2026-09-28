@@ -123,6 +123,27 @@ class AssetSyncRunnerTests(unittest.TestCase):
             conn.close()
         self.assertIn("a1", saved)
 
+    def test_rows_mode_no_root_configured_keeps_relative_paths(self) -> None:
+        """W8 28.09.2026 (W7 znalezisko 7): komputer bez ROOT (root_path="") dostawal
+        sciezki "/- POLSKA/..." - na Windows to sciezka wzgledem biezacego dysku.
+        Bez ROOT indeks trzyma sciezke wzgledna katalogu, bez wiodacego "/"."""
+        pg = _pg_mode("rows")
+        row = {
+            "asset_id": "a1", "asset_key": "- polska/y.png", "path_rel": "- POLSKA/y.png",
+            "name": "y.png", "size": 10, "mtime_ms": 123, "content_hash": None,
+            "meta": {"media_type": "photo"}, "deleted_at": None, "updated_at": 1,
+            "updated_by": "M", "seen_by_machine": "M", "rev": 1,
+        }
+        fake_result = {"ok": True, "rows": {"a1": row}, "pulled": True, "push": None,
+                       "next_last_seen": None, "report": None}
+        with patch.object(asset_sync, "sync_cycle", return_value=fake_result):
+            asset_sync_runner.run_once(
+                self.db_path, self.data_dir, root_alive=False, root_path="",
+                machine="M", pg_connect=lambda: pg, on_index_written=None,
+            )
+        payload = json.loads((self.data_dir / "branding-index.json").read_text(encoding="utf-8"))
+        self.assertEqual(payload["assets"][0]["path"], "- POLSKA/y.png")
+
     # ------------------------------------------------------------------
     # Tryb "rows" z ROOT i nowym manifestem: sync ze skanem
     # ------------------------------------------------------------------

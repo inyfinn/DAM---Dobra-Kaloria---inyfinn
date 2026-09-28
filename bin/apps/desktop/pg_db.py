@@ -60,6 +60,11 @@ _LOCK = threading.Lock()
 _CONFIG_CACHE: dict[str, Any] | None = None
 _LAST_HOST: str | None = None
 _CONNECT_TIMEOUT_S = 1
+# W8 28.09.2026: pierwsze polaczenie w procesie (DDNS + TLS po starcie Windows) nie
+# miesci sie w 1 s -> dam_db wchodzil w offline i logowanie szlo do lokalnej SQLite.
+# Do pierwszego udanego polaczenia (_LAST_HOST is None) dluzszy timeout; potem 1 s,
+# zeby padniety serwer nie blokowal kazdego zapytania.
+_FIRST_CONNECT_TIMEOUT_S = 5
 _HEALTH_INTERVAL_S = 5.0
 _HEALTH: dict[str, Any] = {
     "ok": False,
@@ -517,7 +522,7 @@ def connect(_retried: bool = False):
         "dbname": cfg["dbname"],
         "user": cfg["user"],
         "password": cfg["password"],
-        "connect_timeout": _CONNECT_TIMEOUT_S,
+        "connect_timeout": _CONNECT_TIMEOUT_S if _LAST_HOST else _FIRST_CONNECT_TIMEOUT_S,
         "cursor_factory": psycopg2.extras.RealDictCursor,
         "sslmode": cfg.get("sslmode") or "require",
     }
@@ -1309,7 +1314,7 @@ def index_snapshot_meta() -> dict[str, dict[str, Any]]:
     conn = connect()
     try:
         cur = conn.cursor()
-        cur.execute("SELECT to_regclass('public.dam_index_snapshots') AS t")
+        cur.execute("SELECT to_regclass('dam_index_snapshots') AS t")
         row = cur.fetchone()
         if not row or not row.get("t"):
             return {}
@@ -1353,7 +1358,7 @@ def fetch_thumb_cache_rows(since: str | None = None) -> list[dict[str, Any]]:
     conn = connect()
     try:
         cur = conn.cursor()
-        cur.execute("SELECT to_regclass('public.dam_thumb_cache_index') AS t")
+        cur.execute("SELECT to_regclass('dam_thumb_cache_index') AS t")
         row = cur.fetchone()
         if not row or not row.get("t"):
             return []
@@ -1369,6 +1374,23 @@ def fetch_thumb_cache_rows(since: str | None = None) -> list[dict[str, Any]]:
                 "ORDER BY published_at"
             )
         return [dict(r) for r in cur.fetchall()]
+    finally:
+        conn.close()
+
+
+def thumb_cache_index_signature() -> tuple | None:
+    """Tani odcisk dam_thumb_cache_index (liczba wierszy, ostatnie published_at) - do
+    lekkiego sprawdzania co kilkadziesiat sekund (W8, ADR-012 pkt 4). None = brak tabeli."""
+    conn = connect()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT to_regclass('dam_thumb_cache_index') AS t")
+        row = cur.fetchone()
+        if not row or not row.get("t"):
+            return None
+        cur.execute("SELECT COUNT(*) AS n, MAX(published_at) AS m FROM dam_thumb_cache_index")
+        r = cur.fetchone() or {}
+        return (int(r.get("n") or 0), str(r.get("m") or ""))
     finally:
         conn.close()
 

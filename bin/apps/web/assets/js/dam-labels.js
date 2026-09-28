@@ -748,7 +748,9 @@
 
   /** PL vs eksport z kanonicznej sciezki indeksu */
   function detectMarketFromPath(path) {
-    var p = String(path || "").replace(/\\/g, "/").toUpperCase();
+    /* "/" z przodu: komputer bez ROOT ma sciezki wzgledne "- POLSKA/..." (W8 28.09.2026) -
+       ten sam wynik co dla "X:/Marketing/- POLSKA/..." na komputerze z dyskiem. */
+    var p = "/" + String(path || "").replace(/\\/g, "/").toUpperCase();
     if (p.indexOf("/- EKSPORT") !== -1 || p.indexOf("/-EKSPORT") !== -1 || /\/-?\s*GC\b/.test(p) || p.indexOf("/GC/") !== -1) {
       return "GC";
     }

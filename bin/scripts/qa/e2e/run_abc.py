@@ -69,7 +69,8 @@ PG_HOST = os.environ.get("DAM_TEST_PG_HOST", "inyfinn.synology.me")
 PG_PORT = int(os.environ.get("DAM_TEST_PG_PORT", "5433"))
 PG_DB = "dam_eta_test"
 PG_USER = "dam_test"
-OUT_BASE = REPO / "work" / "2026-09-28" / "W7"
+# W8: katalog dowodow z env (domyslnie W8); W7 zostaje nietkniety.
+OUT_BASE = Path(os.environ.get("DAM_E2E_OUT_BASE") or (REPO / "work" / "2026-09-28" / "W8"))
 
 M_ROOT = TESTROOTS / "M"
 X_ROOT = TESTROOTS / "X"
@@ -408,6 +409,12 @@ def setup_instances(stamp: str) -> dict:
             report["moved_aside"][name] = str(moved)
     if not (RUNTIME_DST / "python.exe").is_file():
         report["runtime"] = _robocopy(RUNTIME_SRC, RUNTIME_DST, ["__pycache__"], [])
+    # W8: magazyn podgladow tez od zera w kazdym przebiegu (rename do _old, bez kasowania) -
+    # inaczej thumb-rel-index.json poprzedniego przebiegu (nowszy mtime) podaje podglad
+    # innej wersji pliku niz ta, ktora ma katalog tego przebiegu.
+    moved_central = _move_aside(CENTRAL.parent, stamp)
+    if moved_central:
+        report["moved_aside"]["_central"] = str(moved_central)
     CENTRAL.mkdir(parents=True, exist_ok=True)
     (CENTRAL / "thumbs").mkdir(parents=True, exist_ok=True)
     for name in INSTANCES:
@@ -881,6 +888,105 @@ def rebuild(name: str, label: str, timeout: float = 300.0) -> dict:
             "blocked": blocked, "lock_held_retries": lock_retries, "seconds": round(time.monotonic() - t0, 1)}
 
 
+# ----------------------------------------------------------------------------- panele (W8)
+
+PANEL_META_SKIP = {"generated_at", "generation_id", "elapsed_sec", "ok", "links_from_sqlite"}
+
+
+def _canon_rows(rows: Any, key: str) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for r in rows or []:
+        if isinstance(r, dict):
+            k = str(r.get(key) or r.get("path") or "")
+            out[_strip_root(k) if key == "path" else k] = canonical(r)
+    return out
+
+
+def panel_payloads(name: str) -> dict[str, Any]:
+    """Dokladnie to, co czyta UI: Branding = /branding-grid-head (pierwsze malowanie) i
+    /branding-grid-index (pelna siatka), Wizualizacje = /file-index?fields=viz_latest.
+    Kanonicznie: ID -> wpis po odcieciu ROOT i pol lokalnych, plus kolejnosc ID."""
+    out: dict[str, Any] = {}
+    for label, path, key in (("head", "/branding-grid-head", "id"), ("grid", "/branding-grid-index", "id"),
+                             ("viz", "/file-index?fields=viz_latest", "product_id")):
+        st, body = http(name, "GET", path, timeout=60)
+        rows = None
+        if isinstance(body, dict):
+            rows = body.get("viz_latest") if label == "viz" else body.get("assets")
+        out[label] = {"status": st, "ok": st == 200 and isinstance(rows, list),
+                      "rows": _canon_rows(rows, key) if isinstance(rows, list) else {},
+                      "order": [(_strip_root(str(r.get(key) or r.get("path") or "")) if isinstance(r, dict) else "")
+                                for r in (rows or [])] if label != "viz" else sorted(_canon_rows(rows, key)),
+                      "error": None if isinstance(rows, list) else (body.get("error") if isinstance(body, dict) else str(body)[:200])}
+    return out
+
+
+def compare_panels(panels: dict[str, dict], parts: tuple[str, ...]) -> dict[str, Any]:
+    names = list(panels)
+    ref = names[0]
+    res: dict[str, Any] = {"parts": {}, "ok": True}
+    for part in parts:
+        info: dict[str, Any] = {"status": {n: panels[n][part]["status"] for n in names},
+                                "count": {n: len(panels[n][part]["rows"]) for n in names},
+                                "ids_equal": True, "order_equal": True, "diffs": []}
+        # head bywa pusty na kazdej instancji (fixture bez rol "head") - wtedy wymagamy tylko
+        # zgodnosci; siatka i wizualizacje musza miec tresc.
+        ok = all(panels[n][part]["ok"] for n in names) and (info["count"][ref] > 0 or part == "head")
+        ref_rows = panels[ref][part]["rows"]
+        for n in names[1:]:
+            rows = panels[n][part]["rows"]
+            if set(rows) != set(ref_rows):
+                info["ids_equal"] = False
+                info.setdefault("ids_only", {})[f"{ref}~{n}"] = {ref: sorted(set(ref_rows) - set(rows))[:20],
+                                                                 n: sorted(set(rows) - set(ref_rows))[:20]}
+            if panels[n][part]["order"] != panels[ref][part]["order"]:
+                info["order_equal"] = False
+            for k in sorted(set(rows) & set(ref_rows)):
+                if rows[k] != ref_rows[k]:
+                    fields = _entry_diff(ref_rows[k], rows[k])
+                    a = ref_rows[k] if isinstance(ref_rows[k], dict) else {}
+                    b = rows[k] if isinstance(rows[k], dict) else {}
+                    info["diffs"].append({"key": k, "vs": f"{ref}~{n}", "fields": fields,
+                                          ref: {f: a.get(f) for f in fields[:6]}, n: {f: b.get(f) for f in fields[:6]}})
+        info["ok"] = bool(ok and info["ids_equal"] and info["order_equal"] and not info["diffs"])
+        res["parts"][part] = info
+        res["ok"] = res["ok"] and info["ok"]
+    return res
+
+
+def converge_panels(label: str, parts: tuple[str, ...], timeout: float = 180.0,
+                    want: Callable[[dict], bool] | None = None) -> dict[str, Any]:
+    """Czekaj, az A/B/C maja identyczne ladunki paneli (ID, wartosci kanoniczne, kolejnosc)."""
+    t0 = time.monotonic()
+    while True:
+        panels = {n: panel_payloads(n) for n in INSTANCES}
+        cmp_ = compare_panels(panels, parts)
+        extra = bool(want(panels)) if want else True
+        if (cmp_["ok"] and extra) or time.monotonic() - t0 > timeout:
+            break
+        time.sleep(3)
+    elapsed = time.monotonic() - t0
+    timing(f"panels.{label}", elapsed, ok=cmp_["ok"], want_ok=extra)
+    write_out(f"diffs/panels_{label}.json", {"compare": cmp_, "want_ok": extra, "seconds": round(elapsed, 1),
+                                             "panels": {n: {part: panels[n][part]["rows"] for part in parts}
+                                                        for n in panels}})
+    return {"ok": cmp_["ok"] and extra, "compare": cmp_, "want_ok": extra, "seconds": round(elapsed, 1),
+            "panels": panels}
+
+
+def thumb_probe(name: str, path: str) -> dict[str, Any]:
+    s, body, ct = http(name, "GET", "/thumb-cache?profile=grid&path=" + urllib.parse.quote(path or ""), raw=True, timeout=30)
+    info: dict[str, Any] = {"status": s, "ctype": ct, "bytes": len(body)}
+    if s == 200 and "image" in ct:
+        info["sha"] = hashlib.sha256(body).hexdigest()[:16]
+    else:
+        try:
+            info["body"] = json.loads(body.decode("utf-8") or "{}")
+        except Exception:  # noqa: BLE001
+            info["body"] = body[:200].decode("utf-8", "replace")
+    return info
+
+
 def id_for_rel(rel: str) -> str | None:
     rel_l = rel.replace("\\", "/").lower()
     for aid, r in pg_catalog().items():
@@ -908,6 +1014,8 @@ def sc_first_start() -> None:
     b = rebuild("B", "s1")
     rev_before_b = None
     conv2 = converge("s1_after_B")
+    # W8: jawna asercja na ladunkach, ktore czyta UI Brandingu (head + pelna siatka).
+    panels = converge_panels("s1_branding", ("head", "grid"), timeout=150)
     pg = pg_catalog()
     ids = sorted(aid for aid, r in pg.items() if r.get("deleted_at") is None)
     ev = {"rebuild_A": a, "rebuild_B": b, "pg_live_ids": ids, "pg_max_rev": pg_max_rev(),
@@ -915,12 +1023,15 @@ def sc_first_start() -> None:
           "grid_order_equal": conv2["compare"].get("grid_order_equal"), "grid_orders": conv2["compare"].get("grid_orders"),
           "sync_ok": conv2["sync_ok"], "canonical_ok": conv2["canonical_ok"],
           "first_ok_s": conv2["first_ok_s"],
-          "updated_by": sorted({str(r.get("updated_by")) for r in pg.values()})}
+          "updated_by": sorted({str(r.get("updated_by")) for r in pg.values()}),
+          "panels_branding": {"ok": panels["ok"], "seconds": panels["seconds"],
+                              "parts": {k: {kk: vv for kk, vv in v.items() if kk != "diffs"} | {"diffs": v["diffs"][:10]}
+                                        for k, v in panels["compare"]["parts"].items()}}}
     _STATE["s1_ids"] = ids
     save_state()
     result("S1", "Pierwszy start A/B/C", "Identyczne zestawy assetow i metadane dla wspolnej rewizji",
-           bool(a["ok"] and conv2["sync_ok"] and conv2["canonical_ok"] and len(ids) > 0), ev,
-           f"live={len(ids)} rev={ev['pg_max_rev']} rev_before_b={rev_before_b}")
+           bool(a["ok"] and conv2["sync_ok"] and conv2["canonical_ok"] and panels["ok"] and len(ids) > 0), ev,
+           f"live={len(ids)} rev={ev['pg_max_rev']} rev_before_b={rev_before_b} panele={panels['ok']} ({panels['seconds']} s)")
 
 
 def sc_c_without_root() -> None:
@@ -1018,6 +1129,10 @@ def sc_v2_vs_vanishing_v1() -> None:
     log("S3: M/V2 kontra znikajaca lokalna V1 na B")
     fid = id_for_rel(fixtures.V_FILE)
     before = pg_catalog().get(fid) or {}
+    # W8: podglad tej karty przed V2 na kazdej instancji (sciezka z katalogu instancji).
+    cats0 = {n: instance_catalog(n) for n in INSTANCES}
+    paths = {n: (cats0[n]["full"].get(fid) or {}).get("path") for n in INSTANCES}
+    thumbs_v1 = {n: thumb_probe(n, paths[n]) for n in INSTANCES if paths[n]}
     v2_ts = fixtures.write_v2(M_ROOT)
     ra = rebuild("A", "s3_v2")
     after_a = pg_catalog().get(fid) or {}
@@ -1027,7 +1142,18 @@ def sc_v2_vs_vanishing_v1() -> None:
     rb = rebuild("B", "s3_vanish")
     after_b = pg_catalog().get(fid) or {}
     conv2 = converge("s3_after_B_vanish")
-    ok = bool(rb.get("ok") and after_b and after_b.get("deleted_at") is None and int(after_b["mtime_ms"]) == int(after_a.get("mtime_ms") or -1)
+    # W8: po V2 zadna instancja nie podaje podgladu V1 jako aktualnego; docelowo te same
+    # bajty co wlasciciel (A zbudowal i opublikowal V2), dopuszczalny chwilowo 404 "pending".
+    old_shas = {v.get("sha") for v in thumbs_v1.values() if v.get("sha")}
+    t_th = time.monotonic()
+    ok_th, secs_th, th_after = wait_until(lambda: (lambda d: d if d["A"].get("sha") and d["A"]["sha"] not in old_shas
+                                                   and all(v.get("sha") == d["A"]["sha"] for v in d.values()) else None)(
+        {n: thumb_probe(n, (conv2["cats"][n]["full"].get(fid) or {}).get("path")) for n in INSTANCES}), 240, 5.0)
+    if not ok_th:
+        th_after = {n: thumb_probe(n, (conv2["cats"][n]["full"].get(fid) or {}).get("path")) for n in INSTANCES}
+    timing("s3.thumb_v2_all", time.monotonic() - t_th, ok=ok_th)
+    served_old = sorted(n for n, v in (th_after or {}).items() if v.get("sha") and v["sha"] in old_shas)
+    ok = bool(ok_th and not served_old and rb.get("ok") and after_b and after_b.get("deleted_at") is None and int(after_b["mtime_ms"]) == int(after_a.get("mtime_ms") or -1)
               and int(after_a.get("mtime_ms") or 0) > int(before.get("mtime_ms") or 0) and removed and conv2["ok"]
               and all(fid in c["full"] for c in conv2["cats"].values()))
     ev = {"asset_id": fid, "v1": {k: before.get(k) for k in ("mtime_ms", "rev", "updated_by", "deleted_at")},
@@ -1035,7 +1161,9 @@ def sc_v2_vs_vanishing_v1() -> None:
           "removed_on_X": removed, "rebuild_B": rb,
           "after_B": {k: after_b.get(k) for k in ("mtime_ms", "rev", "updated_by", "deleted_at")},
           "full_mtime": {n: (c["full"].get(fid) or {}).get("mtime_ms") for n, c in conv2["cats"].items()},
-          "grid_mtime": {n: (c["grid"].get(fid) or {}).get("mtime_ms") for n, c in conv2["cats"].items()}}
+          "grid_mtime": {n: (c["grid"].get(fid) or {}).get("mtime_ms") for n, c in conv2["cats"].items()},
+          "thumbs_v1": thumbs_v1, "thumbs_after": th_after, "thumbs_same_as_A_s": round(secs_th, 1),
+          "served_old_version": served_old}
     result("S3", "M/V2 kontra znikajaca lokalna V1", "Nowszy centralny material pozostaje aktywny", ok, ev)
 
 
@@ -1204,6 +1332,17 @@ def sc_gate() -> None:
 
 def sc_viz_file_index() -> None:
     log("S8: panel Wizualizacji - /file-index?fields=viz_latest na A/B/C")
+    # W8: czekaj na zbieznosc (wlasciciel publikuje migawke po lokalnym buildzie, klienci
+    # pobieraja po lekkim sprawdzeniu generacji) i sprawdz wprost Sliwke (A: FRONT-S).
+    sliwka = "baton-sliwka-w-czekoladzie"
+
+    def _sliwka_same(panels):
+        files = {n: ((panels[n]["viz"]["rows"].get(sliwka) or {}).get("file")) for n in panels}
+        return len(set(files.values())) == 1 and all(files.values())
+
+    t_conv = time.monotonic()
+    panels = converge_panels("s8_viz", ("viz",), timeout=240, want=_sliwka_same)
+    t_conv = time.monotonic() - t_conv
     out = {}
     for n in INSTANCES:
         st, res = http(n, "GET", "/file-index?fields=viz_latest", timeout=60)
@@ -1219,8 +1358,13 @@ def sc_viz_file_index() -> None:
     meta = pg_query("SELECT store_key, generation, built_by, built_at, published_at FROM dam_index_snapshots ORDER BY store_key")
     probe = pg_query("SELECT to_regclass('public.dam_index_snapshots')::text AS public_tbl, "
                      "to_regclass('dam_index_snapshots')::text AS search_path_tbl")
-    result("S8", "Wizualizacje: viz_latest A/B/C", "Ten sam wycinek wizualizacji na kazdej instancji", bool(same),
+    sliwka_files = {n: ((panels["panels"][n]["viz"]["rows"].get(sliwka) or {}).get("file")) for n in INSTANCES}
+    result("S8", "Wizualizacje: viz_latest A/B/C", "Ten sam wycinek wizualizacji na kazdej instancji",
+           bool(same and panels["ok"]),
            {"status": {n: v["status"] for n, v in out.items()}, "pairs_equal": pair,
+            "panels_viz": {k: {kk: vv for kk, vv in v.items() if kk != "diffs"} | {"diffs": v["diffs"][:10]}
+                           for k, v in panels["compare"]["parts"].items()},
+            "converged_s": round(t_conv, 1), "sliwka_file": sliwka_files,
             "C_body": out["C"]["canon"] if out["C"]["status"] != 200 else None, "db_snapshots": meta,
             "to_regclass": probe, "snapshots_C": snaps},
            "pelne dane w diffs/s8_viz_latest.json")

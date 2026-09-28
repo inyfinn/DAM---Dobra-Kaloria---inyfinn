@@ -58,7 +58,10 @@ _OFFLINE_MODE = False
 _OFFLINE_REASON = ""
 _OFFLINE_SINCE = 0.0
 # Co tyle sekund w trybie offline proboj znowu DDNS/Postgres (nie zostawaj offline na zawsze).
-_OFFLINE_RETRY_SEC = 120.0
+# W8 28.09.2026: bylo 120 s - po jednym nieudanym pierwszym polaczeniu przy starcie
+# (timeout 1 s) aplikacja przez 2 minuty logowala do lokalnej SQLite. Proba kosztuje
+# najwyzej timeout polaczenia, wiec 15 s jest tanie.
+_OFFLINE_RETRY_SEC = 15.0
 _OFFLINE_HINT = (
     "Baza chwilowo niedostępna. DAM działa na kopii lokalnej."
 )
@@ -191,6 +194,16 @@ def _should_try_postgres() -> bool:
         return False
     if not _OFFLINE_MODE:
         return True
+    # W8: watek zdrowia pg_db (co 5 s) juz polaczyl sie PO wejsciu w offline -> wracaj
+    # od razu, nie czekaj na okno. Tylko odczyt stanu, bez startowania watku.
+    try:
+        import pg_db
+
+        health = getattr(pg_db, "_HEALTH", {}) or {}
+        if health.get("ok") and float(health.get("checked_at") or 0.0) > _OFFLINE_SINCE:
+            return True
+    except Exception:  # noqa: BLE001
+        pass
     return (time.time() - _OFFLINE_SINCE) >= _OFFLINE_RETRY_SEC
 
 
@@ -435,6 +448,86 @@ def reset_path_cache() -> None:
     _STATUS_CACHE_TS = 0.0
 
 
+# W8 28.09.2026 (instalacja 2.4.6, 'no such table: device_sessions'): schemat SQLite
+# zakladany przy KAZDYM pierwszym polaczeniu z danym plikiem, nie tylko w _init_sqlite.
+# init_db() zapamietuje wynik z PG (_INITIALIZED) - gdy PG pozniej padnie, connect()
+# oddaje SQLite, ktorej nikt nie zainicjowal (albo mirror zalozyl tylko 'users').
+_SQLITE_SCHEMA_SQL = """
+            CREATE TABLE IF NOT EXISTS users (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+              name TEXT NOT NULL,
+              role TEXT NOT NULL DEFAULT 'user',
+              password_hash TEXT NOT NULL,
+              auth_provider TEXT NOT NULL DEFAULT 'local',
+              created_at TEXT NOT NULL,
+              updated_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS device_sessions (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              user_id INTEGER NOT NULL,
+              device_id TEXT NOT NULL,
+              machine_id TEXT NOT NULL DEFAULT '',
+              session_id TEXT NOT NULL DEFAULT '',
+              windows_user TEXT NOT NULL DEFAULT '',
+              hostname TEXT NOT NULL DEFAULT '',
+              token_hash TEXT NOT NULL UNIQUE,
+              created_at TEXT NOT NULL,
+              last_seen_at TEXT NOT NULL,
+              revoked INTEGER NOT NULL DEFAULT 0,
+              FOREIGN KEY(user_id) REFERENCES users(id),
+              UNIQUE(user_id, device_id)
+            );
+            CREATE TABLE IF NOT EXISTS audit_log (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              ts TEXT NOT NULL,
+              action TEXT NOT NULL,
+              username TEXT NOT NULL DEFAULT 'anonymous',
+              path TEXT NOT NULL DEFAULT '',
+              local_path TEXT NOT NULL DEFAULT '',
+              detail TEXT NOT NULL DEFAULT '',
+              meta_json TEXT NOT NULL DEFAULT '{}'
+            );
+            CREATE TABLE IF NOT EXISTS asset_product_links (
+              asset_id TEXT NOT NULL,
+              product_id TEXT NOT NULL,
+              score REAL,
+              source TEXT NOT NULL DEFAULT 'refilter',
+              status TEXT NOT NULL DEFAULT 'pending',
+              reason TEXT NOT NULL DEFAULT '',
+              updated_at TEXT NOT NULL DEFAULT '',
+              updated_by TEXT NOT NULL DEFAULT '',
+              PRIMARY KEY (asset_id, product_id)
+            );
+            CREATE INDEX IF NOT EXISTS asset_product_links_status_idx
+              ON asset_product_links (status, score DESC);
+            CREATE TABLE IF NOT EXISTS dam_kv_local (
+              store_key TEXT PRIMARY KEY,
+              payload TEXT NOT NULL,
+              updated_at TEXT NOT NULL,
+              updated_by TEXT NOT NULL DEFAULT ''
+            );
+            CREATE INDEX IF NOT EXISTS audit_log_ts_idx ON audit_log (ts DESC);
+            CREATE INDEX IF NOT EXISTS audit_log_user_idx ON audit_log (username);
+            CREATE INDEX IF NOT EXISTS audit_log_action_idx ON audit_log (action);
+"""
+_SQLITE_SCHEMA_READY: set[str] = set()
+
+
+def _ensure_sqlite_schema(conn: sqlite3.Connection) -> None:
+    conn.executescript(_SQLITE_SCHEMA_SQL)
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(device_sessions)").fetchall()}
+    for name, sql in [
+        ("machine_id", "ALTER TABLE device_sessions ADD COLUMN machine_id TEXT NOT NULL DEFAULT ''"),
+        ("session_id", "ALTER TABLE device_sessions ADD COLUMN session_id TEXT NOT NULL DEFAULT ''"),
+        ("windows_user", "ALTER TABLE device_sessions ADD COLUMN windows_user TEXT NOT NULL DEFAULT ''"),
+        ("hostname", "ALTER TABLE device_sessions ADD COLUMN hostname TEXT NOT NULL DEFAULT ''"),
+    ]:
+        if name not in cols:
+            conn.execute(sql)
+    conn.commit()
+
+
 def _connect_sqlite() -> sqlite3.Connection:
     path = db_path()
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -444,6 +537,13 @@ def _connect_sqlite() -> sqlite3.Connection:
     conn.execute("PRAGMA journal_mode = WAL")
     conn.execute("PRAGMA synchronous = NORMAL")
     conn.execute("PRAGMA busy_timeout = 60000")
+    key = str(path)
+    if key not in _SQLITE_SCHEMA_READY:
+        try:
+            _ensure_sqlite_schema(conn)
+            _SQLITE_SCHEMA_READY.add(key)
+        except sqlite3.Error as exc:  # np. baza tylko do odczytu - nie blokuj odczytu
+            print("dam_db sqlite schema warning:", exc)
     return conn
 
 
@@ -514,77 +614,7 @@ def _restore_users_from_seed() -> int:
 def _init_sqlite() -> dict[str, Any]:
     conn = _connect_sqlite()
     try:
-        conn.executescript(
-            """
-            CREATE TABLE IF NOT EXISTS users (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              email TEXT NOT NULL UNIQUE COLLATE NOCASE,
-              name TEXT NOT NULL,
-              role TEXT NOT NULL DEFAULT 'user',
-              password_hash TEXT NOT NULL,
-              auth_provider TEXT NOT NULL DEFAULT 'local',
-              created_at TEXT NOT NULL,
-              updated_at TEXT NOT NULL
-            );
-            CREATE TABLE IF NOT EXISTS device_sessions (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              user_id INTEGER NOT NULL,
-              device_id TEXT NOT NULL,
-              machine_id TEXT NOT NULL DEFAULT '',
-              session_id TEXT NOT NULL DEFAULT '',
-              windows_user TEXT NOT NULL DEFAULT '',
-              hostname TEXT NOT NULL DEFAULT '',
-              token_hash TEXT NOT NULL UNIQUE,
-              created_at TEXT NOT NULL,
-              last_seen_at TEXT NOT NULL,
-              revoked INTEGER NOT NULL DEFAULT 0,
-              FOREIGN KEY(user_id) REFERENCES users(id),
-              UNIQUE(user_id, device_id)
-            );
-            CREATE TABLE IF NOT EXISTS audit_log (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              ts TEXT NOT NULL,
-              action TEXT NOT NULL,
-              username TEXT NOT NULL DEFAULT 'anonymous',
-              path TEXT NOT NULL DEFAULT '',
-              local_path TEXT NOT NULL DEFAULT '',
-              detail TEXT NOT NULL DEFAULT '',
-              meta_json TEXT NOT NULL DEFAULT '{}'
-            );
-            CREATE TABLE IF NOT EXISTS asset_product_links (
-              asset_id TEXT NOT NULL,
-              product_id TEXT NOT NULL,
-              score REAL,
-              source TEXT NOT NULL DEFAULT 'refilter',
-              status TEXT NOT NULL DEFAULT 'pending',
-              reason TEXT NOT NULL DEFAULT '',
-              updated_at TEXT NOT NULL DEFAULT '',
-              updated_by TEXT NOT NULL DEFAULT '',
-              PRIMARY KEY (asset_id, product_id)
-            );
-            CREATE INDEX IF NOT EXISTS asset_product_links_status_idx
-              ON asset_product_links (status, score DESC);
-            CREATE TABLE IF NOT EXISTS dam_kv_local (
-              store_key TEXT PRIMARY KEY,
-              payload TEXT NOT NULL,
-              updated_at TEXT NOT NULL,
-              updated_by TEXT NOT NULL DEFAULT ''
-            );
-            CREATE INDEX IF NOT EXISTS audit_log_ts_idx ON audit_log (ts DESC);
-            CREATE INDEX IF NOT EXISTS audit_log_user_idx ON audit_log (username);
-            CREATE INDEX IF NOT EXISTS audit_log_action_idx ON audit_log (action);
-            """
-        )
-        cols = {r[1] for r in conn.execute("PRAGMA table_info(device_sessions)").fetchall()}
-        for name, sql in [
-            ("machine_id", "ALTER TABLE device_sessions ADD COLUMN machine_id TEXT NOT NULL DEFAULT ''"),
-            ("session_id", "ALTER TABLE device_sessions ADD COLUMN session_id TEXT NOT NULL DEFAULT ''"),
-            ("windows_user", "ALTER TABLE device_sessions ADD COLUMN windows_user TEXT NOT NULL DEFAULT ''"),
-            ("hostname", "ALTER TABLE device_sessions ADD COLUMN hostname TEXT NOT NULL DEFAULT ''"),
-        ]:
-            if name not in cols:
-                conn.execute(sql)
-        conn.commit()
+        _ensure_sqlite_schema(conn)
         restored = _restore_users_from_seed()
         if restored:
             print(f"dam_db: przywrocono {restored} kont z users-seed.sqlite")

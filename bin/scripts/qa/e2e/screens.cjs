@@ -65,7 +65,20 @@ async function main() {
           const sel = ["[data-asset-id]", ".dam-viz-card", ".dam-branding-card", ".dam-card"];
           const ids = new Set();
           for (const s of sel) document.querySelectorAll(s).forEach((el) => ids.add(el.getAttribute("data-asset-id") || el.id || el.outerHTML.slice(0, 40)));
-          return { count: ids.size, ids: Array.from(ids).slice(0, 50), title: document.title, url: location.href };
+          // W8: stan miniatur na kartach (zaladowany obraz / "Podglad wkrotce" / brak) -
+          // porownanie A/B/C w screens-report.json obok zrzutow.
+          const thumbs = [];
+          document.querySelectorAll("img[src*='thumb-cache']").forEach((img) => {
+            const m = (img.getAttribute("src") || "").match(/[?&]path=([^&]+)/);
+            let p = "";
+            try { p = m ? decodeURIComponent(m[1]) : ""; } catch (e) { p = m ? m[1] : ""; }
+            const i = p.search(/- POLSKA|- EKSPORT|-- ARCHIWUM --/);
+            thumbs.push({ rel: i >= 0 ? p.slice(i) : p, loaded: img.complete && img.naturalWidth > 0,
+                          w: img.naturalWidth, h: img.naturalHeight });
+          });
+          const noviz = Array.from(document.querySelectorAll(".dam-viz-thumb__noviz span")).map((el) => el.textContent.trim());
+          return { count: ids.size, ids: Array.from(ids).slice(0, 50), title: document.title, url: location.href,
+                   thumbs: thumbs.slice(0, 80), noviz: noviz.slice(0, 80) };
         });
         shots[pg] = { file, status, cards, root_modal_text: modalText };
       }

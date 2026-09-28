@@ -191,14 +191,31 @@ def _prune_old_baks(out: Path, keep: int = 2) -> int:
     return removed
 
 
-def _stamp_disk_mtimes(assets: list[dict]) -> int:
-    """Data z dysku w chwili budowy - ta sama, ktora mostek zwraca w /branding/mtimes.
+def _source_is_rows(src: Path) -> bool:
+    """branding-index.json zmaterializowany z wierszy katalogu (asset_sync_runner,
+    "source":"rows")? Tania proba poczatku pliku (plik bywa >300 MB) - ta sama
+    heurystyka co asset_sync_runner._index_looks_like_rows."""
+    try:
+        with src.open("rb") as fh:
+            head = fh.read(4096)
+    except OSError:
+        return False
+    return bool(re.search(rb'"source"\s*:\s*"rows"', head))
 
-    Bez niej UI sortowal "Modyfikacja: najnowsze" dopiero po dociagnieciu dat
-    (widoczny przeskok kart), a na komputerze bez dysku - nigdy.
+
+def _stamp_disk_mtimes(assets: list[dict]) -> int:
+    """Data z dysku TYLKO dla wierszy bez mtime_ms (stary indeks legacy).
+
+    W8 28.09.2026 (S1 A/B/C): wczesniej nadpisywala KAZDY mtime_ms data pliku z
+    dysku tego komputera - komputer z opozniona kopia (B) pokazywal date,
+    kolejnosc i identyfikator materialu starszej wersji mimo katalogu z nowsza.
+    Wartosc z katalogu zawsze wygrywa; w trybie rows funkcja w ogole nie jest
+    wolana (main), bo jedynym zrodlem daty jest wiersz katalogu.
     """
     stamped = 0
     for row in assets:
+        if row.get("mtime_ms"):
+            continue
         try:
             row["mtime_ms"] = int(os.stat(str(row.get("path") or "")).st_mtime * 1000)
             stamped += 1
@@ -292,8 +309,11 @@ def main() -> int:
         print(json.dumps({"ok": False, "error": "empty_source_kept_existing", "out": str(out)}))
         return 0
 
-    stamped = _stamp_disk_mtimes(assets)
-    print(f"mtime z dysku: {stamped}/{len(assets)}", file=sys.stderr)
+    if _source_is_rows(src):
+        print("mtime z katalogu (source=rows), dysk nie jest czytany", file=sys.stderr)
+    else:
+        stamped = _stamp_disk_mtimes(assets)
+        print(f"mtime z dysku (tylko brakujace): {stamped}/{len(assets)}", file=sys.stderr)
 
     generation_id = compute_generation_id(src, args.from_sqlite)
     generated = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
