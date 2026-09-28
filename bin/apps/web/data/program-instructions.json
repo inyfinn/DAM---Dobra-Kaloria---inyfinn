@@ -1,7 +1,7 @@
 {
-  "version": 26,
+  "version": 27,
   "title_pl": "Instrukcje programu DAM",
-  "updated_at": "2026-09-19T19:00:00+02:00",
+  "updated_at": "2026-09-28T12:00:00+02:00",
   "instructions": [
     {
       "id": "preview.cache_first_online_only",
@@ -219,25 +219,26 @@
     {
       "id": "assoc.sqlite_sot_unified_write",
       "must": [
-        "Zrodlo prawdy skojarzen: SQLite asset_product_links (ADR-010).",
-        "Quiz i reczny editor zapisuja przez jedna funkcje repozytorium; JSON override = lustro kompatybilnosci.",
-        "Po decyzji: debounced slim publish (--from-sqlite), bez pelnego fat rebuild.",
-        "/health i /branding/status ujawniaja counts statusow i bledy schematu - nie maskuja jako pusta kolejka."
+        "Źródło prawdy skojarzeń: tabela dam_asset_product_links w PostgreSQL na inyfinn-syno (ADR-011, zastępuje część 'SoT' z ADR-010).",
+        "Lokalna tabela SQLite asset_product_links to offline'owe lustro: każdy zapis (most, Quiz, skrypty OCR) oznacza wiersz jako dirty=1.",
+        "assoc_sync w tle najpierw PULL (wiersze z rev większym niż ostatnio widziany), potem PUSH (dirty=1); przy konflikcie wygrywa nowszy updated_at, a decyzja ręczna (confirmed/rejected/skipped) zawsze bije automatyczną (auto/pending).",
+        "Po decyzji: debounced slim publish (--from-sqlite) z lokalnego lustra, bez pełnego fat rebuild.",
+        "/health i /branding/status ujawniają counts statusów i błędy schematu - nie maskują jako pusta kolejka."
       ],
-      "body_pl": "HARD 2026-08-10: SQLite SoT + mirror override; seed tylko po dry-run/bramce jakosci.",
+      "body_pl": "HARD 2026-09-17 (ADR-011): PostgreSQL jest źródłem prawdy skojarzeń, lokalny SQLite to zsynchronizowane lustro offline; seed tylko po dry-run/bramce jakości.",
       "category": "assoc",
       "must_not": [
-        "Zapisac decyzje quiz/editor tylko do JSON z pominieciem SQLite.",
-        "Nadpisywac confirmed/rejected przy seedzie pending/auto.",
-        "Seedowac masowo bez dry-run walidacji asset_id/product_id.",
-        "Uzywac Postgres/Redis jako SoT skojarzen."
+        "Zapisać decyzję quiz/editor tylko do JSON z pominięciem SQLite.",
+        "Nadpisywać confirmed/rejected przy seedzie pending/auto.",
+        "Seedować masowo bez dry-run walidacji asset_id/product_id.",
+        "Traktować lokalny SQLite jako źródło prawdy skojarzeń - to PostgreSQL (ADR-011)."
       ],
       "priority": "critical",
-      "title_pl": "SQLite SoT skojarzen - jedna sciezka zapisu",
+      "title_pl": "PostgreSQL SoT skojarzeń, SQLite jako lustro offline (ADR-011)",
       "related_kv": [
         "program-instructions"
       ],
-      "updated_at": "2026-08-10",
+      "updated_at": "2026-09-28",
       "related_code": [
         "apps/desktop/assoc_repo.py",
         "apps/desktop/branding_asset_routes.py",

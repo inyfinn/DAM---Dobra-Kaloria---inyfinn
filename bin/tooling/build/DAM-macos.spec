@@ -53,6 +53,9 @@ SKIP_NAMES = (
     "pg-config.bundled.json",
     "pg-config.json",
     "users-seed.sqlite",
+    # Kopia surowego skanu (do ~370 MB) i jego manifest - nie do bundla.
+    "branding-index.scan.json",
+    "branding-scan-dirs.json",
 )
 
 datas = []

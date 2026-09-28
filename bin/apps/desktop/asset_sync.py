@@ -213,11 +213,55 @@ def _content_differs(entry: dict, prev: dict) -> bool:
     return bool(h_new and h_old and h_new != h_old)
 
 
+# Listy, w ktorych kolejnosc NIESIE znaczenie (pierwszy produkt = glowny,
+# dam-branding.js) - porownywane w kolejnosci, bez sortowania.
+_ORDERED_META_LISTS = frozenset({"linked_product_ids", "folder_linked_product_ids"})
+_ABS_PATH_RE = re.compile(r"^(?:[A-Za-z]:[\\/]|\\\\|//|/volumes/|/mnt/|/media/)", re.IGNORECASE)
+
+
+def _canonical_json(v: Any, key: str = "") -> Any:
+    """Postac TYLKO do porownan: listy deterministycznie posortowane po tresci
+    (poza _ORDERED_META_LISTS), a sciezki bezwzgledne sprowadzone do klucza
+    wzglednego - meta folder_variants/folder_editable_files ma sciezki z litera
+    dysku, wiec komputery z ROOT D: i M: widzialyby "inny opis" tego samego pliku
+    na przemian (28.09, przeglad kierownika B)."""
+    if isinstance(v, dict):
+        return {k: _canonical_json(v[k], k) for k in sorted(v)}
+    if isinstance(v, list):
+        items = [_canonical_json(x, key) for x in v]
+        if key in _ORDERED_META_LISTS:
+            return items
+        try:
+            items.sort(key=lambda x: json.dumps(x, sort_keys=True, ensure_ascii=False))
+        except TypeError:
+            pass  # niesortowalna mieszanka typow - zostaw jak jest
+        return items
+    if isinstance(v, str) and _ABS_PATH_RE.match(v):
+        return key_of(v)
+    return v
+
+
+def normalize_meta(meta: dict | None) -> dict:
+    """Kanoniczna postac meta - TYLKO do porownania (_descriptor_differs). Zapis
+    zostaje w kolejnosci ze skanera: kolejnosc folder_variants (Desktop/Tablet/
+    Mobile) widac w UI i musi byc taka sama z ROOT i bez ROOT.
+
+    28.09.2026: build-branding-index sklada listy typu folder_variants /
+    folder_editable_files z kolejnosci przegladu folderu (os.walk/os.scandir),
+    ktora dla remisow (np. dwa pliki z ta sama etykieta "Plik") nie jest
+    gwarantowana miedzy kolejnymi przebudowami indeksu. Ten sam material w
+    kolko wygladal na "zmieniony opis" (reason=meta) i byl wypychany do bazy
+    w kazdym cyklu, mimo ze tresc byla identyczna - tylko kolejnosc elementow
+    listy sie odwracala. Sortowanie list w meta przed porownaniem usuwa te
+    falszywe roznice; build-branding-index ma tez deterministyczny remis (nazwa)."""
+    return _canonical_json(dict(meta or {}))
+
+
 def _descriptor_differs(entry: dict, prev: dict) -> bool:
     """Ten sam plik (mtime), ale inny opis: meta (np. skojarzenia z kontekstu folderu,
     etykieta rozmiaru) albo zapis sciezki/nazwy. 23.09: zmiana samego meta nigdy nie
     trafiala do bazy - komputery bez ROOT zostawaly ze starym opisem na zawsze."""
-    if (entry.get("meta") or {}) != (prev.get("meta") or {}):
+    if normalize_meta(entry.get("meta")) != normalize_meta(prev.get("meta")):
         return True
     for f in ("path_rel", "name"):
         if entry.get(f) and str(entry.get(f)) != str(prev.get(f) or ""):

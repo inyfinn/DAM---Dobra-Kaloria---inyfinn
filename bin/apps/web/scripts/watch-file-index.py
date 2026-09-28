@@ -342,6 +342,9 @@ def spawn_branding_pipeline(*, status_file: Path | None = None) -> None:
                 return
             if rc == 0:
                 _mark_built_here_safe("branding-search-index", WEB_DATA / "branding-search-index.json")
+                # Ten sam fat build pisze campaigns.json - bez znacznika plik nigdy nie
+                # trafialby do bazy (refused_not_built_here). Jak w local_bridge 28.09.
+                _mark_built_here_safe("campaigns", WEB_DATA / "campaigns.json")
             else:
                 print(f"[watch] branding hook finished rc={rc} - nie oznaczam built_here")
 

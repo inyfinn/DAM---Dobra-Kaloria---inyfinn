@@ -549,6 +549,49 @@ class MetaPropagationTests(unittest.TestCase):
         self.assertEqual(asset_sync.diff_scan(rows, {aid: entry}, {""}, 2000, "M",
                                               last_seen={aid}), [])
 
+    def test_reordered_list_in_meta_is_zero_ops(self):
+        """28.09.2026, incydent produkcyjny: piernik_01.tif/piernik_02.tif (i inne
+        pary plikow z ta sama etykieta "Plik" w folder_variants) byly wypychane w
+        kazdym cyklu synchronizacji, choc tresc meta byla identyczna - tylko
+        build-branding-index ulozyl liste folder_variants w innej kolejnosci przy
+        kolejnej przebudowie (remis sortowania po etykiecie). Dict porownywany
+        wprost ({"folder_variants": [A, B]} != {"folder_variants": [B, A]}) dawal
+        reason='meta' w nieskonczonosc - patrz asset_sync.normalize_meta."""
+        variant_a = {"id": "br-003022082", "name": "piernik_01.tif",
+                     "path": "M:/p/piernik_01.tif", "label": "Plik", "media_type": "image"}
+        variant_b = {"id": "br-061019160", "name": "piernik_02.tif",
+                     "path": "M:/p/piernik_02.tif", "label": "Plik", "media_type": "image"}
+        pg = FakePG()
+        aid, rows = self._pushed_row(pg, {"folder_variants": [variant_a, variant_b]})
+        _, entry = asset_sync.scan_entry(
+            "M:/- POLSKA/p/a.png", size=10, mtime_ms=1000, root="M:",
+            meta={"folder_variants": [variant_b, variant_a]},  # sam skan, inna kolejnosc
+        )
+        self.assertEqual(asset_sync.diff_scan(rows, {aid: entry}, {""}, 2000, "M",
+                                              last_seen={aid}), [])
+
+    def test_normalize_meta_sorts_lists_deterministically(self):
+        a = asset_sync.normalize_meta({"folder_variants": [{"id": "2"}, {"id": "1"}]})
+        b = asset_sync.normalize_meta({"folder_variants": [{"id": "1"}, {"id": "2"}]})
+        self.assertEqual(a, b)
+
+
+class CanonicalMetaAcrossRootsTests(unittest.TestCase):
+    """28.09 (przeglad kierownika B): meta ma sciezki z litera dysku i listy, w ktorych
+    kolejnosc bywa znaczaca - porownanie ma ignorowac ROOT, ale nie kolejnosc produktow."""
+
+    def test_same_files_under_d_and_m_are_equal(self):
+        a = {"folder_variants": [{"name": "b", "path": "D:/Marketing/- POLSKA/x/b.png"},
+                                 {"name": "a", "path": "D:/Marketing/- POLSKA/x/a.png"}]}
+        b = {"folder_variants": [{"name": "a", "path": "M:/- POLSKA/x/a.png"},
+                                 {"name": "b", "path": "M:/- POLSKA/x/b.png"}]}
+        self.assertEqual(asset_sync.normalize_meta(a), asset_sync.normalize_meta(b))
+
+    def test_linked_product_order_is_a_real_change(self):
+        a = {"linked_product_ids": ["p1", "p2"]}
+        b = {"linked_product_ids": ["p2", "p1"]}
+        self.assertNotEqual(asset_sync.normalize_meta(a), asset_sync.normalize_meta(b))
+
 
 if __name__ == "__main__":
     unittest.main()

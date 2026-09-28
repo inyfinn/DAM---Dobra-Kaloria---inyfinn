@@ -217,6 +217,8 @@ $xdCommon = @(
 $xfCommon = @(
   "*.pyc", "*.bak*", "*backup*", "*Conflict*", "*_Conflict*", "*conflict_current*", "*.drifted*", "*.pre-*",
   "index-watcher.log", "audit-log.jsonl", "branding-index.json",
+  # Kopia surowego skanu (do ~370 MB) i jego manifest z build-branding-index.py - nie do instalatora.
+  "branding-index.scan.json", "branding-scan-dirs.json",
   "machine-config.json", "dam-connection.env", "pg-config.json"
 )
 

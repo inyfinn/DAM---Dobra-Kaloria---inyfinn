@@ -861,7 +861,10 @@ def enrich_folder_groups(assets: list[dict[str, Any]], file_index: dict) -> None
                     }
                 )
             order = {"Desktop": 0, "Tablet": 1, "Mobile": 2}
-            variants.sort(key=lambda v: (order.get(v["label"], 9), v["label"]))
+            # Remis etykiety rozstrzyga nazwa/sciezka - kolejnosc os.scandir bywa inna
+            # miedzy przebudowami, a meta wyglada wtedy na zmienione (28.09: petla sync).
+            variants.sort(key=lambda v: (order.get(v["label"], 9), v["label"],
+                                         v["name"].casefold(), v["path"]))
             a["folder_variants"] = variants
 
             extra = " ".join(norm(t) for t in (a.get("appearance_tags") or []))

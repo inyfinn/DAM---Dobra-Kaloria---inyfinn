@@ -1,8 +1,30 @@
 # Postęp prac DAM - Faza 3 „ten sam obraz na każdym komputerze”
 
-Stan na 2026-09-28, 00:00. Wydanie: **2.4.3**
-(https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v2.4.3).
+Stan na 2026-09-28, 12:00 (KRZYSZTOFWI). Wydanie: **2.4.4**
+(https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v2.4.4).
 Szczegóły techniczne i pomiary: `bin/docs/PLAN-jedno-zrodlo-prawdy.md`, sekcja „Faza 3”.
+Materiały z debaty kierowników 28.09: `%LOCALAPPDATA%\DAM-repair\kierownicy\` (A-propozycja, B-krytyka, B-przeglad).
+
+## 28.09 - co zrobione (2.4.4)
+
+| # | Co | Dowód |
+|---|----|-------|
+| 1 | „Figa z makiem” w aplikacji na KRZYSZTOFWI: **43 materiały** (32 wizualizacje + 11 doypack), miniatury widoczne. Uwaga: ta aplikacja to jeszcze 2.3.9 (baner „Gotowa aktualizacja”). | zrzut `DAM-repair\243\shots\live-figa.png` |
+| 2 | Instalator bez `branding-index.scan.json` i `branding-scan-dirs.json` (robocopy /XF, Inno Excludes, PyInstaller SKIP_NAMES) + `[InstallDelete]` obu plików - instalatory <= 2.4.3 dokładały cudzy skan, runner brałby go za własny. | robocopy /L: plik pominięty |
+| 3 | `campaigns.json` oznaczany jako własny build po przebudowie Brandingu - w moście i w watcherze (`watch-file-index.py`). | test czerwony -> zielony |
+| 4 | Reguła `assoc.sqlite_sot_unified_write` w `program-instructions.json` zgodna z ADR-011 (PostgreSQL = baza główna, SQLite = lustro offline); `version` 26 -> 27, inaczej most nadpisałby plik starą wersją z bazy. | JSON OK |
+| 5 | **Koniec pętli synchronizacji** (te same materiały wysyłane co cykl): builder przy remisie etykiety zostawiał kolejność z dysku (`os.scandir`), a porównanie meta było wrażliwe na kolejność list. Teraz: porównanie kanoniczne (listy sortowane, ścieżki bezwzględne jako klucz względny - koniec ping-pongu między ROOT D: i M:), bez sortowania `linked_product_ids` (kolejność = główny produkt); zapis do bazy bez zmian formatu; builder sortuje remis po nazwie i ścieżce. | 4 nowe testy |
+| 6 | Test zależny od kolejności (`test_slim_publish_reschedules_when_lock_held`): nowy test podmieniał `rebuild_lock.acquire_lock` zanim `branding_publish` go zaimportował - podróbka zostawała na stałe. | 617 testów OK |
+| 7 | Podpis instalatora 2.4.3 sprawdzony (`OK ok`). Czysta instalacja rozpakowana (innounp) bez uruchamiania - instalator zabija każdy most DAM i nadpisuje wpisy HKCU tego samego AppId. Bez kodu aktywacyjnego czysta kopia nie łączy się z bazą (Figa = 0, zgodnie z oczekiwaniem). | `DAM-repair\243\` |
+
+Testy przy wydaniu: 617 Python desktop OK, wszystkie `test_*.js` OK, `tests-touch-guard.py` OK.
+
+## 28.09 - otwarte po 2.4.4
+
+- **Dowód z aktywowanej czystej instalacji** wymaga kodu aktywacyjnego od admina (kopiowania poświadczeń bazy z tej instalacji odmówiono - słusznie). Alternatywa: zaktualizować aplikację na tym komputerze do 2.4.4 banerem i sprawdzić Figę/miniatury ponownie.
+- **Stare klienty (<= 2.4.3) z ROOT nadal wyślą co cykl materiały z odwróconą kolejnością list** - do czasu aktualizacji do 2.4.4 (nowy klient nie odpowiada na ich zapis, więc pętla nie rośnie).
+- **Koszt porównania kanonicznego** na ~58 tys. wierszy w cyklu ze skanem - niezmierzony.
+- Z punktu 3 niżej nadal otwarte: pokrycie miniatur (backfill na M:\ po godzinach, porcjami), jeden indeksator (decyzja), uszkodzona `bin/DATABASE/dam-local.sqlite` (diagnoza tylko na kopii), repo poza Synology Drive (decyzja).
 
 ## 0. Zasada pracy przy zmianie komputera (HARD)
 

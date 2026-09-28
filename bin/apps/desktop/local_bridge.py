@@ -2228,6 +2228,12 @@ def _run_branding_rebuild() -> None:
             "mark_built_here branding-search-index "
             + _mark_built_here("branding-search-index", WEB_ROOT / "data" / "branding-search-index.json")
         )
+        # build-branding-index.py (stage "fat") pisze tez campaigns.json - bez oznaczenia
+        # "zbudowany tu" nie publikuje sie do bazy (patrz sekcja 3 POSTEP PRAC.md).
+        _append_rebuild_log(
+            "mark_built_here campaigns "
+            + _mark_built_here("campaigns", WEB_ROOT / "data" / "campaigns.json")
+        )
         # Faza 2: swiezy skan z dysku (build-branding-index.py wlasnie sie skonczyl)
         # moze isc do scalania (asset_sync_runner) od razu - nie czekac na watek co 10 min.
         # No-op dopoki dam_meta.asset_index_mode != "rows".

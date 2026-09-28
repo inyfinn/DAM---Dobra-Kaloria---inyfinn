@@ -1,6 +1,6 @@
 ﻿; DAM Windows installer - pelny kreator (licencja, sciezka, aktualizacja)
 #ifndef MyAppVersion
-  #define MyAppVersion "2.4.3"
+  #define MyAppVersion "2.4.4"
 #endif
 #ifndef StageDir
   #define StageDir "..\..\work\dist\staging\DAM-install"
@@ -98,6 +98,10 @@ Type: filesandordirs; Name: "{app}\bin\apps\web\dist"
 Type: filesandordirs; Name: "{app}\bin\apps\web\public"
 Type: filesandordirs; Name: "{app}\bin\apps\web\components"
 Type: files; Name: "{app}\bin\apps\web\*.html"
+; 2.4.4: instalatory <= 2.4.3 dokladaly cudzy skan Brandingu (kopia ~370 MB + manifest).
+; Runner bralby go za wlasny skan dysku - usuwamy; wlasny build odtworzy oba pliki.
+Type: files; Name: "{app}\bin\apps\web\data\branding-index.scan.json"
+Type: files; Name: "{app}\bin\apps\web\data\branding-scan-dirs.json"
 Type: files; Name: "{app}\bin\apps\web\*.js"
 Type: files; Name: "{app}\bin\apps\web\*.py"
 Type: files; Name: "{app}\bin\apps\web\*.css"
@@ -123,7 +127,7 @@ Source: "{#StageDir}\README.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; wymuszajac pelny reskan i zerujac skojarzenia widoczne w Brandingu do czasu jego konca.
 ; Ta sama zasada dla pozostalych plikow stanu uzytkownika (indeksy, ustawienia, kampanie,
 ; statusy, osoby) i lokalnej bazy kont: cicha aktualizacja nie moze ich cofnac do wersji z builda.
-Source: "{#StageDir}\bin\*"; DestDir: "{app}\bin"; Excludes: "apps\web\data\market-index.json,\apps\web\data\branding-index.json,\apps\web\data\file-index.json,\apps\web\data\search-index.json,\apps\web\data\app-settings.json,\apps\web\data\campaigns.json,\apps\web\data\branding-grid-index.json,\apps\web\data\branding-grid-head.json,\apps\web\data\branding-search-index.json,\apps\web\data\lifecycle-status.json,\apps\web\data\product-people.json,\DATABASE\users-seed.sqlite,\PAMIEC-PODRECZNA\thumbs\*"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#StageDir}\bin\*"; DestDir: "{app}\bin"; Excludes: "apps\web\data\market-index.json,\apps\web\data\branding-index.json,\apps\web\data\branding-index.scan.json,\apps\web\data\branding-scan-dirs.json,\apps\web\data\file-index.json,\apps\web\data\search-index.json,\apps\web\data\app-settings.json,\apps\web\data\campaigns.json,\apps\web\data\branding-grid-index.json,\apps\web\data\branding-grid-head.json,\apps\web\data\branding-search-index.json,\apps\web\data\lifecycle-status.json,\apps\web\data\product-people.json,\DATABASE\users-seed.sqlite,\PAMIEC-PODRECZNA\thumbs\*"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Miniatury maja nazwy = skrot tresci, wiec istniejacego pliku nie trzeba nadpisywac (szybsza aktualizacja).
 Source: "{#StageDir}\bin\PAMIEC-PODRECZNA\thumbs\*"; DestDir: "{app}\bin\PAMIEC-PODRECZNA\thumbs"; Flags: onlyifdoesntexist
 Source: "{#StageDir}\bin\apps\web\data\branding-index.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
