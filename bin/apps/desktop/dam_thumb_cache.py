@@ -3554,6 +3554,45 @@ def load_preview_failures() -> dict[str, dict]:
     return entries if isinstance(entries, dict) else {}
 
 
+def preview_state_for_path(path: str, profile: str = "grid") -> dict:
+    """Stan podgladu dla sciezki karty (etap 4 planu): ready / pending / failed /
+    unsupported, wyliczony przez preview_status.classify_asset z tego, co most
+    juz ma w pamieci (indeks rel|profil, _ASSET_MT, dziennik porazek) - zero IO
+    na oryginale, wiec wolno to wolac dla kazdej karty bez podgladu."""
+    import preview_status as ps  # noqa: PLC0415
+
+    prof = (profile or "grid").strip().lower()
+    if prof not in PROFILES:
+        prof = "grid"
+    rel = _rel_from_logical(path)
+    akey = _asset_key(rel) if rel else ""
+    asset_mtime_s = _asset_mtime_for(rel) if rel else 0.0
+    asset = ps.AssetRow(
+        asset_id=akey or rel, path_rel=rel, mtime_ms=int(asset_mtime_s * 1000),
+        name=rel.rsplit("/", 1)[-1] if rel else "",
+    )
+    idx_row = _load_rel_index().get(_rel_index_key(rel, prof)) if rel else None
+    index_entry = None
+    if isinstance(idx_row, dict) and idx_row.get("digest"):
+        try:
+            index_entry = ps.ThumbIndexEntry(digest=str(idx_row["digest"]), mtime=float(idx_row.get("mtime") or 0.0))
+        except (TypeError, ValueError):
+            index_entry = None
+    fail_row = load_preview_failures().get(f"{akey}|{prof}") if akey else None
+    failure = None
+    if isinstance(fail_row, dict):
+        failure = ps.FailureRecord(mtime_ms=int(fail_row.get("mtime_ms") or 0),
+                                   reason=str(fail_row.get("reason") or ""), at=str(fail_row.get("at") or ""))
+        if not asset.mtime_ms:
+            # wersja pliku nieznana w pamieci (brak _ASSET_MT) - porazka zapisana dla
+            # jedynej znanej wersji tego pliku liczy sie jako porazka tej wersji
+            asset = ps.AssetRow(asset_id=asset.asset_id, path_rel=asset.path_rel,
+                                mtime_ms=failure.mtime_ms, name=asset.name)
+    status = ps.classify_asset(asset, profile=prof, index_entry=index_entry,
+                               failure=failure, supported_extensions=FILL_SUPPORTED_EXT)
+    return status.to_dict()
+
+
 def _encode_with_timeout(physical: str, digest: str, max_side: int, timeout_s: float) -> tuple[Optional[Path], str, bool]:
     """(plik, ctype, timed_out). Watek daemon + join(timeout): zawieszony odczyt X:
     nie blokuje kolejki (lekcja z sekcji 9 doktryny - shutdown(wait=True) wisial)."""

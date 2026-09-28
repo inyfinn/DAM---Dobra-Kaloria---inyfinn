@@ -9606,6 +9606,23 @@ class Handler(BaseHTTPRequestHandler):
                 },
             )
             return
+        if parsed.path == "/preview/status":
+            # Etap 4 planu naprawy: stan podgladu karty bez podgladu (ready / pending /
+            # failed / unsupported), liczony z pamieci mostu - bez IO na oryginale.
+            if not dam_thumb_cache:
+                self._json(500, {"ok": False, "error": "dam_thumb_cache_missing"})
+                return
+            qs = parse_qs(parsed.query)
+            path = (qs.get("path") or [""])[0]
+            profile = (qs.get("profile") or ["grid"])[0] or "grid"
+            if not path:
+                self._json(400, {"ok": False, "error": "path_required"})
+                return
+            try:
+                self._json(200, {"ok": True, **dam_thumb_cache.preview_state_for_path(path, profile)})
+            except Exception as exc:  # noqa: BLE001
+                self._json(200, {"ok": False, "state": "pending", "error": str(exc)[:200]})
+            return
         if parsed.path == "/thumb-cache":
             # <img src> bez Bearer - jail przez resolve + isfile w dam_thumb_cache
             if not dam_thumb_cache:

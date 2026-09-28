@@ -3712,9 +3712,32 @@
       img.onerror = null;
       return;
     }
+    var src = img.getAttribute("src") || "";
     wrap.innerHTML =
-      '<div class="dam-viz-thumb__noviz dam-branding-thumb__icon">' +
+      '<div class="dam-viz-thumb__noviz dam-branding-thumb__icon" title="Brak podglądu">' +
       '<i class="uil uil-image" aria-hidden="true"></i><span>Brak podgl.</span></div>';
+    /* Etap 4 planu naprawy: uczciwy stan zamiast jednego "Brak podgl." -
+       most liczy go z pamieci (/preview/status), bez dotykania oryginalu. */
+    var m = src.match(/[?&]path=([^&]+)/);
+    if (!m) return;
+    var box = wrap.querySelector(".dam-viz-thumb__noviz");
+    var label = wrap.querySelector(".dam-viz-thumb__noviz span");
+    var STATES = {
+      pending: ["Podgląd wkrótce", "Podgląd w przygotowaniu"],
+      failed: ["Błąd podglądu", "Nie udało się utworzyć podglądu"],
+      unsupported: ["Format bez podglądu", "Brak podglądu dla tego formatu"],
+    };
+    fetch(bridgeUrl().replace(/\/$/, "") + "/preview/status?profile=grid&path=" + m[1])
+      .then(function (r) {
+        return r.ok ? r.json() : null;
+      })
+      .then(function (s) {
+        var t = s && STATES[s.state];
+        if (!t || !label || !box) return;
+        label.textContent = t[0];
+        box.setAttribute("title", t[1]);
+      })
+      .catch(function () {});
   };
 
   function folderHint(path) {
