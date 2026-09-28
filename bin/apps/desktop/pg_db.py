@@ -19,6 +19,16 @@ Ping HTTP czyta zapamietany wynik watku zdrowia - nigdy nie czeka na NAS.
 
 Jesli baza niedostepna - pg_db.connect() rzuca OperationalError.
 Warstwa dam_db lapie to: przegladanie zostaje, zapis jest wstrzymany.
+
+Izolacja testowa (DECYZJE 2026-09-28b, sekcja W1, pkt B3.3 "Wersja 2" - wygrywa
+nad wczesniejszymi zalozeniami): gdy DAM_TEST_PG=1 ALBO host z DAM_PG_HOST jest
+loopbackiem (127.0.0.1/::1/localhost), konfiguracja NIE dotyka pg-config.json,
+dam-connection.env ani DPAPI (pg_seal) - jedyny host to DAM_PG_HOST, jedyne
+haslo to DAM_PG_PASSWORD (wymagane wprost, bez fallbacku), zero sticky
+_LAST_HOST. connect() w tym trybie dodatkowo wymaga `SELECT 1 FROM
+dam_test_marker` zanim odda polaczenie wywolujacemu (bezpiecznik: polaczenie z
+baza bez tego znacznika nigdy nie jest baza testowa). Bez DAM_TEST_PG=1 i bez
+loopbacku zachowanie jest identyczne jak przed tą zmianą (produkcja).
 """
 from __future__ import annotations
 
@@ -108,6 +118,27 @@ def _is_private_host(host: str) -> bool:
     except ValueError:
         # hostname (inyfinn.synology.me) = nie prywatny -> priorytet DDNS
         return False
+
+
+def _is_loopback_host(host: str) -> bool:
+    """True dla 127.0.0.1/::1/localhost - jedyny sygnal "to jest testowy PG"
+    obok jawnego DAM_TEST_PG=1 (patrz modul docstring, DECYZJE W1 B3.3)."""
+    h = (host or "").strip().lower()
+    if h in ("localhost", "127.0.0.1", "::1"):
+        return True
+    try:
+        return ipaddress.ip_address(h).is_loopback
+    except ValueError:
+        return False
+
+
+def _test_pg_requested(host_candidate: str) -> bool:
+    """DAM_TEST_PG=1 ALBO host docelowy = loopback. NIGDY sam DAM_PG_HOST na
+    inny adres - dam-connection.env moze go ustawiac realnym uzytkownikom
+    (LAN/DDNS), a to nie ma nic wspolnego z izolacja testowa."""
+    if os.environ.get("DAM_TEST_PG", "").strip() == "1":
+        return True
+    return _is_loopback_host(host_candidate)
 
 
 def _prefer_ddns_first(hosts: list[str]) -> list[str]:
@@ -239,6 +270,42 @@ def _load_config() -> dict[str, Any]:
     global _CONFIG_CACHE, _RESEAL_CHECKED
     if _CONFIG_CACHE is not None:
         return _CONFIG_CACHE
+    # Izolacja testowa PRZED dotknieciem dotenv/pg-config.json/DPAPI - patrz modul
+    # docstring i DECYZJE 2026-09-28b W1 B3.3. Bez DAM_TEST_PG=1 i bez hosta
+    # loopback ta galaz nigdy sie nie wykonuje -> produkcja bez zmian.
+    env_host_probe = os.environ.get("DAM_PG_HOST", "").strip()
+    if _test_pg_requested(env_host_probe):
+        password = os.environ.get("DAM_PG_PASSWORD", "").strip()
+        if not env_host_probe or not password:
+            raise PgNotConfigured(
+                "Tryb testowy PG (DAM_TEST_PG=1 lub host loopback) wymaga "
+                "DAM_PG_HOST i DAM_PG_PASSWORD wprost w env - bez fallbacku na "
+                "dam-connection.env / pg-config.json / DPAPI."
+            )
+        allowed_ssl_test = {
+            "disable",
+            "allow",
+            "prefer",
+            "require",
+            "verify-ca",
+            "verify-full",
+        }
+        sslmode_test = str(os.environ.get("DAM_PG_SSLMODE", "disable") or "disable").strip().lower()
+        if sslmode_test not in allowed_ssl_test:
+            sslmode_test = "disable"
+        cfg = {
+            "host": env_host_probe,
+            "hosts": [env_host_probe],
+            "port": int(os.environ.get("DAM_PG_PORT", 55433)),
+            "dbname": os.environ.get("DAM_PG_DBNAME", "dam_eta_test"),
+            "user": os.environ.get("DAM_PG_USER", "dam_test"),
+            "password": password,
+            "sslmode": sslmode_test,
+            "sslrootcert": "",
+            "_test_mode": True,
+        }
+        _CONFIG_CACHE = cfg
+        return cfg
     _load_dotenv_file(ENV_PATH)
     if not _RESEAL_CHECKED and pg_seal is not None:
         # Raz na proces: aktualizacja mogla przywiezc nowszy sealed.json (nowe haslo).
@@ -281,6 +348,7 @@ def _load_config() -> dict[str, Any]:
         raise PgNotConfigured("Baza Synology nie jest skonfigurowana.")
     if not cfg["hosts"]:
         cfg["hosts"] = [cfg["host"]]
+    cfg["_test_mode"] = False
     _CONFIG_CACHE = cfg
     return cfg
 
@@ -414,7 +482,15 @@ def last_host() -> str | None:
 
 
 def _primary_host(cfg: dict[str, Any]) -> str:
-    """Jeden host: sticky publiczny, inaczej pierwszy po sortowaniu DDNS."""
+    """Jeden host: sticky publiczny, inaczej pierwszy po sortowaniu DDNS.
+
+    Tryb testowy (cfg["_test_mode"]): zero sortowania DDNS-pierwszy i zero
+    sticky _LAST_HOST - zawsze dokladnie DAM_PG_HOST (patrz modul docstring,
+    DECYZJE W1 B3.3). To jest jedyne miejsce, ktore w dzisiejszym (bazowym)
+    kodzie kazaloby DDNS wygrac z hostem 127.0.0.1 - test_pg_db_isolation.py
+    pokazuje ten kontrast wprost na _hosts_from_cfg/_prefer_ddns_first."""
+    if cfg.get("_test_mode"):
+        return str(cfg.get("host") or "").strip()
     ordered = _prefer_ddns_first(list(cfg.get("hosts") or []))
     if _LAST_HOST and _LAST_HOST in ordered and not _is_private_host(_LAST_HOST):
         return _LAST_HOST
@@ -450,9 +526,6 @@ def connect(_retried: bool = False):
         kwargs["sslrootcert"] = root
     try:
         conn = psycopg2.connect(**kwargs)
-        _LAST_HOST = host
-        _AUTH_FAILED = False
-        return conn
     except Exception as exc:  # noqa: BLE001
         if _is_auth_error(exc):
             _AUTH_FAILED = True
@@ -469,6 +542,31 @@ def connect(_retried: bool = False):
             f"sslmode={kwargs.get('sslmode')} -> {exc}"
         )
         raise psycopg2.OperationalError(msg) if psycopg2 else RuntimeError(msg)
+
+    if cfg.get("_test_mode"):
+        # Bezpiecznik izolacji (DECYZJE W1 B3.3): PRZED oddaniem polaczenia
+        # (a wiec przed jakimkolwiek zapisem wywolujacego) wymagamy dowodu, ze
+        # to naprawde baza testowa. Brak dam_test_marker -> connect() nigdy nie
+        # oddaje polaczenia, niezaleznie od tego, co host/port sugerowaly.
+        try:
+            probe = conn.cursor()
+            probe.execute("SELECT 1 FROM dam_test_marker LIMIT 1")
+            probe.fetchall()
+            probe.close()
+        except Exception as marker_exc:  # noqa: BLE001
+            try:
+                conn.close()
+            except Exception:  # noqa: BLE001
+                pass
+            raise PgNotConfigured(
+                f"Tryb testowy PG: SELECT 1 FROM dam_test_marker nieudany na "
+                f"{host}:{cfg['port']}/{cfg['dbname']} - polaczenie odrzucone "
+                f"(bezpiecznik izolacji, DECYZJE W1 B3.3)."
+            ) from marker_exc
+
+    _LAST_HOST = host
+    _AUTH_FAILED = False
+    return conn
 
 
 def _set_health(**kwargs: Any) -> None:
