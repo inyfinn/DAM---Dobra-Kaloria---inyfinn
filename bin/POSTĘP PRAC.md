@@ -14,13 +14,12 @@ wszystko robi Claude). Decyzje wykonawcze: `work\kierownicy\2026-09-28b\DECYZJE.
 | 1 | 4.2 przepychanka M/X, listy wariantów liczone ze wspólnego katalogu | zrobione w kodzie (`e45615fd`), jw. |
 | 2 | 5 przełączanie ROOT (numer generacji, `/Volumes`, UNC, dostępność) | zrobione w kodzie (`2a738de3`), dostępność 359 ms; zrzut UI - przy teście instalacji |
 | - | Instalator: stare foldery DAM do Kosza, deinstalacja sprząta, bez zabijania nowego DAM | zrobione w skrypcie (`3732cced`, `ac89e199`), testy piaskownicy OK; pełny test instalacji - przy wydaniu |
-| 3 | Jeden katalog dla wszystkich paneli (panele z bazy, nie z lokalnych JSON; jeden indeksator) | po krokach 1-2 |
+| 3 | Jeden katalog dla wszystkich paneli: właściciel katalogu = `index_authority` (na start KRZYSZTOFWI z M:), bramka w bazie działa też na stare wersje, klient bez uprawnień bierze wersję z bazy, sprawdzanie zmian co ~30 s | decyzja: ADR-012 (`25ca6493`); wdrożenie i testy na `dam_eta_test`: w toku (W5) |
 | 4 | Podglądy: jeden magazyn, stany gotowy/czeka/błąd | po kroku 3 |
 | 5 | Test 3 izolowanych instancji A/B/C na tym PC + test paczki | po krokach 1-4 |
 | 6 | Porządek (21 GB) i wydanie 2.4.6 | na końcu |
 
-Ograniczenia dowodu (stan 28.09): kopia produkcyjnej bazy (pg_dump) zablokowana przez
-klasyfikator Claude Code (odczyt faktów działa); lokalnej bazy testowej nie stawiamy (decyzja właściciela), bazy testowej na NAS też (klasyfikator) - testy na atrapie, integracja z prawdziwym PG niewykonana. Pełny zestaw: 683 testy Python + 27 JS OK. Przy okazji: test `test_index_assoc_backend` uruchamiał prawdziwą przebudowę Brandingu jako sierotę (błąd od 2.4.5) - naprawione (`6a7f1fd2`).
+Ograniczenia dowodu (stan 28.09): kopia produkcji zrobiona przez SSH (`D:\DAM-lokalneackup\pg6-09-28\dam_eta.dump`, 45,5 MB, test odtworzenia: liczby wierszy zgodne); testowa baza `dam_eta_test` + rola `dam_test` na inyfinn-syno; 4.1 i 4.2 na prawdziwym PG: czerwone na 2.4.5, zielone teraz (`b69d2833`). Na serwerze została baza `dam_restore_test` (kopia z testu odtworzenia) - hook blokuje DROP, do usunięcia ręcznie. Pełny zestaw: 683 testy Python + 27 JS OK. Przy okazji: test `test_index_assoc_backend` uruchamiał prawdziwą przebudowę Brandingu jako sierotę (błąd od 2.4.5) - naprawione (`6a7f1fd2`).
 
 Stan na 2026-09-28, 12:00 (KRZYSZTOFWI). Wydanie: **2.4.5**
 (https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v2.4.5).
