@@ -618,6 +618,11 @@ def _rows_mode_active() -> bool:
         desktop_dir = Path(__file__).resolve().parents[2] / "desktop"
         if str(desktop_dir) not in sys.path:
             sys.path.insert(0, str(desktop_dir))
+        import data_mode  # noqa: PLC0415
+
+        # Tryb LOKALNY komputera: scalanie z bazy stoi, OUT pisze skan ROOT.
+        if data_mode.is_local():
+            return False
         import pg_db  # noqa: PLC0415
 
         pg = pg_db.connect()

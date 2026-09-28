@@ -63,6 +63,7 @@ Endpoints:
   GET  /index/status  mtime file-index + postgres + ETA/cancel/snooze + current_item
   GET  /index/report  last_run_new (added/changed) after indeksowanie
   POST /index/rebuild  przebudowa indeksu + miniatur (async)
+  GET/POST /data-mode  tryb danych komputera: {"mode":"live"|"local"} (data_mode.py)
   GET/POST /index/cancel  przerwij biezacy rebuild (index-control.json)
   GET/POST /index/snooze  odroc hourly+watch do konca dnia
   POST /rename-revision-prefix  kazdy zalogowany: kolejka JSON (tag-proposals).
@@ -2494,6 +2495,71 @@ def _snapshot_root_alive() -> bool:
         return False
     # Ta sama definicja co switch_root / /files/status; publikacja tylko z "full".
     return _root_state(base)["state"] == "full"
+
+
+_data_mode_switch: dict[str, Any] = {"running": False, "mode": "", "stage": "", "error": "",
+                                     "started_at": "", "finished_at": ""}
+
+
+def data_mode_status() -> dict[str, Any]:
+    import data_mode
+
+    return {"ok": True, "mode": data_mode.get_mode(), "root_alive": _snapshot_root_alive(),
+            "switch": dict(_data_mode_switch)}
+
+
+def _run_data_mode_refresh(mode: str) -> None:
+    """Po przelaczeniu: LOKALNY = przebuduj indeksy z ROOT; LIVE = pobierz z bazy."""
+    try:
+        if mode == "local":
+            _data_mode_switch["stage"] = "index"
+            res = start_index_rebuild()
+            if not res.get("ok"):
+                raise RuntimeError(str(res.get("error") or "index_rebuild_failed"))
+            while _index_state.get("running"):
+                time.sleep(1.0)
+            _data_mode_switch["stage"] = "branding"
+            start_branding_rebuild()
+            while _branding_rebuild_state.get("running"):
+                time.sleep(1.0)
+            if _branding_rebuild_state.get("last_ok") is False:
+                raise RuntimeError(str(_branding_rebuild_state.get("last_error") or "branding_failed"))
+        else:
+            import index_snapshots
+
+            _data_mode_switch["stage"] = "snapshots"
+            index_snapshots.run_once(WEB_ROOT / "data", _snapshot_root_alive, _on_snapshot_updated)
+            _data_mode_switch["stage"] = "asset_sync"
+            rep = run_asset_sync_once()
+            if not rep.get("ok"):
+                raise RuntimeError(str(rep.get("error") or "asset_sync_failed"))
+        _invalidate_branding_data_caches()
+        _drop_json_cache(INDEX_FILE)
+    except Exception as exc:  # noqa: BLE001
+        _data_mode_switch["error"] = str(exc)[:300]
+    finally:
+        _data_mode_switch.update(running=False, stage="done", finished_at=utc_now())
+
+
+def switch_data_mode(mode: str) -> dict[str, Any]:
+    import data_mode
+
+    mode = str(mode or "").strip().lower()
+    if mode not in data_mode.MODES:
+        return {"ok": False, "error": "bad_mode"}
+    if _data_mode_switch["running"]:
+        return {"ok": False, "error": "switch_running", "switch": dict(_data_mode_switch)}
+    if mode == data_mode.LOCAL and not _snapshot_root_alive():
+        # Tryb LOKALNY bez pelnego ROOT = pusty katalog. Nie przelaczamy.
+        return {"ok": False, "error": "root_unavailable"}
+    res = data_mode.set_mode(mode)
+    if not res.get("ok"):
+        return res
+    _data_mode_switch.update(running=True, mode=mode, stage="starting", error="",
+                             started_at=utc_now(), finished_at="")
+    threading.Thread(target=_run_data_mode_refresh, args=(mode,), daemon=True,
+                     name="dam-data-mode").start()
+    return data_mode_status()
 
 
 def _on_snapshot_updated(key: str, path: Path) -> None:
@@ -9159,6 +9225,13 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as exc:  # noqa: BLE001
                 self._json(200, {"ok": False, "error": str(exc)[:200]})
             return
+        if parsed.path == "/data-mode":
+            # Tryb danych tego komputera: live (baza) / local (tylko ROOT) - data_mode.py.
+            try:
+                self._json(200, data_mode_status())
+            except Exception as exc:  # noqa: BLE001
+                self._json(200, {"ok": False, "error": str(exc)[:200]})
+            return
         if parsed.path == "/asset-sync/status":
             # Faza 2: ostatni cykl scalania (mode, ok, pulled/push, blocked_count).
             try:
@@ -10772,6 +10845,12 @@ class Handler(BaseHTTPRequestHandler):
             payload = data if isinstance(data, dict) else {}
             payload.setdefault("user", user.get("email") or user.get("name") or "")
             self._json(200, append_audit(payload))
+            return
+        if parsed.path == "/data-mode":
+            if self._require_login() is None:
+                return
+            mode = str((data.get("mode") if isinstance(data, dict) else None) or "")
+            self._json(200, switch_data_mode(mode))
             return
         if parsed.path == "/index/rebuild":
             # Przebudowa indeksu z dysku = mutate (PI auth.roles_and_privilege) - tylko admin.

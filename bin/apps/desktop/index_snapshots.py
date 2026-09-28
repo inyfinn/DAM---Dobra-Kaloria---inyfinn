@@ -452,6 +452,13 @@ def pull_newer(
     """Sciagnij z bazy nowsza generacje skanu. Komputer z folderem jest zrodlem - nie
     nadpisujemy mu swiezszego lokalnego skanu starszym z bazy."""
     try:
+        import data_mode
+
+        if data_mode.is_local():
+            return {"ok": True, "pulled": [], "current": [], "missing_in_db": [], "skipped_local_mode": True}
+    except ImportError:
+        pass
+    try:
         import pg_db
 
         metas = pg_db.index_snapshot_meta()

@@ -378,11 +378,20 @@
     document.head.appendChild(s);
   }
 
+  function loadDataMode() {
+    if (window.DamDataMode || document.querySelector("script[data-dam-data-mode]")) return;
+    var s = document.createElement("script");
+    s.src = "assets/js/dam-data-mode.js?v=2.4.8";
+    s.setAttribute("data-dam-data-mode", "1");
+    document.head.appendChild(s);
+  }
+
   function start() {
     hideSettingsUpdateColumn();
     loadCacheSync();
     if (window.location.pathname.indexOf("signin") !== -1) return;
     ensureUi();
+    loadDataMode();
     function go() {
       check();
       schedulePoll(false);

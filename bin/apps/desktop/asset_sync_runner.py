@@ -426,6 +426,14 @@ def run_once(
 ) -> dict[str, Any]:
     data_dir = Path(data_dir)
     try:
+        import data_mode  # noqa: PLC0415
+
+        # Tryb LOKALNY: branding-index.json pisze skan ROOT, nie scalanie z bazy.
+        if data_mode.is_local():
+            return {"ok": True, "mode": "local"}
+    except ImportError:
+        pass
+    try:
         pg = pg_connect()
     except Exception as exc:  # noqa: BLE001 - siec/baza niedostepna
         return {"ok": False, "error": str(exc)[:300]}

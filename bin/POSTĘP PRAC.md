@@ -2,6 +2,10 @@
 
 ## GDZIE JESTEŚMY (aktualizowane na bieżąco)
 
+**2.4.8 (28.09 wieczór, INYFINN):** przełącznik źródła danych LIVE / LOKALNY w stopce panelu bocznego. LIVE = cały katalog z bazy (jak dotąd). LOKALNY = tylko ROOT tego komputera: most nie pobiera migawek z bazy i nie scala wierszy, `build-branding-index.py` pisze `branding-index.json` ze skanu; po przełączeniu indeksy przebudowują się z ROOT (LOKALNY) albo pobierają z bazy (LIVE). Ustawienie per komputer w `bin/apps/desktop/data/data-mode.json` (poza gitem). LOKALNY wymaga pełnego ROOT. Skojarzenia (ręczne decyzje) nadal z bazy w obu trybach. Kod: `data_mode.py`, `GET/POST /data-mode`, `dam-data-mode.js`; test `tests/test_data_mode.py`. Dowód UI: zrzut z atrapą mostu, nie z zainstalowanej aplikacji.
+
+Sprzątanie 28.09 na INYFINN: `work\_kopie` (3,8 GB) i 2 porzucone `branding-index.json.*.tmp` (2×272 MB) w Koszu Windows. **`work\distin-dist` (3,9 GB, stary staging builda) i `work\_konflikty-synology` (279 MB) zniknęły z dysku bez wpisu w Koszu** (Windows usunął je trwale mimo wywołania przez skrypt kosza) - kopia może być w koszu Synology Drive na serwerze. Baza `dam_restore_test` na NAS nadal stoi: jej usunięcie jest nieodwracalne, zasady bezpieczeństwa na to nie pozwalają.
+
 **Otwarte po 2.4.7:** (1) dostarczenie zmian A->B/C 13-26 s zamiast celu 5 s (odczyt co 30 s w moście); (2) `/branding/live-www-scan` dokleja karty ze skanu lokalnego dysku - do decyzji (wyłączyć w trybie rows?); (3) uzupełnienie ~23,8 tys. brakujących miniatur siatki z M: porcjami na KRZYSZTOFWI; (4) `bin/secrets/activation-code.txt` ma inny kod niż `%USERPROFILE%/.dam/activation-code.txt`, którym pieczętuje build; (5) baza `dam_restore_test` na NAS do usunięcia ręcznie (hook blokuje DROP); (6) KINGAUR i INYFINN zaktualizować do 2.4.7; (7) sprzątanie miejsca (wyżej). Dowód z czystego Windows (Sandbox) - niewykonany, test paczki na tym PC + A/B/C.
 
 Cel: każdy komputer pokazuje ten sam Branding i te same wizualizacje. Katalog ma jednego
@@ -68,7 +72,7 @@ Jeśli `git pull` odmawia przez lokalne zmiany: najpierw `git stash push -u -m "
 
 ## 0a. Prawo publikacji (decyzja właściciela, HARD)
 
-**Nikomu nie odbieramy prawa do publikacji.** Dysk M: jest najwierniejszy, ale lokalna kopia na komputerze bywa nowsza, zanim Synology dowiezie zmianę na M:. Rozstrzyga data pliku (nowsza wygrywa), nie komputer. Mechanizm `index_authority` zostaje w kodzie wyłączony. Nie włączać bez wyraźnej decyzji właściciela.
+**28.09 (decyzja właściciela): mechanizm właściciela katalogu jest WŁĄCZONY.** `dam_meta.index_authority = ["KRZYSZTOFWI"]`, wyzwalacze `dam_authority_gate_snapshots` i `dam_authority_gate_assets` aktywne (sprawdzone 28.09 wieczorem). Wspólny katalog zmienia tylko właściciel; inne komputery dodają nowe pliki, ale nie usuwają, nie przywracają i nie nadpisują indeksów. Wcześniejsza decyzja z 27.09 („każdy komputer ma prawo publikacji”) jest nieaktualna. Wycofanie: `work/2026-09-28/W5/rollback-production.sql`.
 
 ## 1. Cel
 
