@@ -1572,6 +1572,16 @@ class IndexSupervisor:
         return {"ok": True, "owned": True, "started": True}
 
     def _spawn_watcher(self) -> subprocess.Popen | None:
+        if _real_spawn_blocked_in_tests():
+            write_watcher_status(
+                {
+                    "ok": False,
+                    "watcher_ok": False,
+                    "error": "test_spawn_blocked",
+                    "last_error": "test_spawn_blocked",
+                }
+            )
+            return None
         if not WATCH_SCRIPT.is_file():
             write_watcher_status(
                 {
@@ -1760,6 +1770,16 @@ def ensure_index_supervisor(*, interval: float = 2.0, depth: int = 5) -> dict[st
         if result.get("owned"):
             _owner = sup
         return {**result, "watcher": read_watcher_status()}
+
+
+def _real_spawn_blocked_in_tests() -> bool:
+    """28.09.2026: testy (unittest) dwa razy zostawily prawdziwy watch-file-index.py,
+    a ten rebuild-branding-pipeline.py na ROOT komputera (sierota, zapis indeksow w
+    drzewie programu). Kod aplikacji nigdy nie importuje unittest - jego obecnosc w
+    sys.modules = proces testow. Swiadomy test integracyjny: DAM_ALLOW_REAL_SPAWN_IN_TESTS=1."""
+    if os.environ.get("DAM_ALLOW_REAL_SPAWN_IN_TESTS", "").strip() == "1":
+        return False
+    return "unittest" in sys.modules
 
 
 def stop_index_supervisor() -> None:
