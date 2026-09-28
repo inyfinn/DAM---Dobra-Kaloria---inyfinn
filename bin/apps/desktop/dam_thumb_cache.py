@@ -689,6 +689,18 @@ def lookup_cached(
     return None, "", "", rel, mt
 
 
+def _asset_mtime_for(rel: str) -> float:
+    """mtime (s) znany z dam_assets dla `rel` (odswiezany w tle przez
+    refresh_asset_mtimes) - 0.0 gdy nieznany. Czysto z pamieci (_ASSET_MT /
+    _ASSET_MT_KEY, jak w _candidate_digests) - ZERO dodatkowego IO, wiec wolno
+    to wolac w hot path get_or_build_thumb bez zadnego ryzyka wydajnosciowego."""
+    mt = _ASSET_MT.get(rel)
+    if mt is not None:
+        return mt
+    key = _ASSET_MT_KEY.get(_asset_key(rel))
+    return _ASSET_MT.get(key, 0.0) if key else 0.0
+
+
 def get_or_build_thumb(
     path: str,
     *,
@@ -725,7 +737,27 @@ def get_or_build_thumb(
                 daemon=True,
                 name="dam-thumb-revalidate",
             ).start()
-        return _serve_cached(cached_path, cached_ctype, cached_digest, prof, rel, 0.0, "cache")
+        # Plan naprawy etap 4 p.3 ("po zmianie zawartosci nie serwuj starej
+        # miniatury jako aktualnej"): ta galaz serwuje cache NATYCHMIAST, bez
+        # stat() na oryginale (celowo - stat() na odlaczonym udziale sieciowym
+        # kosztuje sekundy przy KAZDEJ karcie siatki, patrz _drive_letter_alive
+        # wyzej). Odswiezenie idzie w tle (_revalidate_thumb) i naprawia sie
+        # dopiero PRZY NASTEPNYM zadaniu - do tego czasu odpowiedz moze byc
+        # stara wersja pliku. Tu tylko OZNACZAMY ten fakt (meta["stale"]),
+        # zeby przestac go ukrywac - porownanie z _ASSET_MT jest w pamieci
+        # (odswiezanej przez refresh_asset_mtimes/run_backfill), wiec zero
+        # dodatkowego IO. Nie zmienia to serwowanych bajtow ani czasu odpowiedzi.
+        idx_row = _load_rel_index().get(_rel_index_key(rel, prof)) or {}
+        try:
+            idx_mtime = float(idx_row.get("mtime") or 0.0)
+        except (TypeError, ValueError):
+            idx_mtime = 0.0
+        asset_mtime = _asset_mtime_for(rel)
+        stale = bool(asset_mtime and idx_mtime and int(asset_mtime) > int(idx_mtime))
+        return _serve_cached(
+            cached_path, cached_ctype, cached_digest, prof, rel, 0.0, "cache",
+            extra_meta={"stale": True} if stale else None,
+        )
 
     def _fallback_or(default: tuple[int, bytes, str, dict]) -> tuple[int, bytes, str, dict]:
         # Bez oryginalu: najpierw lokalne pliki po kluczach z NAS/bazy, potem profil
@@ -796,6 +828,7 @@ def get_or_build_thumb(
         pass
     built, ctype = _encode_thumb(physical, avif_p, jpg_p, max_side)
     if built is None:
+        record_preview_failure(_asset_key(rel), mtime_ms=int(mt2 * 1000), profile=prof, reason="encode_failed")
         return 422, b"", "application/json", {"ok": False, "error": "encode_failed"}
     return _serve_cached(built, ctype, digest, prof, rel, mt2, "original")
 
@@ -3465,6 +3498,62 @@ def _backfill_state_path() -> Path:
     return platform_compat.user_state_dir() / BACKFILL_STATE_NAME
 
 
+# ---------------------------------------------------------------------------
+# Plan naprawy etap 4 p.1-2 (preview_status.py): kazda realna porazka budowy
+# miniatury dla KONKRETNEJ wersji pliku zostaje zapisana lokalnie, zeby
+# bin/scripts/ops/preview-coverage.py mogl zglosic stan "failed" (z powodem)
+# zamiast wiecznego "pending". Osobny plik od thumb-backfill-state.json:
+# tamten trzyma tylko postep JEDNEGO biezacego przebiegu backfillu (jeden
+# profil, klucz = rel bez profilu, mtime w SEKUNDACH jako int) i jest
+# nadpisywany co przebieg; ten jest trwalym, ograniczonym rejestrem porazek
+# per (asset, profil, wersja), czytanym przez raport pokrycia.
+# Klucz = asset_key(rel) (patrz asset_ids.asset_key) - NIGDY litera dysku.
+# ---------------------------------------------------------------------------
+PREVIEW_FAILURES_FILE = "preview-failures.json"
+PREVIEW_FAILURES_CAP = 5000
+
+_PREVIEW_FAIL_LOCK = threading.Lock()
+
+
+def _preview_failures_path() -> Path:
+    return platform_compat.user_state_dir() / PREVIEW_FAILURES_FILE
+
+
+def record_preview_failure(path_key: str, *, mtime_ms: int, profile: str, reason: str) -> None:
+    """Zapamietaj porazke budowy podgladu dla (path_key, profile, mtime_ms).
+
+    `path_key` MUSI byc juz znormalizowany przez asset_ids.asset_key (wolane
+    tu jako `_asset_key`) - to samo, czego uzywa _ASSET_MT_KEY, zeby raport
+    pokrycia mogl polaczyc ten wpis z wierszem dam_assets bez wzgledu na
+    litere dysku/wielkosc liter. Plik ma twardy limit wpisow (PREVIEW_FAILURES_CAP);
+    po przekroczeniu najstarsze (wg `at`) odpadaja."""
+    key = f"{path_key}|{profile}".strip("|")
+    if not key or not path_key:
+        return
+    with _PREVIEW_FAIL_LOCK:
+        p = _preview_failures_path()
+        data = _read_json_file(p)
+        entries = data.get("entries") if isinstance(data.get("entries"), dict) else {}
+        entries[key] = {
+            "path_key": path_key,
+            "profile": profile,
+            "mtime_ms": int(mtime_ms or 0),
+            "reason": str(reason or "")[:200],
+            "at": _utc_iso(),
+        }
+        if len(entries) > PREVIEW_FAILURES_CAP:
+            ordered = sorted(entries.items(), key=lambda kv: str((kv[1] or {}).get("at") or ""))
+            entries = dict(ordered[-PREVIEW_FAILURES_CAP:])
+        _write_json_atomic(p, {"entries": entries, "updated_at": _utc_iso()})
+
+
+def load_preview_failures() -> dict[str, dict]:
+    """entries: klucz 'asset_key(rel)|profile' -> {path_key, profile, mtime_ms, reason, at}."""
+    data = _read_json_file(_preview_failures_path())
+    entries = data.get("entries")
+    return entries if isinstance(entries, dict) else {}
+
+
 def _encode_with_timeout(physical: str, digest: str, max_side: int, timeout_s: float) -> tuple[Optional[Path], str, bool]:
     """(plik, ctype, timed_out). Watek daemon + join(timeout): zawieszony odczyt X:
     nie blokuje kolejki (lekcja z sekcji 9 doktryny - shutdown(wait=True) wisial)."""
@@ -3583,6 +3672,7 @@ def run_backfill(
                     outcome = "built"
                 else:
                     outcome = "timeout" if timed_out else "failed"
+                    record_preview_failure(_asset_key(rel), mtime_ms=int(mt * 1000), profile=profile, reason=outcome)
             with lock:
                 c["done"] += 1
                 c[outcome] += 1
