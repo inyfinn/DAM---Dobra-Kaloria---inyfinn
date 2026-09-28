@@ -21,7 +21,8 @@
   Tego skryptu NIE uruchamiamy tutaj - tylko sprawdzamy parserem PowerShell.
 #>
 param(
-  [string]$Version = ""
+  [string]$Version = "",
+  [switch]$Resume
 )
 
 $ErrorActionPreference = "Stop"
@@ -49,19 +50,31 @@ if (-not $env:LOCALAPPDATA -or -not [System.IO.Path]::IsPathRooted($env:LOCALAPP
 }
 $dst = Join-Path $env:LOCALAPPDATA "DAM-build\src-$Version-$commit"
 
-# Odmawiamy, gdy katalog docelowy juz istnieje - nie nadpisujemy cudzej pracy.
-if (Test-Path -LiteralPath $dst) {
-  throw "Katalog docelowy juz istnieje: $dst - usun go recznie (to nie jest repo, wolno) albo podaj inna wersje/commit."
-}
-
 Write-Host "GIT_ROOT (zrodlo)   = $GitRoot"
 Write-Host "Wersja/commit       = $Version / $commit"
 Write-Host "Katalog docelowy    = $dst (poza Synology Drive - w LOCALAPPDATA)"
 Write-Host ""
-Write-Host "Tworze czysty worktree HEAD ($commit) przez 'git worktree add --detach' ..."
 
-& git -C $GitRoot worktree add --detach $dst HEAD
-if ($LASTEXITCODE -ne 0) { throw "git worktree add nie powiodl sie (exit $LASTEXITCODE)." }
+if (Test-Path -LiteralPath $dst) {
+  # -Resume: dokoncz przygotowanie na worktree TEGO SAMEGO commita (np. po przerwaniu).
+  # Bez -Resume odmawiamy - nie nadpisujemy cudzej pracy.
+  if (-not $Resume) {
+    throw "Katalog docelowy juz istnieje: $dst - uzyj -Resume (ten sam commit) albo innej wersji/commita."
+  }
+  $have = (& git -C $dst rev-parse --short HEAD 2>$null | Select-Object -First 1)
+  if ($have -ne $commit) { throw "-Resume: $dst jest na $have, a HEAD to $commit - odmawiam." }
+  Write-Host "Worktree istnieje na $commit - kontynuuje (-Resume)."
+} else {
+  Write-Host "Tworze czysty worktree HEAD ($commit) przez 'git worktree add --detach' ..."
+  # PS 5.1: komunikat gita na stderr ("Preparing worktree") przy EAP=Stop konczy skrypt
+  # jako NativeCommandError, choc git sie udal - decyduje kod wyjscia, nie stderr.
+  $eap = $ErrorActionPreference
+  $ErrorActionPreference = "Continue"
+  & git -C $GitRoot worktree add --detach $dst HEAD 2>&1 | ForEach-Object { Write-Host "  git: $_" }
+  $rc = $LASTEXITCODE
+  $ErrorActionPreference = $eap
+  if ($rc -ne 0) { throw "git worktree add nie powiodl sie (exit $rc)." }
+}
 Write-Host "Worktree gotowy: $dst (dokladnie stan z commita $commit, bez lokalnych zmian w bin/apps/web/data)."
 Write-Host ""
 
