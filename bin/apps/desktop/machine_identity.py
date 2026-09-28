@@ -90,13 +90,24 @@ def _system_volume_serial() -> str:
         return ""
 
 
+def test_instance_name() -> str:
+    """Nazwa izolowanej instancji testowej (plan naprawy, sekcja 0 i 8: trzy
+    instancje A/B/C na JEDNYM komputerze i JEDNYM koncie Windows musza miec rozne
+    machine_id/device_id). Dziala WYLACZNIE razem z DAM_TEST_PG=1 (ten sam
+    przelacznik, ktory w pg_db.py izoluje baze testowa). Bez DAM_TEST_PG=1 zmienna
+    DAM_TEST_INSTANCE jest ignorowana - produkcja liczy tozsamosc jak dotad."""
+    if (os.environ.get("DAM_TEST_PG") or "").strip() != "1":
+        return ""
+    return (os.environ.get("DAM_TEST_INSTANCE") or "").strip().lower()
+
+
 def collect_raw_parts() -> dict[str, str]:
     hostname = (socket.gethostname() or platform.node() or "").strip().lower()
     win_user = (getpass.getuser() or os.environ.get("USERNAME") or "").strip().lower()
     domain = (os.environ.get("USERDOMAIN") or "").strip().lower()
     guid = _win_machine_guid()
     vol = _system_volume_serial()
-    return {
+    parts = {
         "machine_guid": guid,
         "hostname": hostname,
         "windows_user": win_user,
@@ -104,20 +115,27 @@ def collect_raw_parts() -> dict[str, str]:
         "volume_serial": vol,
         "platform": sys.platform,
     }
+    instance = test_instance_name()
+    if instance:
+        parts["test_instance"] = instance
+    return parts
 
 
 def compute_machine_id(parts: dict[str, str] | None = None) -> str:
     p = parts or collect_raw_parts()
     # machine_guid + hostname + windows_user (+ domain) - bez sciezek lokalnych
-    material = "|".join(
-        [
-            p.get("machine_guid") or "noguid",
-            p.get("hostname") or "nohost",
-            p.get("userdomain") or "nodomain",
-            p.get("windows_user") or "nouser",
-            p.get("volume_serial") or "novol",
-        ]
-    )
+    fields = [
+        p.get("machine_guid") or "noguid",
+        p.get("hostname") or "nohost",
+        p.get("userdomain") or "nodomain",
+        p.get("windows_user") or "nouser",
+        p.get("volume_serial") or "novol",
+    ]
+    # Tylko tryb testowy (test_instance_name): osobna tozsamosc instancji A/B/C.
+    # Bez tego pola material jest identyczny jak przed zmiana (produkcja bez zmian).
+    if p.get("test_instance"):
+        fields.append("test-instance:" + str(p["test_instance"]))
+    material = "|".join(fields)
     digest = hashlib.sha256(material.encode("utf-8")).hexdigest()[:32]
     return "dam-mid-" + digest
 
@@ -134,7 +152,7 @@ def new_session_id() -> str:
 def collect_identity() -> dict[str, Any]:
     parts = collect_raw_parts()
     mid = compute_machine_id(parts)
-    return {
+    out = {
         "ok": True,
         "machine_id": mid,
         "device_id": device_id_for_machine(mid),
@@ -145,6 +163,9 @@ def collect_identity() -> dict[str, Any]:
         "has_machine_guid": bool(parts.get("machine_guid")),
         "collected_at": _utc(),
     }
+    if parts.get("test_instance"):
+        out["test_instance"] = parts["test_instance"]
+    return out
 
 
 def write_identity_runtime(identity: dict[str, Any] | None = None) -> Path:
