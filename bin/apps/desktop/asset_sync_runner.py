@@ -29,6 +29,7 @@ import json
 import os
 import sqlite3
 import time
+import unicodedata
 from pathlib import Path
 from typing import Any, Callable
 
@@ -42,6 +43,7 @@ MANIFEST_NAME = "branding-scan-dirs.json"
 SCAN_NAME = "branding-index.scan.json"
 FALLBACK_SCAN_NAME = "branding-index.json"
 INDEX_NAME = "branding-index.json"
+OVERRIDES_NAME = "branding-associations-overrides.json"
 
 # Faza 3 (decyzja kierownika 27.09.2026): komputer bez uprawnien (index_authority.py)
 # smie dodawac/aktualizowac materialy, ale nie kasowac ich we wspolnej bazie -
@@ -51,6 +53,35 @@ NOT_AUTHORITY_BUCKET = "(wstrzymane: brak uprawnien do usuniec - not_authority)"
 
 def _now_ms() -> int:
     return int(time.time() * 1000)
+
+
+def _norm_root(path: Any) -> str:
+    """ROOT do porownan: NFC, ukosniki w przod, bez koncowego '/', bez wielkosci liter."""
+    p = unicodedata.normalize("NFC", str(path or "")).replace("\\", "/").rstrip("/")
+    return p.casefold()
+
+
+def current_root_gen(root_path: str) -> str:
+    """Kontrakt G: znacznik generacji ROOT dla obserwacji i manifestu.
+
+    Numer generacji z dam_path_resolve.current_root_generation() (W3), jesli jest;
+    bez niego sama znormalizowana sciezka ROOT. Oba skladniki w jednym napisie -
+    zmiana ktoregokolwiek = obserwacje z innego ROOT."""
+    gen: Any = None
+    try:
+        import dam_path_resolve  # noqa: PLC0415
+
+        getter = getattr(dam_path_resolve, "current_root_generation", None)
+        if callable(getter):
+            gen = getter()
+    except Exception:  # noqa: BLE001 - brak gettera / blad odczytu = porownanie samej sciezki
+        gen = None
+    return f"{'-' if gen is None else gen}|{_norm_root(root_path)}"
+
+
+def _load_overrides(data_dir: Path) -> dict | None:
+    raw = _read_json(data_dir / OVERRIDES_NAME) if (data_dir / OVERRIDES_NAME).is_file() else None
+    return raw if isinstance(raw, dict) else None
 
 
 def _index_looks_like_rows(index_path: Path) -> bool:
@@ -175,7 +206,8 @@ def _is_allowed_without_authority(op: dict[str, Any]) -> bool:
 def _sync_cycle_restricted_ops(pg, local_rows: dict, *, scan: dict | None = None,
                                 scanned_dirs=(), failed_dirs=(), confirmed_dirs=(),
                                 last_seen=None, scan_time_ms: int = 0,
-                                machine: str = "", now_ms: int | None = None) -> dict[str, Any]:
+                                machine: str = "", now_ms: int | None = None,
+                                root_gen: Any = None) -> dict[str, Any]:
     """Ta sama orkiestracja co asset_sync.sync_cycle (pull -> diff -> push -> pull),
     ZLOZONA tu z publicznych funkcji asset_sync.py bez zmiany tego pliku (zakaz
     kierownika) - jedyna roznica: operacje spoza _is_allowed_without_authority sa
@@ -197,7 +229,7 @@ def _sync_cycle_restricted_ops(pg, local_rows: dict, *, scan: dict | None = None
     first = asset_sync.pull_since(pg, asset_sync.max_rev(rows))
     rows = asset_sync.apply_remote(rows, first["rows"])
     out: dict[str, Any] = {"ok": first["ok"], "rows": rows, "report": None, "push": None,
-                           "next_last_seen": None if last_seen is None else set(last_seen)}
+                           "next_last_seen": asset_sync._copy_seen(last_seen)}  # noqa: SLF001
     if not first["ok"]:
         out["error"] = first.get("error", "")
         return out
@@ -206,6 +238,7 @@ def _sync_cycle_restricted_ops(pg, local_rows: dict, *, scan: dict | None = None
     report = asset_sync.diff_scan_report(
         rows, scan, scanned_dirs, scan_time_ms, machine,
         last_seen=last_seen, failed_dirs=failed_dirs, confirmed_dirs=confirmed_dirs,
+        root_gen=root_gen,
     )
     ops = report["ops"]
     kept_ops = [op for op in ops if _is_allowed_without_authority(op)]
@@ -225,7 +258,20 @@ def _sync_cycle_restricted_ops(pg, local_rows: dict, *, scan: dict | None = None
     out["rows"] = asset_sync.apply_remote(rows, second["rows"])
     out["ok"] = bool(pushed["ok"] and second["ok"])
     if out["ok"]:
-        out["next_last_seen"] = report["next_last_seen"]
+        nls = report["next_last_seen"]
+        held_ids = {op.get("asset_id") for op in held_back}
+        if isinstance(nls, dict) and held_ids:
+            # 28.09 (W2): wstrzymana operacja nie "zuzywa" obserwacji - zostaje
+            # poprzednia, zeby po nadaniu uprawnien zmiana (np. samego opisu)
+            # zostala wykryta ponownie, a nie uznana za juz wyslana.
+            before = asset_sync.observations(last_seen) or {}
+            for aid in held_ids:
+                if aid in before:
+                    nls[aid] = dict(before[aid])
+                else:
+                    nls.pop(aid, None)
+        out["next_last_seen"] = asset_sync.stamp_observed_rev(
+            nls, out["rows"], [aid for aid in scan if aid not in held_ids])
     else:
         out["error"] = pushed.get("error") or second.get("error", "")
     return out
@@ -295,9 +341,19 @@ def run_once(
             conn = sqlite3.connect(str(db_path))
             asset_repo.ensure_local(conn)
             rows = asset_repo.load_rows(conn)
-            last_seen = asset_repo.load_last_seen(conn)
+            seen_state = asset_repo.load_observations(conn)
         except Exception as exc:  # noqa: BLE001 - lokalny magazyn niedostepny/nie istnieje jeszcze
             return {"ok": False, "error": f"asset_repo: {exc}"[:300], "mode": "rows"}
+
+        # Kontrakt O + G (28.09): obserwacje v2; z v1 (2.4.5) - wpisy bez wersji.
+        # Obserwacje zapisane przy innym ROOT/generacji = jak po reset_scan_memory:
+        # pierwszy skan na tym ROOT nic nie usuwa i nic nie przywraca.
+        root_gen = current_root_gen(root_path)
+        last_seen = seen_state.get("obs")
+        root_gen_changed = (seen_state.get("source") == "v2" and last_seen is not None
+                            and seen_state.get("root_gen") != root_gen)
+        if root_gen_changed:
+            last_seen = None
 
         state_last_scan = _int_state(asset_repo, conn, STATE_KEY_LAST_SCAN_TIME, 0)
         confirmed_raw = asset_repo.get_state(conn, STATE_KEY_CONFIRMED_DIRS)
@@ -313,10 +369,18 @@ def run_once(
         scan_kwargs: dict[str, Any] = {"machine": machine}
         did_scan = False
         manifest = None
+        manifest_root_mismatch = False
         if root_alive:
             manifest_path = data_dir / MANIFEST_NAME
             manifest = _read_json(manifest_path) if manifest_path.is_file() else None
-        if root_alive and isinstance(manifest, dict):
+        if isinstance(manifest, dict):
+            # Kontrakt G: manifest zbudowany przy innym ROOT (np. skan sprzed
+            # przelaczenia, dokonczony po nim) nie jest skanem biezacego ROOT.
+            # Brak pola "root" (starszy build) - porownanie niemozliwe, jak dotad.
+            m_root = manifest.get("root")
+            manifest_root_mismatch = bool(m_root and root_path
+                                          and _norm_root(m_root) != _norm_root(root_path))
+        if root_alive and isinstance(manifest, dict) and not manifest_root_mismatch:
             manifest_scan_time = int(manifest.get("scan_time_ms") or 0)
             if manifest_scan_time > state_last_scan:
                 index_assets = _load_scan_assets(data_dir, manifest)
@@ -329,6 +393,7 @@ def run_once(
                         failed_dirs=manifest.get("failed_dirs") or (),
                         last_seen=last_seen,
                         scan_time_ms=manifest_scan_time,
+                        root_gen=root_gen,
                     )
                     did_scan = True
 
@@ -359,7 +424,14 @@ def run_once(
 
         report: dict[str, Any] = {"ok": bool(result.get("ok")), "mode": "rows",
                                    "pulled": result.get("pulled"), "push": result.get("push"),
-                                   "did_scan": did_scan, "authority": authority}
+                                   "did_scan": did_scan, "authority": authority,
+                                   "observations": seen_state.get("source"),
+                                   "root_gen_changed": root_gen_changed,
+                                   "manifest_root_mismatch": manifest_root_mismatch}
+        diff_report = result.get("report") or {}
+        if "conflicts" in diff_report:
+            report["conflicts"] = diff_report.get("conflicts")
+            report["conflict_sample"] = diff_report.get("conflict_sample") or []
         new_rows = result.get("rows")
         if new_rows is None:
             new_rows = rows
@@ -369,7 +441,12 @@ def run_once(
         if result.get("ok"):
             if did_scan and result.get("next_last_seen") is not None:
                 try:
-                    asset_repo.save_last_seen(conn, result["next_last_seen"])
+                    nls = result["next_last_seen"]
+                    if isinstance(nls, dict):
+                        # v2 + stary klucz last_seen (powrot do 2.4.5) jedna transakcja
+                        asset_repo.save_observations(conn, nls, root_gen)
+                    else:
+                        asset_repo.save_last_seen(conn, nls)
                     asset_repo.set_state(conn, STATE_KEY_LAST_SCAN_TIME,
                                           str(scan_kwargs["scan_time_ms"]))
                     asset_repo.set_state(conn, STATE_KEY_CONFIRMED_DIRS, json.dumps([]))
@@ -408,11 +485,21 @@ def run_once(
             should_write_index = False
         if should_write_index:
             try:
+                assets = asset_repo.live_index(new_rows, root_path or "")
+                # Kontrakt R: relacje folderu z katalogu (ta sama rewizja = ten sam
+                # wynik na kazdym komputerze), nie z meta ostatniego skanu.
+                try:
+                    import folder_relations  # noqa: PLC0415
+
+                    report["relations_computed"] = folder_relations.apply_to_entries(
+                        assets, new_rows, root_path or "", _load_overrides(data_dir))
+                except Exception as exc:  # noqa: BLE001 - zostaja wartosci z bazy
+                    report.setdefault("warnings", []).append(f"folder_relations: {exc}"[:300])
                 payload = {
                     "version": 1,
                     "generated_at": _now_ms(),
                     "source": "rows",
-                    "assets": asset_repo.live_index(new_rows, root_path or ""),
+                    "assets": assets,
                 }
                 _write_json_atomic(index_path, payload)
                 report["index_written"] = True

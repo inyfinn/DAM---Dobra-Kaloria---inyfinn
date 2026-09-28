@@ -13,6 +13,7 @@ Komputery w scenariuszach:
 """
 from __future__ import annotations
 
+import copy
 import sqlite3
 import sys
 import unittest
@@ -464,7 +465,9 @@ class ScenarioTests(unittest.TestCase):
     def test_network_error_is_reported_not_raised(self):
         self._boot()
         self.m.disk[f"{P}/4 - WIZKI/nowa.png"] = (1, 7_000_000)
-        before = set(self.m.last_seen)
+        # 28.09 (W2, kontrakt O): last_seen to slownik obserwacji, nie zbior id -
+        # porownujemy pelna kopie (ta sama intencja: po bledzie nic sie nie zmienia).
+        before = copy.deepcopy(self.m.last_seen)
         self.pg.fail_on = self.pg.statements + 2     # zerwanie w trakcie push
         res = self.m.sync(self.pg)
         self.assertFalse(res["ok"])
@@ -528,18 +531,28 @@ class MetaPropagationTests(unittest.TestCase):
         return aid, rows
 
     def test_meta_only_change_is_pushed_and_applied(self):
+        """28.09 (W2, kontrakty O/R - zmiana uzasadniona w work/2026-09-28/W2/RAPORT.md):
+        sama zmiana opisu idzie do bazy, gdy zmienila sie WLASNA obserwacja tego
+        komputera. Dawniej wystarczalo "opis inny niz w bazie" - to byl mechanizm
+        ping-pongu M/X (audyt 4.2). Obserwacja bez wersji (v1, pierwszy cykl po
+        migracji) nie wysyla samego opisu."""
         pg = FakePG()
         aid, rows = self._pushed_row(pg, {"linked_product_ids": []})
+        _, old = asset_sync.scan_entry("M:/- POLSKA/p/a.png", size=10, mtime_ms=1000,
+                                        root="M:", meta={"linked_product_ids": []})
         _, entry = asset_sync.scan_entry("M:/- POLSKA/p/a.png", size=10, mtime_ms=1000,
                                           root="M:", meta={"linked_product_ids": ["tuba"]})
-        ops = asset_sync.diff_scan(rows, {aid: entry}, {""}, 2000, "M", last_seen={aid})
+        self.assertEqual(asset_sync.diff_scan(rows, {aid: entry}, {""}, 2000, "M",
+                                              last_seen={aid}), [])  # v1: bez wersji
+        seen = {aid: dict(asset_sync.observe(old), rev=rows[aid]["rev"])}
+        ops = asset_sync.diff_scan(rows, {aid: entry}, {""}, 2000, "M", last_seen=seen)
         self.assertEqual([o["reason"] for o in ops], ["meta"])
         self.assertEqual(asset_sync.push_ops(pg, ops, now_ms=2)["applied"], 1)
         rows2 = asset_sync.apply_remote(rows, asset_sync.pull_since(pg, 0)["rows"])
         self.assertEqual(rows2[aid]["meta"]["linked_product_ids"], ["tuba"])
         # stan zgodny - kolejny skan nie generuje operacji
         self.assertEqual(asset_sync.diff_scan(rows2, {aid: entry}, {""}, 3000, "M",
-                                              last_seen={aid}), [])
+                                              last_seen={aid: asset_sync.observe(entry)}), [])
 
     def test_same_meta_is_zero_ops(self):
         pg = FakePG()

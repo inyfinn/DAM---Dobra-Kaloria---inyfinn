@@ -44,6 +44,12 @@ CREATE TABLE IF NOT EXISTS asset_sync_state (
 # nie generuje zapisu (asset_sync._content_differs porownuje rozmiar i skrot).
 # "size" w branding-index to ETYKIETA rozmiaru wizki ("L", "S", "XL"), nie bajty -
 # zostaje w meta; rozmiar w bajtach tylko z liczbowego pola (patrz _size_bytes).
+# 28.09 (kontrakt R, pomiar W2): linked_product_ids / folder_linked_product_ids
+# zostaja FAKTAMI (nie zaleza od sasiadow w folderze, tylko od sciezki i
+# file-index - 0 roznic w obu pomiarach); pola relacji folderu
+# (folder_relations.RELATION_FIELDS) sa w meta, ale asset_sync ich nie porownuje
+# ani nie wysyla ze skanu. Reczne skojarzenia (dam_asset_product_links) - poza
+# tym modulem, nietykalne.
 _SCAN_META_EXCLUDE = {"path", "mtime_ms", "id", "linked_products"}
 
 
@@ -133,7 +139,63 @@ def load_last_seen(conn: sqlite3.Connection) -> set[str] | None:
 
 
 def save_last_seen(conn: sqlite3.Connection, ids: Iterable[str]) -> None:
-    set_state(conn, "last_seen", json.dumps(sorted(str(i) for i in ids), ensure_ascii=False))
+    """Stary zapis v1 (sam zbior id). Usuwa obserwacje v2 - po zapisie bez wersji
+    nie wolno dalej ufac starszym wersjom z `last_seen_v2`."""
+    value = json.dumps(sorted(str(i) for i in ids), ensure_ascii=False)
+    with conn:
+        conn.execute(
+            "INSERT INTO asset_sync_state(key, value) VALUES ('last_seen', ?) "
+            "ON CONFLICT(key) DO UPDATE SET value=excluded.value", (value,))
+        conn.execute("DELETE FROM asset_sync_state WHERE key = ?", (STATE_KEY_LAST_SEEN_V2,))
+
+
+STATE_KEY_LAST_SEEN_V2 = "last_seen_v2"
+
+
+def load_observations(conn: sqlite3.Connection) -> dict[str, Any]:
+    """Kontrakt O (28.09): obserwacje tego komputera.
+
+    Zwraca {"obs": asset_id -> obserwacja | None, "root_gen": generacja ROOT
+    zapisana przy obserwacjach | None, "source": "v2" | "v1" | "none"}.
+    Migracja z 2.4.5: brak `last_seen_v2`, jest `last_seen` (lista id) -> kazde id
+    jako obserwacja BEZ wersji (asset_sync: nic nie usuwa, nie wysyla samego opisu,
+    ale nadal chroni przed falszywym "reappeared")."""
+    row = conn.execute(
+        "SELECT value FROM asset_sync_state WHERE key=?", (STATE_KEY_LAST_SEEN_V2,)
+    ).fetchone()
+    if row is not None:
+        try:
+            data = json.loads(row[0])
+        except (TypeError, ValueError):
+            data = None
+        v1_now = load_last_seen(conn)
+        if isinstance(data, dict) and isinstance(data.get("obs"), dict):
+            obs = {str(k): (dict(v) if isinstance(v, dict) else {})
+                   for k, v in data["obs"].items()}
+            # save_observations pisze v1 = klucze v2. Inna lista v1 = po drodze
+            # pisal starszy klient (powrot do 2.4.5 i ponowna aktualizacja) -
+            # obserwacje v2 sa nieaktualne, obowiazuje migracja z v1.
+            if v1_now is None or v1_now == set(obs):
+                return {"obs": obs, "root_gen": data.get("root_gen"), "source": "v2"}
+    v1 = load_last_seen(conn)
+    if v1 is None:
+        return {"obs": None, "root_gen": None, "source": "none"}
+    return {"obs": {aid: {} for aid in v1}, "root_gen": None, "source": "v1"}
+
+
+def save_observations(conn: sqlite3.Connection, obs: dict[str, dict], root_gen: Any) -> None:
+    """Zapis v2 i - w tej samej transakcji - starego `last_seen` (lista id), zeby
+    powrot do 2.4.5 dzialal bez migracji wstecz."""
+    v2 = json.dumps({"v": 2, "root_gen": root_gen, "obs": obs},
+                    ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    v1 = json.dumps(sorted(str(i) for i in obs), ensure_ascii=False)
+    with conn:
+        for key, value in ((STATE_KEY_LAST_SEEN_V2, v2), ("last_seen", v1)):
+            conn.execute(
+                "INSERT INTO asset_sync_state(key, value) VALUES (?, ?) "
+                "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                (key, value),
+            )
 
 
 def clear_last_seen(conn: sqlite3.Connection) -> None:
@@ -147,9 +209,11 @@ def clear_last_seen(conn: sqlite3.Connection) -> None:
     indziej) przywracal material uznany za usuniety. Po czyszczeniu
     load_last_seen() znow zwraca None (jak swiezy komputer) - pierwszy kolejny
     skan nic nie usuwa i nic nie przywraca (asset_sync.diff_scan_report:
-    last_seen=None wylacza tombstony i "reappeared", patrz tam)."""
+    last_seen=None wylacza tombstony i "reappeared", patrz tam).
+    28.09: czysci tez obserwacje v2 (`last_seen_v2`)."""
     with conn:
-        conn.execute("DELETE FROM asset_sync_state WHERE key = 'last_seen'")
+        conn.execute("DELETE FROM asset_sync_state WHERE key IN ('last_seen', ?)",
+                     (STATE_KEY_LAST_SEEN_V2,))
 
 
 def get_pg_rev(conn: sqlite3.Connection) -> int:

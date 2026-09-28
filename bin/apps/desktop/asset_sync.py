@@ -29,9 +29,24 @@ Reguly (szczegoly i uzasadnienie: bin/docs/PLAN-jedno-zrodlo-prawdy.md, Faza 2):
    last_seen) - nieaktualna kopia, ktora komputer mial caly czas, nie wskrzesza
    pliku usunietego gdzie indziej.
 4. Komputer bez ROOT: tylko pull_since + apply_remote + live_entries.
+
+Partia 28.09 (W2, kontrakty O / T / R z work/kierownicy/2026-09-28b/DECYZJE.md):
+O. last_seen to OBSERWACJE: asset_id -> {mtime_ms, size, hash, root_gen, desc, rev}
+   - wersja pliku, ktora TEN komputer widzial na dysku (observe()). Zbior id (v1)
+   nadal jest przyjmowany: wpis bez wersji = "nie zaobserwowany" (nic nie usuwa,
+   nie wysyla samego opisu). Pobranie wierszy z bazy nie zmienia obserwacji.
+T. Tombstone tylko dla wersji zaobserwowanej przez ten komputer i tylko gdy baza
+   ma DOKLADNIE te wersje (mtime_ms = obs AND size IS NOT DISTINCT FROM obs).
+   Audyt 4.1: X widzial V1, M wyslal V2, V1 zniknela na X - dawniej X usuwal V2.
+R. Pola relacji folderu (folder_relations.RELATION_FIELDS) nie sa porownywane ani
+   wysylane ze skanu - przy zapisie przenoszone z wiersza bazy. Fakty (reszta meta,
+   path_rel, name) wysylane tylko, gdy zmienila sie WLASNA obserwacja (desc), z
+   base_rev z chwili tej obserwacji; rozne fakty dwoch komputerow = konflikt w
+   raporcie, nie nadpisanie (audyt 4.2, ping-pong M/X).
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import sys
@@ -39,6 +54,14 @@ import time
 import unicodedata
 from pathlib import Path
 from typing import Any, Iterable
+
+try:
+    from folder_relations import RELATION_FIELDS as _RELATION_FIELDS
+except ImportError:  # pragma: no cover - modul obok, ale import nie moze wywrocic sync
+    _RELATION_FIELDS = ("folder_variants", "folder_editable_files",
+                        "folder_has_editable", "folder_group_id")
+RELATION_FIELDS = frozenset(_RELATION_FIELDS)
+CONFLICT_SAMPLE = 20
 
 SUBTREE_SHRINK_LIMIT = 0.20   # > 20 % znikajacych plikow poddrzewa = podejrzany odczyt
 SUBTREE_MIN_FILES = 10        # mniejsze poddrzewa nie sa oceniane (1 z 3 plikow to 33 %)
@@ -186,8 +209,23 @@ def _now_ms() -> int:
 # Scalanie: skan -> operacje
 # --------------------------------------------------------------------------
 
+def _push_meta(entry: dict, prev: dict | None) -> dict:
+    """Meta do zapisu: fakty ze skanu + pola relacji BEZ ZMIAN z wiersza bazy
+    (kontrakt R). Nowy wiersz (brak prev) dostaje relacje ze skanu jako wartosc
+    poczatkowa - tylko dla starszych klientow, nowi licza je z katalogu."""
+    meta = dict(entry.get("meta") or {})
+    if prev is None:
+        return meta
+    out = facts_meta(meta)
+    pmeta = prev.get("meta") if isinstance(prev.get("meta"), dict) else {}
+    for k in RELATION_FIELDS:
+        if k in pmeta:
+            out[k] = pmeta[k]
+    return out
+
+
 def _op(kind: str, aid: str, entry: dict, prev: dict | None, machine: str,
-        scan_time_ms: int, reason: str) -> dict:
+        scan_time_ms: int, reason: str, *, base_rev: int | None = None) -> dict:
     return {
         "op": kind,
         "reason": reason,
@@ -198,8 +236,8 @@ def _op(kind: str, aid: str, entry: dict, prev: dict | None, machine: str,
         "size": _opt_int(entry.get("size")),
         "mtime_ms": _int(entry.get("mtime_ms")),
         "content_hash": entry.get("content_hash"),
-        "meta": dict(entry.get("meta") or {}),
-        "base_rev": _int((prev or {}).get("rev")),
+        "meta": _push_meta(entry, prev),
+        "base_rev": _int((prev or {}).get("rev")) if base_rev is None else int(base_rev),
         "base_mtime_ms": _int((prev or {}).get("mtime_ms")),
         "scan_time_ms": int(scan_time_ms),
         "machine": machine,
@@ -266,11 +304,83 @@ def normalize_meta(meta: dict | None) -> dict:
     return _canonical_json(dict(meta or {}))
 
 
+def facts_meta(meta: dict | None) -> dict:
+    """Meta bez pol relacji folderu (kontrakt R) - to, co jest faktem o pliku."""
+    return {k: v for k, v in dict(meta or {}).items() if k not in RELATION_FIELDS}
+
+
+def fact_desc(entry: dict) -> str:
+    """Skrot kanonicznych faktow wpisu skanu (kontrakt O, pole `desc`): meta bez
+    relacji po normalize_meta + path_rel + name. Ten sam opis na M: i X: daje ten
+    sam skrot (sciezki z ROOT sprowadzone do klucza)."""
+    payload = {
+        "meta": normalize_meta(facts_meta(entry.get("meta"))),
+        "path_rel": str(entry.get("path_rel") or ""),
+        "name": str(entry.get("name") or ""),
+    }
+    raw = json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str)
+    return hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
+
+
+def observe(entry: dict, root_gen: Any = None) -> dict:
+    """Obserwacja (kontrakt O) wersji pliku widzianej na dysku przez ten komputer."""
+    return {
+        "mtime_ms": _int(entry.get("mtime_ms")),
+        "size": _opt_int(entry.get("size")),
+        "hash": entry.get("content_hash") or None,
+        "root_gen": root_gen,
+        "desc": fact_desc(entry),
+        "rev": None,
+    }
+
+
+def observations(last_seen: Any) -> dict[str, dict] | None:
+    """last_seen w dowolnej postaci -> asset_id -> obserwacja.
+
+    None = pierwszy skan. Slownik (v2) = obserwacje. Zbior/lista id (v1, 2.4.5) =
+    pliki obecne, ale BEZ wersji ("nie zaobserwowane"): chronia przed falszywym
+    "reappeared", ale nie daja prawa do usuniecia ani do wysylki samego opisu."""
+    if last_seen is None:
+        return None
+    if isinstance(last_seen, dict):
+        return {str(k): (dict(v) if isinstance(v, dict) else {}) for k, v in last_seen.items()}
+    return {str(k): {} for k in last_seen}
+
+
+def _has_version(obs: dict | None) -> bool:
+    return isinstance(obs, dict) and obs.get("mtime_ms") is not None
+
+
+def _same_version(obs: dict, other: dict) -> bool:
+    """Ta sama wersja pliku: mtime i rozmiar (plus skrot tresci, gdy oba znane)."""
+    if _int(obs.get("mtime_ms")) != _int(other.get("mtime_ms")):
+        return False
+    if _opt_int(obs.get("size")) != _opt_int(other.get("size")):
+        return False
+    h1 = obs.get("hash") or obs.get("content_hash")
+    h2 = other.get("hash") or other.get("content_hash")
+    return not (h1 and h2 and h1 != h2)
+
+
+def stamp_observed_rev(next_seen: Any, rows: dict, ids: Iterable[str]) -> Any:
+    """Po cyklu: rev wiersza znany w chwili obserwacji (base_rev dla nastepnej
+    zmiany opisu). Dotyczy tylko plikow zaobserwowanych w TYM skanie; zbior (v1)
+    zwracany bez zmian."""
+    if not isinstance(next_seen, dict):
+        return next_seen
+    for aid in ids:
+        obs = next_seen.get(aid)
+        row = rows.get(aid)
+        if isinstance(obs, dict) and row is not None:
+            obs["rev"] = _int(row.get("rev"))
+    return next_seen
+
+
 def _descriptor_differs(entry: dict, prev: dict) -> bool:
-    """Ten sam plik (mtime), ale inny opis: meta (np. skojarzenia z kontekstu folderu,
-    etykieta rozmiaru) albo zapis sciezki/nazwy. 23.09: zmiana samego meta nigdy nie
+    """Ten sam plik (mtime), ale inne FAKTY opisu: meta bez pol relacji folderu
+    (kontrakt R) albo zapis sciezki/nazwy. 23.09: zmiana samego meta nigdy nie
     trafiala do bazy - komputery bez ROOT zostawaly ze starym opisem na zawsze."""
-    if normalize_meta(entry.get("meta")) != normalize_meta(prev.get("meta")):
+    if normalize_meta(facts_meta(entry.get("meta"))) != normalize_meta(facts_meta(prev.get("meta"))):
         return True
     for f in ("path_rel", "name"):
         if entry.get(f) and str(entry.get(f)) != str(prev.get(f) or ""):
@@ -280,9 +390,10 @@ def _descriptor_differs(entry: dict, prev: dict) -> bool:
 
 def diff_scan_report(prev_rows: dict, scan: dict, scanned_dirs: Iterable[str],
                      scan_time_ms: int, machine: str, *,
-                     last_seen: Iterable[str] | None = None,
+                     last_seen: Any = None,
                      failed_dirs: Iterable[str] = (),
-                     confirmed_dirs: Iterable[str] = ()) -> dict:
+                     confirmed_dirs: Iterable[str] = (),
+                     root_gen: Any = None) -> dict:
     """Pelny raport scalania.
 
     prev_rows    asset_id -> wiersz z bazy (lokalne lustro po ostatnim pull; tombstony tez)
@@ -290,28 +401,40 @@ def diff_scan_report(prev_rows: dict, scan: dict, scanned_dirs: Iterable[str],
     scanned_dirs klucze folderow wylistowanych w calosci bez bledu ('' = korzen)
     failed_dirs  klucze folderow, ktore istnieja, ale nie zostaly wylistowane
                  (blad, brak dostepu, wykluczenie) - nic pod nimi nie jest usuwane
-    last_seen    asset_id widziane przez TEN komputer w poprzednim skanie;
+    last_seen    obserwacje TEGO komputera z poprzedniego skanu (kontrakt O):
+                 slownik asset_id -> observe(); zbior id (v1) = bez wersji;
                  None = pierwszy skan -> zero usuniec
     confirmed_dirs klucze folderow, ktore admin potwierdzil jako prawdziwe usuniecie -
                  pliki pod nimi NIE podlegaja bezpiecznikowi poddrzewa (pkt 3 nizej).
                  Pozostale warunki usuniecia (last_seen, scanned_dirs, mtime) nadal
                  obowiazuja. Domyslnie puste = zachowanie bez zmian.
+    root_gen     generacja/ROOT biezacego skanu (kontrakt G) - obserwacja z inna
+                 generacja nie daje prawa do usuniecia ani do wysylki opisu.
 
     Zwraca {"ops", "blocked": {folder: liczba}, "skipped_unlisted", "stale_ignored",
-            "next_last_seen"}.
+            "meta_held", "conflicts", "conflict_sample", "tombstone_version_mismatch",
+            "unobserved_missing", "next_last_seen" (slownik obserwacji)}.
     """
     listed = {str(d) for d in scanned_dirs}
     failed = {str(d) for d in failed_dirs}
     confirmed = {str(d) for d in confirmed_dirs}
-    seen_before = None if last_seen is None else set(last_seen)
+    obs_before = observations(last_seen)
+    seen_before = None if obs_before is None else set(obs_before)
     ops: list[dict] = []
     stale_ignored = 0
+    meta_held = 0
+    conflict_sample: list[dict] = []
+    next_seen: dict[str, dict] = {}
+
+    def obs_ok(obs: dict | None) -> bool:
+        return _has_version(obs) and obs.get("root_gen") == root_gen
 
     # 1) pliki widziane w skanie: dodanie / zmiana / przywrocenie
     for aid in sorted(scan):
         entry = scan[aid] or {}
         prev = prev_rows.get(aid)
         mt = _int(entry.get("mtime_ms"))
+        next_seen[aid] = observe(entry, root_gen)
         if prev is None:
             ops.append(_op(OP_UPSERT, aid, entry, None, machine, scan_time_ms, "add"))
             continue
@@ -319,7 +442,10 @@ def diff_scan_report(prev_rows: dict, scan: dict, scanned_dirs: Iterable[str],
         if prev.get("deleted_at") is not None:
             if mt > pmt or (mt == pmt and _content_differs(entry, prev)):
                 ops.append(_op(OP_UPSERT, aid, entry, prev, machine, scan_time_ms, "recreate"))
-            elif seen_before is not None and aid not in seen_before:
+            elif (seen_before is not None and aid not in seen_before
+                  and _same_version(next_seen[aid], prev)):
+                # Tylko TA SAMA wersja, ktora usunieto (np. z Kosza). Starsza kopia
+                # (mtime < usunietej) nigdy nie wskrzesza tombstone (audyt 4.1).
                 ops.append(_op(OP_RESTORE, aid, entry, prev, machine, scan_time_ms, "reappeared"))
             else:
                 stale_ignored += 1  # nieaktualna kopia, ktora komputer mial caly czas
@@ -327,16 +453,38 @@ def diff_scan_report(prev_rows: dict, scan: dict, scanned_dirs: Iterable[str],
         if mt > pmt or (mt == pmt and _content_differs(entry, prev)):
             ops.append(_op(OP_UPSERT, aid, entry, prev, machine, scan_time_ms, "change"))
         elif mt == pmt and _descriptor_differs(entry, prev):
-            ops.append(_op(OP_UPSERT, aid, entry, prev, machine, scan_time_ms, "meta"))
+            obs = (obs_before or {}).get(aid)
+            own_changed = (obs_ok(obs) and obs.get("desc")
+                           and _same_version(obs, next_seen[aid])
+                           and obs["desc"] != next_seen[aid]["desc"])
+            if own_changed:
+                base = obs.get("rev")
+                ops.append(_op(OP_UPSERT, aid, entry, prev, machine, scan_time_ms, "meta",
+                               base_rev=_int(prev.get("rev")) if base is None else _int(base)))
+            else:
+                # Opis w bazie inny niz nasz, a nasza obserwacja sie nie zmienila
+                # (albo to pierwsza obserwacja tej wersji / pierwszy cykl po
+                # migracji): konflikt do raportu, nie nadpisanie.
+                meta_held += 1
+                if len(conflict_sample) < CONFLICT_SAMPLE:
+                    conflict_sample.append({
+                        "asset_id": aid, "path_rel": str(prev.get("path_rel") or ""),
+                        "db_updated_by": str(prev.get("updated_by") or ""),
+                        "db_rev": _int(prev.get("rev")),
+                        "why": "unchanged_observation" if obs_ok(obs) and obs.get("desc")
+                        and _same_version(obs, next_seen[aid]) else "first_observation",
+                    })
         elif mt < pmt:
             stale_ignored += 1  # starsza wersja (np. X: jeszcze nie zsynchronizowany)
 
     # 2) kandydaci do usuniecia
     candidates: list[str] = []
     skipped_unlisted = 0
+    version_mismatch = 0
+    unobserved_missing = 0
     keep_seen: set[str] = set()
-    if seen_before is not None:
-        for aid in seen_before:
+    if obs_before is not None:
+        for aid in obs_before:
             if aid in scan:
                 continue
             prev = prev_rows.get(aid)
@@ -353,6 +501,19 @@ def diff_scan_report(prev_rows: dict, scan: dict, scanned_dirs: Iterable[str],
             if not ok:
                 skipped_unlisted += 1
                 keep_seen.add(aid)
+                continue
+            obs = obs_before[aid]
+            if not obs_ok(obs):
+                # v1 (bez wersji) albo inna generacja ROOT: nie wiemy, JAKA wersje
+                # ten komputer mial - zadnego usuniecia (kontrakt O).
+                unobserved_missing += 1
+                keep_seen.add(aid)
+                continue
+            if not _same_version(obs, prev):
+                # Baza ma inna wersje niz ta, ktora znikla z dysku (np. V2 z M,
+                # a tu zniknela V1 w trakcie synchronizacji) - to nie jest
+                # usuniecie tej wersji (kontrakt T, audyt 4.1).
+                version_mismatch += 1
                 continue
             pmt = _int(prev.get("mtime_ms"))
             if pmt > int(scan_time_ms):
@@ -390,13 +551,21 @@ def diff_scan_report(prev_rows: dict, scan: dict, scanned_dirs: Iterable[str],
                     blocked[top] = blocked.get(top, 0) + 1
                     keep_seen.add(aid)
                     continue
+            obs = obs_before[aid]  # type: ignore[index]
             ops.append(_op(OP_TOMBSTONE, aid, {}, prev, machine, scan_time_ms, "missing"))
             ops[-1]["mtime_ms"] = _int(prev.get("mtime_ms"))
             ops[-1]["size"] = _opt_int(prev.get("size"))
+            ops[-1]["obs_mtime_ms"] = _int(obs.get("mtime_ms"))
+            ops[-1]["obs_size"] = _opt_int(obs.get("size"))
 
-    next_seen = set(scan) | keep_seen
+    for aid in keep_seen:
+        next_seen[aid] = dict(obs_before[aid])  # type: ignore[index]
     return {"ops": ops, "blocked": blocked, "skipped_unlisted": skipped_unlisted,
-            "stale_ignored": stale_ignored, "next_last_seen": next_seen}
+            "stale_ignored": stale_ignored, "meta_held": meta_held,
+            "conflicts": meta_held, "conflict_sample": conflict_sample,
+            "tombstone_version_mismatch": version_mismatch,
+            "unobserved_missing": unobserved_missing,
+            "next_last_seen": next_seen}
 
 
 def diff_scan(prev_rows: dict, scan: dict, scanned_dirs: Iterable[str], scan_time_ms: int,
@@ -453,10 +622,15 @@ def max_rev(rows: dict) -> int:
     return max((_int(r.get("rev")) for r in rows.values()), default=0)
 
 
+def local_path(rel: str, root: str | None) -> str:
+    """Sciezka wzgledna z katalogu -> sciezka z ROOT tego komputera."""
+    base = None if root is None else str(root).replace("\\", "/").rstrip("/")
+    return f"{base}/{rel}" if base is not None else str(rel)
+
+
 def live_entries(rows: dict, root: str | None = None) -> list[dict]:
     """Wpisy do lokalnego branding-index (bez usunietych), posortowane po kluczu."""
     out = []
-    base = None if root is None else str(root).replace("\\", "/").rstrip("/")
     for aid in sorted(rows, key=lambda a: str(rows[a].get("asset_key") or "")):
         r = rows[aid]
         if r.get("deleted_at") is not None:
@@ -465,7 +639,7 @@ def live_entries(rows: dict, root: str | None = None) -> list[dict]:
         rel = str(r.get("path_rel") or r.get("asset_key") or "")
         e.update({
             "id": aid,
-            "path": f"{base}/{rel}" if base is not None else rel,
+            "path": local_path(rel, root),
             "name": r.get("name") or rel.rsplit("/", 1)[-1],
             "mtime_ms": r.get("mtime_ms"),
         })
@@ -532,12 +706,14 @@ WHERE EXCLUDED.mtime_ms > t.mtime_ms
 RETURNING rev
 """
 
-# Usuniecie: tylko gdy w bazie jest wciaz ta sama (albo starsza) wersja, ktora
-# ten komputer znal, i nie nowsza niz czas skanu.
+# Usuniecie (kontrakt T): tylko gdy w bazie jest DOKLADNIE ta wersja, ktora ten
+# komputer zaobserwowal na dysku (mtime i rozmiar), i nie nowsza niz czas skanu.
+# Dawniej "mtime_ms <= znany" - V2 pobrana z bazy przechodzila jak V1 (audyt 4.1).
 _SQL_TOMBSTONE = """
 UPDATE dam_assets SET deleted_at = %s, updated_at = %s, updated_by = %s,
   seen_by_machine = %s, rev = nextval('dam_assets_rev_seq')
-WHERE asset_id = %s AND deleted_at IS NULL AND mtime_ms <= %s AND mtime_ms <= %s
+WHERE asset_id = %s AND deleted_at IS NULL
+  AND mtime_ms = %s AND size IS NOT DISTINCT FROM %s AND mtime_ms <= %s
 RETURNING rev
 """
 
@@ -597,9 +773,11 @@ def _exec_op(cur, op: dict, now_ms: int) -> int | None:
         return _first_rev(cur)
     if kind == OP_TOMBSTONE:
         scan_ms = _int(op.get("scan_time_ms"))
+        obs_mtime = op["obs_mtime_ms"] if "obs_mtime_ms" in op else op.get("base_mtime_ms")
+        obs_size = op["obs_size"] if "obs_size" in op else op.get("size")
         cur.execute(_SQL_TOMBSTONE, (
             scan_ms, now_ms, machine, machine, op["asset_id"],
-            _int(op.get("base_mtime_ms")), scan_ms,
+            _int(obs_mtime), _opt_int(obs_size), scan_ms,
         ))
         return _first_rev(cur)
     if kind == OP_RESTORE:
@@ -669,21 +847,32 @@ def pull_since(pg, rev: int, *, limit: int = PULL_BATCH) -> dict:
     return {"ok": True, "rows": rows, "max_rev": last, "more": False}
 
 
+def _copy_seen(last_seen: Any) -> Any:
+    """Kopia last_seen w tej samej postaci (slownik obserwacji albo zbior id v1)."""
+    if last_seen is None:
+        return None
+    if isinstance(last_seen, dict):
+        return {k: (dict(v) if isinstance(v, dict) else v) for k, v in last_seen.items()}
+    return set(last_seen)
+
+
 def sync_cycle(pg, local_rows: dict, *, scan: dict | None = None,
                scanned_dirs: Iterable[str] = (), failed_dirs: Iterable[str] = (),
                confirmed_dirs: Iterable[str] = (),
-               last_seen: Iterable[str] | None = None, scan_time_ms: int = 0,
-               machine: str = "", now_ms: int | None = None) -> dict:
+               last_seen: Any = None, scan_time_ms: int = 0,
+               machine: str = "", now_ms: int | None = None,
+               root_gen: Any = None) -> dict:
     """Jeden cykl jak klient Synology: pull -> (diff -> push -> pull).
 
     scan=None -> komputer bez ROOT: tylko pobiera. Zwraca {"ok", "rows",
     "report", "push", "next_last_seen"}; przy bledzie sieci rows = stan po tym,
-    co zdazylo przyjsc, a last_seen sie nie zmienia."""
+    co zdazylo przyjsc, a last_seen sie nie zmienia. next_last_seen po udanym
+    cyklu ze skanem = slownik obserwacji (kontrakt O) z rev z chwili obserwacji."""
     rows = dict(local_rows)
     first = pull_since(pg, max_rev(rows))
     rows = apply_remote(rows, first["rows"])
     out: dict[str, Any] = {"ok": first["ok"], "rows": rows, "report": None, "push": None,
-                           "next_last_seen": None if last_seen is None else set(last_seen)}
+                           "next_last_seen": _copy_seen(last_seen)}
     if not first["ok"]:
         out["error"] = first.get("error", "")
         return out
@@ -691,7 +880,7 @@ def sync_cycle(pg, local_rows: dict, *, scan: dict | None = None,
         return out
     report = diff_scan_report(rows, scan, scanned_dirs, scan_time_ms, machine,
                               last_seen=last_seen, failed_dirs=failed_dirs,
-                              confirmed_dirs=confirmed_dirs)
+                              confirmed_dirs=confirmed_dirs, root_gen=root_gen)
     out["report"] = {k: v for k, v in report.items() if k != "next_last_seen"}
     pushed = push_ops(pg, report["ops"], now_ms=now_ms)
     out["push"] = pushed
@@ -699,7 +888,7 @@ def sync_cycle(pg, local_rows: dict, *, scan: dict | None = None,
     out["rows"] = apply_remote(rows, second["rows"])
     out["ok"] = bool(pushed["ok"] and second["ok"])
     if out["ok"]:
-        out["next_last_seen"] = report["next_last_seen"]
+        out["next_last_seen"] = stamp_observed_rev(report["next_last_seen"], out["rows"], scan)
     else:
         out["error"] = pushed.get("error") or second.get("error", "")
     return out
