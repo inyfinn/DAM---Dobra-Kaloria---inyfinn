@@ -50,6 +50,48 @@ class RebuildLockTests(unittest.TestCase):
             handle3.release()
 
 
+def _isolate_supervisor(test: unittest.TestCase, td_path: Path, watch_script: Path):
+    """Wszystkie sciezki nadzorcy -> katalog testu, na czas CALEGO testu (mock.patch,
+    przywracane w cleanup) + zakaz prawdziwego Popen. 28.09.2026: test ustawial
+    WATCH_SCRIPT na chwile i przywracal go, zanim watek nadzorcy sie zatrzymal
+    (stop() nie czeka na watek) - watek odpalal PRAWDZIWY watch-file-index.py,
+    a ten rebuild-branding-pipeline.py na ROOT tego komputera (sierota po testach)."""
+    from unittest import mock
+
+    import index_supervisor as isup
+
+    for name, value in (
+        ("DATA_DIR", td_path),
+        ("SUPERVISOR_LOCK", td_path / "index-supervisor.lock.json"),
+        ("WATCHER_STATUS", td_path / "index-watcher-status.json"),
+        ("WATCHER_LOG", td_path / "index-watcher.log"),
+        ("PRODUCT_REBUILD_LOCK", td_path / "index-rebuild.lock.json"),
+        ("CONTROL_FILE", td_path / "index-control.json"),
+        ("WATCH_SCRIPT", watch_script),
+    ):
+        p = mock.patch.object(isup, name, value)
+        p.start()
+        test.addCleanup(p.stop)
+    spawned: list = []
+
+    def _no_real_spawn(*args, **kwargs):
+        spawned.append(args[0] if args else kwargs.get("args"))
+        raise OSError("test: prawdziwy proces zabroniony")
+
+    p = mock.patch.object(isup.subprocess, "Popen", side_effect=_no_real_spawn)
+    p.start()
+    test.addCleanup(p.stop)
+    return spawned
+
+
+def _stop_supervisor_and_wait(isup) -> None:
+    owner = isup._owner
+    isup.stop_index_supervisor()
+    thread = getattr(owner, "_thread", None) if owner is not None else None
+    if thread is not None:
+        thread.join(timeout=5)
+
+
 class SupervisorSingletonTests(unittest.TestCase):
     def test_supervisor_singleton_in_launch_and_browser(self):
         import index_supervisor as isup
@@ -64,15 +106,7 @@ class SupervisorSingletonTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as td:
             td_path = Path(td)
-            # Redirect supervisor paths
-            isup.DATA_DIR = td_path
-            isup.SUPERVISOR_LOCK = td_path / "index-supervisor.lock.json"
-            isup.WATCHER_STATUS = td_path / "index-watcher-status.json"
-            isup.WATCHER_LOG = td_path / "index-watcher.log"
-            isup.PRODUCT_REBUILD_LOCK = td_path / "index-rebuild.lock.json"
-            # Prevent real watcher spawn by pointing to missing script briefly
-            old_script = isup.WATCH_SCRIPT
-            isup.WATCH_SCRIPT = td_path / "missing-watch.py"
+            spawned = _isolate_supervisor(self, td_path, td_path / "missing-watch.py")
             try:
                 r1 = isup.ensure_index_supervisor(interval=30)
                 self.assertTrue(r1.get("ok"))
@@ -107,8 +141,8 @@ class SupervisorSingletonTests(unittest.TestCase):
                 finally:
                     rebuild_lock._pid_alive = orig
             finally:
-                isup.stop_index_supervisor()
-                isup.WATCH_SCRIPT = old_script
+                _stop_supervisor_and_wait(isup)
+            self.assertEqual(spawned, [], "test uruchomil prawdziwy proces obserwatora")
 
 
 class WatcherStatusTests(unittest.TestCase):
@@ -117,13 +151,8 @@ class WatcherStatusTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as td:
             td_path = Path(td)
-            isup.DATA_DIR = td_path
-            isup.WATCHER_STATUS = td_path / "index-watcher-status.json"
-            isup.WATCHER_LOG = td_path / "index-watcher.log"
-            isup.SUPERVISOR_LOCK = td_path / "index-supervisor.lock.json"
-            isup.PRODUCT_REBUILD_LOCK = td_path / "index-rebuild.lock.json"
-            isup.WATCH_SCRIPT = td_path / "nope.py"
-            isup.stop_index_supervisor()
+            spawned = _isolate_supervisor(self, td_path, td_path / "nope.py")
+            _stop_supervisor_and_wait(isup)
             r = isup.ensure_index_supervisor(interval=30)
             self.assertTrue(r.get("owned") or r.get("ok"))
             # Give spawn attempt a moment
@@ -135,7 +164,8 @@ class WatcherStatusTests(unittest.TestCase):
                 self.assertFalse(st.get("watcher_ok"))
                 err = str(st.get("error") or st.get("last_error"))
                 self.assertTrue("missing_watch_script" in err or "spawn_failed" in err or err)
-            isup.stop_index_supervisor()
+            _stop_supervisor_and_wait(isup)
+            self.assertEqual(spawned, [], "test uruchomil prawdziwy proces obserwatora")
 
 
 class AssocRepoTests(unittest.TestCase):

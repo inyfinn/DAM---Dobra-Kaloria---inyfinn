@@ -38,16 +38,37 @@ except ImportError:
 AVAIL_TTL = 30
 PROBE_TIMEOUT_S = 5.0
 
-_HANDOFF = Path(__file__).resolve().parent.parent.parent / "agents" / "shared" / "handoff-preview-cache.md"
+# 28.09.2026: dziennik sond szedl do sledzonego w git pliku w drzewie programu
+# (bin/agents/shared/handoff-preview-cache.md, 5 MB, rosl u kazdego uzytkownika i w
+# testach). Teraz: folder stanu uzytkownika, z limitem rozmiaru (jedna kopia .1).
+_MARK_MAX_BYTES = 1_000_000
+
+
+def _mark_path() -> Path:
+    override = (os.environ.get("DAM_AVAIL_MARK_LOG") or "").strip()
+    if override:
+        return Path(override)
+    try:
+        import platform_compat  # noqa: PLC0415
+
+        return Path(platform_compat.user_state_dir()) / "logs" / "file-availability-probe.log"
+    except Exception:  # noqa: BLE001
+        return Path(os.environ.get("LOCALAPPDATA") or Path.home()) / "DAM" / "state" / "logs" / "file-availability-probe.log"
 
 
 def _mark(tag: str, detail: str = "") -> None:
-    """Append heartbeat for orchestrator watchdog (do not interrupt on probe_wait)."""
+    """Heartbeat sondy dostepnosci (dlugi recall Win32 to nie zawieszenie)."""
     try:
         ts = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
         line = f"- `{ts}` `{tag}` {detail}\n".rstrip() + "\n"
-        _HANDOFF.parent.mkdir(parents=True, exist_ok=True)
-        with open(_HANDOFF, "a", encoding="utf-8") as fh:
+        target = _mark_path()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            if target.stat().st_size > _MARK_MAX_BYTES:
+                os.replace(target, target.with_name(target.name + ".1"))
+        except OSError:
+            pass
+        with open(target, "a", encoding="utf-8") as fh:
             fh.write(line)
     except Exception:
         pass
