@@ -144,6 +144,11 @@ Source: "{#StageDir}\bin\DATABASE\users-seed.sqlite"; DestDir: "{app}\bin\DATABA
 Source: "{#GitRoot}\bin\installer\redist\vc_redist.x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
 Source: "{#GitRoot}\bin\installer\redist\MicrosoftEdgeWebview2Setup.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
 Source: "{#GitRoot}\bin\installer\inyfinn-dam-codesign.cer"; DestDir: "{app}\bin\installer"; Flags: ignoreversion skipifsourcedoesntexist
+; dontcopy: NIE instalowany wprost do {app} tutaj - tylko trzymany do ExtractTemporaryFile
+; w PrepareToInstall/CurStepChanged(ssInstall), bo ta faza biegnie PRZED [Files], wiec {app}
+; jeszcze nie ma tego skryptu. Zwykla kopia do {app}\bin\scripts\ops\ idzie normalnym Source
+; wyzej (katalog bin\scripts\* w Excludes go nie obejmuje - patrz [InstallDelete] i Source bin\*).
+Source: "{#GitRoot}\bin\scripts\ops\dam-cleanup-autostart.ps1"; DestDir: "{tmp}"; Flags: dontcopy
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\bin\apps\desktop\dam_app.ico"
@@ -334,14 +339,72 @@ begin
   Result := WizardSilent and (ExpandConstant('{param:DAMRELAUNCH|0}') = '1');
 end;
 
+{ 2026-09-28: /T zabija CALE drzewo procesow dopasowanych po /IM, wlacznie z potomkami o
+  INNEJ nazwie obrazu. Zmierzone na atrapach (damtest-parent.exe uruchamiajacy
+  damtest-child.exe, taskkill /F /T /IM damtest-parent.exe): dziecko zostalo zabite razem
+  z rodzicem. Przy cichej aktualizacji instalator bywa potomkiem DAM.exe (most odpala go
+  przez Popen) - /T zabilby wlasny proces instalatora w trakcie jego dzialania. Usuniete. }
 function KillDamProcesses: Boolean;
 var
   ResultCode: Integer;
 begin
-  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /T /IM DAM.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM DAM.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   Exec('powershell.exe', '-NoProfile -NonInteractive -Command "Get-CimInstance Win32_Process | Where-Object { $_.Name -in @(''DAM.exe'',''pythonw.exe'',''python.exe'',''dam-appw.exe'') -and (($_.Name -eq ''DAM.exe'') -or ($_.CommandLine -match ''\\bin\\apps\\desktop\\(launch|local_bridge)\.py|dam-appw'')) } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   Sleep(1500);
   Result := True;
+end;
+
+{ Rezerwa (bez ExecutionPolicy Bypass - Bitdefender blokuje ten wzorzec, NIESPRAWDZONE na tej
+  maszynie, brak AV do testu): zatrzymuje obserwator indeksu (watch-file-index.py, build-*.py,
+  bin\scripts\ops) po PID, bez /T, pomijajac korzenie z .git (repo dewelopera nie moze stracic
+  wlasnego obserwatora). Uzywana TYLKO gdy dam-cleanup-autostart.ps1 sie nie uruchomil. }
+function KillDamWatcherFallback: Boolean;
+var
+  ResultCode: Integer;
+  Cmd: String;
+begin
+  Cmd :=
+    '-NoProfile -NonInteractive -Command "' +
+    'Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match ''\\bin\\apps\\web\\scripts\\|\\bin\\scripts\\ops\\'' } | ' +
+    'ForEach-Object { ' +
+    '$exe = $_.ExecutablePath; $root = $exe; $skip = $false; ' +
+    'for ($i = 0; $i -lt 12; $i++) { $root = Split-Path $root -Parent -ErrorAction SilentlyContinue; if (-not $root) { break }; if (Test-Path -LiteralPath (Join-Path $root ''.git'')) { $skip = $true; break } }; ' +
+    'if (-not $skip) { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue } ' +
+    '}"';
+  Result := Exec('powershell.exe', Cmd, '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+end;
+
+{ Rezerwa: usuwa wpisy Run/RunOnce (HKCU) wskazujace uklad DAM poza folderem docelowym (app), bez uruchamiania
+  PowerShell skryptu (uzywane, gdy dam-cleanup-autostart.ps1 sie nie uruchomil). Nie dotyka
+  HKLM (wymaga admina) ani zadan/skrotow - to jest ograniczona rezerwa, nie pelna zamiana. }
+procedure FallbackRemoveStaleRunEntries(const KeepDir: String);
+var
+  Names: TArrayOfString;
+  I: Integer;
+  Val, ValLower, KeepLower: String;
+  Keys: TArrayOfString;
+  K: Integer;
+begin
+  SetArrayLength(Keys, 2);
+  Keys[0] := 'Software\Microsoft\Windows\CurrentVersion\Run';
+  Keys[1] := 'Software\Microsoft\Windows\CurrentVersion\RunOnce';
+  KeepLower := Lowercase(KeepDir);
+  for K := 0 to GetArrayLength(Keys) - 1 do
+  begin
+    if not RegGetValueNames(HKCU, Keys[K], Names) then Continue;
+    for I := 0 to GetArrayLength(Names) - 1 do
+    begin
+      if not RegQueryStringValue(HKCU, Keys[K], Names[I], Val) then Continue;
+      ValLower := Lowercase(Val);
+      if (Pos('\bin\apps\desktop\', ValLower) = 0) and
+         (Pos('\bin\apps\web\scripts\', ValLower) = 0) and
+         (Pos('\bin\scripts\ops\', ValLower) = 0) then Continue;
+      { Uklad DAM. Zostaje tylko jesli polecenie wskazuje wewnatrz folderu docelowego (KeepDir). }
+      if (KeepLower <> '') and (Pos(KeepLower, ValLower) > 0) then Continue;
+      Log('FallbackRemoveStaleRunEntries: usuwam ' + Keys[K] + '\' + Names[I]);
+      RegDeleteValue(HKCU, Keys[K], Names[I]);
+    end;
+  end;
 end;
 
 function InitializeSetup: Boolean;
@@ -383,17 +446,171 @@ begin
   Exec('powershell.exe', '-NoProfile -NonInteractive -Command "$d = ''' + AddBackslash(Safe) + '''; Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -and $_.ExecutablePath.StartsWith($d, [StringComparison]::OrdinalIgnoreCase) -and ($_.ExecutablePath -notmatch ''\\data\\updates\\'') -and ($_.Name -notlike ''*Setup*'') } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
 end;
 
+{ 2026-09-28 (KINGAUR): stara instalacja w innym folderze albo wpis autostartu po
+  recznie skasowanym folderze dalej uruchamialy most w tle i pisaly do wspolnej bazy.
+  bin\scripts\ops\dam-cleanup-autostart.ps1 sprzata TYLKO rzeczy DAM: wpisy Run/RunOnce
+  z ukladem DAM, stare foldery DAM (Kosz Windows, rezerwa: zmiana nazwy), zadania "DAM-*"
+  z brakujacym plikiem (na dysku lokalnym - sieciowy nigdy nie jest "brak"), skroty DAM
+  w Autostarcie, aktywacje (kopia pary pg-config.* do folderu docelowego i do state\activation).
+  Log produktu: %LOCALAPPDATA%\DAM\logs\cleanup-<data>.log.
+
+  WAZNE (naprawa bledu z 28.09): ta faza (Clean) biegnie w ssInstall - PRZED [Registry] -
+  wiec wlasny swiezy wpis DAM-Bridge jeszcze nie istnieje i nie moze zostac przypadkiem
+  skasowany (poprzedni blad Keep() jest tez naprawiony w samym skrypcie, niezaleznie).
+  -ExecutionPolicy RemoteSigned (nie Bypass - .iss ma juz gdzie indziej komentarz, ze
+  Bitdefender blokuje wzorzec "-ExecutionPolicy Bypass"; RemoteSigned nie byl testowany
+  na maszynie z tym AV - NIESPRAWDZONE, brak Bitdefender na tym komputerze do testu).
+  Jesli caly Exec zawiedzie albo rc<>0: FallbackFullFailure (Pascal-only, bez PowerShell
+  -File, tylko Run wpisy + wzorzec obserwatora, pomijajac .git). }
+function RunDamCleanPhaseScript(const Script, Mode, KeepDir: String): Integer;
+var
+  ResultCode: Integer;
+begin
+  Result := -1;
+  if not FileExists(Script) then
+  begin
+    Log('RunDamCleanPhaseScript: skrypt nie istnieje: ' + Script);
+    Exit;
+  end;
+  if Exec('powershell.exe',
+    '-NoProfile -NonInteractive -ExecutionPolicy RemoteSigned -File "' + Script +
+    '" -Phase Clean -Mode ' + Mode + ' -Installer -Apply -KeepDir "' + KeepDir + '"',
+    '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+  begin
+    Log('dam-cleanup-autostart Clean/' + Mode + ' rc=' + IntToStr(ResultCode));
+    Result := ResultCode;
+  end
+  else
+    Log('dam-cleanup-autostart Clean/' + Mode + ' NIE URUCHOMIONY (Exec=false, mozliwa blokada AV)');
+end;
+
+procedure FallbackFullFailure(const KeepDir: String);
+begin
+  Log('Rezerwa Pascal: skrypt PowerShell zawiodl - usuwam tylko Run wpisy spoza {app} i zatrzymuje wzorzec obserwatora (pomijajac .git).');
+  FallbackRemoveStaleRunEntries(KeepDir);
+  KillDamWatcherFallback;
+end;
+
+{ Faza Stop w PrepareToInstall: asynchronicznie (ewNoWait), limit 90 s, POTEM instalacja
+  idzie dalej niezaleznie od wyniku (nigdy nie blokuje instalacji na zawsze). Skrypt sam
+  zapisuje plik-znacznik na koncu (parametr -DoneFile) - to jest jedyny niezawodny sposob
+  na "poczekaj do N sekund" w Inno (Exec nie ma wbudowanego timeoutu). }
+procedure RunDamStopPhase(const KeepDir: String);
+var
+  Script, DoneFile, Args: String;
+  ResultCode, Waited: Integer;
+begin
+  if not FileExists(ExpandConstant('{tmp}\dam-cleanup-autostart.ps1')) then
+  begin
+    ExtractTemporaryFile('dam-cleanup-autostart.ps1');
+  end;
+  Script := ExpandConstant('{tmp}\dam-cleanup-autostart.ps1');
+  if not FileExists(Script) then
+  begin
+    Log('RunDamStopPhase: skrypt niedostepny (dontcopy) - pomijam faze Stop');
+    Exit;
+  end;
+  DoneFile := ExpandConstant('{tmp}\dam-stop-done.flag');
+  if FileExists(DoneFile) then DeleteFile(DoneFile);
+  Args := '-NoProfile -NonInteractive -ExecutionPolicy RemoteSigned -File "' + Script +
+    '" -Phase Stop -Mode Install -Installer -Apply -KeepDir "' + KeepDir +
+    '" -DoneFile "' + DoneFile + '"';
+  if not Exec('powershell.exe', Args, '', SW_HIDE, ewNoWait, ResultCode) then
+  begin
+    Log('RunDamStopPhase: Exec=false (mozliwa blokada AV) - rezerwa Pascal');
+    FallbackFullFailure(KeepDir);
+    Exit;
+  end;
+  Waited := 0;
+  while (not FileExists(DoneFile)) and (Waited < 90000) do
+  begin
+    Sleep(300);
+    Waited := Waited + 300;
+  end;
+  if not FileExists(DoneFile) then
+    Log('RunDamStopPhase: limit 90 s minal, instalacja idzie dalej mimo to')
+  else
+    Log('RunDamStopPhase: zakonczona po ' + IntToStr(Waited) + ' ms');
+end;
+
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
   KillDamProcesses;
   KillProcessesFromDir(WizardDirValue);
-  Sleep(1000);
+  RunDamStopPhase(WizardDirValue);
+  Sleep(200);
   Result := '';
   if PathNeedsAdmin(WizardDirValue) and (not IsAdminInstallMode) then
   begin
     Result :=
       'Program Files wymaga administratora. Wybierz ' + UserInstallDir +
       ' albo uruchom DAM-Setup.exe jako administrator.';
+  end;
+end;
+
+function JsonEscape(const S: String): String;
+var
+  R: String;
+begin
+  R := S;
+  StringChangeEx(R, '\', '\\', True);
+  StringChangeEx(R, '"', '\"', True);
+  Result := R;
+end;
+
+{ Znacznik state\current-install.json (DECYZJE.md sekcja 8 pkt 4-5): pola app_dir, version,
+  state, written_at. Odczytywany w przyszlym wydaniu (etap 5.3, nie ta partia) jako
+  "install_fence" - tutaj tylko zapisujemy, nic jeszcze go nie czyta. }
+procedure WriteCurrentInstallMarker(const StateStr: String);
+var
+  StateDir, MarkerPath, Json: String;
+begin
+  StateDir := ExpandConstant('{localappdata}\DAM\state');
+  ForceDirectories(StateDir);
+  MarkerPath := StateDir + '\current-install.json';
+  Json := '{"app_dir":"' + JsonEscape(ExpandConstant('{app}')) + '","version":"' +
+    JsonEscape('{#MyAppVersion}') + '","state":"' + JsonEscape(StateStr) +
+    '","written_at":"' + JsonEscape(GetDateTimeString('yyyy-mm-dd hh:nn:ss', #0, #0)) + '"}';
+  SaveStringToFile(MarkerPath, Json, False);
+end;
+
+{ Zapisuje state:"uninstalled" TYLKO gdy istniejacy znacznik nalezy do TEGO folderu docelowego - inna
+  rownolegla instalacja (inny folder) nie moze zostac oznaczona jako odinstalowana. }
+procedure MarkUninstalledIfMatchingApp;
+var
+  StateDir, MarkerPath: String;
+  Content: AnsiString;
+  Needle: AnsiString;
+begin
+  StateDir := ExpandConstant('{localappdata}\DAM\state');
+  MarkerPath := StateDir + '\current-install.json';
+  if not FileExists(MarkerPath) then Exit;
+  if not LoadStringFromFile(MarkerPath, Content) then Exit;
+  Needle := AnsiString('"app_dir":"' + JsonEscape(ExpandConstant('{app}')) + '"');
+  if Pos(Needle, Content) > 0 then
+    WriteCurrentInstallMarker('uninstalled');
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  Script: String;
+  Rc: Integer;
+begin
+  { ssInstall biegnie PRZED [InstallDelete]/[Files]/[Registry]: swiezy wpis DAM-Bridge
+    jeszcze nie istnieje, wiec ta faza z definicji nie moze go skasowac. Skrypt jest
+    wyciagniety do folderu tymczasowego przez RunDamStopPhase (PrepareToInstall zawsze biegnie pierwszy,
+    przed ssInstall). }
+  if CurStep = ssInstall then
+  begin
+    Script := ExpandConstant('{tmp}\dam-cleanup-autostart.ps1');
+    if not FileExists(Script) then ExtractTemporaryFile('dam-cleanup-autostart.ps1');
+    Rc := RunDamCleanPhaseScript(Script, 'Install', ExpandConstant('{app}'));
+    if Rc <> 0 then
+    begin
+      Log('CurStepChanged(ssInstall): dam-cleanup-autostart Clean rc=' + IntToStr(Rc) + ' - rezerwa Pascal');
+      FallbackFullFailure(ExpandConstant('{app}'));
+    end;
+    WriteCurrentInstallMarker('installed');
   end;
 end;
 
@@ -426,20 +643,20 @@ var
   Lbl: TNewStaticText;
   Btn, CloseBtn: TNewButton;
 begin
+  { Local\DAM CELOWO nie jest na tej liscie (DECYZJE.md sekcja 8 pkt 5): to folder stanu
+    (state, aktywacja, logi), nie resztka instalacji - okno "skasuj recznie" bylo mylace. }
   AppDir := ExpandConstant('{app}');
   LocalProg := ExpandConstant('{localappdata}\Programs\DAM');
   LocalDam := ExpandConstant('{localappdata}\DAM');
   Roam := ExpandConstant('{userappdata}\DAM');
-  SetArrayLength(SrcDirs, 4);
-  SetArrayLength(SrcLabels, 4);
+  SetArrayLength(SrcDirs, 3);
+  SetArrayLength(SrcLabels, 3);
   SrcDirs[0] := AppDir;
   SrcLabels[0] := 'Folder instalacji';
   SrcDirs[1] := LocalProg;
   SrcLabels[1] := 'Programs\DAM';
-  SrcDirs[2] := LocalDam;
-  SrcLabels[2] := 'Local\DAM';
-  SrcDirs[3] := Roam;
-  SrcLabels[3] := 'Roaming\DAM';
+  SrcDirs[2] := Roam;
+  SrcLabels[2] := 'Roaming\DAM';
 
   SetArrayLength(OpenDirs, 0);
   SetArrayLength(OpenLabels, 0);
@@ -528,9 +745,32 @@ begin
 end;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var
+  Script: String;
+  Rc: Integer;
 begin
   if CurUninstallStep = usUninstall then
+  begin
+    { Kolejnosc (DECYZJE.md sekcja 8 pkt 4): najpierw zatrzymaj, POTEM autostart + aktywacja
+      (skrypt lezy w folderze docelowym, jeszcze nie usuniety - pliki znikaja dopiero po tym kroku). }
     KillDamProcesses;
+    Script := AddBackslash(ExpandConstant('{app}')) + 'bin\scripts\ops\dam-cleanup-autostart.ps1';
+    if FileExists(Script) then
+    begin
+      Rc := RunDamCleanPhaseScript(Script, 'Uninstall', ExpandConstant('{app}'));
+      if Rc <> 0 then
+      begin
+        Log('CurUninstallStepChanged: dam-cleanup-autostart Uninstall rc=' + IntToStr(Rc) + ' - rezerwa Pascal');
+        FallbackFullFailure(ExpandConstant('{app}'));
+      end;
+    end
+    else
+    begin
+      Log('CurUninstallStepChanged: skrypt nie istnieje w {app} - rezerwa Pascal');
+      FallbackFullFailure(ExpandConstant('{app}'));
+    end;
+    MarkUninstalledIfMatchingApp;
+  end;
   if CurUninstallStep = usPostUninstall then
     ShowLeftoverCleanup;
 end;
@@ -539,3 +779,9 @@ end;
 Type: filesandordirs; Name: "{app}\bin\apps\desktop\webview2-profile"
 Type: filesandordirs; Name: "{app}\bin\runtime"
 Type: filesandordirs; Name: "{localappdata}\DAM\build"
+; Sprzatniecie calego {app} PO wlasciwym odinstalowaniu (usPostUninstall): resztki nie
+; sledzone przez [Files]/[Dirs] (cache, miniatury, logi, bazy) tez znikaja. {app} to zawsze
+; podfolder wybrany w kreatorze (PathLooksLikeDamRoot/IsBadInstallPath wykluczaja korzen
+; dysku/profil/system) - Type=filesandordirs nie "ucieka" poza niego. Zablokowane pliki:
+; Inno i tak zostawi je z ostrzezeniem - zlapie je nastepna instalacja (stary korzen -> kosz).
+Type: filesandordirs; Name: "{app}"
