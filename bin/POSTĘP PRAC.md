@@ -2,6 +2,8 @@
 
 ## GDZIE JESTEŚMY (aktualizowane na bieżąco)
 
+**Otwarte po 2.4.7:** (1) dostarczenie zmian A->B/C 13-26 s zamiast celu 5 s (odczyt co 30 s w moście); (2) `/branding/live-www-scan` dokleja karty ze skanu lokalnego dysku - do decyzji (wyłączyć w trybie rows?); (3) uzupełnienie ~23,8 tys. brakujących miniatur siatki z M: porcjami na KRZYSZTOFWI; (4) `bin/secrets/activation-code.txt` ma inny kod niż `%USERPROFILE%/.dam/activation-code.txt`, którym pieczętuje build; (5) baza `dam_restore_test` na NAS do usunięcia ręcznie (hook blokuje DROP); (6) KINGAUR i INYFINN zaktualizować do 2.4.7; (7) sprzątanie miejsca (wyżej). Dowód z czystego Windows (Sandbox) - niewykonany, test paczki na tym PC + A/B/C.
+
 Cel: każdy komputer pokazuje ten sam Branding i te same wizualizacje. Katalog ma jednego
 właściciela (baza na inyfinn-syno, zasilana jednym indeksatorem); ROOT na komputerze mówi tylko,
 czy oryginał jest pod ręką. Plan: `work\PLAN-NAPRAWY-DAM-DLA-CLAUDE -2.md` (jeden komputer,
@@ -16,8 +18,8 @@ wszystko robi Claude). Decyzje wykonawcze: `work\kierownicy\2026-09-28b\DECYZJE.
 | - | Instalator: stare foldery DAM do Kosza, deinstalacja sprząta, bez zabijania nowego DAM | zrobione w skrypcie (`3732cced`, `ac89e199`), testy piaskownicy OK; pełny test instalacji - przy wydaniu |
 | 3 | Jeden katalog dla wszystkich paneli: właściciel katalogu = `index_authority` (KRZYSZTOFWI z M:), bramka w bazie działa też na stare wersje, klient bez uprawnień bierze wersję z bazy, zmiany co 30 s | **włączone na produkcji 28.09 ~15:50** (kopia przed: `dam_eta-przed-bramka.dump`); kod `2c538c07`, testy PG 22/22; wycofanie: `work/2026-09-28/W5/rollback-production.sql` (pusta lista + DISABLE TRIGGER) |
 | 4 | Podglądy: stany gotowy/czeka/błąd/format bez podglądu, `/preview/status`, opis na karcie | zrobione (`0833cbd9`, `35195626`); pokrycie produkcji (grid): 24 361 gotowe / 23 778 czekają / 13 506 bez podglądu - uzupełnianie brakujących z M: porcjami: do zrobienia po instalacji 2.4.6 |
-| 5 | Test 3 izolowanych instancji A/B/C na tym PC + test paczki | po krokach 1-4 |
-| 6 | Porządek (21 GB) i wydanie 2.4.6 | na końcu |
+| 5 | Test 3 izolowanych instancji A/B/C na tym PC (A właściciel, B opóźniona kopia, C bez ROOT) | **S1-S8 PASS**, zrzuty Brandingu i Wizualizacji identyczne na A/B/C (`work/2026-09-28/W8/20260928_164840`), uprząż `bin/scripts/qa/e2e/run_abc.py` |
+| 6 | Porządek i wydanie | wydane **2.4.6** i **2.4.7** (release z .exe + .sig); 2.4.6 zainstalowane i aktywowane na KRZYSZTOFWI (sprzątanie w instalatorze działa: faza Stop 4,5 s, autostart nowej instalacji zachowany). Pomiar miejsca: repo 14 GB (work 8,4 GB - w tym `work/dist` 5,4 GB starych stagingów; `bin/apps/web/data` 2,2 GB - 6 starych kopii branding-index po 270-413 MB) - do przeniesienia do Kosza po potwierdzeniu (>500 MB) |
 
 Ograniczenia dowodu (stan 28.09): kopia produkcji zrobiona przez SSH (`D:\DAM-lokalne\backup\pg\2026-09-28\dam_eta.dump`, 45,5 MB, test odtworzenia: liczby wierszy zgodne); testowa baza `dam_eta_test` + rola `dam_test` na inyfinn-syno; 4.1 i 4.2 na prawdziwym PG: czerwone na 2.4.5, zielone teraz (`b69d2833`). Na serwerze została baza `dam_restore_test` (kopia z testu odtworzenia) - hook blokuje DROP, do usunięcia ręcznie. Pełny zestaw: 683 testy Python + 27 JS OK. Przy okazji: test `test_index_assoc_backend` uruchamiał prawdziwą przebudowę Brandingu jako sierotę (błąd od 2.4.5) - naprawione (`6a7f1fd2`).
 
