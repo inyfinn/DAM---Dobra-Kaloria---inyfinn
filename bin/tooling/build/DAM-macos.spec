@@ -4,6 +4,8 @@
 # Build (na macOS):  python -m PyInstaller bin/tooling/build/DAM-macos.spec --noconfirm
 # Test bez GUI:      dist/DAM.app/Contents/MacOS/DAM --selftest
 
+import json
+import os
 from pathlib import Path
 
 from PyInstaller.utils.hooks import collect_all, collect_submodules
@@ -52,14 +54,49 @@ SKIP_SUFFIXES = (".pyc", ".log", ".sqlite", ".env")
 SKIP_NAMES = (
     "pg-config.bundled.json",
     "pg-config.json",
+    # 29.09.2026: te tez nigdy do publicznego .dmg. .off to kopia JAWNEGO
+    # pg-config.json (lezy w drzewie deweloperskim), secret.key to lokalny klucz
+    # Fernet (secret_box.py), reszta to stan aktywacji tej maszyny (pg_seal.py).
+    # Build z CI ich nie ma (gitignored), ale build na Macu z drzewa roboczego tak.
+    "pg-config.json.off",
+    "pg-config.dpapi",
+    "pg-config.code.dpapi",
+    "pg-config.protected",
+    "pg-config.code.protected",
+    "pg-config.sealed.used",
+    "secret.key",
     "users-seed.sqlite",
     # Kopia surowego skanu (do ~370 MB) i jego manifest - nie do bundla.
     "branding-index.scan.json",
     "branding-scan-dirs.json",
 )
 
+# Zapieczetowana konfiguracja bazy MA jechac w .app - dokladnie jak w instalatorze
+# Windows (build-installer.ps1 -> data/pg-config.sealed.json). To szyfrogram
+# scrypt+Fernet: bez kodu aktywacyjnego od administratora jest bezuzyteczny, a
+# instalator Windows i tak wozi go publicznie. Bez tego pliku DAM 2.4.7 na Macu
+# nie mial skad wziac bazy i logowanie konczylo sie "nieprawidlowy email lub haslo".
+# macos-build.yml zapisuje go z sekretu DAM_PG_SEALED_JSON przed PyInstallerem;
+# DAM_REQUIRE_SEALED=1 (wydanie) = brak pliku przerywa build zamiast cichej alfy.
+SEALED = DESKTOP / "data" / "pg-config.sealed.json"
+if "pg-config.sealed.json" in SKIP_NAMES:
+    raise SystemExit("pg-config.sealed.json nie moze byc w SKIP_NAMES - to jedyna konfiguracja bazy w .app")
+if SEALED.is_file():
+    try:
+        _sealed = json.loads(SEALED.read_text(encoding="utf-8"))
+    except Exception as exc:  # noqa: BLE001
+        raise SystemExit(f"pg-config.sealed.json nie jest poprawnym JSON: {exc}")
+    if not (isinstance(_sealed, dict) and _sealed.get("v") == 1 and _sealed.get("kdf") == "scrypt"
+            and _sealed.get("token") and "password" not in _sealed):
+        raise SystemExit("pg-config.sealed.json ma zly format (oczekiwane v=1, kdf=scrypt, token; bez jawnego hasla)")
+elif os.environ.get("DAM_REQUIRE_SEALED", "").strip() == "1":
+    raise SystemExit(f"DAM_REQUIRE_SEALED=1, a brak {SEALED} - wydanie macOS bez konfiguracji bazy przerwane")
+
 datas = []
 datas += tree(DESKTOP, "bin/apps/desktop", SKIP_DIRS, SKIP_SUFFIXES)
+if SEALED.is_file() and not any(src == str(SEALED) for src, _dest in datas):
+    raise SystemExit("pg-config.sealed.json istnieje, ale nie trafil do datas (sprawdz SKIP_DIRS/SKIP_SUFFIXES)")
+print(f"DAM-macos.spec: pg-config.sealed.json {'W PAKIECIE' if SEALED.is_file() else 'BRAK (build bez konfiguracji bazy)'}")
 datas += tree(ROOT / "bin" / "apps" / "web", "bin/apps/web", ("__pycache__", "node_modules", "_qa"), (".pyc",))
 datas += tree(ROOT / "bin" / "THEME", "bin/THEME", ("__pycache__", "documentation"), (".zip", ".map"))
 datas += tree(ROOT / "bin" / "DATABASE", "bin/DATABASE", ("__pycache__",), (".gz",))

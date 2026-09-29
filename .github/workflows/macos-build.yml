@@ -87,22 +87,87 @@ jobs:
           fi
           ls -la "$OUT" 2>/dev/null || echo "brak .icns (dopuszczalne)"
 
-      - name: Konfiguracja bazy (pg-config.bundled.json)
+      - name: Testy aktywacji na prawdziwym macOS (pek kluczy + kod)
         env:
-          PG_CONFIG_JSON: ${{ secrets.DAM_PG_CONFIG_JSON }}
+          DAM_REAL_KEYCHAIN_TEST: '1'
         run: |
-          # pg_seal._dpapi() dziala tylko na Windows (pg_seal.py:111-113), wiec aktywacja
-          # kodem na macOS zwrocilaby dpapi_failed. pg_db._pg_config_candidates() czyta
-          # pg-config.bundled.json bezwarunkowo - to jest droga bez zmian w kodzie.
+          set -euo pipefail
+          # Jedyne miejsce, gdzie kod pg_seal dla macOS dziala na prawdziwym systemie
+          # (testy na Windows symuluja sys.platform=darwin i narzedzie security).
+          export DAM_STATE_DIR="$RUNNER_TEMP/dam-state-test"
+          cd bin/apps/desktop
+          python -m unittest discover -v -s tests -p 'test_pg_seal_macos.py' 2>&1 | tee /tmp/pg-seal-macos-tests.log
+
+      - name: Konfiguracja bazy (pg-config.sealed.json)
+        env:
+          PG_SEALED_JSON: ${{ secrets.DAM_PG_SEALED_JSON }}
+          PG_CONFIG_JSON: ${{ secrets.DAM_PG_CONFIG_JSON }}
+          IS_RELEASE: ${{ github.event_name == 'release' }}
+        run: |
+          set -euo pipefail
+          # 29.09.2026: DMG 2.4.7 wyszly BEZ konfiguracji bazy (brak sekretu, krok tylko
+          # pisal "build alfa"). Na Macu logowanie trafialo do lokalnych kont seed:
+          # "nieprawidlowy email lub haslo". Teraz jak w instalatorze Windows: DMG wozi
+          # SZYFROGRAM (scrypt+Fernet), odblokowywany kodem aktywacyjnym od administratora,
+          # a pg_seal.py trzyma odszyfrowana konfiguracje w peku kluczy macOS.
+          DATA=bin/apps/desktop/data
+          SEALED="$DATA/pg-config.sealed.json"
+          mkdir -p "$DATA"
+          if [ -n "$PG_SEALED_JSON" ]; then
+            printf '%s' "$PG_SEALED_JSON" > "$SEALED"
+            python - "$SEALED" <<'PY'
+          import json, sys
+          d = json.load(open(sys.argv[1], encoding="utf-8"))
+          assert isinstance(d, dict), "sealed: to nie jest obiekt JSON"
+          assert d.get("v") == 1 and d.get("kdf") == "scrypt", "sealed: zly format (v/kdf)"
+          assert d.get("salt") and d.get("token"), "sealed: brak salt/token"
+          assert "password" not in d and "host" not in d, "sealed: wyglada na JAWNA konfiguracje"
+          print("pg-config.sealed.json z sekretu DAM_PG_SEALED_JSON: format OK (v1 scrypt+Fernet)")
+          PY
+          fi
           if [ -n "$PG_CONFIG_JSON" ]; then
-            printf '%s' "$PG_CONFIG_JSON" > bin/apps/desktop/data/pg-config.bundled.json
-            echo "pg-config.bundled.json zapisany z sekretu"
+            # Stara droga (jawne haslo) zostaje tylko dla zgodnosci. DAM-macos.spec
+            # (SKIP_NAMES) NIGDY nie pakuje tego pliku do publicznego .dmg, a pakiet
+            # jest tylko do odczytu, wiec aplikacja i tak by go nie skopiowala.
+            printf '%s' "$PG_CONFIG_JSON" > "$DATA/pg-config.bundled.json"
+            echo "::warning::DAM_PG_CONFIG_JSON (jawne haslo) jest PRZESTARZALY i nie konfiguruje DMG. Uzyj DAM_PG_SEALED_JSON (pg-config.sealed.json z builda Windows)."
+          fi
+          if [ ! -s "$SEALED" ]; then
+            if [ "$IS_RELEASE" = "true" ]; then
+              echo "::error::Brak sekretu DAM_PG_SEALED_JSON. Wydanie macOS bez konfiguracji bazy = na kazdym Macu 'nieprawidlowy email lub haslo' (DAM 2.4.7). Build przerwany."
+              exit 1
+            fi
+            echo "::warning::Brak DAM_PG_SEALED_JSON - build testowy BEZ konfiguracji bazy (logowanie zwroci 'Aplikacja nie jest aktywowana')."
           else
-            echo "BRAK sekretu DAM_PG_CONFIG_JSON - build alfa bez konfiguracji bazy"
+            echo "DAM_REQUIRE_SEALED=1" >> "$GITHUB_ENV"
           fi
 
       - name: Build DAM.app
         run: python -m PyInstaller bin/tooling/build/DAM-macos.spec --noconfirm --clean
+
+      - name: Kontrola konfiguracji bazy w DAM.app
+        env:
+          IS_RELEASE: ${{ github.event_name == 'release' }}
+        run: |
+          set -euo pipefail
+          APP=dist/DAM.app
+          # Jawna konfiguracja albo sekret tej maszyny w publicznym .dmg = wyciek hasla.
+          LEAK=$(find "$APP" \( -name 'pg-config.json' -o -name 'pg-config.bundled.json' \
+            -o -name 'pg-config.json.off' -o -name 'pg-config.dpapi' -o -name 'pg-config.code.dpapi' \
+            -o -name 'pg-config.protected' -o -name 'pg-config.code.protected' -o -name 'secret.key' \) -print)
+          if [ -n "$LEAK" ]; then
+            echo "::error::Jawna konfiguracja bazy albo sekret w pakiecie: $LEAK"
+            exit 1
+          fi
+          SEALED_IN_APP=$(find "$APP" -name 'pg-config.sealed.json' -path '*bin/apps/desktop/data/*' | head -1)
+          if [ -n "$SEALED_IN_APP" ]; then
+            echo "OK: zapieczetowana konfiguracja bazy w pakiecie: $SEALED_IN_APP"
+          elif [ "$IS_RELEASE" = "true" ]; then
+            echo "::error::Brak pg-config.sealed.json w DAM.app - wydanie przerwane."
+            exit 1
+          else
+            echo "::warning::DAM.app bez pg-config.sealed.json (build testowy)."
+          fi
 
       - name: Podpis ad-hoc (bez konta Apple Developer)
         run: |
@@ -179,6 +244,7 @@ jobs:
           path: |
             dist/DAM-${{ matrix.arch }}.dmg
             /tmp/selftest.log
+            /tmp/pg-seal-macos-tests.log
           retention-days: 14
 
       - name: Dolacz do release

@@ -80,6 +80,43 @@ def _pg_configured_but_offline() -> bool:
         return False
 
 
+NOT_ACTIVATED_MESSAGE = "Aplikacja nie jest aktywowana - wpisz kod aktywacyjny od administratora."
+NO_DB_CONFIG_MESSAGE = (
+    "Aplikacja nie jest aktywowana - ta instalacja nie ma konfiguracji bazy. "
+    "Pobierz aktualny instalator DAM albo skontaktuj się z administratorem."
+)
+
+
+def _activation_block() -> dict | None:
+    """29.09.2026 (DAM 2.4.7 na Macu): bez konfiguracji bazy logowanie szlo do lokalnych
+    kont seed i konczylo sie "nieprawidlowy email lub haslo". Nieaktywowana instalacja
+    NIE loguje do lokalnej SQLite - zwraca jawny blad, a UI pokazuje okno kodu."""
+    try:
+        import pg_db
+
+        reason = pg_db.login_block_reason()
+    except Exception as exc:  # noqa: BLE001 - bez pg_db zachowanie jak dotad
+        print("auth_store activation check warning:", exc, flush=True)
+        return None
+    if reason == "not_activated":
+        return {
+            "ok": False,
+            "error": "not_activated",
+            "reason": "not_activated",
+            "activation_available": True,
+            "message": NOT_ACTIVATED_MESSAGE,
+        }
+    if reason == "no_config":
+        return {
+            "ok": False,
+            "error": "not_activated",
+            "reason": "no_config",
+            "activation_available": False,
+            "message": NO_DB_CONFIG_MESSAGE,
+        }
+    return None
+
+
 def _retry_pg_now_if_offline() -> None:
     """Logowanie to akcja uzytkownika: zamiast czekac na okno ponowien dam_db,
     nastepne dam_db.connect() od razu probuje Postgres."""
@@ -411,6 +448,9 @@ def login(
     allow_weak_password: bool = False,
 ) -> dict:
     init_db()
+    blocked = _activation_block()
+    if blocked:
+        return blocked
     email_n = (email or "").strip().lower()
     identity = _current_identity()
     mid = (machine_id or identity.get("machine_id") or "").strip()
@@ -558,6 +598,10 @@ def change_password(email: str, old_password: str, new_password: str) -> dict:
         return {"ok": False, "error": policy}
     if new_password == old_password:
         return {"ok": False, "error": "password_unchanged"}
+    # Stare haslo to dowod jak przy logowaniu - bez aktywacji nie sprawdzamy go w SQLite.
+    blocked = _activation_block()
+    if blocked:
+        return blocked
     if _login_throttled(email_n):
         return {"ok": False, "error": "too_many_attempts"}
     with _LOCK:

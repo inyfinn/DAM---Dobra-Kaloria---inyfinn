@@ -251,6 +251,28 @@ def activation_reason() -> str:
     return "auth_failed" if _AUTH_FAILED else ""
 
 
+def login_block_reason() -> str:
+    """Czy logowanie WOLNO puscic do lokalnej SQLite. '' = tak (albo PG skonfigurowany).
+
+    29.09.2026 (DAM 2.4.7 na Macu): instalacja bez konfiguracji bazy logowala do
+    lokalnych kont seed i odpowiadala "nieprawidlowy email lub haslo" zamiast
+    "aplikacja nie jest aktywowana". Teraz:
+      "not_activated" - instalacja ma sealed.json, kodu jeszcze nie wpisano
+                        (UI pokazuje okno kodu aktywacyjnego),
+      "no_config"     - zainstalowana kopia bez sealed.json i bez konfiguracji
+                        (np. DMG 2.4.7 zbudowany bez sekretu) - kod nic nie da,
+      ""              - PG skonfigurowany albo drzewo deweloperskie (repo z .git),
+                        gdzie lokalna SQLite bez bazy jest dozwolona jak dotad.
+    """
+    if is_configured():
+        return ""
+    if pg_seal is not None and pg_seal.sealed_present():
+        return "not_activated"
+    if _is_dev_tree():
+        return ""
+    return "no_config"
+
+
 def last_auth_failed() -> bool:
     return _AUTH_FAILED
 

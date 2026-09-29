@@ -2,12 +2,24 @@
  *
  * Instalator nie wozi juz jawnego hasla do bazy (audyt 2026-09-17). Wozi szyfrogram,
  * ktory odblokowuje kod przekazany przez administratora poza aplikacja. Most zapisuje
- * potem konfiguracje pod Windows DPAPI i pyta o kod tylko raz na konto Windows.
+ * potem konfiguracje pod Windows DPAPI (macOS: pek kluczy uzytkownika) i pyta o kod
+ * tylko raz na konto uzytkownika systemu.
  *
  * Skrypt sam sprawdza GET /db/activation i sam buduje okno. Bez innerHTML.
+ * window.DamActivation.show(reason) - dam-api.js otwiera okno po bledzie logowania
+ * "not_activated" (29.09.2026, DAM na Macu mowil "nieprawidlowy email lub haslo").
  */
 (function () {
   "use strict";
+
+  function onMac() {
+    try {
+      var p = String((navigator && (navigator.platform || navigator.userAgent)) || "");
+      return /Mac/i.test(p);
+    } catch (_e) {
+      return false;
+    }
+  }
 
   function bridge() {
     try {
@@ -62,8 +74,9 @@
       passwordChanged
         ? "Baza Synology odrzuciła zapisane hasło, więc DAM pracuje na kopii lokalnej. Wpisz kod aktywacyjny " +
             "z tej wersji instalatora - później aktualizacje odświeżą hasło same."
-        : "To pierwsze uruchomienie DAM na tym koncie Windows. Wpisz kod, który dostałeś od administratora. " +
-            "Kod jest potrzebny tylko raz."
+        : "Aplikacja nie jest aktywowana. To pierwsze uruchomienie DAM na tym koncie " +
+            (onMac() ? "macOS" : "Windows") +
+            ". Wpisz kod aktywacyjny, który dostałeś od administratora. Kod jest potrzebny tylko raz."
     );
     var label = el("label", "display:block;margin:0 0 6px;font-size:13px;font-weight:600;", "Kod");
     label.setAttribute("for", "damActivationCode");
@@ -155,6 +168,8 @@
       })
       .catch(function () { /* most jeszcze wstaje: signin i tak pokaze swoj stan */ });
   }
+
+  window.DamActivation = { show: show, check: check };
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", function () { check(true); });

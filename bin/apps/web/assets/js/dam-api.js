@@ -857,6 +857,20 @@
         if (bdata && bdata.error === "invalid_credentials") {
           throw new Error("Nieprawidłowy email lub hasło.");
         }
+        /* 29.09.2026 (DAM 2.4.7 na Macu): instalacja bez konfiguracji bazy odpowiadala
+           "Nieprawidłowy email lub hasło". Most mówi teraz wprost, że brakuje aktywacji -
+           pokazujemy komunikat i od razu okno kodu (dam-activation.js), jeśli kod coś da. */
+        if (bdata && bdata.error === "not_activated") {
+          var na = new Error(
+            bdata.message || "Aplikacja nie jest aktywowana - wpisz kod aktywacyjny od administratora."
+          );
+          na.code = "not_activated";
+          na.activationAvailable = bdata.activation_available !== false;
+          if (na.activationAvailable && window.DamActivation && typeof window.DamActivation.show === "function") {
+            try { window.DamActivation.show("not_activated"); } catch (eAct) { /* komunikat i tak wyjdzie */ }
+          }
+          throw na;
+        }
         if (bdata && bdata.error === "machine_id_required") {
           throw new Error("Brak ID maszyny - uruchom DAM przez skrót na pulpicie.");
         }
@@ -998,6 +1012,9 @@
       if (err === "password_unchanged") throw new Error("Nowe hasło musi być inne niż stare.");
       if (err === "invalid_credentials") throw new Error("Stare hasło jest nieprawidłowe.");
       if (err === "too_many_attempts") throw new Error("Za dużo nieudanych prób. Odczekaj 5 minut.");
+      if (err === "not_activated") {
+        throw new Error((data && data.message) || "Aplikacja nie jest aktywowana - wpisz kod aktywacyjny od administratora.");
+      }
       throw new Error("Nie udało się zmienić hasła.");
     },
     async rehydrate() {
