@@ -104,7 +104,7 @@ class SupervisorSingletonTests(unittest.TestCase):
         self.assertNotIn("start_index_watcher", serve_src)
         self.assertIn("BridgeSupervisor", serve_src)
 
-        with tempfile.TemporaryDirectory() as td:
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as td:
             td_path = Path(td)
             spawned = _isolate_supervisor(self, td_path, td_path / "missing-watch.py")
             try:
@@ -149,7 +149,7 @@ class WatcherStatusTests(unittest.TestCase):
     def test_watcher_startup_failure_surfaces_status(self):
         import index_supervisor as isup
 
-        with tempfile.TemporaryDirectory() as td:
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as td:
             td_path = Path(td)
             spawned = _isolate_supervisor(self, td_path, td_path / "nope.py")
             _stop_supervisor_and_wait(isup)

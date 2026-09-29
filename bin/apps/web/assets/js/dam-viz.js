@@ -5006,11 +5006,82 @@
   /* Render card galerii                                                  */
   /* ------------------------------------------------------------------ */
 
+  /*
+   * 29.09.2026 (zgloszenie: "grafiki nie laduja sie calkowicie, nie wiem, czy to laduje,
+   * czy nigdy sie nie zaladuja"). Dotad po pierwszym bledzie miniatury (504 = most jeszcze
+   * ja buduje, albo odrzucone polaczenie) karta ciagnela CALY oryginal z M: (/media bez
+   * preview), a w czasie ponowien przegladarka pokazywala ikone zepsutego obrazka.
+   * Teraz: stan z mostu (/preview/status, ~10 ms) -> "w przygotowaniu" = animacja
+   * ladowania i ponowienie miniatury (most dokancza ja w tle), bez ciezkiego oryginalu;
+   * "nieobslugiwany" / "blad" = od razu uczciwy opis na karcie.
+   */
+  function vizThumbFinal(img, path, state) {
+    if (!img || !img.isConnected) return;
+    var PT = global.DamPreviewTruth;
+    if (PT && typeof PT.stopThumbWait === "function") PT.stopThumbWait(img);
+    img.onerror = null;
+    img.setAttribute("data-thumb-state", state || "pending");
+    img.title = PT && typeof PT.stateLabel === "function" ? PT.stateLabel(state) : "";
+    img.src =
+      PT && typeof PT.statePlaceholderSvg === "function" ? PT.statePlaceholderSvg(state) : PLACEHOLDER_SVG;
+    img.classList.add("dam-viz-thumb__img--placeholder");
+    if (state === "unsupported" || !path || !PT || typeof PT.retryPlaceholderLater !== "function") return;
+    /* Zaslepka moze sie sama naprawic - most dociaga miniature pozniej. */
+    PT.retryPlaceholderLater(img, path, "grid", function (freshUrl) {
+      if (!img.isConnected) return;
+      img.classList.remove("dam-viz-thumb__img--placeholder", "dam-viz-thumb__img--online-only");
+      img.removeAttribute("title");
+      img.removeAttribute("data-thumb-state");
+      img.onerror = function () {
+        onThumbError(img);
+      };
+      img.src = freshUrl;
+    });
+  }
+
   function onThumbError(img) {
     var path = img.getAttribute("data-media-path") || "";
+    var PT = global.DamPreviewTruth;
+    if (path && PT && typeof PT.previewStatus === "function" && typeof PT.retryThumbLater === "function") {
+      if (typeof PT.startThumbWait === "function") PT.startThumbWait(img);
+      PT.previewStatus(path, "grid").then(function (st) {
+        if (!img || !img.isConnected) return;
+        var state = (st && st.state) || "pending";
+        if (state === "unsupported") {
+          /* SVG przegladarka pokaze sama; inne formaty bez podgladu - uczciwy opis. */
+          var ext = String(path.split(".").pop() || "").toLowerCase();
+          var tried = img.getAttribute("data-thumb-fallback") || "";
+          var svgUrl = ext === "svg" && typeof PT.mediaPreviewUrl === "function" ? PT.mediaPreviewUrl(path) : "";
+          if (svgUrl && !tried) {
+            img.setAttribute("data-thumb-fallback", "media");
+            img.src = svgUrl;
+            return;
+          }
+          vizThumbFinal(img, path, "unsupported");
+          return;
+        }
+        if (state === "failed") {
+          /* Most nie umial zbudowac miniatury - raz pomniejszony podglad oryginalu
+             (preview=1, most skaluje), potem uczciwy opis. */
+          var triedFailed = img.getAttribute("data-thumb-fallback") || "";
+          var prev = typeof PT.mediaPreviewUrl === "function" ? PT.mediaPreviewUrl(path) : "";
+          if (prev && !triedFailed) {
+            img.setAttribute("data-thumb-fallback", "media");
+            img.src = prev;
+            return;
+          }
+          vizThumbFinal(img, path, "failed");
+          return;
+        }
+        /* ready (chwilowy blad polaczenia) albo pending (most buduje) - ponow miniature. */
+        if (PT.retryThumbLater(img, PT.thumbCacheUrl(path, "grid"))) return;
+        vizThumbFinal(img, path, state === "ready" ? "pending" : state);
+      });
+      return;
+    }
     var src = img.getAttribute("src") || "";
     var tried = img.getAttribute("data-thumb-fallback") || "";
-    /* Progressive real: cache miss → /media preview ze źródła. Zero starych JPG. */
+    /* Starsza sciezka (bez DamPreviewTruth.previewStatus): cache miss -> /media ze zrodla. */
     if (!tried && path) {
       var live = mediaPreviewUrl(path);
       if (live && live !== src) {

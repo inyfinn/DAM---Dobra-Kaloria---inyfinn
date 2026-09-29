@@ -287,7 +287,10 @@ ok(vz.indexOf("<span>Powiększ · przesuń</span>") < 0, "dam-viz: stara twarda 
 ok(/DamLightbox\.close\(\)/.test(vz), "dam-viz: zamkniecie okna zamyka lightbox");
 ok(/bindOpenGesture\(thumbStage, openHeroLightbox/.test(mp), "dam-media-preview: ten sam pomocnik gestu");
 var vh = fs.readFileSync(path.join(WEB, "visualizations.html"), "utf8");
-ok(vh.indexOf("dam-viz.js?v=2.4.2") > 0, "visualizations.html: dam-viz.js?v=2.4.2");
+/* 29.09.2026: sprawdzamy "co najmniej 2.4.2" (lightbox), nie dokladny numer - kazda pozniejsza
+   zmiana dam-viz.js podbija ?v= i nie moze wywracac tego testu. */
+var vzVer = (vh.match(/dam-viz\.js\?v=(\d+)\.(\d+)\.(\d+)/) || []).slice(1).map(Number);
+ok(vzVer.length === 3 && (vzVer[0] * 10000 + vzVer[1] * 100 + vzVer[2]) >= 20402, "visualizations.html: dam-viz.js?v>=2.4.2");
 ok(vh.indexOf("dam-lightbox.js?v=2.4.2") > 0 && vh.indexOf("dam-lightbox.js") < vh.indexOf("dam-viz.js?v="), "visualizations.html: dam-lightbox.js przed dam-viz.js");
 ok(/#damVizModalHero[\s\S]{0,40}touch-action: manipulation/.test(css), "CSS: hero okna produktu bez przegladarkowego zoomu na double-tap");
 

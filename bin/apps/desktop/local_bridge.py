@@ -12228,12 +12228,24 @@ def _kv_cache_watcher() -> None:
             print("kv_cache watcher error:", exc)
 
 
+class BridgeHTTPServer(ThreadingHTTPServer):
+    """29.09.2026: domyslna kolejka polaczen ThreadingHTTPServer to 5. Siatka Wizualizacji
+    / Brandingu wysyla dziesiatki rownoleglych /thumb-cache; gdy watek glowny chwile nie
+    przyjmuje polaczen (GIL przy duzym JSON, budowa miniatury), Windows odrzuca nadmiar
+    (WinError 10061), przegladarka ponawia po 0,5 s / 1 s i po ~2 s poddaje sie - karta
+    zostaje z ikona zepsutego obrazka. Pomiar (work/2026-09-29/backlog_experiment.py,
+    60 rownoleglych): kolejka 5 -> p95 1,32 s, max 1,83 s; kolejka 128 -> 0,32 s."""
+
+    request_queue_size = 128
+    daemon_threads = True
+
+
 def main() -> None:
     # Port najpierw: autostart (klucz Run) i DAM.exe moga wystartowac mostek rownolegle.
     # Bez tego drugi proces robi cala inicjalizacje (index_supervisor, sync cache, watki)
     # i dopiero potem wywala sie na bindzie - pod pythonw.exe po cichu, bez sladu.
     try:
-        httpd = ThreadingHTTPServer((HOST, PORT), Handler)
+        httpd = BridgeHTTPServer((HOST, PORT), Handler)
     except OSError as exc:
         print(f"DAM local bridge: port {PORT} zajety ({exc}) - mostek juz dziala, wychodze.")
         return

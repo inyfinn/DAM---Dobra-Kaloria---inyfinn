@@ -72,22 +72,57 @@
    * Cache paints immediately, but the source request starts in parallel and
    * always replaces it when available. No delay and no cache-only steady state.
    */
-  function preferOriginal(img, path) {
-    if (!img || !path || img.getAttribute("data-dam-original-started") === "1") return;
-    var original = mediaPreviewUrl(path);
-    if (!original || img.src === original) return;
-    img.setAttribute("data-dam-original-started", "1");
+  /*
+   * 29.09.2026: kazda widoczna karta Brandingu startowala naraz pobieranie podgladu
+   * oryginalu z dysku (most skaluje go osobno). Przy przewijaniu setek kart kolejka
+   * mostu rosla, a miniatury i karty czekaly za oryginalami. Teraz najwyzej
+   * ORIGINAL_MAX_INFLIGHT naraz; reszta czeka (miniatura z pamieci jest juz widoczna),
+   * a karta, ktora zniknela z ekranu, nie zajmuje miejsca w kolejce.
+   */
+  var ORIGINAL_MAX_INFLIGHT = 3;
+  var _originalInflight = 0;
+  var _originalQueue = [];
+
+  function _pumpOriginals() {
+    while (_originalInflight < ORIGINAL_MAX_INFLIGHT && _originalQueue.length) {
+      var job = _originalQueue.shift();
+      if (!job.img.isConnected || job.img.getAttribute("data-dam-original") !== job.path) continue;
+      _startOriginal(job.img, job.path, job.original);
+    }
+  }
+
+  function _startOriginal(img, path, original) {
+    _originalInflight++;
+    var done = false;
+    function finish() {
+      if (done) return;
+      done = true;
+      _originalInflight = Math.max(0, _originalInflight - 1);
+      _pumpOriginals();
+    }
     var probe = new Image();
     probe.decoding = "async";
     probe.onload = function () {
+      finish();
       if (!img.isConnected || img.getAttribute("data-dam-original") !== path) return;
       img.src = original;
       img.setAttribute("data-dam-original-ready", "1");
     };
     probe.onerror = function () {
+      finish();
       img.setAttribute("data-dam-original-unavailable", "1");
     };
+    setTimeout(finish, 20000); /* wiszace zadanie nie blokuje kolejki na zawsze */
     probe.src = original;
+  }
+
+  function preferOriginal(img, path) {
+    if (!img || !path || img.getAttribute("data-dam-original-started") === "1") return;
+    var original = mediaPreviewUrl(path);
+    if (!original || img.src === original) return;
+    img.setAttribute("data-dam-original-started", "1");
+    _originalQueue.push({ img: img, path: path, original: original });
+    _pumpOriginals();
   }
 
   /** Explicit single-file open: the bridge may download this one original (fetch=1). */
@@ -269,6 +304,9 @@
     st.textContent =
       ".dam-thumb-wait{background:linear-gradient(100deg,var(--dam-surface-muted,#f1f3f2) 30%,var(--dam-surface,#fff) 50%,var(--dam-surface-muted,#f1f3f2) 70%);" +
       "background-size:300% 100%;animation:damThumbWait 1.6s ease-in-out infinite;}" +
+      /* 29.09.2026: w czasie czekania obrazek z nieudanym src pokazywal ikone zepsutego
+         obrazka NA animacji - uzytkownik nie wiedzial, czy to laduje, czy nie zaladuje sie nigdy. */
+      ".dam-thumb-wait img{opacity:0!important}" +
       "@keyframes damThumbWait{0%{background-position:100% 0}100%{background-position:0 0}}" +
       "@media (prefers-reduced-motion: reduce){.dam-thumb-wait{animation:none}}";
     (document.head || document.documentElement).appendChild(st);
@@ -308,6 +346,68 @@
   function stopThumbWait(img) {
     var host = img && waitHost(img);
     if (host && host.classList) host.classList.remove("dam-thumb-wait");
+  }
+
+  /** Karta od razu w stanie "laduje" (animacja, bez ikony zepsutego obrazka). */
+  function startThumbWait(img) {
+    ensureRetryCss();
+    var host = img && waitHost(img);
+    if (host && host.classList) host.classList.add("dam-thumb-wait");
+  }
+
+  /*
+   * Stan podgladu z mostu (/preview/status, etap 4 planu naprawy): ready / pending /
+   * failed / unsupported, liczony z pamieci mostu (~10 ms). Wynik pamietany 30 s na
+   * sciezke, zeby siatka setek kart nie pytala w kolko.
+   */
+  var _statusCache = Object.create(null);
+
+  function previewStatus(path, profile) {
+    var local = toLocal(path);
+    if (!local) return Promise.resolve({ state: "pending" });
+    var p = (profile || "grid").trim() || "grid";
+    var key = p + "|" + local;
+    var hit = _statusCache[key];
+    if (hit && Date.now() - hit.at < 30000) return hit.promise;
+    var promise = fetch(
+      bridgeUrl() + "/preview/status?profile=" + encodeURIComponent(p) + "&path=" + encodeURIComponent(local),
+      { cache: "no-store" }
+    )
+      .then(function (r) {
+        return r.ok ? r.json() : { state: "pending" };
+      })
+      .catch(function () {
+        return { state: "pending" };
+      });
+    _statusCache[key] = { at: Date.now(), promise: promise };
+    return promise;
+  }
+
+  var STATE_LABELS = {
+    pending: "Podgląd w przygotowaniu",
+    failed: "Nie udało się utworzyć podglądu",
+    unsupported: "Format bez podglądu",
+  };
+
+  function stateLabel(state) {
+    return STATE_LABELS[state] || STATE_LABELS.pending;
+  }
+
+  /** Zaslepka z uczciwym opisem stanu (data-URI SVG nie widzi CSS - kolory wprost). */
+  function statePlaceholderSvg(state, w, h) {
+    var W = w || 320;
+    var H = h || 200;
+    var text = stateLabel(state);
+    return (
+      "data:image/svg+xml," +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + " " + H + '">' +
+          '<rect fill="none" width="' + W + '" height="' + H + '"/>' +
+          '<text x="' + W / 2 + '" y="' + (H / 2 + 5) + '" text-anchor="middle" fill="#6B7F76" font-family="Jost,Segoe UI,sans-serif" font-size="14">' +
+          text +
+          "</text></svg>"
+      )
+    );
   }
 
   /*
@@ -518,6 +618,10 @@
     applyFallbackEl: applyFallbackEl,
     retryThumbLater: retryThumbLater,
     stopThumbWait: stopThumbWait,
+    startThumbWait: startThumbWait,
+    previewStatus: previewStatus,
+    stateLabel: stateLabel,
+    statePlaceholderSvg: statePlaceholderSvg,
     retryPlaceholderLater: retryPlaceholderLater,
   };
 
