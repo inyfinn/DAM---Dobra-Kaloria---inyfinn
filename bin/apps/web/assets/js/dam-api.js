@@ -582,6 +582,45 @@
     return "http://127.0.0.1:8766";
   }
 
+  var STALE_BRIDGE_MESSAGE =
+    "Działa starsza wersja DAM w tle - zamknij ją w Monitorze aktywności / Menedżerze zadań albo uruchom komputer ponownie.";
+
+  function staleBridgeErr(msg) {
+    var e = new Error(msg || STALE_BRIDGE_MESSAGE);
+    e.code = "stale_bridge_running";
+    return e;
+  }
+
+  /**
+   * null = most jest tej samej wersji co serwer UI (albo nie da sie tego sprawdzic).
+   * Wersje serwera UI podaje /dam-runtime.json (app_version, DAM 2.4.9+). Tryb publiczny
+   * i stare pliki dam-runtime.json jej nie maja - wtedy niczego nie blokujemy.
+   */
+  async function staleBridgeError() {
+    var rt = window.DamRuntime;
+    var want = rt && rt.app_version ? String(rt.app_version) : "";
+    if (!want || typeof rt.bridgeHealth !== "function") return null;
+    function mismatch(h) {
+      // Most offline -> dotychczasowa sciezka ("Most DAM niedostępny").
+      if (!h || h.ok === false) return false;
+      return String(h.app_version || "") !== want;
+    }
+    var h = null;
+    try { h = await rt.bridgeHealth(); } catch (e) { return null; }
+    if (!mismatch(h)) return null;
+    // Nasz serwer UI przejmuje port: zatrzymuje stary most i startuje wlasny.
+    var res = null;
+    try {
+      var origin = typeof rt.uiOrigin === "function" ? rt.uiOrigin() : "";
+      var r = await fetch(origin + "/dam/ensure-services", { method: "POST", cache: "no-store" });
+      res = await r.json();
+    } catch (e2) { res = null; }
+    if (res && res.error === "stale_bridge_running") return staleBridgeErr(res.message);
+    try { h = await rt.bridgeHealth(); } catch (e3) { h = null; }
+    if (mismatch(h)) return staleBridgeErr(res && res.message);
+    return null;
+  }
+
   var _identityCache = null;
   /** Rola z ostatniego /auth/me (anti-spoof localStorage.dam_role). */
   var _sessionRole = "";
@@ -833,6 +872,10 @@
           await window.DamRuntime.ensureServices({ skipEnsure: false });
         }
       } catch (eEnsure) { /* ignore */ }
+      /* 29.09.2026 (Mac 2.4.7 -> 2.4.9): stary most zyl w tle i logowanie szlo do starej
+         bazy ("Nieprawidłowy email lub hasło"). Hasla nie wysylamy do mostu innej wersji. */
+      var stale = await staleBridgeError();
+      if (stale) throw stale;
       var bridgeErr = null;
       try {
         var ident = await fetchIdentity();

@@ -239,6 +239,45 @@ HOST = "127.0.0.1"
 PORT = int(os.environ.get("DAM_BRIDGE_PORT", "8766"))
 # Bump po nowych endpointach hub (smoke: GET /health -> api_version)
 BRIDGE_API_VERSION = 11
+# Token sterujacy tej instancji mostu (plik w katalogu stanu uzytkownika, zapis
+# w main() po zajeciu portu). Pusty = /__dam_shutdown zawsze odrzucany.
+_CONTROL_TOKEN = ""
+
+
+def _bridge_identity() -> dict:
+    """app_version / pid / root - nowa aplikacja rozpoznaje po tym stary most w tle."""
+    try:
+        import bridge_supervisor as _bsup
+
+        return _bsup.local_identity()
+    except Exception:  # noqa: BLE001
+        return {"app_version": "", "pid": os.getpid(), "root": str(DESKTOP_DIR.parent.parent)}
+
+
+def _schedule_control_shutdown(server) -> None:
+    """Zatrzymaj most po odeslaniu odpowiedzi (POST /__dam_shutdown z poprawnym tokenem)."""
+
+    def _run() -> None:
+        time.sleep(0.2)
+        print("DAM local bridge: zatrzymanie na zadanie nowszej instancji (/__dam_shutdown)")
+        try:
+            server.shutdown()
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            import index_supervisor
+
+            index_supervisor.stop_index_supervisor()
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            server.server_close()
+        except Exception:  # noqa: BLE001
+            pass
+        # Watki nie-daemon (watchery, sync) trzymalyby proces przy zyciu.
+        os._exit(0)
+
+    threading.Thread(target=_run, daemon=True, name="dam-control-shutdown").start()
 DESKTOP_DIR = Path(__file__).resolve().parent
 WEB_ROOT = Path(os.environ.get("DAM_WEB_ROOT", str(DESKTOP_DIR.parent / "web")))
 AUDIT_FILE = WEB_ROOT / "data" / "audit-log.jsonl"
@@ -8903,6 +8942,36 @@ class Handler(BaseHTTPRequestHandler):
             return False
         return True
 
+    def _handle_control_shutdown(self) -> None:
+        """POST /__dam_shutdown: zatrzymanie mostu przez nowsza instancje DAM.
+
+        Tylko pulpit (nie tryb publiczny), tylko klient 127.0.0.1, bez naglowka Origin
+        (przegladarka zawsze go wysyla przy POST - strona WWW nie wylaczy mostu)
+        i tylko z tokenem z pliku w katalogu stanu uzytkownika tej instalacji.
+        """
+        if PUBLIC_MODE:
+            self._json(404, {"ok": False, "error": "not_found"})
+            return
+        client = (self.client_address[0] if self.client_address else "") or ""
+        if client not in ("127.0.0.1", "::1", "::ffff:127.0.0.1"):
+            self._json(403, {"ok": False, "error": "loopback_only"})
+            return
+        if (self.headers.get("Origin") or "").strip():
+            self._json(403, {"ok": False, "error": "origin_forbidden"})
+            return
+        given = self.headers.get("X-DAM-Control-Token") or ""
+        try:
+            import bridge_supervisor as _bsup
+
+            ok = _bsup.control_token_matches(_CONTROL_TOKEN, given)
+        except Exception:  # noqa: BLE001
+            ok = False
+        if not ok:
+            self._json(403, {"ok": False, "error": "control_token_invalid"})
+            return
+        self._json(200, {"ok": True, "shutting_down": True, "pid": os.getpid()})
+        _schedule_control_shutdown(self.server)
+
     def _origin_ok(self) -> bool:
         """CORS: tylko UI origin (albo brak Origin = same-origin / narzedzia lokalne)."""
         # <img>/<script> z obcej strony nie wysyla Origin, ale przegladarka oznacza
@@ -9174,6 +9243,10 @@ class Handler(BaseHTTPRequestHandler):
                     "service": "dam-local-bridge",
                     "port": PORT,
                     "api_version": BRIDGE_API_VERSION,
+                    # 29.09.2026: tozsamosc - nowa aplikacja nie uzywa mostu innej
+                    # wersji / instalacji (Mac 2.4.7 -> 2.4.9 logowal do starej bazy).
+                    **_bridge_identity(),
+                    "control": True,
                     "assoc": assoc,
                     "assoc_schema_error": assoc.get("schema_error") or "",
                     "watcher_ok": bool(watcher.get("watcher_ok")),
@@ -10389,6 +10462,9 @@ class Handler(BaseHTTPRequestHandler):
         raw = self.rfile.read(length) if length else b"{}"
         parsed = urlparse(self.path)
         content_type = self.headers.get("Content-Type") or ""
+        if parsed.path == "/__dam_shutdown":
+            self._handle_control_shutdown()
+            return
         if parsed.path != "/oauth/callback" and not self._origin_ok():
             self._json(403, {"ok": False, "error": "origin_forbidden"})
             return
@@ -12249,6 +12325,16 @@ def main() -> None:
     except OSError as exc:
         print(f"DAM local bridge: port {PORT} zajety ({exc}) - mostek juz dziala, wychodze.")
         return
+
+    global _CONTROL_TOKEN
+    try:
+        import bridge_supervisor as _bsup
+
+        # Port juz nasz - swiezy token dla /__dam_shutdown (nowsza wersja moze nas
+        # lagodnie zatrzymac zamiast zabijac po PID).
+        _CONTROL_TOKEN = _bsup.write_control_token()
+    except Exception as exc:  # noqa: BLE001
+        print("control token:", exc)
 
     AUDIT_FILE.parent.mkdir(parents=True, exist_ok=True)
     DESKTOP_DATA_DIR.mkdir(parents=True, exist_ok=True)

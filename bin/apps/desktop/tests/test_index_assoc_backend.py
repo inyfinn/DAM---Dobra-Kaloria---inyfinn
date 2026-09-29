@@ -443,6 +443,7 @@ class LiveIndexGuardTests(unittest.TestCase):
                     str(status),
                     "--lock-file",
                     str(lock),
+                    "--no-branding-hook",
                 ],
                 capture_output=True,
                 text=True,

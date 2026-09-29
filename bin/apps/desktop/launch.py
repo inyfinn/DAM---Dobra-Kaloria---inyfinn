@@ -757,6 +757,17 @@ def main() -> None:
 
     # Przed bindowaniem: zwolnij 8765/8766 zajete przez stare serve_browser / http.server
     _kill_stale_dam_processes()
+    # 29.09.2026: most / serwer UI INNEJ wersji albo innej instalacji (np. dam-appw,
+    # ktorego powyzsze nie lapie) - przejmij po tozsamosci, nie po nazwie procesu.
+    # Nie dalo sie zatrzymac -> jawny komunikat; nadzorca i tak nie uzyje starego mostu.
+    try:
+        from bridge_supervisor import STALE_MESSAGE, takeover_stale_services
+
+        takeover = takeover_stale_services(DEFAULT_UI_PORT, DEFAULT_BRIDGE_PORT)
+        if not takeover.get("ok"):
+            win_message(APP_TITLE, str(takeover.get("message") or STALE_MESSAGE), icon=0x30)
+    except Exception as exc:  # noqa: BLE001 - przejecie nie moze wywrocic startu
+        _log_tray("takeover error: " + str(exc))
 
     ui_port = pick_free_port(DEFAULT_UI_PORT)
     bridge_port = pick_free_port(DEFAULT_BRIDGE_PORT)

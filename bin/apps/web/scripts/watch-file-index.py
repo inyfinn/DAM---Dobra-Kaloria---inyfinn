@@ -286,6 +286,12 @@ def _write_status(path: Path, payload: dict, *, preserve_last: bool = True) -> N
 
 def spawn_branding_pipeline(*, status_file: Path | None = None) -> None:
     """Fire-and-forget branding fat+grid (same lock as POST /branding/rebuild)."""
+    # 29.09.2026: trzecia sierota rebuild-branding-pipeline.py po przebiegu testow -
+    # testy importuja ten modul. Pod unittest prawdziwej przebudowy nie odpalamy
+    # (ten sam bezpiecznik co index_supervisor._real_spawn_blocked_in_tests).
+    if "unittest" in sys.modules and os.environ.get("DAM_ALLOW_REAL_SPAWN_IN_TESTS", "").strip() != "1":
+        print("[watch] branding hook skip: test_spawn_blocked")
+        return
     if not BRANDING_PIPELINE.is_file():
         print(f"[watch] branding hook skip: missing {BRANDING_PIPELINE}")
         return
@@ -590,9 +596,13 @@ def rebuild_with_lock(
         # dla globalnego klucza produkcyjnego.
         _mark_built_here_safe("file-index", WEB_DATA / "file-index.json")
         _mark_built_here_safe("search-index", WEB_DATA / "search-index.json")
-    if rc == 0 and branding_hook:
+    # 29.09.2026: build do --out-dir (fixture/test) NIE rusza zywego stanu: przebudowa
+    # Brandingu nie zna --out-dir (skanowala prawdziwy ROOT i pisala do apps/web/data),
+    # publikacja miniatur tez dotyczy zywego cache. Tak test "fixture keeps live hashes"
+    # zostawial sierote rebuild-branding-pipeline.py.
+    if rc == 0 and branding_hook and out_dir is None:
         spawn_branding_pipeline(status_file=status_file)
-    if rc == 0:
+    if rc == 0 and out_dir is None:
         _publish_cache_after_index()
     return int(rc)
 
@@ -672,7 +682,7 @@ def main() -> None:
         )
         raise SystemExit(f"Brak marketing_roots: {exc}")
 
-    branding_hook = not args.no_branding_hook
+    branding_hook = not args.no_branding_hook and not args.out_dir
     branding_roots: list[Path] = []
 
     if args.root:

@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING
 
 from runtime_config import WEB_ROOT, runtime_payload, write_runtime_file
 
+UI_HEALTH_PATH = "/__dam_ui_health"  # = bridge_supervisor.UI_HEALTH_PATH
+
 _CLIENT_GONE = (ConnectionAbortedError, ConnectionResetError, BrokenPipeError, TimeoutError, ConnectionError)
 
 
@@ -180,6 +182,11 @@ class DamUiRequestHandler(http.server.SimpleHTTPRequestHandler):
         if path == "/dam/ensure-services":
             self._handle_ensure_services()
             return
+        if path == UI_HEALTH_PATH:
+            # Tozsamosc serwera UI: nowa aplikacja rozpoznaje po tym serwer UI
+            # innej wersji / instalacji zostawiony w tle i go przejmuje.
+            self._send_json(200, ui_identity())
+            return
         # HARD: nie serwuj branding-index.json (~340MB) ani backupow do przegladarki.
         # Slim: branding-grid-head.json / branding-grid-index.json. Admin: ?full=1
         if _is_backup_static_path(path):
@@ -215,6 +222,14 @@ class DamUiRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
         self.send_error(405, "Method Not Allowed")
 
+    def _send_json(self, code: int, payload: dict) -> None:
+        body = json_bytes(payload)
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     def _handle_ensure_services(self) -> None:
         result = {"ok": False, "service": "dam-ui", "bridge": None}
         sup = getattr(self, "bridge_supervisor", None)
@@ -224,6 +239,13 @@ class DamUiRequestHandler(http.server.SimpleHTTPRequestHandler):
             bridge = sup.ensure_running()
             result["bridge"] = bridge
             result["ok"] = bool(bridge.get("ok"))
+            if not result["ok"]:
+                # Jawny powod dla UI/logowania (np. stale_bridge_running = stary most
+                # innej wersji w tle, ktorego nie dalo sie zatrzymac).
+                if bridge.get("error"):
+                    result["error"] = bridge.get("error")
+                if bridge.get("message"):
+                    result["message"] = bridge.get("message")
         body = json_bytes(result)
         self.send_response(200 if result["ok"] else 503)
         self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -247,6 +269,21 @@ def make_handler_class(
     return Handler
 
 
+def ui_identity() -> dict:
+    from bridge_supervisor import local_identity
+
+    return {"ok": True, "service": "dam-ui", **local_identity()}
+
+
 def prepare_runtime(ui_port: int, bridge_port: int) -> dict:
     write_runtime_file(ui_port, bridge_port)
-    return runtime_payload(ui_port, bridge_port)
+    payload = dict(runtime_payload(ui_port, bridge_port))
+    # Wersja serwera UI dla dam-api.js: logowanie porownuje ja z app_version mostu
+    # (/health) i nie wysyla hasla do mostu innej wersji.
+    try:
+        ident = ui_identity()
+        payload["app_version"] = ident["app_version"]
+        payload["app_root"] = ident["root"]
+    except Exception:  # noqa: BLE001
+        pass
+    return payload
