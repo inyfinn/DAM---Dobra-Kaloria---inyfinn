@@ -56,6 +56,9 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--in", dest="src", required=True)
     ap.add_argument("--out", dest="dst", required=True)
+    # 29.09.2026 (wlasciciel): bez kodu aktywacyjnego - instalator wozi kod, pierwszy start
+    # aktywuje sie sam (pg_seal.auto_activate). Plik obok sealed.json.
+    ap.add_argument("--autocode-out", dest="autocode", default="")
     args = ap.parse_args()
     cfg = json.loads(Path(args.src).read_text(encoding="utf-8-sig"))
     if not isinstance(cfg, dict) or not cfg.get("password"):
@@ -73,6 +76,15 @@ def main() -> int:
         out.unlink()
         print("FAIL: haslo widoczne w pliku wynikowym", file=sys.stderr)
         return 4
+    if args.autocode:
+        ac = Path(args.autocode)
+        ac.parent.mkdir(parents=True, exist_ok=True)
+        ac.write_text(pg_seal.normalize_code(code), encoding="utf-8")
+        cfg2 = pg_seal.unseal(sealed, ac.read_text(encoding="utf-8").strip())
+        if cfg2 != cfg:
+            print("FAIL: kod z --autocode-out nie otwiera sealed", file=sys.stderr)
+            return 5
+        print(f"OK autocode -> {ac}  (automatyczna aktywacja)")
     # Kodu nie wypisujemy (logi builda bywaja w chmurze) - tylko skad pochodzi.
     print(f"OK sealed -> {out}  (kod aktywacyjny: {origin})")
     return 0

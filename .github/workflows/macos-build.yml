@@ -101,6 +101,7 @@ jobs:
       - name: Konfiguracja bazy (pg-config.sealed.json)
         env:
           PG_SEALED_JSON: ${{ secrets.DAM_PG_SEALED_JSON }}
+          ACTIVATION_CODE: ${{ secrets.DAM_ACTIVATION_CODE }}
           PG_CONFIG_JSON: ${{ secrets.DAM_PG_CONFIG_JSON }}
           IS_RELEASE: ${{ github.event_name == 'release' }}
         run: |
@@ -141,6 +142,15 @@ jobs:
           else
             echo "DAM_REQUIRE_SEALED=1" >> "$GITHUB_ENV"
           fi
+          # 29.09.2026 (wlasciciel): bez kodu aktywacyjnego - DMG aktywuje sie sam przy
+          # pierwszym starcie (pg_seal.auto_activate, plik pg-config.autocode obok sealed).
+          if [ -n "$ACTIVATION_CODE" ]; then
+            printf '%s' "$ACTIVATION_CODE" > "$DATA/pg-config.autocode"
+            echo "pg-config.autocode z sekretu DAM_ACTIVATION_CODE (automatyczna aktywacja)"
+          elif [ "$IS_RELEASE" = "true" ]; then
+            echo "::error::Brak sekretu DAM_ACTIVATION_CODE - Mac pokazalby okno kodu aktywacyjnego. Build przerwany."
+            exit 1
+          fi
 
       - name: Build DAM.app
         run: python -m PyInstaller bin/tooling/build/DAM-macos.spec --noconfirm --clean
@@ -157,6 +167,11 @@ jobs:
             -o -name 'pg-config.protected' -o -name 'pg-config.code.protected' -o -name 'secret.key' \) -print)
           if [ -n "$LEAK" ]; then
             echo "::error::Jawna konfiguracja bazy albo sekret w pakiecie: $LEAK"
+            exit 1
+          fi
+          AUTO_IN_APP=$(find "$APP" -name 'pg-config.autocode' -path '*bin/apps/desktop/data/*' | head -1)
+          if [ -z "$AUTO_IN_APP" ] && [ "$IS_RELEASE" = "true" ]; then
+            echo "::error::Brak pg-config.autocode w DAM.app - Mac pokazalby okno kodu aktywacyjnego."
             exit 1
           fi
           SEALED_IN_APP=$(find "$APP" -name 'pg-config.sealed.json' -path '*bin/apps/desktop/data/*' | head -1)

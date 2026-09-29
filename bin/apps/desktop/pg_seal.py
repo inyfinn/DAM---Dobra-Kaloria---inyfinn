@@ -532,6 +532,35 @@ def remembered_code_present() -> bool:
     return _protected_exists(CODE_PATH)
 
 
+# 29.09.2026 (wlasciciel): "nie chce zadnego kodu aktywacyjnego - instalator ma dzialac".
+# Instalator (Windows) i DMG (macOS) przywoza kod obok pg-config.sealed.json; pierwszy
+# start aktywuje sie sam, bez okna kodu. Swiadomy kompromis: kto ma instalator, ma dostep
+# do bazy (instalatory sa na publicznym GitHubie) - zabezpieczenie po stronie serwera
+# (pg_hba / adres firmy) albo prywatne wydania.
+AUTOCODE_PATH = DATA_DIR / "pg-config.autocode"
+
+
+def bundled_code() -> str:
+    """Kod przywieziony przez instalator ('' gdy brak)."""
+    try:
+        return normalize_code(AUTOCODE_PATH.read_text(encoding="utf-8").strip())
+    except OSError:
+        return ""
+
+
+def auto_activate() -> dict[str, Any]:
+    """Aktywacja bez uzytkownika: gdy konfiguracji jeszcze nie ma, a instalacja ma
+    sealed.json i kod z instalatora. Nic nie robi, gdy konfiguracja juz jest."""
+    if load_protected() is not None:
+        return {"ok": True, "skipped": "already_active"}
+    if not sealed_present():
+        return {"ok": False, "error": "sealed_missing"}
+    code = bundled_code()
+    if len(code) < MIN_CODE_LEN:
+        return {"ok": False, "error": "no_bundled_code"}
+    return activate(code)
+
+
 def reseal_if_newer(*, force: bool = False) -> bool:
     """Odswiez konfiguracje DPAPI z sealed.json przywiezionego przez aktualizacje.
 
@@ -552,7 +581,7 @@ def reseal_if_newer(*, force: bool = False) -> bool:
         if used == fp and _protected_exists(DPAPI_PATH):
             return False
     saved = load_protected(CODE_PATH)
-    code = str((saved or {}).get("code") or "")
+    code = str((saved or {}).get("code") or "") or bundled_code()
     if len(code) < MIN_CODE_LEN:
         return False
     try:

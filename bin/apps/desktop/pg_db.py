@@ -448,6 +448,14 @@ def ensure_pg_config_ready() -> None:
     """First-run: wgraj passworded pg-config z drzewa Setupu. Zero krokow uzytkownika."""
     dest = CONFIG_PATH
     try:
+        if pg_seal is not None:
+            # 29.09.2026: instalacja z kodem z instalatora aktywuje sie sama (bez okna kodu).
+            try:
+                res = pg_seal.auto_activate()
+                if res.get("ok") and not res.get("skipped"):
+                    reset_config_cache()
+            except Exception:  # noqa: BLE001
+                pass
         if pg_seal is not None and pg_seal.load_protected():
             return
         dest.parent.mkdir(parents=True, exist_ok=True)

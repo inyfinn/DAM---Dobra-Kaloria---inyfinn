@@ -354,7 +354,7 @@ if (-not $pgSrc) {
 # instalator. Do Setupu idzie TYLKO szyfrogram; odblokowuje go kod aktywacyjny (pg_seal.py).
 $sealScript = Join-Path $BinRoot "scripts\ops\seal-pg-config.py"
 $sealedDst = Join-Path $deskDataDst "pg-config.sealed.json"
-& $rtPyExe $sealScript --in $pgSrc --out $sealedDst
+& $rtPyExe $sealScript --in $pgSrc --out $sealedDst --autocode-out (Join-Path $deskDataDst "pg-config.autocode")
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $sealedDst)) {
   throw "Pieczetowanie pg-config nieudane (exit $LASTEXITCODE). Setup NIE moze wyjechac."
 }
