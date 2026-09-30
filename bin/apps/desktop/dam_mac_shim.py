@@ -124,6 +124,8 @@ RUNNABLE = {
     "branding-recognize": "apps/web/scripts/enrich-branding-recognize.py",
     "wykrojniki-import": "apps/web/scripts/import-wykrojniki-xlsx.py",
     "wykrojniki-link": "apps/web/scripts/link-wykrojniki-products.py",
+    # 2.5.2: plansza startowa Dobra Kaloria (dam_splash.start -> payload_script_cmd).
+    "splash": "apps/desktop/dam_splash.py",
 }
 
 

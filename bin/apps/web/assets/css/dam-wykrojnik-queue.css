@@ -65,7 +65,7 @@
   white-space: nowrap;
   border: 1px solid transparent;
   box-sizing: border-box;
-  background: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 14%, #fff);
+  background: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 14%, var(--dam-paper, #fff));
   color: #6a6570;
   border-color: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 28%, transparent);
 }
@@ -73,14 +73,14 @@
 .dam-wyk-map__chip--ok,
 .dam-wyk-map__stats .dam-int-chip.dam-int-st--ok {
   color: #0a7a4f;
-  background: color-mix(in srgb, var(--dam-ok, #00b074) 16%, #fff);
+  background: color-mix(in srgb, var(--dam-ok, #00b074) 16%, var(--dam-paper, #fff));
   border-color: color-mix(in srgb, var(--dam-ok, #00b074) 28%, transparent);
 }
 
 .dam-wyk-map__chip--warn,
 .dam-wyk-map__stats .dam-int-chip.dam-int-st--wait {
   color: #6a6570;
-  background: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 14%, #fff);
+  background: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 14%, var(--dam-paper, #fff));
   border-color: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 28%, transparent);
 }
 
@@ -127,8 +127,8 @@
   line-height: 1.2;
   border-radius: 8px;
   border: 1px solid #e7e7e7;
-  background: #fff;
-  color: #464255;
+  background: var(--dam-paper, #fff);
+  color: var(--dam-ink, #464255);
   text-decoration: none;
   cursor: pointer;
   box-shadow: none;
@@ -244,7 +244,7 @@ table.dam-wyk-map__table {
 }
 
 .dam-wyk-map__table tr:hover td {
-  background: color-mix(in srgb, var(--dam-primary, #005A29) 4%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 4%, var(--dam-paper, #fff));
 }
 
 .dam-wyk-map__kod {
@@ -289,7 +289,7 @@ table.dam-wyk-map__table {
   white-space: nowrap;
   border: 1px solid transparent;
   box-sizing: border-box;
-  background: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 14%, #fff);
+  background: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 14%, var(--dam-paper, #fff));
   color: #6a6570;
   border-color: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 28%, transparent);
 }
@@ -297,26 +297,26 @@ table.dam-wyk-map__table {
 .dam-wyk-map .dam-int-chip.dam-int-st--ok,
 .dam-wyk-map__badge--linked {
   color: #0a7a4f;
-  background: color-mix(in srgb, var(--dam-ok, #00b074) 16%, #fff);
+  background: color-mix(in srgb, var(--dam-ok, #00b074) 16%, var(--dam-paper, #fff));
   border-color: color-mix(in srgb, var(--dam-ok, #00b074) 28%, transparent);
 }
 
 .dam-wyk-map .dam-int-chip.dam-int-st--wait,
 .dam-wyk-map__badge--open {
   color: #6a6570;
-  background: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 14%, #fff);
+  background: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 14%, var(--dam-paper, #fff));
   border-color: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 28%, transparent);
 }
 
 .dam-wyk-map .dam-int-chip.dam-int-st--ready {
   color: var(--dam-primary, #005A29);
-  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, var(--dam-paper, #fff));
   border-color: color-mix(in srgb, var(--dam-primary, #005A29) 24%, transparent);
 }
 
 .dam-wyk-map .dam-int-chip.dam-int-st--err {
   color: var(--dam-danger, #ff5b5b);
-  background: color-mix(in srgb, var(--dam-danger, #ff5b5b) 12%, #fff);
+  background: color-mix(in srgb, var(--dam-danger, #ff5b5b) 12%, var(--dam-paper, #fff));
   border-color: color-mix(in srgb, var(--dam-danger, #ff5b5b) 28%, transparent);
 }
 

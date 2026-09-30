@@ -809,7 +809,7 @@
       ".dam-viz-card__actions{margin-top:auto;width:100%;}" +
       ".dam-viz-card__indexes-wrap{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;}" +
       ".dam-viz-card__indexes-wrap[hidden]{display:none!important;}" +
-      ".dam-viz-modal__variant-title{font-weight:700;font-size:13px;line-height:1.35;margin:0 0 4px;color:#464255;}" +
+      ".dam-viz-modal__variant-title{font-weight:700;font-size:13px;line-height:1.35;margin:0 0 4px;color:var(--dam-ink, #464255);}" +
       ".dam-viz-modal-close:hover{background:rgba(239,68,68,.14)!important;border-color:#fecaca!important;color:#b91c1c!important;}";
     document.head.appendChild(st);
   }
@@ -3531,12 +3531,12 @@
       var vizCss = document.createElement("link");
       vizCss.id = "dam-viz-modal-css";
       vizCss.rel = "stylesheet";
-      vizCss.href = "assets/css/dam-viz-modal.css?v=2.4.2";
+      vizCss.href = "assets/css/dam-viz-modal.css?v=2.5.2";
       document.head.appendChild(vizCss);
     } else {
       var existingVizCss = document.getElementById("dam-viz-modal-css");
       if (existingVizCss && existingVizCss.tagName === "LINK") {
-        existingVizCss.href = "assets/css/dam-viz-modal.css?v=2.4.2";
+        existingVizCss.href = "assets/css/dam-viz-modal.css?v=2.5.2";
       }
     }
     document.body.insertAdjacentHTML("beforeend", html);
@@ -3840,8 +3840,8 @@
       el.textContent = "Indeksowanie…";
       el.style.cssText =
         "position:fixed;right:20px;bottom:84px;z-index:12950;pointer-events:none;" +
-        "padding:8px 12px;border-radius:999px;background:#fff;border:1px solid #ececf2;" +
-        "box-shadow:0 4px 16px rgba(40,36,56,.12);font-size:12px;font-weight:600;color:#464255;";
+        "padding:8px 12px;border-radius:999px;background:var(--dam-paper, #fff);border:1px solid #ececf2;" +
+        "box-shadow:0 4px 16px rgba(40,36,56,.12);font-size:12px;font-weight:600;color:var(--dam-ink, #464255);";
       document.body.appendChild(el);
     }
 
@@ -6368,7 +6368,7 @@
       if (err && (err.name === "AbortError" || /abort/i.test(String(err && err.message ? err.message : err)))) {
         return;
       }
-      grid.innerHTML = '<p style="color:#FF5653">Blad indeksu: ' + esc(err.message) + "</p>";
+      grid.innerHTML = '<p style="color:var(--dam-ink-danger, #FF5653)">Blad indeksu: ' + esc(err.message) + "</p>";
     });
 
     /* Live refresh via shared poller (visible/focus + 10s, backoff while rebuild). */

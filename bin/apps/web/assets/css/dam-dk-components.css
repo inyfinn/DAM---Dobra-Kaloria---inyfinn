@@ -1,0 +1,1880 @@
+/**
+ * DAM - warstwa komponentow w stylu Dobra Kaloria (2026-09-30, po dam-theme-dk.css).
+ * Jezyk komponentow z programu "Stworz prezentacje" (WORK/src/ui/style.css) przeniesiony
+ * na klasy DAM. Dziala TYLKO w zestawach DK: html[data-dam-style="dk"]. Pozostale zestawy
+ * nie widza tego arkusza. Gestosc (wysokosci, odstepy, uklad) bez zmian - to restyl, nie relayout.
+ *
+ * Drabina zagniezdzen (zalecenie usera 30.09, ZALECENIA-USERA.md §1-2) - kazdy kontener ma poziom:
+ *   L0 --dam-surface-0  tlo strony, sidebar, topbar, pasek okna
+ *   L1 --dam-surface-1  karta / panel / sekcja  (== --dam-paper w DK: dawne twarde #fff)
+ *   L2 --dam-surface-2  rubryka: pole, zaglebienie, miniatura, wiersz w karcie (minimalnie ciemniejsza niz w Resizerze 2.6.2)
+ *   L3 --dam-surface-3  element w rubryce: wiersz listy, chip w polu, panel w oknie
+ *   L4 --dam-surface-4  nakladka: okno, menu, dymek, podpowiedzi (zawsze z cieniem)
+ *   Jasny tryb: glebiej = minimalnie ciemniej (L0 najjasniejszy), nakladka L4 wraca do jasnego + cien.
+ *   Ciemny tryb: glebiej = jasniej. Czystej bieli #FFFFFF nie ma na zadnym poziomie DK.
+ *   Przyciski drugorzedne i chipy nieaktywne stoja na L0 (jak .btn-secondary programu: paper na kremie).
+ *   Wartosci: dam-theme.js DK_PACKS (l0..l4); docelowo tokeny DS 1.4.0 (surface-0..4) - patrz raport.
+ * Slownik (program -> DAM):
+ *   paper (tlo strony)        -> --dam-surface-0
+ *   cream / karta             -> --dam-surface-1
+ *   surface-hover             -> --dam-surface-hover
+ *   well (zaglebienie)        -> --dam-surface-2
+ *   line / line-strong        -> --dam-border / --dam-border-strong
+ *   field-line (ramka pola)   -> --dam-field-border
+ *   sage / sage-deep          -> --dam-brand-soft / --dam-brand-soft-strong
+ *   green / green-deep        -> --dam-primary / --dam-primary-hover
+ *   yellow (CTA)              -> --dam-cta-bg / --dam-cta-ink
+ *   tan (etykieta)            -> --dam-label
+ *   ink (toast, tooltip)      -> --dam-inverse-bg / --dam-on-inverse
+ * Ksztalt: przycisk 4, pole 8, chip pill, karta 12, okno 16. Karta = ramka 1 px, bez cienia.
+ * Cien tylko na oknach, dymkach i toastach (podbarwiony --dam-shadow-rgb).
+ * Reguly z !important tylko tam, gdzie arkusz panelu sam uzywa !important albo jest ladowany
+ * pozniej (dam-viz-modal.css, dam-lightbox.css w <body>).
+ */
+
+/* =====================================================================
+   0. Zmienne pomocnicze warstwy (wartosci maluje dam-theme.js: DK_PACKS)
+   ===================================================================== */
+html[data-dam-style="dk"] {
+  --dk-shadow-pop: 0 10px 30px rgb(var(--dam-shadow-rgb) / 0.22);
+  --dk-shadow-toast: 0 10px 30px rgb(var(--dam-shadow-rgb) / 0.28);
+  --dk-shadow-thumb: 0 1px 2px rgb(var(--dam-shadow-rgb) / 0.18), 0 5px 12px rgb(var(--dam-shadow-rgb) / 0.16);
+  --dk-focus-field: 0 0 0 3px color-mix(in srgb, var(--dam-primary) 22%, transparent);
+  /* Zaslona: program ma braz 42 %, ale okna DAM sa prawie pelnoekranowe na bardzo jasnym L0 - przy 42 % okno
+     L1 zlewalo sie z zaslona. Zaslona w barwie stylu (--dam-shadow-rgb: sosna w DK1, braz w DK2), 56 %. */
+  --dk-scrim: rgb(var(--dam-shadow-rgb, 59 42 32) / 0.56);
+  --dk-shadow-window: 0 2px 6px rgb(var(--dam-shadow-rgb) / 0.18), 0 24px 64px rgb(var(--dam-shadow-rgb) / 0.34);
+  --dam-btn-outline-border: var(--dam-primary);
+  /* Dawne literaly tekstu DAM (#464255 fioletowy grafit, #8b8d97 szary) zamienione w arkuszach i skryptach
+     na var(--dam-ink, #464255) / var(--dam-ink-muted, #8b8d97). Poza DK zmienne nie istnieja -> literal. */
+  --dam-ink: var(--dam-text);
+  --dam-ink-muted: var(--dam-text-muted);
+  --dam-ink-danger: var(--dam-danger);
+}
+html[data-dam-style="dk"][data-theme="dark"] {
+  --dk-scrim: rgb(0 0 0 / 0.66);
+  --dk-shadow-window: 0 24px 64px rgb(0 0 0 / 0.55);
+}
+
+/* =====================================================================
+   1. Powierzchnie: strona, sidebar, karty, zaglebienia
+   ===================================================================== */
+html[data-dam-style="dk"] body,
+html[data-dam-style="dk"] .geex-main-content,
+html[data-dam-style="dk"] .geex-content {
+  background: var(--dam-surface-0);
+}
+html[data-dam-style="dk"] .geex-sidebar {
+  background: var(--dam-surface-0);
+  border-right: 1px solid var(--dam-border);
+  box-shadow: none;
+}
+
+/* Karta = powierzchnia + ramka 1 px + promien 12, BEZ cienia (DS: "Nie rob cienia na karcie"). */
+html[data-dam-style="dk"] .dam-widget,
+html[data-dam-style="dk"] .dam-dash-panel,
+html[data-dam-style="dk"] .dam-bento__cell:not(.dam-bento__cell--bare),
+html[data-dam-style="dk"] .dam-viz-card,
+html[data-dam-style="dk"] .dam-project-card,
+html[data-dam-style="dk"] .geex-card,
+html[data-dam-style="dk"] .dam-search-wrap--panel,
+html[data-dam-style="dk"] .dam-viz-secondary-filters,
+html[data-dam-style="dk"] .dam-explorer-shell > .dam-viz-secondary-filters,
+html[data-dam-style="dk"] .dam-branding-tag-filters,
+html[data-dam-style="dk"] .dam-explorer-panel,
+html[data-dam-style="dk"] .dam-explorer-tree-panel,
+html[data-dam-style="dk"] .dam-explorer-results,
+html[data-dam-style="dk"] .dam-cat-panel,
+html[data-dam-style="dk"] .dam-settings-card,
+html[data-dam-style="dk"] .dam-int-card,
+html[data-dam-style="dk"] .dam-hub-card,
+html[data-dam-style="dk"] .dam-help-page__group,
+html[data-dam-style="dk"] .dam-help-card,
+html[data-dam-style="dk"] .dam-inbox-side,
+html[data-dam-style="dk"] .dam-inbox-main,
+html[data-dam-style="dk"] .dam-inbox-item,
+html[data-dam-style="dk"] .dam-task-card,
+html[data-dam-style="dk"] .dam-invoice-card,
+html[data-dam-style="dk"] .dam-cost-card,
+html[data-dam-style="dk"] .dam-activity-card,
+html[data-dam-style="dk"] .dam-catalog-marketing,
+html[data-dam-style="dk"] .dam-legal-page,
+html[data-dam-style="dk"] .dam-auth-card,
+html[data-dam-style="dk"] .dam-saved-accounts,
+html[data-dam-style="dk"] .dam-db-panel,
+html[data-dam-style="dk"] .dam-update-toast {
+  background: var(--dam-surface-1);
+  border-color: var(--dam-border);
+  box-shadow: none;
+}
+html[data-dam-style="dk"] .dam-widget,
+html[data-dam-style="dk"] .dam-dash-panel,
+html[data-dam-style="dk"] .dam-bento__cell:not(.dam-bento__cell--bare),
+html[data-dam-style="dk"] .dam-viz-card,
+html[data-dam-style="dk"] .dam-project-card,
+html[data-dam-style="dk"] .geex-card,
+html[data-dam-style="dk"] .dam-search-wrap--panel,
+html[data-dam-style="dk"] .dam-viz-secondary-filters,
+html[data-dam-style="dk"] .dam-int-card,
+html[data-dam-style="dk"] .dam-help-card,
+html[data-dam-style="dk"] .dam-settings-card {
+  border-radius: var(--dam-radius-md);
+  border-width: 1px;
+  border-style: solid;
+}
+html[data-dam-style="dk"] .dam-viz-card:hover,
+html[data-dam-style="dk"] .dam-project-card:hover {
+  border-color: var(--dam-border-strong);
+  box-shadow: none;
+  transform: none;
+}
+html[data-dam-style="dk"] .dam-bento__cell--muted {
+  background: var(--dam-surface-2);
+}
+
+/* L2 - rubryki w karcie L1: wiersze, miniatury kart siatki, wyniki, kody (pomiar: tools/nesting.py) */
+html[data-dam-style="dk"] .dam-widget__viz-row,
+html[data-dam-style="dk"] .dam-dash-panel__item,
+html[data-dam-style="dk"] .dam-viz-thumb,
+html[data-dam-style="dk"] .dam-viz-card__thumb,
+html[data-dam-style="dk"] .dam-viz-card__media,
+html[data-dam-style="dk"] .dam-project-card__thumb,
+html[data-dam-style="dk"] .dam-search-hit,
+html[data-dam-style="dk"] .dam-explorer-card,
+html[data-dam-style="dk"] .dam-folder-item,
+html[data-dam-style="dk"] .dam-prod-row,
+html[data-dam-style="dk"] .dam-rev-row,
+html[data-dam-style="dk"] .dam-dash-panel__row,
+html[data-dam-style="dk"] .dam-lb-section,
+html[data-dam-style="dk"] .dam-viz-modal__variant,
+html[data-dam-style="dk"] .dam-media-preview__assoc-item,
+html[data-dam-style="dk"] .dam-viz-modal__filepath,
+html[data-dam-style="dk"] .dam-help-pill,
+html[data-dam-style="dk"] kbd,
+html[data-dam-style="dk"] code:not(pre code) {
+  background: var(--dam-surface-2) !important;
+  border-color: var(--dam-border-l2, var(--dam-border));
+}
+/* L3: wiersz / element wewnatrz rubryki L2 (miniatura w wierszu, wiersz w liscie) */
+html[data-dam-style="dk"] .dam-widget__viz-row .dam-widget__thumb-link,
+html[data-dam-style="dk"] .dam-search-hits .dam-search-hit,
+html[data-dam-style="dk"] .dam-prod-row .dam-rev-row,
+html[data-dam-style="dk"] .dam-lb-section .dam-lb-chip,
+html[data-dam-style="dk"] .dam-media-preview__assoc-grid .dam-media-preview__assoc-item {
+  background: var(--dam-surface-3) !important;
+  border-color: var(--dam-border-l3, var(--dam-border)) !important;
+}
+/* Obraz w ramce miniatury nie jest kolejnym poziomem - tlo przejmuje ramka */
+html[data-dam-style="dk"] .dam-widget__thumb,
+html[data-dam-style="dk"] body.geex-dashboard .dam-widget__list .dam-widget__thumb-link .dam-widget__thumb,
+html[data-dam-style="dk"] .dam-viz-thumb__img {
+  background: transparent !important;
+}
+/* Zbedne opakowania (poziom bez wlasnej roli) - przezroczyste, bez ramki: glebokosc DAM miesci sie w L0-L4 */
+html[data-dam-style="dk"] .geex-content__section-wrapper,
+html[data-dam-style="dk"] .dam-explorer-toolbar,
+html[data-dam-style="dk"] .dam-explorer-results__toolbar,
+html[data-dam-style="dk"] .dam-explorer-results__body {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+html[data-dam-style="dk"] .dam-search-hit:hover,
+html[data-dam-style="dk"] .dam-explorer-card:hover,
+html[data-dam-style="dk"] .dam-folder-item:hover,
+html[data-dam-style="dk"] .dam-prod-row:hover,
+html[data-dam-style="dk"] .dam-dash-panel__row:hover,
+html[data-dam-style="dk"] .dam-media-preview__assoc-item:hover {
+  background: var(--dam-surface-hover);
+}
+html[data-dam-style="dk"] pre {
+  background: var(--dam-inverse-bg);
+  color: var(--dam-on-inverse);
+  border-radius: 10px;
+}
+
+/* =====================================================================
+   2. Naglowek strony: okruszki jako etykieta (eyebrow), tytul Mindset
+   ===================================================================== */
+html[data-dam-style="dk"] .dam-breadcrumb,
+html[data-dam-style="dk"] .dam-breadcrumb a,
+html[data-dam-style="dk"] .dam-breadcrumb__item,
+html[data-dam-style="dk"] .dam-breadcrumb__current {
+  font-family: var(--dam-font);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dam-label) !important;
+}
+html[data-dam-style="dk"] .dam-breadcrumb a:hover {
+  color: var(--dam-primary) !important;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+html[data-dam-style="dk"] .geex-content__header__subtitle,
+html[data-dam-style="dk"] .dam-page-sub {
+  color: var(--dam-text-muted) !important;
+}
+
+/* =====================================================================
+   3. Przyciski
+   Program: .btn = 2 px ramka, promien 4, Lato 700; .btn-secondary = paper + zielona ramka +
+   zielony tekst, hover sage; .btn-primary zolty (dam-theme-dk.css); .link-btn podkreslony.
+   ===================================================================== */
+/* 3a. Drugorzedny (kazdy "zwykly" przycisk DAM) */
+html[data-dam-style="dk"] .geex-btn:not(.geex-btn--primary):not(.geex-btn--danger):not(.geex-btn--success):not(.dam-badge-tag):not(.dam-viz-badge):not(.dam-btn-primary),
+html[data-dam-style="dk"] .dam-nav-back,
+html[data-dam-style="dk"] .dam-root-status__btn,
+html[data-dam-style="dk"] .dam-widget__layout-btn,
+html[data-dam-style="dk"] .dam-sw-btn:not(.dam-sw-btn--primary):not(.dam-sw-btn--danger),
+html[data-dam-style="dk"] .dam-panel-nav-btn,
+html[data-dam-style="dk"] .dam-tag-more,
+html[data-dam-style="dk"] .dam-update-toast__btn:not(.dam-update-toast__btn--primary),
+html[data-dam-style="dk"] .dam-note-dialog__btn:not(.dam-note-dialog__btn--primary),
+html[data-dam-style="dk"] .dam-update-confirm-dialog__btn:not(.dam-update-confirm-dialog__btn--primary),
+html[data-dam-style="dk"] .dam-tut__btn:not(.dam-tut__btn--primary):not(.dam-tut__btn--quiet),
+html[data-dam-style="dk"] .dam-saved-account__login,
+html[data-dam-style="dk"] .dam-basepath-later,
+html[data-dam-style="dk"] .load-more-btn,
+html[data-dam-style="dk"] .dam-explorer-tree-actions button,
+html[data-dam-style="dk"] .dam-explorer-actions button:not(.geex-btn--primary),
+html[data-dam-style="dk"] .dam-index-action,
+html[data-dam-style="dk"] .dam-date-popover__foot-btn,
+html[data-dam-style="dk"] .dam-changelog-bar .geex-btn,
+html[data-dam-style="dk"] .dam-file-copy,
+html[data-dam-style="dk"] .dam-file-reveal,
+html[data-dam-style="dk"] .dam-assoc-edit-toolbar__btn:not(.dam-assoc-edit-toolbar__btn--primary),
+html[data-dam-style="dk"] .dam-branding-preview-btn {
+  background: var(--dam-surface-0) !important;
+  color: var(--dam-primary) !important;
+  border: 1px solid var(--dam-primary) !important;
+  box-shadow: inset 0 0 0 1px var(--dam-primary) !important;
+  border-radius: var(--dam-radius-btn) !important;
+  font-family: var(--dam-font);
+  font-weight: 700;
+}
+html[data-dam-style="dk"] .geex-btn:not(.geex-btn--primary):not(.geex-btn--danger):not(.geex-btn--success):not(.dam-badge-tag):not(.dam-viz-badge):not(.dam-btn-primary):hover,
+html[data-dam-style="dk"] .dam-nav-back:hover,
+html[data-dam-style="dk"] .dam-root-status__btn:hover,
+html[data-dam-style="dk"] .dam-widget__layout-btn:hover,
+html[data-dam-style="dk"] .dam-sw-btn:not(.dam-sw-btn--primary):not(.dam-sw-btn--danger):hover,
+html[data-dam-style="dk"] .dam-panel-nav-btn:hover,
+html[data-dam-style="dk"] .dam-tag-more:hover,
+html[data-dam-style="dk"] .dam-update-toast__btn:not(.dam-update-toast__btn--primary):hover,
+html[data-dam-style="dk"] .dam-note-dialog__btn:not(.dam-note-dialog__btn--primary):hover,
+html[data-dam-style="dk"] .dam-tut__btn:not(.dam-tut__btn--primary):not(.dam-tut__btn--quiet):hover,
+html[data-dam-style="dk"] .dam-saved-account__login:hover,
+html[data-dam-style="dk"] .load-more-btn:hover,
+html[data-dam-style="dk"] .dam-explorer-tree-actions button:hover,
+html[data-dam-style="dk"] .dam-explorer-actions button:not(.geex-btn--primary):hover,
+html[data-dam-style="dk"] .dam-date-popover__foot-btn:hover,
+html[data-dam-style="dk"] .dam-file-copy:hover,
+html[data-dam-style="dk"] .dam-file-reveal:hover,
+html[data-dam-style="dk"] .dam-branding-preview-btn:hover {
+  background: var(--dam-brand-soft) !important;
+  color: var(--dam-primary-hover) !important;
+  border-color: var(--dam-primary-hover) !important;
+  box-shadow: inset 0 0 0 1px var(--dam-primary-hover) !important;
+}
+html[data-dam-style="dk"] .geex-btn:not(.geex-btn--primary):not(.geex-btn--danger):disabled,
+html[data-dam-style="dk"] .dam-panel-nav-btn:disabled,
+html[data-dam-style="dk"] .dam-sw-btn:disabled {
+  background: var(--dam-disabled-bg) !important;
+  color: var(--dam-text-muted) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  cursor: not-allowed;
+}
+
+/* 3b. Ikonowe (kwadrat, cienka ramka piaskowa, promien 4) */
+html[data-dam-style="dk"] .dam-btn-icon,
+html[data-dam-style="dk"] .dam-btn-icon-only,
+html[data-dam-style="dk"] .dam-viz-icon-btn:not(.dam-viz-icon-btn--explorer),
+html[data-dam-style="dk"] .dam-modal-x,
+html[data-dam-style="dk"] .dam-viz-modal-close,
+html[data-dam-style="dk"] .dam-preview-nav button,
+html[data-dam-style="dk"] .dam-help-modal__close,
+html[data-dam-style="dk"] .dam-help-modal__restart,
+html[data-dam-style="dk"] .dam-sidebar-collapse-btn,
+html[data-dam-style="dk"] .dam-int-cta--icon,
+html[data-dam-style="dk"] .dam-widget__count-select,
+html[data-dam-style="dk"] .dam-date-popover__nav,
+html[data-dam-style="dk"] .dam-db-status__refresh,
+html[data-dam-style="dk"] .dam-root-status__refresh,
+html[data-dam-style="dk"] .dam-scheme-picker__close,
+html[data-dam-style="dk"] .dam-update-chip__btn--cancel,
+html[data-dam-style="dk"] .dam-saved-account__remove,
+html[data-dam-style="dk"] .dam-lightbox__btn,
+html[data-dam-style="dk"] .dam-lightbox__close,
+html[data-dam-style="dk"] .dam-search-clear {
+  background: var(--dam-surface-0) !important;
+  color: var(--dam-text) !important;
+  border: 1px solid var(--dam-border-strong) !important;
+  border-radius: var(--dam-radius-btn) !important;
+  box-shadow: none !important;
+}
+html[data-dam-style="dk"] .dam-btn-icon:hover,
+html[data-dam-style="dk"] .dam-btn-icon-only:hover,
+html[data-dam-style="dk"] .dam-viz-icon-btn:not(.dam-viz-icon-btn--explorer):hover,
+html[data-dam-style="dk"] .dam-modal-x:hover,
+html[data-dam-style="dk"] .dam-viz-modal-close:hover,
+html[data-dam-style="dk"] .dam-preview-nav button:hover,
+html[data-dam-style="dk"] .dam-help-modal__close:hover,
+html[data-dam-style="dk"] .dam-help-modal__restart:hover,
+html[data-dam-style="dk"] .dam-sidebar-collapse-btn:hover,
+html[data-dam-style="dk"] .dam-int-cta--icon:hover,
+html[data-dam-style="dk"] .dam-widget__count-select:hover,
+html[data-dam-style="dk"] .dam-date-popover__nav:hover,
+html[data-dam-style="dk"] .dam-db-status__refresh:hover,
+html[data-dam-style="dk"] .dam-root-status__refresh:hover,
+html[data-dam-style="dk"] .dam-scheme-picker__close:hover,
+html[data-dam-style="dk"] .dam-saved-account__remove:hover,
+html[data-dam-style="dk"] .dam-lightbox__btn:hover,
+html[data-dam-style="dk"] .dam-lightbox__close:hover,
+html[data-dam-style="dk"] .dam-search-clear:hover {
+  background: var(--dam-brand-soft) !important;
+  color: var(--dam-primary-hover) !important;
+  border-color: var(--dam-primary) !important;
+}
+/* Zamkniecie okna: czerwien tylko na hover, jak dotad, ale w tokenie */
+html[data-dam-style="dk"] .dam-viz-modal-close:hover,
+html[data-dam-style="dk"] .dam-preview-nav__close:hover,
+html[data-dam-style="dk"] .dam-modal-x:hover {
+  background: color-mix(in srgb, var(--dam-danger) 12%, var(--dam-surface-0)) !important;
+  border-color: var(--dam-danger) !important;
+  color: var(--dam-danger) !important;
+}
+/* Przyciski kolumny akcji w kartach siatki (Eksplorator/Wizualizacje) - ramka piaskowa */
+html[data-dam-style="dk"] .dam-nav-circles .dam-viz-icon-btn:not(.dam-viz-icon-btn--explorer),
+html[data-dam-style="dk"] .dam-viz-card__actions .dam-viz-icon-btn:not(.dam-viz-icon-btn--explorer) {
+  border-radius: var(--dam-radius-sm) !important;
+}
+html[data-dam-style="dk"] .dam-viz-icon-btn--explorer,
+html[data-dam-style="dk"] .dam-nav-circles .dam-viz-icon-btn--explorer {
+  border-radius: var(--dam-radius-sm) !important;
+  border: 1px solid var(--dam-primary) !important;
+}
+
+/* 3c. Niebezpieczny */
+html[data-dam-style="dk"] .geex-btn--danger,
+html[data-dam-style="dk"] .dam-sw-btn--danger {
+  background: var(--dam-danger) !important;
+  border-color: var(--dam-danger) !important;
+  color: #fff !important;
+  border-radius: var(--dam-radius-btn) !important;
+  font-weight: 700;
+}
+
+/* 3d. Link-przycisk (tekst w akcencie, podkreslony) */
+html[data-dam-style="dk"] .dam-link-btn,
+html[data-dam-style="dk"] .dam-tut__btn--quiet,
+html[data-dam-style="dk"] .dam-update-chip__btn:not(.dam-update-chip__btn--install):not(.dam-update-chip__btn--cancel),
+html[data-dam-style="dk"] .dam-show-older-label,
+html[data-dam-style="dk"] .dam-changelog-history__close,
+html[data-dam-style="dk"] .dam-viz-card__title a,
+html[data-dam-style="dk"] .dam-widget__title-link {
+  color: var(--dam-primary);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1.5px;
+  background: transparent;
+}
+
+/* 3e. Pomoc (FAB) - zielone kolo, hover w ciemniejszej zieleni (nie fiolet) */
+html[data-dam-style="dk"] .dam-help-fab {
+  background: var(--dam-primary) !important;
+  color: var(--dam-on-primary) !important;
+  box-shadow: var(--dk-shadow-thumb) !important;
+}
+html[data-dam-style="dk"] .dam-help-fab:hover {
+  background: var(--dam-primary-hover) !important;
+}
+
+/* 3f. Zolty CTA: Lato 700, bez cienia, promien 4 (kolory: dam-theme-dk.css) */
+html[data-dam-style="dk"] .geex-btn--primary:not(.dam-badge-tag):not(.dam-viz-badge),
+html[data-dam-style="dk"] .dam-btn-primary,
+html[data-dam-style="dk"] .dam-sw-btn--primary,
+html[data-dam-style="dk"] .dam-tut__btn--primary,
+html[data-dam-style="dk"] .dam-update-toast__btn--primary,
+html[data-dam-style="dk"] .dam-update-chip__btn--install,
+html[data-dam-style="dk"] .dam-update-mascot__btn,
+html[data-dam-style="dk"] .dam-note-dialog__btn--primary,
+html[data-dam-style="dk"] .dam-update-confirm-dialog__btn--primary,
+html[data-dam-style="dk"] .dam-report__submit,
+html[data-dam-style="dk"] #settingsSave,
+html[data-dam-style="dk"] #damSchemeOpenPicker {
+  font-family: var(--dam-font);
+  font-weight: 700;
+  border-radius: var(--dam-radius-btn) !important;
+}
+
+/* =====================================================================
+   4. Chipy, segmenty, plakietki (pill, Lato 700 12 px)
+   Nieaktywny: paper + ramka piaskowa + tekst przygaszony; hover: sage; aktywny: zielen.
+   ===================================================================== */
+html[data-dam-style="dk"] .dam-search-scope__btn,
+html[data-dam-style="dk"] .dam-db-mode-chip,
+html[data-dam-style="dk"] .dam-brand-chip-btn,
+html[data-dam-style="dk"] .dam-branding-tab,
+html[data-dam-style="dk"] .dam-lb-chip,
+html[data-dam-style="dk"] .dam-branding-channel-pill,
+html[data-dam-style="dk"] .dam-branding-campaign-chip,
+html[data-dam-style="dk"] .dam-branding-discovery-chip,
+html[data-dam-style="dk"] .dam-inbox-tag,
+html[data-dam-style="dk"] .dam-thumb-picker__view-btn,
+html[data-dam-style="dk"] .dam-explorer-brand-tab,
+html[data-dam-style="dk"] .dam-brand-tabs button,
+html[data-dam-style="dk"] .dam-lang-trigger,
+html[data-dam-style="dk"] .dam-lang-code,
+html[data-dam-style="dk"] .dam-data-mode__chip,
+html[data-dam-style="dk"] .dam-branding-date-presets button,
+html[data-dam-style="dk"] .dam-life-hist__filter button {
+  background: var(--dam-surface-0);
+  color: var(--dam-text-muted);
+  border: 1px solid var(--dam-border-strong);
+  border-radius: 999px;
+  font-family: var(--dam-font);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: none;
+}
+html[data-dam-style="dk"] .dam-search-scope__btn:hover,
+html[data-dam-style="dk"] .dam-db-mode-chip:hover,
+html[data-dam-style="dk"] .dam-brand-chip-btn:hover,
+html[data-dam-style="dk"] .dam-branding-tab:hover,
+html[data-dam-style="dk"] .dam-lb-chip:hover,
+html[data-dam-style="dk"] .dam-branding-channel-pill:hover,
+html[data-dam-style="dk"] .dam-branding-campaign-chip:hover,
+html[data-dam-style="dk"] .dam-inbox-tag:hover,
+html[data-dam-style="dk"] .dam-thumb-picker__view-btn:hover,
+html[data-dam-style="dk"] .dam-explorer-brand-tab:hover,
+html[data-dam-style="dk"] .dam-lang-trigger:hover,
+html[data-dam-style="dk"] .dam-branding-date-presets button:hover {
+  background: var(--dam-brand-soft);
+  color: var(--dam-primary-hover);
+  border-color: var(--dam-primary);
+}
+html[data-dam-style="dk"] .dam-search-scope__btn.is-on,
+html[data-dam-style="dk"] .dam-db-mode-chip:has(input:checked),
+html[data-dam-style="dk"] .dam-db-mode-chip.is-on,
+html[data-dam-style="dk"] .dam-db-mode-chip[aria-pressed="true"],
+html[data-dam-style="dk"] .dam-brand-chip-btn.is-active,
+html[data-dam-style="dk"] .dam-brand-chip-btn--dk.is-active,
+html[data-dam-style="dk"] .dam-brand-chip-btn--gc.is-active,
+html[data-dam-style="dk"] .dam-branding-tab.is-active,
+html[data-dam-style="dk"] .dam-lb-chip.is-active,
+html[data-dam-style="dk"] .dam-branding-channel-pill.is-active,
+html[data-dam-style="dk"] .dam-branding-campaign-chip.is-active,
+html[data-dam-style="dk"] .dam-branding-discovery-chip.is-active,
+html[data-dam-style="dk"] .dam-inbox-tag.is-active,
+html[data-dam-style="dk"] .dam-thumb-picker__view-btn.is-active,
+html[data-dam-style="dk"] .dam-explorer-brand-tab.is-active,
+html[data-dam-style="dk"] .dam-brand-tabs .is-active,
+html[data-dam-style="dk"] .dam-branding-date-presets button.is-active,
+html[data-dam-style="dk"] .dam-branding-date-presets button[aria-pressed="true"] {
+  background: var(--dam-primary) !important;
+  color: var(--dam-on-primary) !important;
+  border-color: var(--dam-primary) !important;
+}
+/* Chip GC (Good Calories) pozostaje niebieskawy tylko poza DK; tu jedna zielen marki. */
+html[data-dam-style="dk"] .dam-brand-chip-btn::before {
+  display: none;
+}
+
+/* Tagi filtrow i plakietki kart: pill, 700. Kolor = odcien stylu z malym przesunieciem Hue na
+   kategorie (dam-theme.js paintDkTags -> --dam-tag-<kategoria>-bg/-fg, kontrast >= 4,5:1).
+   Zastepuje stala palete z dam-theme-dk.css (ta sama specyficznosc, ten arkusz jest pozniej). */
+html[data-dam-style="dk"] .dam-tag-group--typ .dam-tag-pill,
+html[data-dam-style="dk"] .dam-prod-tag.dam-tag-group--typ,
+html[data-dam-style="dk"] .dam-viz-badge--cat,
+html[data-dam-style="dk"] .dam-branding-tag-group--przeznaczenie .dam-viz-badge.dam-badge-tag {
+  background: var(--dam-tag-typ-bg) !important;
+  color: var(--dam-tag-typ-fg) !important;
+}
+html[data-dam-style="dk"] .dam-tag-group--smak .dam-tag-pill,
+html[data-dam-style="dk"] .dam-prod-tag.dam-tag-group--smak {
+  background: var(--dam-tag-smak-bg) !important;
+  color: var(--dam-tag-smak-fg) !important;
+}
+html[data-dam-style="dk"] .dam-tag-group--opakowanie .dam-tag-pill,
+html[data-dam-style="dk"] .dam-prod-tag.dam-tag-group--opakowanie,
+html[data-dam-style="dk"] .dam-viz-badge--carrier,
+html[data-dam-style="dk"] .dam-viz-badge--multilang {
+  background: var(--dam-tag-opakowanie-bg) !important;
+  color: var(--dam-tag-opakowanie-fg) !important;
+}
+html[data-dam-style="dk"] .dam-tag-group--autor .dam-tag-pill,
+html[data-dam-style="dk"] .dam-tag-group--osoba .dam-tag-pill,
+html[data-dam-style="dk"] .dam-prod-tag.dam-tag-group--autor,
+html[data-dam-style="dk"] .dam-prod-tag.dam-tag-group--osoba,
+html[data-dam-style="dk"] .dam-branding-tag-group--autor .dam-viz-badge.dam-badge-tag {
+  background: var(--dam-tag-autor-bg) !important;
+  color: var(--dam-tag-autor-fg) !important;
+}
+html[data-dam-style="dk"] .dam-tag-group--opis .dam-tag-pill,
+html[data-dam-style="dk"] .dam-prod-tag.dam-tag-group--opis {
+  background: var(--dam-tag-opis-bg) !important;
+  color: var(--dam-tag-opis-fg) !important;
+}
+html[data-dam-style="dk"] .dam-tag-group--podkategoria .dam-tag-pill,
+html[data-dam-style="dk"] .dam-viz-badge--subcat {
+  background: var(--dam-tag-podkategoria-bg) !important;
+  color: var(--dam-tag-podkategoria-fg) !important;
+}
+html[data-dam-style="dk"] .dam-viz-badge--lang {
+  background: var(--dam-tag-jezyk-bg) !important;
+  color: var(--dam-tag-jezyk-fg) !important;
+}
+html[data-dam-style="dk"] .dam-viz-badge--mix,
+html[data-dam-style="dk"] .dam-viz-badge--variants,
+html[data-dam-style="dk"] .dam-viz-badge--source {
+  background: var(--dam-tag-mix-bg) !important;
+  color: var(--dam-tag-mix-fg) !important;
+}
+html[data-dam-style="dk"] .dam-tag-group--inne .dam-tag-pill,
+html[data-dam-style="dk"] .dam-prod-tag.dam-tag-group--inne {
+  background: var(--dam-tag-inne-bg) !important;
+  color: var(--dam-tag-inne-fg) !important;
+}
+/* Tagi filtrow i plakietki kart: pill, 700 */
+html[data-dam-style="dk"] .dam-tag-pill,
+html[data-dam-style="dk"] .dam-prod-tag,
+html[data-dam-style="dk"] .dam-viz-badge,
+html[data-dam-style="dk"] .dam-badge-tag,
+html[data-dam-style="dk"] .dam-chip,
+html[data-dam-style="dk"] .dam-help-pill,
+html[data-dam-style="dk"] .dam-widget__pill,
+html[data-dam-style="dk"] .dam-dash-panel__pill,
+html[data-dam-style="dk"] .dam-inbox-item__tag {
+  font-family: var(--dam-font);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+}
+html[data-dam-style="dk"] .dam-viz-badge--brand,
+html[data-dam-style="dk"] .dam-viz-badge--meta,
+html[data-dam-style="dk"] .dam-search-hit__badge,
+html[data-dam-style="dk"] .dam-dash-panel__pill,
+html[data-dam-style="dk"] .dam-inbox-item__tag,
+html[data-dam-style="dk"] .dam-widget__pill {
+  background: var(--dam-brand-soft) !important;
+  color: var(--dam-primary-hover) !important;
+}
+html[data-dam-style="dk"] .dam-viz-badge--index,
+html[data-dam-style="dk"] .dam-viz-badge--code,
+html[data-dam-style="dk"] .dam-viz-badge--year {
+  background: var(--dam-surface-2) !important;
+  color: var(--dam-text-muted) !important;
+}
+/* Plakietki stanu w naglowku: ADMIN / LIVE / LOKALNY / PL */
+html[data-dam-style="dk"] .dam-admin-toggle,
+html[data-dam-style="dk"] .dam-data-mode,
+html[data-dam-style="dk"] .dam-lang-code {
+  color: var(--dam-text);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+html[data-dam-style="dk"] .dam-lang-code {
+  background: var(--dam-brand-soft) !important;
+  color: var(--dam-primary-hover) !important;
+  border-color: transparent;
+}
+
+/* =====================================================================
+   5. Pola: paper, ramka 1,5 px piaskowa, promien 8, fokus zielen + poswiata
+   ===================================================================== */
+html[data-dam-style="dk"] .form-control,
+html[data-dam-style="dk"] .form-select,
+html[data-dam-style="dk"] .dam-control,
+html[data-dam-style="dk"] .dam-projects-sort__select,
+html[data-dam-style="dk"] .dam-search-input,
+html[data-dam-style="dk"] .dam-search-wrap--panel .dam-search-input,
+html[data-dam-style="dk"] .dam-basepath-input,
+html[data-dam-style="dk"] .dam-date-input,
+html[data-dam-style="dk"] .dam-tag-edit-popover__search,
+html[data-dam-style="dk"] .dam-cost-picker__search,
+html[data-dam-style="dk"] .dam-settings-page input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+html[data-dam-style="dk"] .dam-settings-page select,
+html[data-dam-style="dk"] .dam-settings-page textarea,
+html[data-dam-style="dk"] .geex-content__authentication__form input:not([type="checkbox"]):not([type="radio"]),
+html[data-dam-style="dk"] input.dam-input,
+html[data-dam-style="dk"] textarea.dam-input,
+html[data-dam-style="dk"] .dam-note-dialog textarea,
+html[data-dam-style="dk"] .dam-report__field {
+  background: var(--dam-input-bg) !important;
+  color: var(--dam-text) !important;
+  border: 1.5px solid var(--dam-field-border) !important;
+  border-radius: var(--dam-radius-sm) !important;
+  box-shadow: none !important;
+  font-family: var(--dam-font);
+}
+html[data-dam-style="dk"] .form-control:hover,
+html[data-dam-style="dk"] .form-select:hover,
+html[data-dam-style="dk"] .dam-control:hover,
+html[data-dam-style="dk"] .dam-search-input:hover,
+html[data-dam-style="dk"] .dam-settings-page input:hover,
+html[data-dam-style="dk"] .dam-settings-page select:hover {
+  border-color: var(--dam-text-muted) !important;
+}
+html[data-dam-style="dk"] .form-control:focus,
+html[data-dam-style="dk"] .form-select:focus,
+html[data-dam-style="dk"] .dam-control:focus,
+html[data-dam-style="dk"] .dam-projects-sort__select:focus,
+html[data-dam-style="dk"] .dam-search-input:focus,
+html[data-dam-style="dk"] .dam-search-wrap--panel .dam-search-input:focus,
+html[data-dam-style="dk"] .dam-basepath-input:focus,
+html[data-dam-style="dk"] .dam-settings-page input:focus,
+html[data-dam-style="dk"] .dam-settings-page select:focus,
+html[data-dam-style="dk"] .dam-settings-page textarea:focus,
+html[data-dam-style="dk"] .geex-content__authentication__form input:focus,
+html[data-dam-style="dk"] .dam-note-dialog textarea:focus {
+  border-color: var(--dam-primary) !important;
+  box-shadow: var(--dk-focus-field) !important;
+  outline: none;
+}
+html[data-dam-style="dk"] input::placeholder,
+html[data-dam-style="dk"] textarea::placeholder {
+  color: var(--dam-text-muted);
+  opacity: 0.8;
+}
+html[data-dam-style="dk"] .dam-search-input-wrap .uil-search {
+  color: var(--dam-primary);
+}
+/* Etykiety pol: Lato 700 */
+html[data-dam-style="dk"] .dam-settings-page label,
+html[data-dam-style="dk"] .geex-content__authentication__form label,
+html[data-dam-style="dk"] .dam-field__label,
+html[data-dam-style="dk"] .form-label {
+  font-weight: 700;
+  color: var(--dam-text);
+}
+/* Wybor daty: pole i kalendarz na papierze */
+html[data-dam-style="dk"] .dam-date-popover {
+  background: var(--dam-surface-4);
+  border: 1px solid var(--dam-border-strong);
+  border-radius: var(--dam-radius-md);
+  box-shadow: var(--dk-shadow-pop);
+  color: var(--dam-text);
+}
+html[data-dam-style="dk"] .dam-date-popover__day {
+  border-radius: 999px;
+  color: var(--dam-text);
+}
+html[data-dam-style="dk"] .dam-date-popover__day:hover {
+  background: var(--dam-brand-soft);
+  color: var(--dam-primary-hover);
+}
+html[data-dam-style="dk"] .dam-date-popover__day.is-today {
+  box-shadow: inset 0 0 0 2px var(--dam-primary);
+}
+html[data-dam-style="dk"] .dam-date-popover__title {
+  font-weight: 700;
+  color: var(--dam-text);
+}
+html[data-dam-style="dk"] .dam-date-popover__weekday {
+  color: var(--dam-label);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Pole wyboru i radio: zielen; suwak zakresu: szyna sage-deep, uchwyt bialy z cieniem */
+html[data-dam-style="dk"] input[type="checkbox"],
+html[data-dam-style="dk"] input[type="radio"] {
+  accent-color: var(--dam-primary);
+}
+html[data-dam-style="dk"] input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 22px;
+  background: transparent;
+  accent-color: var(--dam-primary);
+}
+html[data-dam-style="dk"] input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--dam-brand-soft-strong);
+}
+html[data-dam-style="dk"] input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--dam-border-strong);
+  box-shadow: var(--dk-shadow-thumb);
+}
+html[data-dam-style="dk"] input[type="range"]:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--dam-primary);
+}
+html[data-dam-style="dk"] input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--dam-brand-soft-strong);
+}
+html[data-dam-style="dk"] input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--dam-border-strong);
+  box-shadow: var(--dk-shadow-thumb);
+}
+html[data-dam-style="dk"] .dam-viz-zoom-control {
+  background: var(--dam-surface-0) !important;
+  border: 1px solid var(--dam-border-strong) !important;
+  border-radius: var(--dam-radius-sm) !important;
+  color: var(--dam-text);
+}
+
+/* =====================================================================
+   6. Przelacznik (.dam-switch): tor piaskowy / zielony, uchwyt bialy
+   ===================================================================== */
+html[data-dam-style="dk"] .dam-switch {
+  background: var(--dam-surface-0);
+  border: 1px solid var(--dam-border-strong);
+  border-radius: var(--dam-radius-sm);
+}
+html[data-dam-style="dk"] .dam-switch.is-off,
+html[data-dam-style="dk"] .dam-switch:has(.dam-switch__input:not(:checked)) {
+  background: var(--dam-surface-0);
+  border-color: var(--dam-border-strong);
+}
+html[data-dam-style="dk"] .dam-switch:has(.dam-switch__input:checked) {
+  background: var(--dam-brand-soft);
+  border-color: var(--dam-primary);
+}
+html[data-dam-style="dk"] .dam-switch__track {
+  background: var(--dam-switch-off);
+}
+html[data-dam-style="dk"] .dam-switch__track::after {
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(31 31 31 / 0.3);
+}
+html[data-dam-style="dk"] .dam-switch__input:checked + .dam-switch__track {
+  background: var(--dam-primary);
+}
+html[data-dam-style="dk"] .dam-switch__label {
+  color: var(--dam-primary-hover);
+  font-weight: 700;
+}
+html[data-dam-style="dk"] .dam-switch.is-off .dam-switch__label,
+html[data-dam-style="dk"] .dam-switch:has(.dam-switch__input:not(:checked)) .dam-switch__label {
+  color: var(--dam-text-muted);
+}
+html[data-dam-style="dk"] .dam-switch__input:focus-visible + .dam-switch__track {
+  outline: 3px solid var(--dam-primary);
+  outline-offset: 3px;
+}
+/* Przelacznik ADMIN w naglowku (Bootstrap form-switch) */
+html[data-dam-style="dk"] .form-check-input:checked {
+  background-color: var(--dam-primary);
+  border-color: var(--dam-primary);
+}
+html[data-dam-style="dk"] .form-check-input:not(:checked) {
+  background-color: var(--dam-switch-off);
+  border-color: var(--dam-switch-off);
+}
+html[data-dam-style="dk"] .form-check-input:focus {
+  box-shadow: var(--dk-focus-field);
+}
+
+/* =====================================================================
+   7. Naglowek (topbar): status bazy/plikow, przyciski akcji
+   ===================================================================== */
+html[data-dam-style="dk"] .dam-db-status,
+html[data-dam-style="dk"] .dam-root-status,
+html[data-dam-style="dk"] .geex-content__header__customizer,
+html[data-dam-style="dk"] .geex-content__header__searchform {
+  background: var(--dam-surface-1) !important;
+  border: 1px solid var(--dam-border) !important;
+  border-radius: var(--dam-radius-sm) !important;
+  color: var(--dam-text) !important;
+  box-shadow: none !important;
+}
+html[data-dam-style="dk"] .dam-db-status:hover,
+html[data-dam-style="dk"] .dam-root-status:hover {
+  background: var(--dam-surface-hover) !important;
+}
+html[data-dam-style="dk"] .dam-db-status__dot,
+html[data-dam-style="dk"] .dam-root-status__dot {
+  background: var(--dam-primary);
+}
+html[data-dam-style="dk"] .dam-db-status.is-offline .dam-db-status__dot,
+html[data-dam-style="dk"] .dam-root-status.is-offline .dam-root-status__dot {
+  background: var(--dam-danger);
+}
+html[data-dam-style="dk"] .geex-content__header__btn,
+html[data-dam-style="dk"] .geex-content__header__quickaction__link,
+html[data-dam-style="dk"] .geex-content__header__customizer {
+  color: var(--dam-text);
+}
+html[data-dam-style="dk"] .geex-content__header__badge {
+  background: var(--dam-cta-bg);
+  color: var(--dam-cta-ink);
+  font-weight: 700;
+}
+html[data-dam-style="dk"] .geex-content__header__author img,
+html[data-dam-style="dk"] .geex-content__header__author__img {
+  background: var(--dam-brand-soft);
+  border: 1px solid var(--dam-border-strong);
+}
+
+/* =====================================================================
+   8. Sidebar: pozycja aktywna sage + zielen, ikony w kolorze tekstu
+   ===================================================================== */
+html[data-dam-style="dk"] .geex-sidebar__menu__link {
+  color: var(--dam-text);
+  font-family: var(--dam-font);
+  font-weight: 700;
+}
+html[data-dam-style="dk"] .geex-sidebar__menu__link:hover {
+  background: var(--dam-surface-hover);
+  color: var(--dam-primary-hover);
+}
+html[data-dam-style="dk"] .geex-sidebar .geex-sidebar__menu__link.active,
+html[data-dam-style="dk"][data-theme="light"] .geex-sidebar .geex-sidebar__menu__link.active,
+html[data-dam-style="dk"][data-theme="dark"] .geex-sidebar .geex-sidebar__menu__link.active {
+  background: var(--dam-brand-soft) !important;
+  color: var(--dam-primary-hover) !important;
+  box-shadow: inset 3px 0 0 var(--dam-primary);
+}
+html[data-dam-style="dk"] .geex-sidebar__menu__link.active i,
+html[data-dam-style="dk"] .geex-sidebar__menu__link.active .uil {
+  color: var(--dam-primary) !important;
+}
+/* Karta "Gotowa aktualizacja" - jak pasek aktualizacji programu: sage + ramka sage-deep */
+html[data-dam-style="dk"] .dam-update-chip {
+  background: var(--dam-brand-soft) !important;
+  border: 1px solid var(--dam-brand-soft-strong) !important;
+  border-radius: var(--dam-radius-md) !important;
+  box-shadow: none !important;
+  color: var(--dam-text) !important;
+}
+html[data-dam-style="dk"] .dam-update-chip__label {
+  color: var(--dam-text) !important;
+  font-weight: 700;
+}
+html[data-dam-style="dk"] .dam-update-mascot {
+  background: var(--dam-surface-4) !important;
+  border: 1px solid var(--dam-border-strong) !important;
+  border-radius: var(--dam-radius-lg, 16px) !important;
+  box-shadow: var(--dk-shadow-pop) !important;
+  color: var(--dam-text) !important;
+}
+html[data-dam-style="dk"] .dam-update-mascot--beside::before {
+  border-right-color: var(--dam-surface-4) !important;
+}
+html[data-dam-style="dk"] .dam-sidebar-version,
+html[data-dam-style="dk"] #damSidebarVersion,
+html[data-dam-style="dk"] .geex-sidebar__footer,
+html[data-dam-style="dk"] .geex-sidebar__copyright {
+  color: var(--dam-text-muted);
+}
+
+/* =====================================================================
+   9. Okna, dymki, menu, listy podpowiedzi
+   Program: okno = paper, promien 16, cien toast, scrim brazowy 42 %.
+   Arkusze okien ladowane w <body> (dam-viz-modal.css, dam-lightbox.css) - stad !important.
+   ===================================================================== */
+html[data-dam-style="dk"] .dam-viz-modal-overlay,
+html[data-dam-style="dk"] .dam-media-preview-overlay,
+html[data-dam-style="dk"] .dam-basepath-overlay,
+html[data-dam-style="dk"] .dam-help-modal__backdrop,
+html[data-dam-style="dk"] .dam-dash-modal__backdrop,
+html[data-dam-style="dk"] .dam-branding-modal__backdrop,
+html[data-dam-style="dk"] .dam-update-confirm-overlay,
+html[data-dam-style="dk"] .dam-assoc-edit-overlay,
+html[data-dam-style="dk"] .dam-thumb-picker-overlay,
+html[data-dam-style="dk"] .dam-viz-request-overlay,
+html[data-dam-style="dk"] #damSchemePickerOverlay.dam-scheme-picker-overlay {
+  background: var(--dk-scrim) !important;
+  backdrop-filter: none;
+}
+/* Okno na zaslonie = L1 od nowa (DS 3.2 p. 4): zaslona zakrywa strone, liczenie startuje od okna.
+   Wnetrze okna: panele L2, elementy w panelach L3; menu/podpowiedzi nad oknem L4. */
+html[data-dam-style="dk"] .dam-viz-modal-box,
+html[data-dam-style="dk"] .dam-viz-modal-shell > .dam-viz-modal-box,
+html[data-dam-style="dk"] .dam-media-preview__panel,
+html[data-dam-style="dk"] .dam-basepath-box,
+html[data-dam-style="dk"] .dam-help-modal__panel,
+html[data-dam-style="dk"] .dam-help-modal__body,
+html[data-dam-style="dk"] .dam-dash-modal__box,
+html[data-dam-style="dk"] .dam-dash-modal__panel,
+html[data-dam-style="dk"] .dam-branding-modal__box,
+html[data-dam-style="dk"] .dam-update-confirm-dialog,
+html[data-dam-style="dk"] .dam-note-dialog,
+html[data-dam-style="dk"] .dam-thumb-picker,
+html[data-dam-style="dk"] .dam-thumb-picker-box,
+html[data-dam-style="dk"] .dam-viz-request,
+html[data-dam-style="dk"] .dam-viz-request-box,
+html[data-dam-style="dk"] .dam-changelog-history,
+html[data-dam-style="dk"] .dam-life-hist,
+html[data-dam-style="dk"] #damSchemePickerOverlay .dam-scheme-picker-dialog {
+  background: var(--dam-surface-1) !important;
+  color: var(--dam-text) !important;
+  /* ramka okna o stopien mocniejsza niz ramka L1 - krawedz okna ma byc wyrazna na zaslonie w 4 wariantach */
+  border: 1px solid var(--dam-border-l4, var(--dam-border)) !important;
+  box-shadow: var(--dk-shadow-window) !important;
+}
+/* Nakladki L4: menu, listy rozwijane, podpowiedzi, dymki w naglowku */
+html[data-dam-style="dk"] .dam-assoc-edit-popover,
+html[data-dam-style="dk"] .dam-tag-edit-popover,
+html[data-dam-style="dk"] .dam-filter-dropdown,
+html[data-dam-style="dk"] .dam-cost-picker,
+html[data-dam-style="dk"] .dam-settings-jump-results,
+html[data-dam-style="dk"] .dam-db-sync-toast,
+html[data-dam-style="dk"] .dam-db-status__panel,
+html[data-dam-style="dk"] .dam-variant-info-popover,
+html[data-dam-style="dk"] .dam-assoc-action-menu__inner,
+html[data-dam-style="dk"] .dam-date-popover,
+html[data-dam-style="dk"] .dam-tut__bubble,
+html[data-dam-style="dk"] .geex-content__header__popup,
+html[data-dam-style="dk"] .geex-content__header__popup--author.dam-user-menu,
+html[data-dam-style="dk"] .dam-search-suggest,
+html[data-dam-style="dk"] .dam-search-wrap:not(.dam-search-wrap--panel) .dam-search-results {
+  background: var(--dam-surface-4) !important;
+  color: var(--dam-text) !important;
+  border: 1px solid var(--dam-border-l4, var(--dam-border-strong)) !important;
+  box-shadow: var(--dk-shadow-toast) !important;
+}
+html[data-dam-style="dk"] .dam-viz-modal-box,
+html[data-dam-style="dk"] .dam-viz-modal-shell > .dam-viz-modal-box,
+html[data-dam-style="dk"] .dam-media-preview__panel,
+html[data-dam-style="dk"] .dam-basepath-box,
+html[data-dam-style="dk"] .dam-help-modal__panel,
+html[data-dam-style="dk"] .dam-dash-modal__box,
+html[data-dam-style="dk"] .dam-branding-modal__box,
+html[data-dam-style="dk"] .dam-update-confirm-dialog,
+html[data-dam-style="dk"] .dam-note-dialog,
+html[data-dam-style="dk"] .dam-thumb-picker,
+html[data-dam-style="dk"] .dam-viz-request,
+html[data-dam-style="dk"] .dam-tut__bubble,
+html[data-dam-style="dk"] #damSchemePickerOverlay .dam-scheme-picker-dialog {
+  border-radius: var(--dam-radius-lg, 16px) !important;
+}
+html[data-dam-style="dk"] .dam-viz-modal-shell:has(.dam-preview-nav) > .dam-viz-modal-box {
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+  border-top: 0 !important;
+}
+/* Pasek nawigacji okna (< > ^ odswiez x) - byl bialy w ciemnym DK. To naglowek okna = L1 okna. */
+html[data-dam-style="dk"] .dam-viz-modal-shell > .dam-preview-nav,
+html[data-dam-style="dk"] .dam-preview-nav {
+  background: var(--dam-surface-1) !important;
+  border: 1px solid var(--dam-border-l1, var(--dam-border)) !important;
+  border-bottom-color: var(--dam-border) !important;
+  color: var(--dam-text) !important;
+  box-shadow: none !important;
+}
+/* Wnetrze okna: panele i zaglebienia = L2 (okno L1) */
+html[data-dam-style="dk"] .dam-viz-modal__assoc-pane,
+html[data-dam-style="dk"] .dam-viz-modal-box--assoc-split .dam-viz-modal__assoc-pane,
+html[data-dam-style="dk"] .dam-media-preview__assoc-col,
+html[data-dam-style="dk"] .dam-media-preview__elementy-panel,
+html[data-dam-style="dk"] .dam-viz-modal__thumb,
+html[data-dam-style="dk"] .dam-viz-modal__hero,
+html[data-dam-style="dk"] .dam-media-preview__studio,
+html[data-dam-style="dk"] .dam-media-preview__studio-frame,
+html[data-dam-style="dk"] .dam-media-preview__all-file,
+html[data-dam-style="dk"] .dam-viz-modal__product-variants,
+html[data-dam-style="dk"] .dam-thumb-picker__item,
+html[data-dam-style="dk"] .dam-help-modal__section--note {
+  background: var(--dam-surface-2) !important;
+  border-color: var(--dam-border-l2, var(--dam-border)) !important;
+}
+/* Obraz w ramce nie jest kolejnym poziomem */
+html[data-dam-style="dk"] .dam-viz-modal__thumb img,
+html[data-dam-style="dk"] .dam-thumb-picker__item img,
+html[data-dam-style="dk"] .dam-media-preview__all-file img {
+  background: transparent !important;
+}
+/* Czesci okna (tresc, pasek akcji, stopka) = to samo L1 co okno, z ramka oddzielajaca */
+html[data-dam-style="dk"] .dam-viz-modal__body,
+html[data-dam-style="dk"] .dam-viz-modal__main,
+html[data-dam-style="dk"] .dam-viz-modal__actions,
+html[data-dam-style="dk"] #damMediaPreview .dam-viz-modal__actions,
+html[data-dam-style="dk"] .dam-viz-modal__foot,
+html[data-dam-style="dk"] .dam-media-preview__foot,
+html[data-dam-style="dk"] .dam-thumb-picker__head,
+html[data-dam-style="dk"] .dam-thumb-picker__footer {
+  background: var(--dam-surface-1) !important;
+  border-color: var(--dam-border) !important;
+  color: var(--dam-text) !important;
+}
+html[data-dam-style="dk"] .dam-viz-modal__title,
+html[data-dam-style="dk"] .dam-media-preview__title,
+html[data-dam-style="dk"] .dam-help-modal__title,
+html[data-dam-style="dk"] .dam-basepath-box h3,
+html[data-dam-style="dk"] .dam-dash-modal__title,
+html[data-dam-style="dk"] .dam-note-dialog__title,
+html[data-dam-style="dk"] .dam-update-confirm-dialog__title,
+html[data-dam-style="dk"] .dam-thumb-picker__title,
+html[data-dam-style="dk"] .dam-scheme-picker__head h2 {
+  font-family: var(--dam-font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 1.05;
+  color: var(--dam-text) !important;
+}
+html[data-dam-style="dk"] .dam-viz-modal__meta-k,
+html[data-dam-style="dk"] .dam-media-preview__assoc-label,
+html[data-dam-style="dk"] .dam-lb-section__title,
+html[data-dam-style="dk"] .dam-variant-info__path-label,
+html[data-dam-style="dk"] .dam-help-modal__eyebrow {
+  color: var(--dam-label) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+html[data-dam-style="dk"] .dam-viz-modal__meta-v,
+html[data-dam-style="dk"] .dam-viz-modal__filename,
+html[data-dam-style="dk"] .dam-viz-modal__filepath-text {
+  color: var(--dam-text) !important;
+}
+/* Menu uzytkownika i powiadomienia (dymki w naglowku) */
+html[data-dam-style="dk"] .geex-content__header__popup {
+  border-radius: var(--dam-radius-md) !important;
+}
+html[data-dam-style="dk"] .geex-content__header__popup__item__title,
+html[data-dam-style="dk"] .dam-user-menu__link,
+html[data-dam-style="dk"] .dam-user-menu__link span,
+html[data-dam-style="dk"] .dam-user-menu__name {
+  color: var(--dam-text) !important;
+}
+html[data-dam-style="dk"] .dam-user-menu__link:hover,
+html[data-dam-style="dk"] .geex-content__header__popup__link:hover {
+  background: var(--dam-brand-soft) !important;
+  color: var(--dam-primary-hover) !important;
+}
+html[data-dam-style="dk"] .dam-user-menu__logout {
+  background: var(--dam-surface-0) !important;
+  color: var(--dam-primary) !important;
+  border: 1px solid var(--dam-primary) !important;
+  box-shadow: inset 0 0 0 1px var(--dam-primary) !important;
+  border-radius: var(--dam-radius-btn) !important;
+  font-weight: 700;
+}
+html[data-dam-style="dk"] .dam-user-menu__logout:hover {
+  background: var(--dam-brand-soft) !important;
+}
+html[data-dam-style="dk"] .dam-popup-head__count {
+  background: var(--dam-primary) !important;
+  color: var(--dam-on-primary) !important;
+}
+/* Podpowiedzi wyszukiwarki: wiersz aktywny sage */
+html[data-dam-style="dk"] .dam-search-suggest__item.is-active,
+html[data-dam-style="dk"] .dam-search-suggest__item:hover,
+html[data-dam-style="dk"] .dam-search-suggest__item[aria-selected="true"] {
+  background: var(--dam-brand-soft) !important;
+  color: var(--dam-primary-hover) !important;
+}
+/* Wybor zestawu kolorow (Ustawienia) */
+html[data-dam-style="dk"] .dam-scheme-tile {
+  background: var(--dam-surface-1) !important;
+  border: 1px solid var(--dam-border-strong) !important;
+  border-radius: var(--dam-radius-md) !important;
+  box-shadow: none !important;
+}
+html[data-dam-style="dk"] .dam-scheme-tile:hover {
+  border-color: var(--dam-label) !important;
+}
+html[data-dam-style="dk"] .dam-scheme-tile.is-active {
+  border-color: var(--dam-primary) !important;
+  background: var(--dam-brand-soft) !important;
+  box-shadow: inset 0 0 0 1px var(--dam-primary) !important;
+}
+html[data-dam-style="dk"] .dam-scheme-tile__label {
+  color: var(--dam-text) !important;
+  font-weight: 700;
+}
+html[data-dam-style="dk"] .dam-scheme-group__label {
+  color: var(--dam-label) !important;
+}
+html[data-dam-style="dk"] #damSchemePickerOverlay .dam-scheme-picker__foot {
+  border-top: 1px solid var(--dam-border) !important;
+}
+html[data-dam-style="dk"] #damSchemePickerOverlay .dam-scheme-picker__foot [data-scheme-picker-close] {
+  background: var(--dam-cta-bg) !important;
+  color: var(--dam-cta-ink) !important;
+  border: 1px solid var(--dam-cta-bg) !important;
+  border-radius: var(--dam-radius-btn) !important;
+  font-weight: 700;
+}
+html[data-dam-style="dk"] #damSchemePickerOverlay .dam-scheme-picker__hint {
+  color: var(--dam-text-muted) !important;
+}
+
+/* =====================================================================
+   10. Dymki (tooltip) i toasty: ink + biel, promien 8/10, cien podbarwiony
+   ===================================================================== */
+html[data-dam-style="dk"] .dam-tooltip {
+  background: var(--dam-inverse-bg) !important;
+  color: var(--dam-on-inverse) !important;
+  border: 0 !important;
+  border-radius: var(--dam-radius-sm) !important;
+  box-shadow: var(--dk-shadow-toast) !important;
+  font-family: var(--dam-font);
+}
+html[data-dam-style="dk"] .dam-explorer-toast,
+html[data-dam-style="dk"] .dam-toast,
+html[data-dam-style="dk"] .dam-inline-toast,
+html[data-dam-style="dk"] .dam-media-preview__toast {
+  background: var(--dam-inverse-bg) !important;
+  color: var(--dam-on-inverse) !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  box-shadow: var(--dk-shadow-toast) !important;
+  font-family: var(--dam-font);
+  font-weight: 400;
+}
+html[data-dam-style="dk"] .dam-explorer-toast--error,
+html[data-dam-style="dk"] .dam-toast--error {
+  background: var(--dam-danger) !important;
+  color: #fff !important;
+}
+html[data-dam-style="dk"] .dam-explorer-toast--success,
+html[data-dam-style="dk"] .dam-toast--success {
+  background: var(--dam-primary-hover) !important;
+  color: var(--dam-on-primary) !important;
+}
+html[data-dam-style="dk"] .dam-update-toast {
+  border-radius: var(--dam-radius-md) !important;
+  box-shadow: var(--dk-shadow-toast) !important;
+  border: 1px solid var(--dam-border-strong) !important;
+}
+html[data-dam-style="dk"] .dam-update-toast__title {
+  font-family: var(--dam-font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+html[data-dam-style="dk"] .dam-db-sync-toast {
+  border-radius: var(--dam-radius-md) !important;
+}
+
+/* =====================================================================
+   11. Kafelki KPI (Dashboard): paleta DK zamiast niebieskiego i fioletu
+   ===================================================================== */
+/* Zielen marki DS (green-700 / green-800) w obu trybach: w ciemnym --dam-primary jest jasna (#6FC792),
+   a tekst kafelka jest bialy - 1,9:1. Na #0F763E bialy tekst = 5,6:1. */
+html[data-dam-style="dk"] .dam-widget--fill-brand {
+  background: linear-gradient(135deg, #0B5F31 0%, #0F763E 100%);
+}
+html[data-dam-style="dk"] .dam-widget--fill-info {
+  background: linear-gradient(135deg, #8E6E52 0%, #7D5E44 100%);
+}
+html[data-dam-style="dk"] .dam-widget--fill-primary {
+  background: linear-gradient(135deg, #6E8C4E 0%, #56703F 100%);
+}
+html[data-dam-style="dk"] .dam-widget--fill-success {
+  background: linear-gradient(135deg, #1E7A4B 0%, #0B5F31 100%);
+}
+html[data-dam-style="dk"] .dam-widget--fill-warning {
+  background: linear-gradient(135deg, #9C6A0A 0%, #7A4E00 100%);
+}
+html[data-dam-style="dk"] .dam-widget--fill-brand,
+html[data-dam-style="dk"] .dam-widget--fill-info,
+html[data-dam-style="dk"] .dam-widget--fill-primary,
+html[data-dam-style="dk"] .dam-widget--fill-success,
+html[data-dam-style="dk"] .dam-widget--fill-warning {
+  color: #fff;
+  border-color: transparent;
+}
+html[data-dam-style="dk"] .dam-widget--fill-brand .dam-widget__title,
+html[data-dam-style="dk"] .dam-widget--fill-info .dam-widget__title,
+html[data-dam-style="dk"] .dam-widget--fill-primary .dam-widget__title,
+html[data-dam-style="dk"] .dam-widget--fill-success .dam-widget__title,
+html[data-dam-style="dk"] .dam-widget--fill-warning .dam-widget__title {
+  color: #fff;
+}
+/* Liczba KPI w Mindset (jak liczba-bohater programu) */
+html[data-dam-style="dk"] .dam-widget__kpi,
+html[data-dam-style="dk"] .dam-widget__value,
+html[data-dam-style="dk"] .dam-widget__number,
+html[data-dam-style="dk"] .dam-kpi__value {
+  font-family: var(--dam-font-display);
+  font-weight: 400;
+  letter-spacing: 0.005em;
+  font-variant-numeric: tabular-nums;
+}
+/* Ladowanie (shimmer) w palecie tla */
+html[data-dam-style="dk"] .dam-skeleton,
+html[data-dam-style="dk"] .dam-widget__skeleton,
+html[data-dam-style="dk"] .dam-shimmer {
+  background: linear-gradient(110deg, var(--dam-surface-2) 25%, var(--dam-surface-3) 40%, var(--dam-surface-2) 55%) !important;
+}
+
+/* =====================================================================
+   12. Tabele, listy, paginacja, stany puste i bledy
+   ===================================================================== */
+html[data-dam-style="dk"] table th,
+html[data-dam-style="dk"] .geex-table th,
+html[data-dam-style="dk"] .dam-table th {
+  font-family: var(--dam-font);
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--dam-label);
+  background: transparent;
+  border-bottom: 1px solid var(--dam-border-strong);
+}
+html[data-dam-style="dk"] table td,
+html[data-dam-style="dk"] .table > :not(caption) > * > * {
+  background: transparent;
+  color: var(--dam-text);
+  border-color: var(--dam-border);
+}
+html[data-dam-style="dk"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+  background: var(--dam-surface-2);
+}
+html[data-dam-style="dk"] .geex-pagination__link {
+  background: var(--dam-surface-0);
+  border: 1px solid var(--dam-border-strong);
+  border-radius: var(--dam-radius-btn);
+  color: var(--dam-text);
+  font-weight: 700;
+}
+html[data-dam-style="dk"] .geex-pagination__link:hover {
+  background: var(--dam-brand-soft) !important;
+  color: var(--dam-primary-hover) !important;
+  border-color: var(--dam-primary) !important;
+}
+html[data-dam-style="dk"] .geex-pagination__link.active {
+  background: var(--dam-primary) !important;
+  border-color: var(--dam-primary) !important;
+  color: var(--dam-on-primary) !important;
+}
+html[data-dam-style="dk"] .dam-explorer-empty,
+html[data-dam-style="dk"] .dam-viz-empty,
+html[data-dam-style="dk"] .dam-empty,
+html[data-dam-style="dk"] .dam-empty-state,
+html[data-dam-style="dk"] .dam-help-page__empty,
+html[data-dam-style="dk"] .dam-cost-empty,
+html[data-dam-style="dk"] .dam-inbox-empty {
+  color: var(--dam-text-muted);
+  background: var(--dam-surface-2);
+  border: 1px dashed var(--dam-label);
+  border-radius: var(--dam-radius-md);
+}
+html[data-dam-style="dk"] .dam-explorer-error,
+html[data-dam-style="dk"] .dam-error,
+html[data-dam-style="dk"] .dam-form-error,
+html[data-dam-style="dk"] .dam-auth-error,
+html[data-dam-style="dk"] .geex-content__authentication__form .dam-error,
+html[data-dam-style="dk"] .dam-explorer-tree-error {
+  color: var(--dam-danger);
+}
+html[data-dam-style="dk"] .dam-warning,
+html[data-dam-style="dk"] .dam-notice--warn,
+html[data-dam-style="dk"] .dam-index-warning,
+html[data-dam-style="dk"] .dam-banner--warn {
+  background: var(--dam-warning-bg);
+  border: 1px solid var(--dam-warning-border);
+  color: var(--dam-warning-text);
+  border-radius: 10px;
+}
+/* Pasek postepu: sage + wypelnienie zielone (jak w programie) */
+html[data-dam-style="dk"] progress,
+html[data-dam-style="dk"] .dam-progress,
+html[data-dam-style="dk"] .dam-update-toast__bar,
+html[data-dam-style="dk"] .dam-cache-progress {
+  background: var(--dam-brand-soft);
+  border: 1px solid var(--dam-brand-soft-strong);
+  border-radius: 8px;
+  accent-color: var(--dam-primary);
+}
+html[data-dam-style="dk"] .dam-progress__fill,
+html[data-dam-style="dk"] .dam-update-toast__bar-fill,
+html[data-dam-style="dk"] .dam-cache-progress__fill {
+  background: var(--dam-primary);
+  border-radius: 8px;
+}
+html[data-dam-style="dk"] .dam-spinner,
+html[data-dam-style="dk"] .spinner-border {
+  border-color: var(--dam-brand-soft-strong);
+  border-top-color: var(--dam-primary);
+}
+
+/* =====================================================================
+   13. Logowanie
+   ===================================================================== */
+html[data-dam-style="dk"] .geex-content__authentication,
+html[data-dam-style="dk"] .geex-content__authentication__form {
+  background: var(--dam-surface-0);
+}
+html[data-dam-style="dk"] .dam-saved-account,
+html[data-dam-style="dk"] .dam-saved-accounts__item {
+  background: var(--dam-surface-1) !important;
+  border: 1px solid var(--dam-border) !important;
+  border-radius: var(--dam-radius-md) !important;
+}
+html[data-dam-style="dk"] .dam-saved-accounts__label,
+html[data-dam-style="dk"] .dam-saved-accounts__title {
+  color: var(--dam-label);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 11px;
+}
+
+/* =====================================================================
+   14. Paski przewijania (jak w programie: 12 px, piaskowy uchwyt, ramka w tle)
+   ===================================================================== */
+html[data-dam-style="dk"] ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+html[data-dam-style="dk"] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+html[data-dam-style="dk"] ::-webkit-scrollbar-thumb {
+  background: var(--dam-border-strong);
+  border-radius: 6px;
+  border: 3px solid var(--dam-surface-0);
+}
+html[data-dam-style="dk"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--dam-label);
+}
+html[data-dam-style="dk"] * {
+  scrollbar-color: var(--dam-border-strong) transparent;
+}
+
+/* =====================================================================
+   15. Fokus klawiatury: 3 px w zieleni, odsuniety (DS 2.7) - takze na elementach z !important
+   ===================================================================== */
+html[data-dam-style="dk"] a:focus-visible,
+html[data-dam-style="dk"] button:focus-visible,
+html[data-dam-style="dk"] [role="button"]:focus-visible,
+html[data-dam-style="dk"] [tabindex]:focus-visible,
+html[data-dam-style="dk"] input:focus-visible,
+html[data-dam-style="dk"] select:focus-visible,
+html[data-dam-style="dk"] textarea:focus-visible {
+  outline: 3px solid var(--dam-primary) !important;
+  outline-offset: 2px !important;
+}
+html[data-dam-style="dk"] input[type="range"]:focus-visible {
+  outline: none !important;
+}
+
+/* =====================================================================
+   16. Dopiski po spisie stron (Ustawienia, Skrzynka, Koszty, Integracje, Katalog)
+   ===================================================================== */
+/* Karty stron bez wlasnej reguly wyzej: L1 + ramka 1 px, bez cienia */
+html[data-dam-style="dk"] .dam-tasks-card,
+html[data-dam-style="dk"] .dam-integration-card,
+html[data-dam-style="dk"] .dam-profile-card,
+html[data-dam-style="dk"] .dam-catalog-card,
+html[data-dam-style="dk"] .dam-catalog-panel,
+html[data-dam-style="dk"] .dam-catalog-kpi-panel,
+html[data-dam-style="dk"] .dam-catalog-marketing-card,
+html[data-dam-style="dk"] .dam-variant-panel,
+html[data-dam-style="dk"] .dam-dash-preview-card,
+html[data-dam-style="dk"] .dam-cost-panel,
+html[data-dam-style="dk"] .dam-cost-bucket,
+html[data-dam-style="dk"] .dam-int-config,
+html[data-dam-style="dk"] .dam-int-form,
+html[data-dam-style="dk"] .dam-inbox-list,
+html[data-dam-style="dk"] .dam-inbox-mod,
+html[data-dam-style="dk"] .dam-inbox-hist-item,
+html[data-dam-style="dk"] .dam-help-steps,
+html[data-dam-style="dk"] .dam-sw-row,
+html[data-dam-style="dk"] .dam-settings-hero {
+  background: var(--dam-surface-1);
+  border-color: var(--dam-border);
+  box-shadow: none;
+}
+/* Segmenty / zakladki stron (Ustawienia: kategorie; Dashboard: Asana/Teams; Skrzynka; Koszty) */
+html[data-dam-style="dk"] .dam-settings-jump__chip,
+html[data-dam-style="dk"] .dam-dash-panel__tab,
+html[data-dam-style="dk"] .dam-inbox-subtab,
+html[data-dam-style="dk"] .dam-cost-tabs button,
+html[data-dam-style="dk"] .dam-int-chip,
+html[data-dam-style="dk"] .dam-help-pill,
+html[data-dam-style="dk"] .dam-inbox-unread-toggle,
+html[data-dam-style="dk"] .dam-widget__chip,
+html[data-dam-style="dk"] .dam-variant-panel__chip {
+  background: var(--dam-surface-0);
+  color: var(--dam-text-muted);
+  border: 1px solid var(--dam-border-strong);
+  border-radius: var(--dam-radius-btn);
+  font-family: var(--dam-font);
+  font-weight: 700;
+  box-shadow: none;
+}
+html[data-dam-style="dk"] .dam-settings-jump__chip:hover,
+html[data-dam-style="dk"] .dam-dash-panel__tab:hover,
+html[data-dam-style="dk"] .dam-inbox-subtab:hover,
+html[data-dam-style="dk"] .dam-cost-tabs button:hover,
+html[data-dam-style="dk"] .dam-int-chip:hover,
+html[data-dam-style="dk"] .dam-help-pill:hover {
+  background: var(--dam-brand-soft);
+  color: var(--dam-primary-hover);
+  border-color: var(--dam-primary);
+}
+html[data-dam-style="dk"] .dam-settings-jump__chip.is-active,
+html[data-dam-style="dk"] .dam-dash-panel__tab.is-active,
+html[data-dam-style="dk"] .dam-dash-panel__tab.active,
+html[data-dam-style="dk"] .dam-inbox-subtab.is-active,
+html[data-dam-style="dk"] .dam-cost-tabs button.is-active,
+html[data-dam-style="dk"] .dam-cost-tabs button[aria-selected="true"],
+html[data-dam-style="dk"] .dam-int-chip.is-active,
+html[data-dam-style="dk"] .dam-help-pill--on,
+html[data-dam-style="dk"] .dam-inbox-unread-toggle.is-on,
+html[data-dam-style="dk"] .dam-variant-panel__chip--ok {
+  background: var(--dam-brand-soft) !important;
+  color: var(--dam-primary-hover) !important;
+  border-color: var(--dam-primary) !important;
+  box-shadow: inset 0 0 0 1px var(--dam-primary) !important;
+}
+/* Przycisk drugorzedny w integracjach / Eksploratorze (.dam-int-cta) */
+html[data-dam-style="dk"] .dam-int-cta:not(.dam-int-cta--icon):not(.dam-int-cta--primary),
+html[data-dam-style="dk"] .dam-sw-btn--ghost {
+  background: var(--dam-surface-0) !important;
+  color: var(--dam-primary) !important;
+  border: 1px solid var(--dam-primary) !important;
+  box-shadow: inset 0 0 0 1px var(--dam-primary) !important;
+  border-radius: var(--dam-radius-btn) !important;
+  font-weight: 700;
+}
+html[data-dam-style="dk"] .dam-int-cta:not(.dam-int-cta--icon):not(.dam-int-cta--primary):hover,
+html[data-dam-style="dk"] .dam-sw-btn--ghost:hover {
+  background: var(--dam-brand-soft) !important;
+  color: var(--dam-primary-hover) !important;
+}
+/* Pola w Ustawieniach (.dam-sw-field) i wyszukiwarka ustawien */
+html[data-dam-style="dk"] .dam-sw-field input,
+html[data-dam-style="dk"] .dam-sw-field select,
+html[data-dam-style="dk"] .dam-sw-field textarea,
+html[data-dam-style="dk"] .dam-settings-search__input,
+html[data-dam-style="dk"] .dam-inbox-search input {
+  background: var(--dam-input-bg) !important;
+  border: 1.5px solid var(--dam-field-border) !important;
+  border-radius: var(--dam-radius-sm) !important;
+  color: var(--dam-text) !important;
+  box-shadow: none !important;
+}
+html[data-dam-style="dk"] .dam-sw-field input:focus,
+html[data-dam-style="dk"] .dam-settings-search__input:focus,
+html[data-dam-style="dk"] .dam-inbox-search input:focus {
+  border-color: var(--dam-primary) !important;
+  box-shadow: var(--dk-focus-field) !important;
+}
+html[data-dam-style="dk"] .dam-settings-badge-ro {
+  background: var(--dam-surface-2);
+  color: var(--dam-text-muted);
+  border-radius: 999px;
+  font-weight: 700;
+}
+/* Przelacznik w Ustawieniach (.dam-sw-toggle__ui) - tor piaskowy / zielony */
+html[data-dam-style="dk"] .dam-sw-toggle__ui {
+  background: var(--dam-switch-off) !important;
+  border-color: transparent !important;
+}
+html[data-dam-style="dk"] .dam-sw-toggle input:checked + .dam-sw-toggle__ui {
+  background: var(--dam-primary) !important;
+}
+html[data-dam-style="dk"] .dam-sw-toggle__ui::before,
+html[data-dam-style="dk"] .dam-sw-toggle__ui::after {
+  background: #fff;
+}
+/* Paski postepu w widgetach */
+html[data-dam-style="dk"] .dam-widget__bar-track {
+  background: var(--dam-brand-soft);
+  border-radius: 8px;
+}
+html[data-dam-style="dk"] .dam-widget__bar-fill {
+  background: var(--dam-primary);
+  border-radius: 8px;
+}
+/* Kropki akcentu w Ustawieniach: ramka piaskowa, aktywna z obrysem zieleni */
+html[data-dam-style="dk"] .dam-accent-swatch {
+  border: 2px solid var(--dam-border-strong);
+}
+html[data-dam-style="dk"] .dam-accent-swatch.is-active {
+  box-shadow: 0 0 0 3px var(--dam-primary);
+}
+/* Tytuly sekcji stron (Mindset) tam, gdzie dam-theme-dk.css ich nie zna */
+html[data-dam-style="dk"] .dam-tasks-card__title,
+html[data-dam-style="dk"] .dam-cost-section-title,
+html[data-dam-style="dk"] .dam-catalog-panel__title,
+html[data-dam-style="dk"] .dam-int-card__title,
+html[data-dam-style="dk"] .dam-inbox-side__title,
+html[data-dam-style="dk"] .dam-variant-marketing-block__title,
+html[data-dam-style="dk"] .dam-settings-hero__title {
+  font-family: var(--dam-font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 1.05;
+}
+
+/* =====================================================================
+   17. Korekty po pomiarze zagniezdzen (tools/nesting.py, 2026-09-30)
+   Mapa DAM: L0 strona/sidebar/naglowek · L1 karty, panele, pasek wyszukiwania, filtry, okno na zaslonie
+   · L2 pola, wiersze, miniatury kart, panele w oknie · L3 miniatura w wierszu, wiersz w liscie
+   · L4 menu, listy rozwijane, dymki, kalendarz. Opakowania bez roli = przezroczyste.
+   ===================================================================== */
+/* Tlo pod przyklejonym paskiem wyszukiwania i filtrow = tlo strony (L0), nie karta: w spoczynku niewidoczne,
+   przy przewijaniu dalej zaslania tresc (w ciemnym byl widoczny pas L1 nad i pod panelem). */
+html[data-dam-style="dk"] {
+  --dam-sticky-chrome-bg-frost: color-mix(in srgb, var(--dam-surface-0) 94%, transparent);
+}
+/* Sidebar plasko w obu trybach (w ciemnym Geex rysowal pudelko z ramka i promieniem 33 px) */
+html[data-dam-style="dk"] .geex-sidebar,
+html[data-dam-style="dk"][data-theme="dark"] #damSidebar.geex-sidebar {
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+/* Link w formie przycisku: glowny (zolty) ma brazowy tekst bez podkreslenia; ogolna regula linku DK
+   (zielony, podkreslony) dawala zielony tekst na zoltym (Karta produktu: "Kalkulator kosztow") */
+html[data-dam-style="dk"] #damProductCatalog .dam-catalog-fmcg__links a.geex-btn.geex-btn--primary,
+html[data-dam-style="dk"] #damProductCatalog .dam-catalog-fmcg__links a.geex-btn.geex-btn--primary:hover {
+  color: var(--dam-cta-ink) !important;
+}
+html[data-dam-style="dk"] a.geex-btn.geex-btn--primary {
+  text-decoration: none !important;
+}
+html[data-dam-style="dk"] a.geex-btn:not(.geex-btn--primary) {
+  text-decoration: none !important;
+}
+/* Tytuly kart/paneli (Karta produktu, Koszty) - Mindset wersalikami jak tytuly sekcji */
+html[data-dam-style="dk"] .dam-integration-card > h3,
+html[data-dam-style="dk"] .dam-cost-card__title {
+  font-family: var(--dam-font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 1.05;
+}
+/* Biale karty zapisane w atrybucie style w HTML (strony prawne, pusty stan Rozliczen) = L1 */
+html[data-dam-style="dk"] [style*="background:#fff;border"],
+html[data-dam-style="dk"] [style*="background: #fff; border"] {
+  background: var(--dam-surface-1) !important;
+  border-color: var(--dam-border) !important;
+  color: var(--dam-text) !important;
+}
+/* Logowanie: lewa polowa = strona L0, formularz bez wlasnego tla (byl jasniejszym prostokatem bez ramki),
+   zapisane konto = karta L1, pola lezace wprost na stronie = L1 (DS 3.2 p. 2) */
+html[data-dam-style="dk"] .geex-content__authentication__content {
+  background: var(--dam-surface-0) !important;
+}
+html[data-dam-style="dk"] .geex-content__authentication__form {
+  background: transparent !important;
+}
+html[data-dam-style="dk"] .dam-saved-logins__item {
+  background: var(--dam-surface-1) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-dam-style="dk"] .geex-content__authentication__form #authEmail,
+html[data-dam-style="dk"] .geex-content__authentication__form #authPassword,
+html[data-dam-style="dk"] .geex-content__authentication__form .form-control {
+  background: var(--dam-surface-1) !important;
+}
+/* Szkielety ladowania w palecie drabiny (byly szare #f0f0f4 / #e8e8ee albo L0 = "dziury" w panelu L2):
+   bryla (karta, wiersz) = L2, kreski i klocki w niej = L3 */
+html[data-dam-style="dk"] .dam-skeleton__card,
+html[data-dam-style="dk"] .dam-skeleton__row,
+html[data-dam-style="dk"] .dam-skeleton__hero,
+html[data-dam-style="dk"] .dam-tasks-skel__row {
+  background: var(--dam-surface-2) !important;
+  border-color: var(--dam-border-l2, var(--dam-border)) !important;
+}
+html[data-dam-style="dk"] .dam-assoc-skeleton,
+html[data-dam-style="dk"] .dam-skeleton__line,
+html[data-dam-style="dk"] .dam-widget-skel__line,
+html[data-dam-style="dk"] .dam-widget-skel__thumb,
+html[data-dam-style="dk"] .dam-widget-skel__icon,
+html[data-dam-style="dk"] .dam-viz-modal__variant-placeholder,
+html[data-dam-style="dk"] .dam-tasks-skel__pill,
+html[data-dam-style="dk"] .dam-tasks-skel__line,
+html[data-dam-style="dk"] .dam-tasks-skel__due,
+html[data-dam-style="dk"] .dam-tasks-skel__check,
+html[data-dam-style="dk"] .dam-tasks-skel__avatar,
+html[data-dam-style="dk"] .dam-tasks-skel__notes,
+html[data-dam-style="dk"] .dam-tasks-skel__input,
+html[data-dam-style="dk"] .dam-tasks-skel__icon,
+html[data-dam-style="dk"] .dam-tasks-skel__chip {
+  background: var(--dam-surface-3) !important;
+  border-color: var(--dam-border-l3, var(--dam-border)) !important;
+}
+html[data-dam-style="dk"] .dam-assoc-skeleton::after {
+  background: linear-gradient(100deg, transparent 20%, color-mix(in srgb, var(--dam-surface-1) 70%, transparent) 50%, transparent 80%) !important;
+}
+/* Dymek (tooltip) = nakladka L4 z cieniem (DS 3.2 p. 5, Qt QToolTip: surface-4), nie odwrocony atrament */
+html[data-dam-style="dk"] .dam-tooltip {
+  background: var(--dam-surface-4) !important;
+  color: var(--dam-text) !important;
+  border: 1px solid var(--dam-border-l4, var(--dam-border-strong)) !important;
+}
+/* Plakietki kart w trybie ciemnym: arkusze dam-dark-*.css (html[data-theme=dark] .dam-viz-badge.dam-badge-tag...)
+   przebijaly palete tagow polprzezroczystym piaskiem - ta sama mapa kategorii, wyzsza specyficznosc. */
+html[data-dam-style="dk"][data-theme="dark"] .dam-viz-badge.dam-badge-tag.dam-viz-badge--cat {
+  background: var(--dam-tag-typ-bg) !important; color: var(--dam-tag-typ-fg) !important;
+}
+html[data-dam-style="dk"][data-theme="dark"] .dam-viz-badge.dam-badge-tag.dam-viz-badge--carrier,
+html[data-dam-style="dk"][data-theme="dark"] .dam-viz-badge.dam-badge-tag.dam-viz-badge--multilang {
+  background: var(--dam-tag-opakowanie-bg) !important; color: var(--dam-tag-opakowanie-fg) !important;
+}
+html[data-dam-style="dk"][data-theme="dark"] .dam-viz-badge.dam-badge-tag.dam-viz-badge--subcat {
+  background: var(--dam-tag-podkategoria-bg) !important; color: var(--dam-tag-podkategoria-fg) !important;
+}
+html[data-dam-style="dk"][data-theme="dark"] .dam-viz-badge.dam-badge-tag.dam-viz-badge--lang {
+  background: var(--dam-tag-jezyk-bg) !important; color: var(--dam-tag-jezyk-fg) !important;
+}
+html[data-dam-style="dk"][data-theme="dark"] .dam-viz-badge.dam-badge-tag.dam-viz-badge--mix,
+html[data-dam-style="dk"][data-theme="dark"] .dam-viz-badge.dam-badge-tag.dam-viz-badge--variants,
+html[data-dam-style="dk"][data-theme="dark"] .dam-viz-badge.dam-badge-tag.dam-viz-badge--source {
+  background: var(--dam-tag-mix-bg) !important; color: var(--dam-tag-mix-fg) !important;
+}
+/* Indeks, kod, rok, "edytowalny" = tag neutralny "inne" (DS 5c: surface-3 + text-muted + ramka border-subtle-3),
+   czytelny na L1 i na L2 (wiersz) */
+html[data-dam-style="dk"] .dam-viz-badge.dam-viz-badge--index,
+html[data-dam-style="dk"] .dam-viz-badge.dam-viz-badge--code,
+html[data-dam-style="dk"] .dam-viz-badge.dam-viz-badge--year,
+html[data-dam-style="dk"] .dam-viz-badge.dam-badge-tag.dam-viz-badge--index,
+html[data-dam-style="dk"] .dam-viz-badge.dam-badge-tag.dam-viz-badge--editable,
+html[data-dam-style="dk"] .dam-viz-badge.dam-badge-tag.dam-badge-tag--tier-low {
+  background: var(--dam-tag-inne-bg, var(--dam-surface-3)) !important;
+  color: var(--dam-tag-inne-fg, var(--dam-text-muted)) !important;
+  box-shadow: inset 0 0 0 1px var(--dam-tag-inne-border, var(--dam-border)) !important;
+}
+/* Przelaczniki w etykiecie (Info Pakowania, Pokaz wszystkie, ADMIN): pole = poziom rodzica + 1 */
+html[data-dam-style="dk"] label.dam-switch:not(.dam-admin-header-switch) {
+  background: var(--dam-surface-2) !important;
+}
+html[data-dam-style="dk"] label.dam-switch.dam-admin-header-switch {
+  background: var(--dam-surface-1) !important;
+}
+/* Statusy integracji: ok = zielen marki, czeka = neutralny, blad = czerwien (tylko blad) */
+html[data-dam-style="dk"] .dam-int-chip.dam-int-st--ok,
+html[data-dam-style="dk"] .dam-int-chip.dam-int-st--ready {
+  background: var(--dam-brand-soft) !important; color: var(--dam-primary-hover) !important;
+}
+html[data-dam-style="dk"] .dam-int-chip.dam-int-st--wait,
+html[data-dam-style="dk"] .dam-int-chip.dam-int-st:not([class*="dam-int-st--"]) {
+  background: var(--dam-surface-3) !important; color: var(--dam-text-muted) !important;
+}
+html[data-dam-style="dk"] .dam-int-chip.dam-int-st--danger {
+  background: color-mix(in srgb, var(--dam-danger) 14%, var(--dam-surface-1)) !important; color: var(--dam-danger) !important;
+}
+/* Obce jasne szarosci / lawenda (audyt palety tools/palette_audit.py) -> drabina */
+html[data-dam-style="dk"] .dam-card-checklist,
+html[data-dam-style="dk"] .dam-colleague-chip,
+html[data-dam-style="dk"] .dam-inv-asana-item,
+html[data-dam-style="dk"] .dam-devpath-current,
+html[data-dam-style="dk"] .dam-tasks-pill {
+  background: var(--dam-surface-2) !important;
+  border-color: var(--dam-border-l2, var(--dam-border)) !important;
+}
+html[data-dam-style="dk"] .dam-devpath-card,
+html[data-dam-style="dk"] .dam-inbox-zgloszenie-tabs {
+  background: var(--dam-surface-1) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-dam-style="dk"] thead,
+html[data-dam-style="dk"] thead tr,
+html[data-dam-style="dk"] thead th {
+  background: transparent !important;
+}
+/* Podsumowanie faktur: pastele (roz, lawenda, mieta) -> role DS */
+/* Suma faktur: bialy tekst na zieleni - jak kafel KPI, zielen DS green-800/700 w obu trybach (w ciemnym
+   --dam-primary jest jasna i bialy tekst mial ~2:1) */
+html[data-dam-style="dk"] .dam-inv-summary__tile--total {
+  background: linear-gradient(135deg, #0F763E 0%, #0B5F31 100%) !important;
+}
+html[data-dam-style="dk"] .dam-inv-summary__tile--all {
+  background: var(--dam-surface-2) !important;
+}
+html[data-dam-style="dk"] .dam-inv-summary__tile--paid {
+  background: var(--dam-brand-soft) !important;
+}
+html[data-dam-style="dk"] .dam-inv-summary__tile--pending {
+  background: var(--dam-warning-bg) !important;
+}
+html[data-dam-style="dk"] .dam-inv-summary__tile--overdue {
+  background: color-mix(in srgb, var(--dam-danger) 12%, var(--dam-surface-1)) !important;
+}
+/* Glowna akcja widoku bez zoltego (fiolet) -> zolty CTA DS; przyciski wtorne w grafice (Zadania: Zapytaj)
+   -> zielen akcentu (zolty zostaje jeden na widok) */
+html[data-dam-style="dk"] #consentSave.dam-save-btn {
+  background: var(--dam-cta-bg) !important;
+  color: var(--dam-cta-ink) !important;
+  border-color: var(--dam-cta-bg) !important;
+  border-radius: var(--dam-radius-btn) !important;
+  font-weight: 700;
+}
+html[data-dam-style="dk"] .dam-tasks-btn.dam-tasks-btn--primary {
+  background: var(--dam-primary) !important;
+  color: var(--dam-on-primary) !important;
+  border-color: var(--dam-primary) !important;
+  border-radius: var(--dam-radius-btn) !important;
+  font-weight: 700;
+}
+html[data-dam-style="dk"] .dam-tasks-btn.dam-tasks-btn--primary:hover {
+  background: var(--dam-primary-hover) !important;
+}
+/* Ustawienia: jedna glowna akcja widoku = "Zapisz ustawienia" (zolty); "Wybierz zestaw" = drugorzedny.
+   Bloki w karcie (Motyw, Zestawy, Kolor akcentu) to sekcje bez tla - nie zajmuja poziomu (DS 3.2 p. 3). */
+html[data-dam-style="dk"] #settingsSave {
+  background: var(--dam-cta-bg) !important;
+  color: var(--dam-cta-ink) !important;
+  border-color: var(--dam-cta-bg) !important;
+}
+/* Pomoc: jedyna akcja widoku = wyslanie zgloszenia -> zolty CTA */
+html[data-dam-style="dk"] .dam-report__submit {
+  background: var(--dam-cta-bg) !important;
+  color: var(--dam-cta-ink) !important;
+  border-color: var(--dam-cta-bg) !important;
+}
+html[data-dam-style="dk"] .dam-report__submit:hover {
+  background: var(--dam-cta-bg-hover, var(--dam-cta-bg)) !important;
+}
+html[data-dam-style="dk"] #settingsSave:hover {
+  background: var(--dam-cta-bg-hover, var(--dam-cta-bg)) !important;
+}
+html[data-dam-style="dk"] #damSchemeOpenPicker {
+  background: var(--dam-surface-0) !important;
+  color: var(--dam-primary) !important;
+  border: 1px solid var(--dam-primary) !important;
+  box-shadow: inset 0 0 0 1px var(--dam-primary) !important;
+}
+html[data-dam-style="dk"] #damSchemeOpenPicker:hover {
+  background: var(--dam-brand-soft) !important;
+}
+html[data-dam-style="dk"] .dam-sw-block {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+/* Okna materialu/produktu: scena podgladu = L2 (w ciemnym byla L0 - "dziura" w oknie L1), obraz bez tla;
+   studnie w panelu skojarzen (produkty, materialy) = L3 w panelu L2 (byly --dam-surface-muted = L0) */
+html[data-dam-style="dk"] #damMediaPreview .dam-viz-modal__thumb,
+html[data-dam-style="dk"] #damVizModal .dam-viz-modal__thumb,
+html[data-dam-style="dk"] .dam-viz-modal-box .dam-viz-modal__thumb {
+  background: var(--dam-surface-2) !important;
+}
+html[data-dam-style="dk"] #damMediaPreview .dam-viz-modal__thumb img,
+html[data-dam-style="dk"] #damVizModal .dam-viz-modal__thumb img,
+html[data-dam-style="dk"] .dam-viz-modal-box .dam-viz-modal__thumb img {
+  background: transparent !important;
+}
+html[data-dam-style="dk"] .dam-viz-modal-box .dam-viz-modal__assoc-pane .dam-media-preview__assoc-pane-section--products,
+html[data-dam-style="dk"] .dam-viz-modal-box .dam-viz-modal__assoc-pane .dam-media-preview__assoc-col--materials,
+html[data-dam-style="dk"] .dam-viz-modal-box .dam-viz-modal__assoc-pane .dam-media-preview__assoc-section,
+html[data-dam-style="dk"] .dam-media-preview__assoc-col--branding-split .dam-media-preview__assoc-section,
+html[data-dam-style="dk"] .dam-media-preview__assoc-col--branding-split .dam-media-preview__assoc-pane-section--products {
+  background: var(--dam-surface-3) !important;
+  border-color: var(--dam-border-l3, var(--dam-border)) !important;
+}
+/* Glebiej niz L3 = splaszczenie (DS 3.2 p. 6): kafelek materialu w studni L3 zostaje L3 z ramka,
+   szkielet ladowania w studni = L4, zeby byl widoczny */
+html[data-dam-style="dk"] .dam-viz-modal__assoc-pane .dam-media-preview__assoc-item {
+  background: var(--dam-surface-3) !important;
+  border: 1px solid var(--dam-border-l3, var(--dam-border)) !important;
+}
+html[data-dam-style="dk"] .dam-viz-modal__assoc-pane .dam-assoc-skeleton {
+  background: var(--dam-surface-4) !important;
+}
+/* Karta produktu (project.html): karta materialu w kafelku L2 wracala do L1 (skok w gore) -> L3,
+   miniatura w niej bez wlasnego tla; pole zrzutu zalacznika (Pomoc) = L2 w sekcji L1, ramka przerywana */
+html[data-dam-style="dk"] .dam-marketing-tile .dam-catalog-marketing-card {
+  background: var(--dam-surface-3) !important;
+  border-color: var(--dam-border-l3, var(--dam-border)) !important;
+}
+html[data-dam-style="dk"] .dam-marketing-tile .dam-catalog-marketing-card .dam-viz-thumb {
+  background: transparent !important;
+}
+html[data-dam-style="dk"] .dam-report__drop {
+  background: var(--dam-surface-2) !important;
+  border: 1.5px dashed var(--dam-field-border) !important;
+  border-radius: 16px !important;
+}
+/* Menu uzytkownika (nakladka L4): blok tozsamosci byl jasny (--white-color/Geex) - w ciemnym bialy tekst
+   imienia na kosci sloniowej. Wewnatrz L4 nie ma poziomu wyzej: blok bez tla, oddzielony ramka (DS 3.2 p. 6). */
+html[data-dam-style="dk"] .geex-content__header__popup--author.dam-user-menu .geex-content__header__popup__header,
+html[data-dam-style="dk"] .geex-content__header__popup--author.dam-user-menu .dam-user-menu__identity {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--dam-border-l4, var(--dam-border)) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+html[data-dam-style="dk"] .dam-user-menu .dam-user-menu__name {
+  color: var(--dam-text) !important;
+}
+html[data-dam-style="dk"] .dam-user-menu .dam-user-menu__role {
+  color: var(--dam-text-muted) !important;
+}
+/* Audyt kontrastu (tools/contrast_audit.py): obce barwy tekstu -> role DS (>= 4,5:1) */
+html[data-dam-style="dk"] .geex-content__header__action .geex-content__header__badge.dam-badge--msg:not(.dam-badge--notif),
+html[data-dam-style="dk"][data-theme="dark"] .geex-content__header__action .geex-content__header__badge.dam-badge--msg:not(.dam-badge--notif),
+html[data-dam-style="dk"][data-theme] #damMsgBadge,
+html[data-dam-style="dk"] .geex-badge.geex-badge--warning-transparent,
+html[data-dam-style="dk"] .dam-devpath-pill.is-missing,
+html[data-dam-style="dk"] .dam-int-auth-warn {
+  background: var(--dam-warning-bg) !important;
+  color: var(--dam-warning-text) !important;
+  border-color: var(--dam-warning-border) !important;
+}
+/* Kolory tekstu wpisane w atrybut style (HTML i skrypty stron) oraz w <style> profile.html */
+html[data-dam-style="dk"] [style*="color:#ff5653" i],
+html[data-dam-style="dk"] [style*="color: #ff5653" i] {
+  color: var(--dam-danger) !important;
+}
+html[data-dam-style="dk"] [style*="color:#8b8d97" i],
+html[data-dam-style="dk"] [style*="color: #8b8d97" i],
+html[data-dam-style="dk"] .dam-profile-subtitle,
+html[data-dam-style="dk"] .dam-meta-label,
+html[data-dam-style="dk"] .dam-org-section-title {
+  color: var(--dam-text-muted) !important;
+}
+html[data-dam-style="dk"] [style*="color:#AB54DB" i],
+html[data-dam-style="dk"] [style*="color: #AB54DB" i] {
+  color: var(--dam-primary) !important;
+}
+/* Profil (style w <style> profile.html: lawenda/fiolet DAM) */
+html[data-dam-style="dk"] .dam-profile-avatar {
+  background: var(--dam-brand-soft) !important;
+  color: var(--dam-primary) !important;
+}
+html[data-dam-style="dk"] .dam-profile-name,
+html[data-dam-style="dk"] .dam-meta-value {
+  color: var(--dam-text) !important;
+}
+html[data-dam-style="dk"] .dam-meta-value a,
+html[data-dam-style="dk"] .dam-colleague-chip i {
+  color: var(--dam-primary) !important;
+}
+html[data-dam-style="dk"] .dam-colleague-chip {
+  color: var(--dam-text) !important;
+}
+html[data-dam-style="dk"] .dam-profile-card[style*="171,84,219"] {
+  background: var(--dam-surface-1) !important;
+  border-color: var(--dam-border) !important;
+}
+html[data-dam-style="dk"] .dam-auth-msg.is-err {
+  color: var(--dam-danger) !important;
+}
+html[data-dam-style="dk"] code:not(pre code) {
+  color: var(--dam-text) !important;
+}
+/* Plakietka PRODUKT w wynikach: tlo brand-soft z sekcji 4 + bialy tekst z dam-theme-dk.css = niewidoczna.
+   Produkt = pelna zielen + tekst on-primary; WARIANT zostaje brand-soft. */
+html[data-dam-style="dk"] .dam-search-hit--product > a > .dam-search-hit__badge {
+  background: var(--dam-primary) !important;
+  color: var(--dam-on-primary) !important;
+}
+/* Gradienty z literalem bieli (pominiete przy tokenizacji) */
+html[data-dam-style="dk"] .dam-assoc-edit-toolbar {
+  background: var(--dam-surface-1) !important;
+}
+html[data-dam-style="dk"] .dam-assoc-quiz__col--left {
+  background: var(--dam-surface-2) !important;
+}

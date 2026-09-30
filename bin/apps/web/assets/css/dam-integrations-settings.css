@@ -148,8 +148,8 @@
   line-height: 1.2;
   border-radius: 8px;
   border: 1px solid #e7e7e7;
-  background: #fff;
-  color: #464255;
+  background: var(--dam-paper, #fff);
+  color: var(--dam-ink, #464255);
   text-decoration: none;
   cursor: pointer;
   box-shadow: none;
@@ -181,7 +181,7 @@
   color: #1a1820 !important;
   -webkit-text-fill-color: #1a1820 !important;
   background: transparent !important;
-  background-color: #fff !important;
+  background-color: var(--dam-paper, #fff) !important;
   border: 1px dashed #8b8d97 !important;
   box-shadow: none !important;
 }
@@ -234,7 +234,7 @@
 #damIntegrations .dam-int-chip.dam-int-st--wait,
 .dam-integrations-page--settings .dam-int-chip.dam-int-st--wait {
   color: #6a6570;
-  background: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 14%, #fff);
+  background: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 14%, var(--dam-paper, #fff));
   border-color: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 28%, transparent);
 }
 
@@ -282,8 +282,8 @@
   max-width: 100%;
   border-radius: 8px;
   border: 1px solid #e7e7e7;
-  background: #fff;
-  color: #464255;
+  background: var(--dam-paper, #fff);
+  color: var(--dam-ink, #464255);
   font-size: 12px;
   font-weight: 500;
   line-height: 1.2;

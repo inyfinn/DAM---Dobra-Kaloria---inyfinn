@@ -388,7 +388,7 @@
       "background:color-mix(in srgb,var(--dam-primary,#005A29) 12%,#fff);" +
       "border-color:var(--dam-primary,#005A29)!important;}" +
       "#damTagEditPopover .dam-tag-edit-popover__changecat{" +
-      "border:1px solid #e2e2ea!important;background:#fff;color:#3d3a48;}" +
+      "border:1px solid #e2e2ea!important;background:var(--dam-paper, #fff);color:#3d3a48;}" +
       "#damTagEditPopover .dam-tag-edit-popover__changecat:hover{" +
       "border-color:var(--dam-primary)!important;color:var(--dam-chrome-ink,var(--dam-text));}" +
       "#damTagEditPopover .dam-tag-edit-popover__foot > button:focus-visible{" +
@@ -1348,7 +1348,7 @@
       "<strong>" +
       esc(headTxt) +
       (isLangMulti
-        ? ' <small style="font-weight:500;color:#8b8d97">(wielokrotny)</small>'
+        ? ' <small style="font-weight:500;color:var(--dam-ink-muted, #8b8d97)">(wielokrotny)</small>'
         : "") +
       "</strong>" +
       '<button type="button" class="dam-viz-modal-close" aria-label="Zamknij" data-close data-dam-tip="Zamknij bez zapisu">' +

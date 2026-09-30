@@ -157,7 +157,7 @@
       "position:relative;display:flex;flex-direction:column;" +
       "width:min(80vw,1280px);height:min(80vh,900px);min-width:min(320px,100%);" +
       "min-height:min(360px,80vh);max-width:100%;max-height:100%;" +
-      "overflow:hidden;background:#fff;border:1px solid #d8d8e0;border-radius:12px;" +
+      "overflow:hidden;background:var(--dam-paper, #fff);border:1px solid #d8d8e0;border-radius:12px;" +
       "box-shadow:0 12px 40px rgba(0,0,0,.18);padding:18px 20px 16px;" +
       "box-sizing:border-box;color:#1c1c22;overscroll-behavior:contain}" +
       "#" +
@@ -221,7 +221,7 @@
       OVERLAY_ID +
       " .dam-fmcg-edit__table select{" +
       "width:100%;min-width:0;box-sizing:border-box;border:1px solid #d4d4dc;border-radius:6px;" +
-      "padding:6px 8px;font:inherit;background:#fff;min-height:36px}" +
+      "padding:6px 8px;font:inherit;background:var(--dam-paper, #fff);min-height:36px}" +
       "#" +
       OVERLAY_ID +
       " .dam-fmcg-edit__empty{padding:18px 12px;text-align:center;color:#6a6a78;font-size:13px}" +
@@ -249,7 +249,7 @@
       OVERLAY_ID +
       " .dam-int-cta{display:inline-flex;align-items:center;justify-content:center;gap:6px;" +
       "min-height:34px;padding:8px 12px;margin:0;font:inherit;font-size:12px;font-weight:500;" +
-      "line-height:1.2;border-radius:8px;border:1px solid #e7e7e7;background:#fff;color:#464255;" +
+      "line-height:1.2;border-radius:8px;border:1px solid #e7e7e7;background:var(--dam-paper, #fff);color:var(--dam-ink, #464255);" +
       "cursor:pointer;box-shadow:none;-webkit-appearance:none;appearance:none}" +
       "#" +
       OVERLAY_ID +

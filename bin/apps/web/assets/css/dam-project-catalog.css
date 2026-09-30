@@ -241,7 +241,7 @@
 .dam-catalog-pack-cell {
   display: block;
   border-radius: 2px;
-  background: color-mix(in srgb, var(--dam-primary, #005A29) 55%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 55%, var(--dam-paper, #fff));
   border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 25%, transparent);
   min-height: 6px;
 }

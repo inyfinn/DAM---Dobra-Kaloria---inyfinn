@@ -1,4 +1,4 @@
-"""Build branded dam_app.ico (green tile + DAM)."""
+"""STARY generator ikony (zielony kafel + DAM). Od 2026-09-30 dam_app.ico pochodzi z logo (ds-dobra-kaloria/assets/icons/dam.ico) - NIE uruchamiac, nadpisze nowa ikone."""
 from __future__ import annotations
 
 from pathlib import Path

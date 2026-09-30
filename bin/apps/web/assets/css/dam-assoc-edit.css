@@ -76,7 +76,7 @@
 
   overflow: hidden !important;
 
-  background: #fff !important;
+  background: var(--dam-paper, #fff) !important;
 
   border: 1px solid #e2e2ea !important;
 
@@ -108,7 +108,7 @@
 
   flex: 0 0 auto !important;
 
-  background: #fff !important;
+  background: var(--dam-paper, #fff) !important;
 
 }
 
@@ -122,7 +122,7 @@
 
   line-height: 1.25 !important;
 
-  color: #464255 !important;
+  color: var(--dam-ink, #464255) !important;
 
 }
 
@@ -316,7 +316,7 @@
 
   border: 1px solid #e2e2ea !important;
 
-  background: #fff !important;
+  background: var(--dam-paper, #fff) !important;
 
   cursor: pointer !important;
 
@@ -330,7 +330,7 @@
 
 #damAssocEditPopover .dam-tag-edit-popover__confirm {
 
-  background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, #fff) !important;
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, var(--dam-paper, #fff)) !important;
 
   border-color: color-mix(in srgb, var(--dam-primary, #005A29) 55%, #fff) !important;
 
@@ -354,7 +354,7 @@
 
 #damAssocEditPopover .dam-tag-edit-popover__cancel {
 
-  background: #fff !important;
+  background: var(--dam-paper, #fff) !important;
 
   border-color: #e2e2ea !important;
 
@@ -414,9 +414,9 @@
 
   border: 1px solid #e7e7e7 !important;
 
-  background: #fff !important;
+  background: var(--dam-paper, #fff) !important;
 
-  color: #464255 !important;
+  color: var(--dam-ink, #464255) !important;
 
   box-shadow: none !important;
 

@@ -106,7 +106,7 @@
 .dam-inv-toolbar .dam-int-cta:hover,
 .dam-inv-toolbar label.dam-int-cta:hover {
   border-color: var(--dam-primary, #005A29);
-  background: color-mix(in srgb, var(--dam-primary, #005A29) 6%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 6%, var(--dam-paper, #fff));
   color: var(--dam-primary, #005A29);
 }
 
@@ -185,7 +185,7 @@
 }
 
 .dam-inv-summary__tile--overdue .dam-inv-summary__value {
-  color: #ff5653;
+  color: var(--dam-ink-danger, #ff5653);
 }
 
 .dam-inv-summary__tile--total .dam-inv-summary__value {
@@ -195,7 +195,7 @@
 
 .dam-inv-summary__label {
   font-size: 12px;
-  color: #888;
+  color: var(--dam-ink-muted, #888);
   margin-top: 2px;
 }
 
@@ -246,14 +246,14 @@
 .dam-inv-filters .inv-filter-btn:hover {
   border-color: color-mix(in srgb, var(--dam-primary, #005A29) 35%, var(--dam-border, #ececf2));
   color: var(--dam-text, #464255);
-  background: color-mix(in srgb, var(--dam-primary, #005A29) 4%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 4%, var(--dam-paper, #fff));
 }
 
 .dam-inv-filters .dam-int-filter.active,
 .dam-inv-filters .dam-int-filter.is-active,
 .dam-inv-filters .inv-filter-btn.active,
 .dam-inv-filters .inv-filter-btn.is-active {
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border: 1.5px solid var(--dam-primary, #005A29);
   color: color-mix(in srgb, var(--dam-primary, #005A29) 78%, #464255);
   font-weight: 600;

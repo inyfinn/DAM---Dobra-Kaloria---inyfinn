@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>DAM - uruchamianie</title>
+  <!-- Plansza startowa DAM w stylu Dobra Kaloria (2.5.2, 2026-09-30).
+       Otwierana z dysku (file://) przez apps/desktop/dam_splash.py, zanim wstanie serwer UI.
+       Wzor: plansza programu "Stworz prezentacje" (launcher.cs Splash + powitanie.py):
+       560x330, zielen #0F763E, logo, nazwa w Mindset, kolko, napis, czas, zolty pasek.
+       Pasek dochodzi do 92% w przewidywanym czasie (#eta=s), potem pelznie; 100% przy gotowosci. -->
+  <style>
+    @font-face { font-family: "Mindset"; src: url("assets/vendor/fonts/mindset/Mindset.otf") format("opentype"); font-display: swap; }
+    @font-face { font-family: "Lato"; src: url("assets/vendor/fonts/lato/Lato-Regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
+    html, body { margin: 0; width: 560px; height: 330px; overflow: hidden; background: #0F763E; }
+    body { position: relative; color: #FFFFFF; font-family: "Lato", "Segoe UI", Arial, sans-serif; -webkit-font-smoothing: antialiased; user-select: none; cursor: default; }
+    .logo { position: absolute; left: 185px; top: 34px; width: 190px; height: auto; }
+    .name { position: absolute; left: 0; right: 0; top: 184px; text-align: center; font-family: "Mindset", "Arial Narrow", sans-serif; font-size: 34px; line-height: 1.1; letter-spacing: .01em; text-transform: uppercase; }
+    .spin { position: absolute; left: 56px; top: 258px; width: 22px; height: 22px; box-sizing: border-box; border-radius: 50%; border: 3px solid rgba(255,255,255,.27); border-top-color: #FFFFFF; animation: spin .9s linear infinite; }
+    .done .spin { animation: none; border-color: #FFFFFF; }
+    .done .spin::after { content: ""; position: absolute; left: 4px; top: 1px; width: 5px; height: 9px; border: solid #FFFFFF; border-width: 0 2.5px 2.5px 0; transform: rotate(40deg); }
+    .left { position: absolute; left: 90px; top: 258px; font-size: 16.5px; line-height: 22px; }
+    .right { position: absolute; right: 56px; top: 260px; font-size: 14px; line-height: 20px; color: #E0ECE4; }
+    .bar { position: absolute; left: 56px; right: 56px; top: 296px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.27); overflow: hidden; }
+    .fill { height: 100%; width: 0; border-radius: 3px; background: #FFD42A; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .spin { animation-duration: 3s; } }
+  </style>
+</head>
+<body>
+  <img class="logo" src="assets/img/dk-logo-white-box.png" alt="Dobra Kaloria">
+  <div class="name">DAM Dobra Kaloria</div>
+  <div class="spin" aria-hidden="true"></div>
+  <div class="left" id="left" role="status" aria-live="polite">Uruchamiam program…</div>
+  <div class="right" id="right"></div>
+  <div class="bar" aria-hidden="true"><div class="fill" id="fill"></div></div>
+  <script>
+    (function () {
+      var q = /eta=([0-9.]+)/.exec(location.hash + location.search);
+      var eta = Math.max(2, q ? parseFloat(q[1]) : 6);
+      var q0 = /t0=([0-9]+)/.exec(location.hash);
+      var startMs = q0 ? parseFloat(q0[1]) : Date.now();
+      function now() { return Math.max(0, (Date.now() - startMs) / 1000); }
+      var ready = false;
+      var fill = document.getElementById("fill");
+      var right = document.getElementById("right");
+      function progress(t) {
+        if (ready) return 1;
+        if (t <= eta) return 0.92 * (1 - Math.pow(1 - t / eta, 2));
+        return 0.92 + 0.07 * (1 - Math.exp(-(t - eta) / 8));
+      }
+      function tick() {
+        var t = now();
+        fill.style.width = (progress(t) * 100).toFixed(2) + "%";
+        if (!ready) {
+          var rest = Math.ceil(eta - t);
+          right.textContent = rest >= 1 ? "zostało ok. " + rest + " s" : "jeszcze chwilkę…";
+          requestAnimationFrame(tick);
+        }
+      }
+      requestAnimationFrame(tick);
+      /* Wolane przez dam_splash.py, gdy okno programu jest gotowe. */
+      window.damSplashDone = function () {
+        ready = true;
+        document.body.classList.add("done");
+        fill.style.width = "100%";
+        document.getElementById("left").textContent = "Gotowe";
+        right.textContent = "";
+      };
+    })();
+  </script>
+</body>
+</html>

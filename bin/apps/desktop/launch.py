@@ -723,6 +723,18 @@ def main() -> None:
         win_message(APP_TITLE, f"Brak folderu UI:\n{WEB_ROOT}")
         raise SystemExit(1)
 
+    # 2.5.2: plansza startowa Dobra Kaloria (osobny proces) - znika, gdy okno wczyta strone.
+    try:
+        import dam_splash
+
+        splash = dam_splash.start()
+    except Exception:  # noqa: BLE001 - bez planszy start jak dotad
+        splash = None
+
+    def _splash_close() -> None:
+        if splash is not None:
+            splash.close()
+
     try:
         import pg_db
 
@@ -732,6 +744,7 @@ def main() -> None:
 
     binding = verify_machine_before_start()
     if binding.get("ok") is False and binding.get("error"):
+        _splash_close()
         win_message(
             APP_TITLE,
             "Nie udalo sie zweryfikowac ID maszyny.\n\n" + str(binding.get("error")),
@@ -739,6 +752,7 @@ def main() -> None:
         raise SystemExit(1)
 
     if not acquire_single_instance():
+        _splash_close()
         raise SystemExit(0)
 
     db_sync_stop: threading.Event | None = None
@@ -822,6 +836,17 @@ def main() -> None:
         window.events.shown += _on_shown
     except Exception:
         pass
+
+    def _on_loaded() -> None:
+        # Pierwsza wczytana strona = program gotowy: plansza domyka pasek i znika,
+        # a czas tego startu staje sie przewidywanym czasem nastepnego.
+        if splash is not None:
+            splash.ready()
+
+    try:
+        window.events.loaded += _on_loaded
+    except Exception:
+        _splash_close()
 
     def _show_window() -> None:
         try:
@@ -914,6 +939,7 @@ def main() -> None:
                 daemon=True,
             ).start()
     except Exception as exc:
+        _splash_close()
         heal = DESKTOP_DIR / "boot-heal.html"
         try:
             import webbrowser
@@ -938,6 +964,7 @@ def main() -> None:
             )
         raise SystemExit(1) from exc
     finally:
+        _splash_close()
         bridge_supervisor.stop()
         if db_sync_stop is not None:
             db_sync_stop.set()

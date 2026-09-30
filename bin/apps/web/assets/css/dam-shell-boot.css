@@ -7,19 +7,19 @@
  * Awaria = html.dam-boot-failed + #damBootFail (wlasny ekran DAM).
  */
 html.dam-booting {
-  background: #F6F7F6; /* DK canvas whisper; tokens not loaded yet */
+  background: #EEF4EF; /* zestaw domyslny Dobra Kaloria 1 (jasny); tokens not loaded yet */
 }
 
 html.dam-booting[data-theme="dark"] {
-  background: #060F0C; /* --dam-bg dark */
+  background: #0F1F15; /* zestaw domyslny Dobra Kaloria 1 (ciemny) */
 }
 
 html.dam-boot-failed {
-  background: #F6F7F6;
+  background: #EEF4EF;
 }
 
 html.dam-boot-failed[data-theme="dark"] {
-  background: #060F0C;
+  background: #0F1F15;
 }
 
 /* Krytyczne: nie pokazuj surowego chrome zanim boot sie uda. Zero auto-reveal. */
@@ -88,7 +88,7 @@ html[data-theme="dark"] .dam-boot-fail {
   width: 100%;
   padding: 28px 24px;
   border-radius: 16px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   box-shadow: 0 12px 40px rgba(23, 22, 30, 0.12);
 }
 

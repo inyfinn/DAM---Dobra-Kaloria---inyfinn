@@ -356,7 +356,7 @@
       "@keyframes damTutCompanionIn{from{opacity:0;transform:translate(28px,18px)}to{opacity:1;transform:translate(0,0)}}" +
       "@keyframes damTutPoseSwap{0%{opacity:.35}100%{opacity:1}}" +
       ".dam-tut-companion{position:fixed;right:20px;bottom:100px;z-index:14050;width:min(360px,calc(100vw - 40px));" +
-      "display:flex;gap:18px;align-items:flex-start;padding:28px 26px 22px;background:#fff;color:#464255;" +
+      "display:flex;gap:18px;align-items:flex-start;padding:28px 26px 22px;background:var(--dam-paper, #fff);color:var(--dam-ink, #464255);" +
       "border:1px solid #ececf2;border-radius:16px;box-shadow:0 14px 36px rgba(23,22,30,.22);pointer-events:auto;" +
       "font-family:var(--dam-font,'Jost',sans-serif);overflow:visible;}" +
       ".dam-tut-companion.is-enter{animation:damTutCompanionIn .4s ease-out both;}" +
@@ -374,12 +374,12 @@
       "border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer;}" +
       ".dam-tut-companion__x{position:absolute;top:16px;right:16px;width:28px;height:28px;border:0;border-radius:8px;" +
       "background:transparent;color:#7a7489;cursor:pointer;font-size:18px;line-height:1;}" +
-      ".dam-tut-companion__x:hover{background:#f3f1f7;color:#464255;}" +
+      ".dam-tut-companion__x:hover{background:#f3f1f7;color:var(--dam-ink, #464255);}" +
       ".dam-tut-cheer{position:fixed;right:16px;bottom:20px;z-index:13950;pointer-events:none;" +
       "width:96px;height:110px;opacity:0;}" +
       ".dam-tut-cheer.is-on{opacity:1;transition:opacity .35s ease;}" +
       ".dam-tut-praise-toast{position:fixed;right:20px;bottom:112px;z-index:14120;" +
-      "width:min(280px,calc(100vw - 40px));padding:16px 18px;background:#fff;color:#464255;" +
+      "width:min(280px,calc(100vw - 40px));padding:16px 18px;background:var(--dam-paper, #fff);color:var(--dam-ink, #464255);" +
       "border:1px solid #ececf2;border-left:3px solid var(--dam-brand-green,#008244);border-radius:12px;" +
       "box-shadow:0 12px 28px rgba(23,22,30,.14);font-family:var(--dam-font,'Jost',sans-serif);" +
       "pointer-events:none;opacity:0;transform:translateY(12px);overflow:visible;}" +
@@ -388,7 +388,7 @@
       ".dam-tut-praise-toast.is-out{opacity:0;transform:translateY(6px);" +
       "transition:opacity .22s ease,transform .22s ease;}" +
       ".dam-tut-praise-toast__title{margin:0 0 4px;font-size:14px;font-weight:700;color:#008244;line-height:1.25;}" +
-      ".dam-tut-praise-toast__text{margin:0;font-size:13px;line-height:1.4;color:#464255;}" +
+      ".dam-tut-praise-toast__text{margin:0;font-size:13px;line-height:1.4;color:var(--dam-ink, #464255);}" +
       ".dam-tut-praise-burst{position:absolute;inset:0;pointer-events:none;overflow:visible;}" +
       ".dam-tut-praise-burst span{position:absolute;left:50%;top:40%;width:6px;height:6px;border-radius:50%;" +
       "background:var(--dam-brand-green,#008244);opacity:.85;}" +

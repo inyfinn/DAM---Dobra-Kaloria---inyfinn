@@ -373,7 +373,7 @@
     }
     if (document.querySelector("script[data-dam-cache-sync]")) return;
     var s = document.createElement("script");
-    s.src = "assets/js/dam-cache-sync.js?v=6.0.13";
+    s.src = "assets/js/dam-cache-sync.js?v=2.5.2";
     s.setAttribute("data-dam-cache-sync", "1");
     document.head.appendChild(s);
   }

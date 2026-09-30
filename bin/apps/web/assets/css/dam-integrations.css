@@ -155,25 +155,25 @@
 
 .dam-int-chip.dam-int-st--ok {
   color: #0a7a4f;
-  background: color-mix(in srgb, var(--dam-ok, #00b074) 16%, #fff);
+  background: color-mix(in srgb, var(--dam-ok, #00b074) 16%, var(--dam-paper, #fff));
   border-color: color-mix(in srgb, var(--dam-ok, #00b074) 28%, transparent);
 }
 
 .dam-int-chip.dam-int-st--ready {
   color: var(--dam-primary, #005A29);
-  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 12%, var(--dam-paper, #fff));
   border-color: color-mix(in srgb, var(--dam-primary, #005A29) 24%, transparent);
 }
 
 .dam-int-chip.dam-int-st--wait {
   color: #6a6570;
-  background: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 14%, #fff);
+  background: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 14%, var(--dam-paper, #fff));
   border-color: color-mix(in srgb, var(--dam-text-muted, #8b8d97) 28%, transparent);
 }
 
 .dam-int-chip.dam-int-st--err {
   color: var(--dam-danger, #ff5b5b);
-  background: color-mix(in srgb, var(--dam-danger, #ff5b5b) 12%, #fff);
+  background: color-mix(in srgb, var(--dam-danger, #ff5b5b) 12%, var(--dam-paper, #fff));
   border-color: color-mix(in srgb, var(--dam-danger, #ff5b5b) 28%, transparent);
 }
 
@@ -306,7 +306,7 @@
   color: #1a1820 !important;
   -webkit-text-fill-color: #1a1820 !important;
   background: transparent !important;
-  background-color: #fff !important;
+  background-color: var(--dam-paper, #fff) !important;
   border: 1px dashed #8b8d97 !important;
   box-shadow: none !important;
   -webkit-appearance: none;
@@ -367,8 +367,8 @@
   max-width: 100%;
   border-radius: 8px;
   border: 1px solid #e7e7e7;
-  background: #fff;
-  color: #464255;
+  background: var(--dam-paper, #fff);
+  color: var(--dam-ink, #464255);
   font-size: 12px;
   font-weight: 500;
   line-height: 1.2;

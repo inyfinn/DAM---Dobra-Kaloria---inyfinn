@@ -192,9 +192,9 @@
         "position:fixed;right:76px;bottom:20px;z-index:11030;" +
         "min-height:" + MIN_TOUCH + "px;padding:0 14px;" +
         "display:inline-flex;align-items:center;" +
-        "background:#fff;border:1px solid rgba(70,66,85,.12);border-radius:999px;" +
+        "background:var(--dam-paper, #fff);border:1px solid rgba(70,66,85,.12);border-radius:999px;" +
         "box-shadow:0 8px 24px rgba(23,22,30,.10);" +
-        "font-size:12.5px;font-weight:600;color:#464255;" +
+        "font-size:12.5px;font-weight:600;color:var(--dam-ink, #464255);" +
       "}" +
       "#" + PILL_ID + "[hidden]{display:none!important;}" +
       "#" + REPORT_ID + "{" +
@@ -204,7 +204,7 @@
       "#" + REPORT_ID + "[hidden]{display:none!important;}" +
       "#" + REPORT_ID + " .dam-index-report__card{" +
         "width:min(520px,100%);max-height:min(80vh,640px);overflow:auto;" +
-        "background:#fff;border-radius:16px;padding:20px 20px 16px;" +
+        "background:var(--dam-paper, #fff);border-radius:16px;padding:20px 20px 16px;" +
         "box-shadow:0 20px 50px rgba(23,22,30,.22);" +
       "}" +
       "#" + REPORT_ID + " h2{margin:0 0 8px;font-size:18px;color:#17161E;}" +
@@ -215,7 +215,7 @@
       "#" + REPORT_ID + " .dam-index-report__actions{display:flex;gap:8px;margin-top:16px;}" +
       "#" + REPORT_ID + " button{min-width:" + MIN_TOUCH + "px;min-height:" + MIN_TOUCH + "px;border:0;border-radius:12px;padding:0 14px;font-weight:700;cursor:pointer;}" +
       "#" + REPORT_ID + " .is-primary{background:var(--primary-color,#005A29);color:#fff;}" +
-      "#" + REPORT_ID + " .is-ghost{background:#eceaf3;color:#464255;}" +
+      "#" + REPORT_ID + " .is-ghost{background:#eceaf3;color:var(--dam-ink, #464255);}" +
       "html[data-theme='dark'] #" + HOST_ID + "{background:#1f1d27;color:#eceaf3;border-color:rgba(255,255,255,.08);}" +
       "html[data-theme='dark'] #" + HOST_ID + " .dam-job-toast__title{color:#fff;}" +
       "html[data-theme='dark'] #" + HOST_ID + " .dam-job-toast__now{color:#e4dff0;}" +

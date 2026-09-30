@@ -281,7 +281,7 @@
 
     if (!filtered.length) {
       tbody.innerHTML =
-        '<tr><td colspan="6" style="text-align:center;padding:20px;color:#888">Brak faktur</td></tr>';
+        '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--dam-ink-muted, #888)">Brak faktur</td></tr>';
       return;
     }
 
@@ -300,7 +300,7 @@
           escapeHtml(inv.project || "-") +
           testBadgeInline(inv) +
           "</div>" +
-          '<div style="font-size:11px;color:#888">' +
+          '<div style="font-size:11px;color:var(--dam-ink-muted, #888)">' +
           escapeHtml(inv.type || inv.client || "") +
           "</div>" +
           "</td>" +
@@ -436,7 +436,7 @@
       ".dam-inv-cb__input:focus-visible{outline:2px solid var(--dam-primary,#005A29);outline-offset:2px}" +
       ".dam-inv-mail{margin-top:24px!important;display:block!important}" +
       ".dam-inv-mail__content{display:flex;flex-direction:column;gap:24px;padding:8px 4px 16px}" +
-      ".dam-inv-mail__section{padding:16px 18px;border:1px solid #e8e8ee;border-radius:14px;background:#fff}" +
+      ".dam-inv-mail__section{padding:16px 18px;border:1px solid #e8e8ee;border-radius:14px;background:var(--dam-paper, #fff)}" +
       ".dam-inv-mail__section h5{margin:0 0 10px;font-size:13px;font-weight:650;text-transform:uppercase;letter-spacing:.04em;color:#5c5c6a}" +
       ".dam-inv-mail__chips{display:flex;flex-wrap:wrap;gap:8px}" +
       ".dam-inv-mail__chip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:#f0eef6;border:1px solid #e2dced;font-size:13px;cursor:pointer}" +
@@ -1105,7 +1105,7 @@
         var tbody = document.getElementById("invTableBody");
         if (tbody) {
           tbody.innerHTML =
-            '<tr><td colspan="6" style="text-align:center;padding:20px;color:#888">Brak danych</td></tr>';
+            '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--dam-ink-muted, #888)">Brak danych</td></tr>';
         }
         renderMailPanel();
       });

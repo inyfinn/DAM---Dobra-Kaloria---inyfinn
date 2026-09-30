@@ -2,6 +2,20 @@
 
 ## GDZIE JESTEŚMY (aktualizowane na bieżąco)
 
+**2.5.2 (30.09, KRZYSZTOFWI) - design Dobra Kaloria, wydane:** https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v2.5.2
+DAM wygląda jak program „Stwórz prezentację” (design system Dobra Kaloria 1.4.1: drabina powierzchni L0-L4, tagi w odcieniu stylu).
+Pełny styl: warstwa `assets/css/dam-dk-components.css` działa tylko pod `html[data-dam-style="dk"]`; białe tła i literały tekstu
+w CSS/JS zamienione na `var(--dam-paper|--dam-ink*, literał)`, więc inne zestawy zostają piksel w piksel (diff ~0 %).
+Okna: zasłona 56 % w barwie stylu (ciemny 66 %), ramka L4 i cień okna. Czerwień błędu w kremie jasnym `#C0262C` (DS 1.4.1).
+Dziennik pełnego stylu: `bin/design-system/evidence/2026-09-30-dk-full/POSTEP.md`.
+Zestaw „Dobra Kaloria” zastąpiony dwoma zestawami w obu trybach:
+„Dobra Kaloria 1 · zieleń” (domyślny: jasny szałwiowy / ciemna zieleń) i „Dobra Kaloria 2 · krem” (jasny krem /
+ciemny krem). Tryb jasny/ciemny i pozostałe zestawy bez zmian. Styl DK: Mindset (nagłówki) + Lato z paczki,
+żółty przycisk głównej akcji, obrys 2 px przycisków drugorzędnych, etykiety wersalikami, pola 1,5 px + fokus 3 px,
+karty 12 px. Nowa plansza startowa Dobra Kaloria (`dam_splash.py`, `dam-splash.html`) z czasem z poprzedniego startu.
+Szczegóły i decyzje: `bin/design-system/DESIGN_SYSTEM.md` §0. Dowody: `bin/design-system/evidence/2026-09-30-dk-theme/`.
+Favicon panelu = nowa ikona DAM (`dam.ico`, `dam-256.png`). Zrzuty finalne: `evidence/2026-09-30-dk-theme/final/` (statyczny serwer :8765 z repo, most :8766 zainstalowanej aplikacji, sesja podstawiona w testerze; DAM-domyślny przed/po + 4 warianty DK).
+
 **2.4.9 (29.09, KRZYSZTOFWI) - wydane:** https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v2.4.9
 - **Grafiki:** pomiar na żywej aplikacji (444 karty Wizualizacji): 11 x 504 (budowa miniatury z M: > 2,5 s) i 13 x odmowa połączenia przy żywym moście - kolejka połączeń mostu miała 5 miejsc. Teraz 128; karta po błędzie pyta `/preview/status` (animacja ładowania, ponowienie, bez ciągnięcia oryginału z M:, uczciwy opis na końcu); Branding najwyżej 3 oryginały naraz. Po instalacji 2.4.9: 445/445 miniatur OK, 24 naraz p95 0,25 s. Zrzut z aplikacji niewykonany (ekran zablokowany - „Nieprawidłowe dojście”).
 - **ROOT KRZYSZTOFWI był pusty od świeżej instalacji 28.09** - właściciel katalogu nie skanował. Ustawiony `M:\` (`state\machine-config.json`); pierwszy cykl: 4 migawki opublikowane, +719 materiałów, 0 usunięć, 0 odmów bramki.

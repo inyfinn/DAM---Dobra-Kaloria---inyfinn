@@ -381,7 +381,7 @@
     st.id = "dam-inbox-hist-disabled-style";
     st.textContent =
       ".dam-inbox-hist-item__btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none;}" +
-      ".dam-inbox-hist-item__btn:disabled:hover{border-color:#ececf2;background:#fff;color:inherit;}";
+      ".dam-inbox-hist-item__btn:disabled:hover{border-color:#ececf2;background:var(--dam-paper, #fff);color:inherit;}";
     document.head.appendChild(st);
   }
 

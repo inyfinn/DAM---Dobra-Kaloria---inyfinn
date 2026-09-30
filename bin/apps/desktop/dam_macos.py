@@ -44,6 +44,14 @@ def main() -> None:
         print(f"Brak bridge: {LOCAL_BRIDGE}")
         raise SystemExit(1)
 
+    # 2.5.2: plansza startowa Dobra Kaloria (osobny proces, jak na Windows).
+    try:
+        import dam_splash
+
+        splash = dam_splash.start()
+    except Exception:  # noqa: BLE001
+        splash = None
+
     ui_port = DEFAULT_UI_PORT
     bridge_port = DEFAULT_BRIDGE_PORT
     httpd, supervisor = _start_http(ui_port, bridge_port)
@@ -55,18 +63,27 @@ def main() -> None:
         import webview  # type: ignore
 
         window = webview.create_window(APP_TITLE, url, width=1440, height=900, text_select=True)
+        if splash is not None:
+            try:
+                window.events.loaded += splash.ready
+            except Exception:  # noqa: BLE001
+                splash.close()
         try:
             webview.start(gui="cocoa", debug=False)
         except Exception:
             webview.start(debug=False)
         return
     except ImportError:
+        if splash is not None:
+            splash.close()
         print("Brak pywebview — otwieram przegladarke. pip install pywebview")
         try:
             webbrowser.open(url)
         except Exception:
             pass
     except Exception as exc:
+        if splash is not None:
+            splash.close()
         print(f"pywebview cocoa skip: {exc}")
         try:
             webbrowser.open(url)

@@ -445,7 +445,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .geex-content__header__popup--notification .dam-notif-icon--warn {
   background: rgba(255, 86, 83, 0.1);
-  color: #FF5653;
+  color: var(--dam-ink-danger, #FF5653);
 }
 
 .geex-content__header__popup--notification .dam-notif-icon--info {
@@ -583,7 +583,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   padding: 12px 14px;
   border: 1px solid rgba(70, 66, 85, 0.08);
   border-radius: 12px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
 }
 
 .dam-product-toolbar__main {
@@ -702,7 +702,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-cat-panel__title {
   font-size: 12px;
   font-weight: 600;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   letter-spacing: 0.02em;
 }
 
@@ -718,7 +718,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   padding: 6px 8px;
   border: 1px solid var(--gray-color, #E7E7E7);
   border-radius: 10px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
 }
 
 .dam-viz-viewbtn {
@@ -744,7 +744,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   align-items: center;
   gap: 6px;
   font-size: 11px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 
 .dam-viz-scale input[type="range"] {
@@ -767,7 +767,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-viz-bg-tab {
   border: 1px solid var(--gray-color, #E7E7E7);
-  background: #fff;
+  background: var(--dam-paper, #fff);
   color: var(--body-color, #464255);
   border-radius: 999px;
   padding: 8px 16px;
@@ -804,7 +804,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-viz-hero {
   border: 1px solid var(--gray-color, #E7E7E7);
   border-radius: 12px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -860,7 +860,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-viz-hero__meta {
   font-size: 12px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -877,7 +877,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-viz-empty {
   margin: 10px 0 0;
   font-size: 12px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 
 .dam-viz-groups {
@@ -920,7 +920,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   padding: 6px 8px;
   border: 1px solid #eee;
   border-radius: 8px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
 }
 
 .dam-viz-list-row__open {
@@ -946,7 +946,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-viz-list-row__name {
   font-size: 12px;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   word-break: break-all;
 }
 
@@ -988,7 +988,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   width: min(1360px, 97vw);
   height: min(92vh, 960px);
   max-height: 94vh;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 24px 80px rgba(15, 17, 26, 0.35);
@@ -1030,7 +1030,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   list-style: none;
   min-height: 36px;
   display: flex;
@@ -1043,7 +1043,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-lb-details[open] .dam-lb-details__sum {
   margin-bottom: 8px;
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 
 .dam-lightbox__main {
@@ -1066,8 +1066,8 @@ body:has(.geex-customizer.active) .geex-content__header {
   height: 44px;
   border: none;
   border-radius: 50%;
-  background: #fff;
-  color: #464255;
+  background: var(--dam-paper, #fff);
+  color: var(--dam-ink, #464255);
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(0,0,0,0.18);
   font-size: 22px;
@@ -1078,7 +1078,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-lightbox__close:hover,
 .dam-lightbox__close:focus-visible {
-  color: #FF5653;
+  color: var(--dam-ink-danger, #FF5653);
 }
 
 .dam-lightbox__toolbar {
@@ -1157,7 +1157,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   height: auto;
   object-fit: contain;
   border-radius: 4px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   transform-origin: center center;
   transition: transform 0.18s ease;
 }
@@ -1190,7 +1190,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   margin-bottom: 8px;
 }
 
@@ -1202,7 +1202,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-lb-chip {
   border: 1px solid var(--gray-color, #E7E7E7);
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-radius: 8px;
   padding: 6px 10px;
   font-size: 12px;
@@ -1237,7 +1237,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   min-height: 44px;
   padding: 8px 10px;
   border: 1px solid #c9c7d1;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-radius: 10px;
   cursor: pointer;
   font-family: inherit;
@@ -1277,7 +1277,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-lb-size__n {
   font-size: 10px;
   font-weight: 600;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 
 .dam-lb-size__ext {
@@ -1285,7 +1285,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 
 .dam-lb-size.is-active .dam-lb-size__ext {
@@ -1300,7 +1300,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-lb-meta {
   font-size: 12px;
   line-height: 1.5;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -1308,7 +1308,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-lb-meta__muted,
 .dam-lb-meta__loading {
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   font-size: 12px;
 }
 
@@ -1381,7 +1381,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   position: relative;
   width: min(1180px, 97vw);
   max-height: 94vh;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 16px 56px rgba(0, 0, 0, 0.22);
@@ -1395,7 +1395,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   height: min(92vh, 900px);
   max-height: 94vh;
   width: 100%;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-radius: 0;
   box-shadow: none;
 }
@@ -1409,12 +1409,12 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-lb-lead {
   font-size: 12px;
   line-height: 1.45;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   margin: 0 0 10px;
 }
 
 .dam-lightbox--studio-v2 .dam-lightbox__main {
-  background: #fff;
+  background: var(--dam-paper, #fff);
   min-height: 0;
 }
 
@@ -1427,7 +1427,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   align-items: center;
   justify-content: center;
   padding: 48px 24px 16px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   overflow: hidden;
 }
 
@@ -1450,7 +1450,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-lightbox--studio-v2 .dam-lightbox__img {
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-radius: 8px;
   box-shadow: 0 2px 24px rgba(15, 17, 26, 0.08);
 }
@@ -1464,11 +1464,11 @@ body:has(.geex-customizer.active) .geex-content__header {
   gap: 10px 16px;
   padding: 12px 18px 16px;
   border-top: 1px solid var(--gray-color, #E7E7E7);
-  background: #fff;
+  background: var(--dam-paper, #fff);
 }
 
 .dam-lightbox--studio-v2 .dam-lightbox__title {
-  color: #464255;
+  color: var(--dam-ink, #464255);
   font-size: 12px;
   font-weight: 600;
   flex: 1 1 200px;
@@ -1504,7 +1504,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-lb-chip__sub {
   font-size: 10px;
   font-weight: 600;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -1529,7 +1529,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   padding: 8px 10px;
   border: 1px solid var(--gray-color, #E7E7E7);
   border-radius: 10px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   cursor: pointer;
   font-family: inherit;
   text-align: left;
@@ -1556,7 +1556,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-lb-persp__hint {
   font-size: 10px;
   line-height: 1.35;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   font-weight: 500;
 }
 
@@ -1636,7 +1636,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-lightbox__counter {
   font-size: 12px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 
 /* ---------- Nav trail was below - keep product toolbar above explorer title tweaks */
@@ -1660,8 +1660,8 @@ body:has(.geex-customizer.active) .geex-content__header {
   padding: 0 12px;
   border: 1px solid #E7E7E7;
   border-radius: 8px;
-  background: #fff;
-  color: #464255;
+  background: var(--dam-paper, #fff);
+  color: var(--dam-ink, #464255);
   font-family: inherit;
   font-size: 13px;
   font-weight: 500;
@@ -1699,7 +1699,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   padding: 0;
   font-size: 13px;
   line-height: 1.4;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 
 .dam-breadcrumb__item {
@@ -1735,7 +1735,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-breadcrumb__current {
-  color: #464255;
+  color: var(--dam-ink, #464255);
   font-weight: 600;
   max-width: min(420px, 70vw);
   overflow: hidden;
@@ -1785,7 +1785,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-cost-toolbar__gen {
   font-size: 12px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 
 .dam-cost-panel {
@@ -1836,7 +1836,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   padding: 18px 20px;
   border: 1px solid #E7E7E7;
   border-radius: 14px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   box-shadow: 0 2px 12px rgba(23, 22, 30, 0.04);
 }
 
@@ -1868,7 +1868,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   border: 1px solid #E7E7E7;
   border-radius: 10px;
   background: #f7f7f9;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   font: inherit;
   font-size: 13px;
   font-weight: 500;
@@ -1909,7 +1909,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   position: absolute;
   left: 12px;
   bottom: 11px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   font-size: 16px;
   pointer-events: none;
 }
@@ -1920,7 +1920,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   min-height: 44px;
   border: 1px solid #E7E7E7;
   border-radius: 10px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   color: #17161E;
   font: inherit;
   font-size: 14px;
@@ -1979,7 +1979,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-cost-picker__count {
   margin: 0;
   font-size: 12px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 
 .dam-cost-card__title {
@@ -1998,7 +1998,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-cost-card__note {
   font-size: 11px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   margin: 16px 0 0;
   line-height: 1.4;
 }
@@ -2042,7 +2042,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-cost-row-meta {
   font-size: 11px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 
 .dam-cost-sum td {
@@ -2050,7 +2050,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-cost-empty {
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 
 .dam-cost-meta-list {
@@ -2069,7 +2069,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 }
 
 .dam-cost-meta-list li span {
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   flex: 0 1 auto;
 }
 
@@ -2127,7 +2127,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   right: 0;
   top: calc(100% + 4px);
   z-index: 40;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border: 1px solid #E7E7E7;
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
@@ -2138,7 +2138,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-search-msg {
   padding: 12px 14px;
   font-size: 13px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 
 .dam-search-hits,
@@ -2153,7 +2153,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   display: block;
   padding: 7px 12px;
   text-decoration: none;
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 
 .dam-search-hits a:hover,
@@ -2180,7 +2180,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   padding: 7px 12px;
   text-align: left;
   cursor: pointer;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   border-radius: 0;
 }
 
@@ -2204,7 +2204,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   justify-content: center;
   font-size: 12px;
   color: transparent;
-  background: #fff;
+  background: var(--dam-paper, #fff);
 }
 
 .dam-search-hit__check.is-on {
@@ -2270,7 +2270,7 @@ body:has(.geex-customizer.active) .geex-content__header {
 .dam-search-meta {
   display: block;
   font-size: 11px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   margin-top: 2px;
 }
 
@@ -2681,12 +2681,12 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-tag-chip {
   border: 1px solid #E7E7E7;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-radius: 999px;
   padding: 4px 10px;
   font-size: 12px;
   cursor: pointer;
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 
 .dam-tag-chip:hover {
@@ -2703,7 +2703,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   padding: 16px;
   border: 1px solid #E7E7E7;
   border-radius: 12px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   cursor: pointer;
   text-align: left;
 }
@@ -2715,12 +2715,12 @@ body:has(.geex-customizer.active) .geex-content__header {
 
 .dam-explorer-card strong {
   font-size: 14px;
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 
 .dam-explorer-card span {
   font-size: 12px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 
 .dam-explorer-table-wrap {
@@ -2744,7 +2744,7 @@ body:has(.geex-customizer.active) .geex-content__header {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   user-select: none;
   min-width: 0;
 }
@@ -2986,7 +2986,7 @@ html[data-theme="dark"] .dam-viz-card .dam-viz-card__title {
   display: block;
   /* Packshot / viz cards: plain white slot (no checkerboard, no black matte).
      Checkerboard stays only on modal Elementy assoc thumbs (dam-branding.css). */
-  background-color: #fff;
+  background-color: var(--dam-paper, #fff);
   background-image: none;
   transform: scale(var(--dam-viz-img-scale, 1));
   transform-origin: center center;
@@ -3049,7 +3049,7 @@ html[data-theme="dark"] .dam-viz-thumb__img {
 
 .dam-viz-badge--index {
   background: rgba(70, 66, 85, 0.08);
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 
 .dam-viz-badge--index-miss {
@@ -3370,7 +3370,7 @@ body.dam-sidebar-collapsed .geex-sidebar__menu__link[aria-current="page"] {
   flex-shrink: 0;
   z-index: 60;
   border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 35%, transparent);
-  background: #fff;
+  background: var(--dam-paper, #fff);
   color: var(--dam-primary, #005A29);
   border-radius: 8px;
   cursor: pointer;
@@ -3807,7 +3807,7 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   border: none;
   border-radius: 999px;
   background: transparent;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -3828,7 +3828,7 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 .dam-search-input:focus {
   border-color: var(--dam-primary, #005A29) !important;
   outline: none;
-  background: #fff !important;
+  background: var(--dam-paper, #fff) !important;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--dam-primary, #005A29) 15%, transparent) !important;
 }
 
@@ -3914,11 +3914,11 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 .dam-explorer-empty__hint {
   margin: 10px 0 0;
   font-size: 13px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 .dam-explorer-status-line {
   font-size: 12px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   margin: 0 0 8px;
 }
 
@@ -4103,7 +4103,7 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 }
 .dam-explorer-results__meta {
   font-size: 12px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -4164,7 +4164,7 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 .dam-tag-group-label {
   flex: 0 0 auto;
   font-weight: 600;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   min-width: 72px;
   padding-top: 3px;
   line-height: 1.4;
@@ -4216,7 +4216,7 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 .dam-tag-group--inne .dam-tag-pill,
 .dam-prod-tag.dam-tag-group--inne {
   background: #f4f4f6;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 /* Podkategoria (np. "Kulki Surowe") - ten sam fiolet co dam-viz-badge--subcat */
 .dam-tag-group--podkategoria .dam-tag-pill {
@@ -4233,7 +4233,7 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 .dam-tag-more {
   border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 35%, transparent);
   border-radius: 999px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   color: var(--dam-primary, #005A29);
   font-size: 11px;
   font-weight: 600;
@@ -4706,7 +4706,7 @@ body::-webkit-scrollbar-button,
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   cursor: pointer;
   user-select: none;
 }
@@ -4731,7 +4731,7 @@ body::-webkit-scrollbar-button,
 
 .dam-changelog-bar__hint {
   font-size: 12px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   max-width: 220px;
   white-space: nowrap;
   overflow: hidden;
@@ -4862,7 +4862,7 @@ body::-webkit-scrollbar-button,
   background: transparent;
   font-size: 18px;
   line-height: 1;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   cursor: pointer;
   padding: 2px 6px;
   border-radius: 6px;
@@ -4918,7 +4918,7 @@ body::-webkit-scrollbar-button,
 .dam-changelog-history__body {
   flex: 1 1 auto;
   min-width: 0;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border: 1px solid rgba(70, 66, 85, 0.09);
   border-radius: 10px;
   padding: 8px 10px;
@@ -4935,14 +4935,14 @@ body::-webkit-scrollbar-button,
 .dam-changelog-history__when {
   font-size: 11.5px;
   font-weight: 600;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   font-variant-numeric: tabular-nums;
 }
 
 .dam-changelog-history__scope {
   font-size: 10.5px;
   font-weight: 600;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -4990,7 +4990,7 @@ body::-webkit-scrollbar-button,
 
 .dam-changelog-history__meta {
   font-size: 11px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 
 .dam-changelog-history__empty {
@@ -4999,7 +4999,7 @@ body::-webkit-scrollbar-button,
   align-items: center;
   gap: 6px;
   font-size: 12.5px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   padding: 20px 10px;
   text-align: center;
   border: 1px dashed rgba(70, 66, 85, 0.16);
@@ -5018,7 +5018,7 @@ body::-webkit-scrollbar-button,
 .dam-changelog-history__footnote {
   margin: 0;
   font-size: 11px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   border-top: 1px solid rgba(70, 66, 85, 0.1);
   padding-top: 8px;
   line-height: 1.4;
@@ -5033,7 +5033,7 @@ body::-webkit-scrollbar-button,
   background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, transparent);
   border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 20%, transparent);
   font-size: 12px;
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 .dam-bc-sep {
   color: #ccc;
@@ -5057,7 +5057,7 @@ body::-webkit-scrollbar-button,
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   margin: 0 0 8px;
 }
 .dam-welcome-links {
@@ -5072,8 +5072,8 @@ body::-webkit-scrollbar-button,
   padding: 8px 12px;
   border: 1px solid #E7E7E7;
   border-radius: 8px;
-  background: #fff;
-  color: #464255;
+  background: var(--dam-paper, #fff);
+  color: var(--dam-ink, #464255);
   font-size: 12px;
   font-weight: 500;
   text-decoration: none;
@@ -5086,7 +5086,7 @@ body::-webkit-scrollbar-button,
 }
 .dam-welcome-hint {
   font-size: 11px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   margin: 12px 0 0;
 }
 .dam-explorer-panel__title {
@@ -5123,7 +5123,7 @@ body::-webkit-scrollbar-button,
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 40%, transparent);
   border-radius: 10px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   color: var(--dam-primary, #005A29);
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(70, 66, 85, 0.06);
@@ -5140,7 +5140,7 @@ body::-webkit-scrollbar-button,
 .dam-panel-nav-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 .dam-panel-nav-btn:focus-visible {
   outline: 2px solid var(--dam-primary, #005A29);
@@ -5178,7 +5178,7 @@ body::-webkit-scrollbar-button,
   font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 .dam-panel-head__meta {
   margin: 6px 0 0;
@@ -5188,7 +5188,7 @@ body::-webkit-scrollbar-button,
   color: #6b6d78;
 }
 .dam-explorer-panel__lead {
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   font-size: 12px;
   font-weight: 400;
   margin: 0 0 14px;
@@ -5201,7 +5201,7 @@ body::-webkit-scrollbar-button,
 }
 .dam-explorer-empty {
   padding: 24px;
-  color: #888;
+  color: var(--dam-ink-muted, #888);
 }
 .dam-prod-list {
   display: flex;
@@ -5289,7 +5289,7 @@ body::-webkit-scrollbar-button,
   min-width: 2.1em;
   border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 28%, transparent);
   border-radius: 999px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   color: var(--dam-primary, #005A29);
   font-size: 20px;
   font-weight: 500;
@@ -5337,7 +5337,7 @@ body::-webkit-scrollbar-button,
   padding: 3px 9px;
   border-radius: 999px;
   background: rgba(70, 66, 85, 0.08);
-  color: #464255;
+  color: var(--dam-ink, #464255);
   margin: 0;
   letter-spacing: 0.01em;
   line-height: 1.3;
@@ -5438,7 +5438,7 @@ body::-webkit-scrollbar-button,
 }
 .dam-prod-row__revs {
   font-size: 11px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   white-space: nowrap;
 }
 .dam-rev-list {
@@ -5490,12 +5490,12 @@ body::-webkit-scrollbar-button,
 }
 .dam-rev-row__meta {
   font-size: 11px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   margin-top: 2px;
 }
 .dam-rev-open {
   border: 1px solid var(--dam-primary, #005A29);
-  background: #fff;
+  background: var(--dam-paper, #fff);
   color: var(--dam-primary, #005A29);
   border-radius: 6px;
   padding: 4px 10px;
@@ -5526,7 +5526,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-show-older-label {
   font-size: 11px;
   font-weight: 500;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   padding: 0 0 8px;
   margin: 0;
 }
@@ -5573,7 +5573,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   padding: 0 8px;
   border-radius: 8px;
   border: 1px solid #E7E7E7;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   color: #4a4b57;
   font-size: 11px;
   font-weight: 600;
@@ -5721,7 +5721,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-lifecycle-history__title {
   font-size: 11px;
   font-weight: 600;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   margin-bottom: 4px;
 }
 
@@ -5746,7 +5746,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 
 .dam-lifecycle-history__when {
   font-variant-numeric: tabular-nums;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 
 .dam-lifecycle-history__letter {
@@ -5795,7 +5795,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-product-toolbar__life-label {
   font-size: 11px;
   font-weight: 600;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -5824,7 +5824,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-file-layer__title {
   font-size: 12px;
   font-weight: 600;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   text-transform: uppercase;
   letter-spacing: 0.03em;
   margin: 0 0 6px;
@@ -5854,7 +5854,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-file-row__name {
   font-size: 13px;
   font-weight: 500;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -5876,7 +5876,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-file-reveal {
   border: none;
   background: none;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
@@ -5933,7 +5933,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 .dam-basepath-box {
   width: min(520px, 100%);
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 18px 48px rgba(28, 28, 40, 0.2);
@@ -5947,7 +5947,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   right: 14px;
   border: none;
   background: #f4f4f6;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   border-radius: 50%;
   width: 32px;
   height: 32px;
@@ -5985,7 +5985,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   display: block;
   font-size: 12px;
   font-weight: 600;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   margin-bottom: 6px;
 }
 .dam-basepath-field {
@@ -6043,7 +6043,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   margin: 0 0 12px;
 }
 .dam-basepath-msg.is-ok { color: #2CBF44; }
-.dam-basepath-msg.is-err { color: #FF5653; }
+.dam-basepath-msg.is-err { color: var(--dam-ink-danger, #FF5653); }
 .dam-basepath-actions {
   display: flex;
   flex-wrap: wrap;
@@ -6085,7 +6085,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   border-radius: 12px;
   padding: 12px 14px;
   margin-bottom: 10px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
 }
 .dam-audit-item__top {
   display: flex;
@@ -6093,11 +6093,11 @@ button.dam-status-badge.dam-tag-editable:hover {
   gap: 12px;
   font-size: 13px;
   font-weight: 600;
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 .dam-audit-item__meta {
   font-size: 12px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   margin-top: 4px;
   word-break: break-all;
 }
@@ -6128,7 +6128,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 .dam-marketing-hint {
   font-size: 11px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   margin: 6px 0 0;
 }
 .dam-admin-rev-actions {
@@ -6141,7 +6141,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   font-size: 11px;
   cursor: pointer;
   border: 1px solid #E7E7E7;
-  background: #fff;
+  background: var(--dam-paper, #fff);
 }
 .dam-admin-btn--ok:hover {
   border-color: #28C76F;
@@ -6179,7 +6179,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 .dam-folder-item__count {
   font-size: 10px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   font-weight: 400;
 }
 .dam-explorer-toast {
@@ -6245,8 +6245,8 @@ button.dam-status-badge.dam-tag-editable:hover {
   padding: 0 12px;
   border: 1px solid #E7E7E7;
   border-radius: var(--dam-control-radius, 8px);
-  background: #fff;
-  color: #464255;
+  background: var(--dam-paper, #fff);
+  color: var(--dam-ink, #464255);
   font-family: inherit;
   font-size: var(--dam-control-fs, 12px);
   font-weight: 500;
@@ -6275,8 +6275,8 @@ button.dam-status-badge.dam-tag-editable:hover {
   padding: 0 14px;
   border: 1px solid #E7E7E7;
   border-radius: var(--dam-control-radius, 8px);
-  background: #fff;
-  color: #464255;
+  background: var(--dam-paper, #fff);
+  color: var(--dam-ink, #464255);
   font-family: inherit;
   font-size: var(--dam-control-fs, 12px);
   font-weight: 500;
@@ -6410,7 +6410,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   z-index: 9000;
   display: none;
   min-width: 220px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border: 1px solid #E7E7E7;
   border-radius: 12px;
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
@@ -6423,7 +6423,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   padding: 12px 14px 6px;
 }
 
@@ -6440,7 +6440,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   gap: 8px;
   font-size: 13px;
   font-weight: 500;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   cursor: pointer;
   padding: 5px 0;
   user-select: none;
@@ -6464,7 +6464,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 
 .dam-filter-btn {
   border: 1px solid #E7E7E7;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-radius: 6px;
   padding: 3px 9px;
   font-size: 11px;
@@ -6505,7 +6505,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   font-weight: 600;
   cursor: pointer;
   user-select: none;
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 
 .dam-brand-check input[type="checkbox"] {
@@ -6523,7 +6523,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 
 .dam-brand-btn {
   border: 1px solid #E7E7E7;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-radius: 6px;
   padding: 2px 8px;
   font-size: 10px;
@@ -6561,7 +6561,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   border-radius: 12px;
   margin: 0 0 18px;
   overflow: hidden;
-  background: #fff;
+  background: var(--dam-paper, #fff);
 }
 
 .dam-mix-toggle {
@@ -6641,7 +6641,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 
 .dam-carrier-card.is-expanded {
   border-color: color-mix(in srgb, var(--dam-primary, #005A29) 45%, transparent);
-  background: #fff;
+  background: var(--dam-paper, #fff);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--dam-primary, #005A29) 12%, transparent);
 }
 
@@ -6652,7 +6652,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 
 /* Label nosnika: ten sam kolor co .dam-viz-card__title (#464255) - NIE zielony status */
 .dam-carrier-card--aktualne .dam-carrier-toggle__label {
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 
 .dam-carrier-card--aktualne.is-expanded {
@@ -7000,7 +7000,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   font-size: 16px;
   font-weight: 600;
   font-family: inherit;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   letter-spacing: 0.01em;
   line-height: 1.3;
   margin: 0;
@@ -7202,20 +7202,20 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 
 .dam-check-brak .dam-check-icon {
-  color: #FF5653;
+  color: var(--dam-ink-danger, #FF5653);
 }
 
 .dam-check-ok .dam-check-label {
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 
 .dam-check-brak .dam-check-label {
-  color: #FF5653;
+  color: var(--dam-ink-danger, #FF5653);
   font-weight: 600;
 }
 
 .dam-check-brak .dam-check-detail {
-  color: #FF5653;
+  color: var(--dam-ink-danger, #FF5653);
   font-weight: 700;
   letter-spacing: 0.04em;
 }
@@ -7224,7 +7224,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   display: inline-block;
   font-size: 10px;
   font-weight: 600;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   margin-left: 4px;
   font-style: normal;
 }
@@ -7245,7 +7245,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-check-action {
   border: 0;
   background: transparent;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   width: 28px;
   height: 28px;
   border-radius: 6px;
@@ -7263,13 +7263,13 @@ button.dam-status-badge.dam-tag-editable:hover {
 
 .dam-check-action--danger:hover {
   background: rgba(255, 86, 83, 0.12);
-  color: #FF5653;
+  color: var(--dam-ink-danger, #FF5653);
 }
 
 .dam-elements-picker__hint {
   margin: 0 14px 10px;
   font-size: 12px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   line-height: 1.4;
 }
 
@@ -7295,7 +7295,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   margin-bottom: 6px;
 }
 
@@ -7404,7 +7404,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   border-radius: 6px;
   border: 1px solid #f0f0f0;
   font-size: 11px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 
 .dam-older-rev-row__main {
@@ -7527,7 +7527,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 
 .dam-viz-modal-box {
   position: relative;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-radius: 16px;
   width: var(--dam-modal-box-w, 90vw);
   max-width: var(--dam-modal-box-w, 90vw);
@@ -7552,8 +7552,8 @@ button.dam-status-badge.dam-tag-editable:hover {
   justify-content: center;
   border: 1px solid #E7E7E7;
   border-radius: 8px;
-  background: #fff;
-  color: #464255;
+  background: var(--dam-paper, #fff);
+  color: var(--dam-ink, #464255);
   cursor: pointer;
   font-size: 18px;
   z-index: 2;
@@ -7571,7 +7571,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   flex: 1 1 0;
   min-height: 120px;
   max-height: none;
-  background: #ffffff;
+  background: var(--dam-paper, #fff);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -7595,7 +7595,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   object-fit: contain;
   transform-origin: center center;
   transition: transform 0.12s ease;
-  background: #ffffff;
+  background: var(--dam-paper, #fff);
   will-change: transform;
   user-select: none;
   -webkit-user-drag: none;
@@ -7628,7 +7628,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   cursor: pointer;
   font-size: 18px;
 }
@@ -7641,7 +7641,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   text-align: center;
   font-size: 12px;
   font-weight: 600;
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 
 .dam-viz-modal__zoom-label[contenteditable="true"] {
@@ -7694,7 +7694,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-media-preview__title-base {
   font-size: 28px;
   font-weight: 700;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   margin: 0;
   line-height: 1.3;
 }
@@ -7743,7 +7743,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 
 .dam-viz-modal__carrier {
   font-size: 12px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   margin: 0;
 }
 
@@ -7753,7 +7753,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 #damVizModalFilename {
   font-size: 11px;
   font-weight: 400;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   margin: 0;
   line-height: 1.45;
   letter-spacing: 0.01em;
@@ -7847,7 +7847,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-viz-modal__variant-label {
   font-size: 10px;
   font-weight: 600;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   line-height: 1.2;
   text-align: center;
   max-width: 72px;
@@ -7912,7 +7912,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   margin-top: 0;
   width: 100%;
   justify-content: flex-start;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   box-sizing: border-box;
 }
 
@@ -7955,7 +7955,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 }
 .dam-viz-modal__actions .geex-btn:not(.geex-btn--primary),
 .dam-viz-modal__actions .geex-btn.dam-win-btn:not(.geex-btn--primary) {
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-color: var(--dam-btn-outline-border, color-mix(in srgb, var(--dam-primary, #005A29) 50%, transparent));
 }
 
@@ -8166,7 +8166,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-variant-info-popover {
   position: fixed;
   z-index: 20060;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 22%, transparent);
   border-radius: 10px;
   box-shadow: 0 10px 28px rgba(70, 66, 85, 0.2);
@@ -8183,23 +8183,23 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-variant-info__country {
   font-size: 17px; /* +5px wobec bazy 12px tooltipa */
   font-weight: 700;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   letter-spacing: 0.01em;
 }
 .dam-variant-info__country-full {
   font-size: 12px;
   font-weight: 400;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 .dam-variant-info__path-label {
   font-size: 11px;
   font-weight: 600;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   margin-bottom: 3px;
 }
 .dam-variant-info__path {
   font-size: 12px;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   word-break: break-all;
   margin-bottom: 10px;
   line-height: 1.4;
@@ -8210,7 +8210,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   gap: 6px;
   border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 40%, transparent);
   border-radius: 999px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   color: var(--dam-primary, #005A29);
   font-size: 12px;
   font-weight: 600;
@@ -8225,7 +8225,7 @@ button.dam-status-badge.dam-tag-editable:hover {
 .dam-tooltip {
   position: fixed;
   z-index: 20050;
-  background: #ffffff;
+  background: var(--dam-paper, #fff);
   color: #3d3a4a;
   font-size: 12px;
   font-weight: 400;
@@ -8353,7 +8353,7 @@ button.dam-status-badge.dam-tag-editable:hover {
   max-height: min(78vh, 640px);
   padding: 22px 22px 20px;
   border-radius: 14px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border: 1px solid rgba(70, 66, 85, 0.1);
   box-shadow: 0 16px 40px rgba(23, 22, 30, 0.14);
   cursor: default;
@@ -8449,7 +8449,7 @@ button.dam-db-mode-chip:focus-visible {
   border-radius: 999px;
   border: 1px solid rgba(70, 66, 85, 0.14);
   background: #f6f5f8;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -8536,7 +8536,7 @@ button.dam-db-mode-chip:focus-visible {
   height: 20px;
   border-radius: 6px;
   border: 1.5px solid rgba(70, 66, 85, 0.28);
-  background: #fff;
+  background: var(--dam-paper, #fff);
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 .dam-db-check__box::after {
@@ -8689,7 +8689,7 @@ button.dam-db-mode-chip:focus-visible {
 }
 .dam-root-status__btn {
   border: 1px solid color-mix(in srgb, var(--dam-primary, #008244) 40%, transparent);
-  background: #fff;
+  background: var(--dam-paper, #fff);
   color: var(--dam-primary, #008244);
   font-size: 12px;
   font-weight: 600;
@@ -8708,7 +8708,7 @@ button.dam-db-mode-chip:focus-visible {
   line-height: 1;
 }
 .dam-root-status__btn:hover {
-  background: color-mix(in srgb, var(--dam-primary, #008244) 12%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #008244) 12%, var(--dam-paper, #fff));
   color: var(--dam-primary, #008244);
 }
 
@@ -8726,7 +8726,7 @@ button.dam-db-mode-chip:focus-visible {
   width: min(360px, calc(100vw - 32px));
   padding: 14px 16px 12px;
   border-radius: 14px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border: 1px solid rgba(70, 66, 85, 0.1);
   box-shadow: 0 16px 40px rgba(23, 22, 30, 0.14);
   opacity: 0;
@@ -8794,7 +8794,7 @@ button.dam-db-mode-chip:focus-visible {
   font-weight: 600;
 }
 .dam-db-sync-toast__step.is-done {
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 .dam-db-sync-toast__step.is-error {
   color: #e11d48;
@@ -8939,7 +8939,7 @@ body.dam-bridge-offline .dam-offline-bar {
   width: min(800px, 100%);
   max-height: min(88vh, 900px);
   overflow: auto;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-radius: 16px;
   box-shadow: 0 24px 64px rgba(23, 22, 30, 0.22);
   border: 1px solid #ebebef;
@@ -8983,7 +8983,7 @@ body.dam-bridge-offline .dam-offline-bar {
 .dam-help-modal__lead {
   margin: 6px 0 0;
   font-size: 13px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   line-height: 1.45;
   max-width: 48ch;
 }
@@ -8993,7 +8993,7 @@ body.dam-bridge-offline .dam-offline-bar {
   border: 0;
   border-radius: 10px;
   background: #f5f5f7;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -9048,7 +9048,7 @@ body.dam-bridge-offline .dam-offline-bar {
   margin: 0 0 10px;
   font-size: 14px;
   font-weight: 700;
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 .dam-help-keys {
   list-style: none;
@@ -9111,7 +9111,7 @@ body.dam-bridge-offline .dam-offline-bar {
 .dam-help-card p {
   margin: 0;
   font-size: 12px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   line-height: 1.45;
 }
 .dam-help-modal__section--note {
@@ -9128,7 +9128,7 @@ body.dam-bridge-offline .dam-offline-bar {
 }
 .dam-help-modal__section--note code {
   font-size: 11px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   padding: 1px 5px;
   border-radius: 4px;
   border: 1px solid #e8e8ee;
@@ -9204,7 +9204,7 @@ body.dam-help-open .dam-help-fab {
 .dam-help-hint {
   margin: 8px 0 0;
   font-size: 12px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   line-height: 1.45;
 }
 .dam-help-pill {
@@ -9216,7 +9216,7 @@ body.dam-help-open .dam-help-fab {
   font-size: 10px;
   font-weight: 600;
   background: #f4f4f6;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   vertical-align: middle;
 }
 .dam-help-pill--on {
@@ -9247,7 +9247,7 @@ body.dam-help-open .dam-help-fab {
   align-items: center;
   gap: 10px;
   padding: 12px 16px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border: 1px solid #E7E7E7;
   border-radius: 14px;
   box-shadow: 0 4px 16px rgba(23, 22, 30, 0.04);
@@ -9272,11 +9272,11 @@ body.dam-help-open .dam-help-fab {
 .dam-help-page__meta {
   margin: 8px 4px 0;
   font-size: 12px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 .dam-help-page__group {
   margin-bottom: 18px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border: 1px solid #E7E7E7;
   border-radius: 14px;
   padding: 8px 20px 12px;
@@ -9292,7 +9292,7 @@ body.dam-help-open .dam-help-fab {
   margin: 12px 0 4px;
   font-size: 13px;
   font-weight: 700;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -9310,7 +9310,7 @@ body.dam-help-open .dam-help-fab {
 .dam-faq-q {
   font-size: 14px;
   font-weight: 600;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   margin: 0 0 6px;
   display: flex;
   align-items: flex-start;
@@ -9348,9 +9348,9 @@ body.dam-help-open .dam-help-fab {
 .dam-help-page__empty {
   padding: 28px 20px;
   text-align: center;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   font-size: 14px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border: 1px dashed #e2e2e8;
   border-radius: 14px;
 }
@@ -9403,8 +9403,8 @@ body.dam-help-open .dam-help-fab {
   outline: none;
   border: 1.5px solid color-mix(in srgb, var(--dam-primary, #005A29) 55%, transparent) !important;
   border-radius: var(--btn-radius, 50px) !important;
-  background: #fff !important;
-  color: #464255 !important;
+  background: var(--dam-paper, #fff) !important;
+  color: var(--dam-ink, #464255) !important;
   padding: 0.2rem 0.55rem !important;
   min-height: 28px !important;
   font-size: 11px !important;
@@ -9438,8 +9438,8 @@ body.dam-help-open .dam-help-fab {
   text-transform: uppercase;
   border-radius: 8px !important;
   border: 1px solid rgba(70, 66, 85, 0.22) !important;
-  background: #fff !important;
-  color: #464255 !important;
+  background: var(--dam-paper, #fff) !important;
+  color: var(--dam-ink, #464255) !important;
   box-shadow: none !important;
   line-height: 1.2 !important;
 }
@@ -9589,7 +9589,7 @@ button.dam-viz-badge:focus-visible,
   }
 }
 .dam-inbox-side {
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border: 1px solid #ececf2;
   border-radius: 14px;
   padding: 14px;
@@ -9600,7 +9600,7 @@ button.dam-viz-badge:focus-visible,
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 .dam-inbox-side__block {
   display: flex;
@@ -9623,14 +9623,14 @@ button.dam-viz-badge:focus-visible,
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   white-space: nowrap;
   cursor: pointer;
 }
 .dam-inbox-stats {
   margin: 0 0 12px;
   font-size: 12px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   font-weight: 600;
 }
 .dam-inbox-tag {
@@ -9640,8 +9640,8 @@ button.dam-viz-badge:focus-visible,
   gap: 10px;
   width: 100%;
   border: 1px solid #ececf2;
-  background: #fff;
-  color: #464255;
+  background: var(--dam-paper, #fff);
+  color: var(--dam-ink, #464255);
   border-radius: 10px;
   padding: 9px 12px;
   font-size: 13px;
@@ -9732,7 +9732,7 @@ button.dam-viz-badge:focus-visible,
   align-items: start;
   border: 1px solid #ececf2;
   border-radius: 12px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   padding: 12px 14px;
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -9830,7 +9830,7 @@ button.dam-viz-badge:focus-visible,
 }
 .dam-inbox-item__chevron {
   font-size: 18px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   width: 28px;
   height: 28px;
   display: inline-flex;
@@ -9859,7 +9859,7 @@ button.dam-viz-badge:focus-visible,
 }
 .dam-inbox-item__date {
   font-size: 11px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
@@ -9877,7 +9877,7 @@ button.dam-viz-badge:focus-visible,
   display: none !important;
 }
 .dam-inbox-item__detail-body strong {
-  color: #464255;
+  color: var(--dam-ink, #464255);
   font-weight: 600;
 }
 .dam-inbox-item__foot {
@@ -9938,7 +9938,7 @@ button.dam-viz-badge:focus-visible,
   white-space: nowrap;
 }
 .dam-inbox-item__actor strong {
-  color: #464255;
+  color: var(--dam-ink, #464255);
   font-weight: 700;
 }
 .dam-inbox-item__actions {
@@ -9991,7 +9991,7 @@ button.dam-viz-badge:focus-visible,
   border: 1px solid transparent;
   border-radius: 10px;
   background: transparent;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -10003,11 +10003,11 @@ button.dam-viz-badge:focus-visible,
   opacity: 0.85;
 }
 .dam-inbox-subtab:hover {
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-color: #e0dfe8;
 }
 .dam-inbox-subtab.is-active {
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-color: var(--dam-primary, #005A29);
   color: var(--dam-text);
   box-shadow: 0 1px 0 rgba(23, 22, 30, 0.04);
@@ -10054,7 +10054,7 @@ button.dam-viz-badge:focus-visible,
   margin-top: 4px;
   padding: 10px 12px;
   border-radius: 10px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border: 1px solid rgba(192, 57, 43, 0.28);
   max-height: 220px;
   overflow: auto;
@@ -10069,7 +10069,7 @@ button.dam-viz-badge:focus-visible,
   gap: 8px;
   margin-bottom: 6px;
   font-size: 13px;
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 .dam-inbox-hist-conflict__close {
   border: none;
@@ -10077,7 +10077,7 @@ button.dam-viz-badge:focus-visible,
   cursor: pointer;
   font-size: 18px;
   line-height: 1;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   min-width: 28px;
   min-height: 28px;
 }
@@ -10095,7 +10095,7 @@ button.dam-viz-badge:focus-visible,
   padding: 0 0 0 18px;
   font-size: 12px;
   line-height: 1.45;
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 .dam-inbox-timeline__list li {
   margin: 0 0 4px;
@@ -10110,7 +10110,7 @@ button.dam-viz-badge:focus-visible,
 .dam-inbox-hist-item__btn--ghost {
   border-color: #ececf2;
   color: #6b6d78;
-  background: #fff;
+  background: var(--dam-paper, #fff);
 }
 /* Historia: note left | actions right (jak carrier meta→end) */
 .dam-inbox-hist-item {
@@ -10158,8 +10158,8 @@ button.dam-viz-badge:focus-visible,
   padding: 8px 14px;
   border-radius: 10px;
   border: 1px solid #ececf2;
-  background: #fff;
-  color: #464255;
+  background: var(--dam-paper, #fff);
+  color: var(--dam-ink, #464255);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -10292,7 +10292,7 @@ button.dam-viz-badge:focus-visible,
   font-weight: 600;
   font-size: var(--dam-fs-base, 14px);
   line-height: 1.3;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   text-decoration: none;
   min-width: 0;
 }
@@ -10305,7 +10305,7 @@ button.dam-viz-badge:focus-visible,
   gap: 6px;
   font-size: var(--dam-fs-xs, 11px);
   font-weight: 600;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   padding: 4px 10px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, transparent);
@@ -10425,8 +10425,8 @@ button.dam-viz-badge:focus-visible,
   padding: 8px 14px;
   border-radius: 10px;
   border: 1px solid #ececf2;
-  background: #fff;
-  color: #464255;
+  background: var(--dam-paper, #fff);
+  color: var(--dam-ink, #464255);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -10462,8 +10462,8 @@ button.dam-viz-badge:focus-visible,
   border-radius: 10px;
   padding: 8px 12px;
   font-size: 13px;
-  color: #464255;
-  background: #fff;
+  color: var(--dam-ink, #464255);
+  background: var(--dam-paper, #fff);
 }
 .dam-inbox-mod__select:focus {
   outline: 2px solid color-mix(in srgb, var(--dam-primary, #005A29) 45%, transparent);
@@ -10492,7 +10492,7 @@ button.dam-viz-badge:focus-visible,
   padding: 16px;
 }
 .dam-viz-request-box {
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-radius: 14px;
   max-width: 420px;
   width: 100%;
@@ -10506,7 +10506,7 @@ button.dam-viz-badge:focus-visible,
   right: 12px;
   border: none;
   background: #f4f4f6;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   border-radius: 50%;
   width: 32px;
   height: 32px;
@@ -10524,7 +10524,7 @@ button.dam-viz-badge:focus-visible,
 .dam-viz-request-title {
   font-size: 16px;
   font-weight: 700;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   margin: 0 28px 4px 0;
   display: flex;
   align-items: center;
@@ -10532,7 +10532,7 @@ button.dam-viz-badge:focus-visible,
 }
 .dam-viz-request-sub {
   font-size: 12px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   margin: 0 0 16px;
 }
 .dam-viz-request-channels {
@@ -10550,7 +10550,7 @@ button.dam-viz-badge:focus-visible,
   border-radius: 10px;
   cursor: pointer;
   font-size: 13px;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   min-height: 44px;
 }
 .dam-viz-request-channel:hover {
@@ -10569,8 +10569,8 @@ button.dam-viz-badge:focus-visible,
 .dam-viz-request-bulk button {
   flex: 1;
   border: 1px solid #ececf2;
-  background: #fff;
-  color: #464255;
+  background: var(--dam-paper, #fff);
+  color: var(--dam-ink, #464255);
   border-radius: 8px;
   font-size: 12px;
   padding: 8px;
@@ -10684,7 +10684,7 @@ button.dam-viz-badge:focus-visible,
   cursor: pointer;
 }
 #damThumbPicker .dam-tag-edit-popover__confirm {
-  background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, var(--dam-paper, #fff));
   border: 1px solid color-mix(in srgb, var(--dam-primary, #005A29) 55%, #fff);
   color: var(--dam-chrome-ink, var(--dam-text));
 }
@@ -10698,7 +10698,7 @@ button.dam-viz-badge:focus-visible,
   cursor: not-allowed;
 }
 #damThumbPicker .dam-tag-edit-popover__cancel {
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border: 1px solid #e2e2ea;
   color: #6b6b76;
 }
@@ -10715,7 +10715,7 @@ button.dam-viz-badge:focus-visible,
   box-sizing: border-box;
   padding: 10px 14px;
   border-bottom: 1px solid #ececf2;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   flex: 0 0 auto;
 }
 #damAssocEditPopover .dam-thumb-picker__head strong,
@@ -10726,7 +10726,7 @@ button.dam-viz-badge:focus-visible,
   font-size: 15px;
   font-weight: 600;
   line-height: 1.25;
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 #damTagEditPopover .dam-thumb-picker__head .dam-viz-modal-close,
 #damTagEditPopover .dam-tag-edit-popover__head .dam-viz-modal-close {
@@ -10741,7 +10741,7 @@ button.dam-viz-badge:focus-visible,
 .dam-tag-edit-popover {
   position: absolute;
   z-index: 10060;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-radius: 14px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
   min-width: 240px;
@@ -10762,13 +10762,13 @@ button.dam-viz-badge:focus-visible,
 .dam-tag-edit-popover__head {
   font-size: 15px;
   font-weight: 600;
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 .dam-tag-edit-popover__close {
   border: 1px solid #e7e7e7;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   cursor: pointer;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   width: 32px;
   min-width: 32px;
   height: 32px;
@@ -10791,7 +10791,7 @@ button.dam-viz-badge:focus-visible,
   padding: 10px 14px;
   border-bottom: 1px solid #ececf2;
   flex: 0 0 auto;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 .dam-tag-edit-popover__search-wrap i {
   font-size: 14px;
@@ -10803,12 +10803,12 @@ button.dam-viz-badge:focus-visible,
   border: none;
   outline: none;
   font-size: 12px;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   background: transparent;
 }
 .dam-tag-edit-popover__empty {
   font-size: 11px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   padding: 10px 8px;
   margin: 0;
   text-align: center;
@@ -10832,7 +10832,7 @@ button.dam-viz-badge:focus-visible,
 .dam-tag-edit-popover__opt--none {
   border-bottom: 1px dashed #ececf2;
   margin-bottom: 4px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 /* Footer flush: shared .dam-dialog-actions / .dam-modal-footer grid above.
    Keep button anatomy aligned with COMBO (#damThumbPicker). */
@@ -10863,13 +10863,13 @@ button.dam-viz-badge:focus-visible,
 }
 .dam-tag-edit-popover__confirm,
 #damTagEditPopover .dam-tag-edit-popover__confirm {
-  background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, var(--dam-paper, #fff));
   border-color: color-mix(in srgb, var(--dam-primary, #005A29) 55%, #fff);
   color: var(--dam-chrome-ink, var(--dam-text));
 }
 .dam-tag-edit-popover__confirm:hover,
 #damTagEditPopover .dam-tag-edit-popover__confirm:hover {
-  background: color-mix(in srgb, var(--dam-primary, #005A29) 22%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 22%, var(--dam-paper, #fff));
 }
 .dam-tag-edit-popover__confirm[data-confirm],
 #damTagEditPopover .dam-tag-edit-popover__confirm[data-confirm] {
@@ -10883,7 +10883,7 @@ button.dam-viz-badge:focus-visible,
 }
 .dam-tag-edit-popover__cancel,
 #damTagEditPopover .dam-tag-edit-popover__cancel {
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-color: #e2e2ea;
   color: #6b6b76;
 }
@@ -10903,7 +10903,7 @@ button.dam-viz-badge:focus-visible,
   padding: 8px 10px;
   border-radius: 6px;
   font-size: 13px;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -10964,11 +10964,11 @@ button.dam-viz-badge:focus-visible,
   padding: 10px 12px;
   border: 1px solid #ececf2;
   border-radius: 10px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
 }
 .dam-moderation-item__main strong {
   font-size: 13px;
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 .dam-moderation-item__actions {
   display: flex;
@@ -11006,8 +11006,8 @@ button.dam-viz-badge:focus-visible,
   border-radius: 8px;
   padding: 6px 8px;
   min-height: 36px;
-  color: #464255;
-  background: #fff;
+  color: var(--dam-ink, #464255);
+  background: var(--dam-paper, #fff);
 }
 
 /* Picker miniatury (przegladarka) */
@@ -11022,7 +11022,7 @@ button.dam-viz-badge:focus-visible,
   padding: 16px;
 }
 .dam-thumb-picker-box {
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-radius: 14px;
   max-width: 720px;
   width: 100%;
@@ -11040,7 +11040,7 @@ button.dam-viz-badge:focus-visible,
 }
 .dam-thumb-picker__path {
   font-size: 12px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   word-break: break-all;
   margin: 0 0 12px;
 }
@@ -11062,7 +11062,7 @@ button.dam-viz-badge:focus-visible,
   border: 1px solid #e7e7e7;
   border-radius: 8px;
   font-size: 12px;
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 .dam-thumb-picker__grid {
   display: grid;
@@ -11074,7 +11074,7 @@ button.dam-viz-badge:focus-visible,
   flex-direction: column;
   gap: 6px;
   padding: 8px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border: 1px solid #e7e7e7;
   border-radius: 10px;
   cursor: pointer;
@@ -11095,7 +11095,7 @@ button.dam-viz-badge:focus-visible,
   width: 100%;
   height: 90px;
   object-fit: contain;
-  background: #fff;
+  background: var(--dam-paper, #fff);
 }
 .dam-thumb-picker__name {
   font-size: 11px;
@@ -11135,7 +11135,7 @@ button.dam-viz-badge:focus-visible,
   border-radius: 50%;
   overflow: hidden;
   border: 2px solid color-mix(in srgb, var(--dam-primary, #005A29) 35%, transparent);
-  background: #fff;
+  background: var(--dam-paper, #fff);
 }
 
 .dam-user-menu__avatar img {
@@ -11157,7 +11157,7 @@ button.dam-viz-badge:focus-visible,
   font-size: 15px;
   line-height: 1.25;
   font-weight: 700;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   letter-spacing: -0.01em;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -11172,7 +11172,7 @@ button.dam-viz-badge:focus-visible,
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -11200,7 +11200,7 @@ button.dam-viz-badge:focus-visible,
   border-radius: 10px;
   font-size: 14px !important;
   font-weight: 600 !important;
-  color: #464255 !important;
+  color: var(--dam-ink, #464255) !important;
   text-decoration: none !important;
   transition: background 0.15s ease, color 0.15s ease;
 }
@@ -11243,7 +11243,7 @@ button.dam-viz-badge:focus-visible,
 }
 
 .geex-content__header__popup--author.dam-user-menu .dam-user-menu__legal-link:hover {
-  color: #8b8d97 !important;
+  color: var(--dam-ink-muted, #8b8d97) !important;
   text-decoration: underline !important;
   background: transparent !important;
 }
@@ -11271,7 +11271,7 @@ button.dam-viz-badge:focus-visible,
   padding: 0 14px !important;
   border-radius: 10px !important;
   background: #f0eef3 !important;
-  color: #464255 !important;
+  color: var(--dam-ink, #464255) !important;
   font-size: 13.5px !important;
   font-weight: 650 !important;
   text-decoration: none !important;
@@ -11627,7 +11627,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
 #damMediaPreviewStudio .dam-media-preview__studio-label {
   font-size: 11px;
   font-weight: 600;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   letter-spacing: 0.03em;
   text-transform: uppercase;
   min-width: 86px;
@@ -11665,13 +11665,13 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
 #damMediaPreviewStudio .dam-media-preview__studio-chip:hover,
 #damVizModalStudio .dam-media-preview__studio-chip:hover {
   border-color: var(--dam-primary, #005A29);
-  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-paper, #fff));
   color: color-mix(in srgb, var(--dam-primary, #005A29) 85%, #3d2f4a);
 }
 /* Quiet outline selection — no solid purple fill (readable muted accent). */
 #damMediaPreviewStudio .dam-media-preview__studio-chip.is-active,
 #damVizModalStudio .dam-media-preview__studio-chip.is-active {
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border: 1px solid var(--dam-primary, #005A29);
   color: color-mix(in srgb, var(--dam-primary, #005A29) 72%, #3d2f4a);
   box-shadow: none;
@@ -11701,7 +11701,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   aspect-ratio: 1 / 1;
   border-radius: 10px;
   background: rgba(70, 66, 85, 0.06);
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   font-size: 22px;
 }
 #damMediaPreviewLinkedAssets.is-collapsed-assets .dam-media-preview__assoc-item--extra,
@@ -11749,7 +11749,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   padding: 10px;
   border: 1px solid rgba(70, 66, 85, 0.12);
   border-radius: 10px;
-  background: color-mix(in srgb, var(--dam-surface-muted, #f5f6fa) 60%, #fff);
+  background: color-mix(in srgb, var(--dam-surface-muted, #f5f6fa) 60%, var(--dam-paper, #fff));
   max-height: min(240px, 32vh);
   overflow-x: hidden;
   overflow-y: auto;
@@ -11896,7 +11896,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
 .dam-life-hist__filter-label {
   font-size: 11px;
   font-weight: 600;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
@@ -12012,7 +12012,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
 .dam-life-hist__scope {
   font-size: 10.5px;
   font-weight: 600;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -12060,7 +12060,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   margin-top: 12px;
   border: 1px dashed rgba(70, 66, 85, 0.16);
   border-radius: 12px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   text-align: center;
 }
 .dam-life-hist__empty i {
@@ -12083,7 +12083,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   display: flex;
   flex-direction: column;
   border-radius: 14px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   padding: 0;
   overflow: hidden;
   box-shadow: 0 18px 48px rgba(40, 34, 60, 0.24);
@@ -12108,7 +12108,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
 .dam-thumb-picker__grid[data-view="thumbs"] .dam-thumb-picker__item--folder,
 .dam-thumb-picker__grid[data-view="tiles"] .dam-thumb-picker__item--folder {
   flex-direction: column;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-color: #ececf1;
 }
 .dam-thumb-picker__head {
@@ -12121,7 +12121,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
 }
 .dam-thumb-picker__head strong {
   font-size: 15px;
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 .dam-thumb-picker__head .dam-viz-modal-close,
 #damThumbPickerClose {
@@ -12174,7 +12174,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   justify-content: center;
   border: 1px solid #ececf1;
   border-radius: 8px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   color: #6b6b76;
   cursor: pointer;
   font-size: 15px;
@@ -12218,7 +12218,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   color: var(--dam-primary, #005A29);
 }
 .dam-thumb-picker__crumb.is-current {
-  color: #464255;
+  color: var(--dam-ink, #464255);
   font-weight: 600;
   cursor: default;
 }
@@ -12243,7 +12243,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   cursor: pointer;
   font-size: 14px;
 }
@@ -12280,7 +12280,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   padding: 10px 8px;
   border: 1px solid #ececf1;
   border-radius: 12px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   cursor: pointer;
   text-align: center;
   transition: border-color 0.14s ease, box-shadow 0.14s ease, transform 0.14s ease;
@@ -12321,7 +12321,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
 }
 .dam-thumb-picker__grid[data-view] .dam-thumb-picker__name {
   font-size: 11.5px;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   line-height: 1.3;
   word-break: break-word;
   min-width: 0;
@@ -12346,7 +12346,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
 }
 .dam-thumb-picker__status {
   grid-column: 1 / -1;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   font-size: 13px;
   padding: 18px 4px;
   text-align: center;
@@ -12435,7 +12435,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   display: flex;
   gap: 6px;
   padding: 6px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border: 1px solid #ececf1;
   border-radius: 999px;
   box-shadow: 0 8px 28px rgb(70 66 85 / 14%);
@@ -12450,7 +12450,7 @@ html[data-theme="dark"] .dam-assoc-skeleton::after {
   border: none;
   border-radius: 50%;
   background: #f8f8fa;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   text-decoration: none;
   cursor: pointer;
   transition: background 0.14s ease, color 0.14s ease, transform 0.14s ease;

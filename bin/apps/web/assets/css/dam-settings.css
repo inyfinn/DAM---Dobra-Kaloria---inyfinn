@@ -259,7 +259,7 @@
   max-width: 520px;
   border: 1px solid rgba(70, 66, 85, 0.12);
   border-radius: 12px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   box-shadow: 0 8px 24px rgba(23, 22, 30, 0.1);
   display: flex;
   flex-direction: column;
@@ -286,7 +286,7 @@
 }
 .dam-settings-jump-results__btn:hover,
 .dam-settings-jump-results__btn:focus-visible {
-  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 8%, var(--dam-paper, #fff));
   outline: none;
 }
 .dam-settings-jump-results__btn i {
@@ -307,7 +307,7 @@
 }
 .dam-settings-jump-results__where {
   font-size: 11.5px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 .dam-settings-grid.is-searching .dam-sw-row.is-search-miss {
   display: none;
@@ -333,7 +333,7 @@
   margin-top: 12px;
   padding: 14px 16px 12px;
   border: 1px solid rgba(70, 66, 85, 0.1);
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-radius: 12px;
 }
 .dam-changelog-history--panel .dam-life-hist__list-host {
@@ -1085,7 +1085,7 @@
   border-radius: var(--dam-radius-btn, 6px);
 }
 .dam-naming-pill--ui {
-  background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 14%, var(--dam-paper, #fff));
   color: var(--dam-primary, #005A29);
 }
 .dam-naming-pill--disk {

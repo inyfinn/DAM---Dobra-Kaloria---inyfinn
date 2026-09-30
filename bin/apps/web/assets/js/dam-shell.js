@@ -145,7 +145,7 @@
   var LOGO_SRC_LIGHT = "assets/img/logo-dk-green.svg";
   var LOGO_SRC_DARK = "assets/img/logo-dk-green.svg";
   var LOGO_SRC = LOGO_SRC_LIGHT;
-  var FAVICON_SRC = "assets/img/favicon-dk.svg";
+  var FAVICON_SRC = "assets/img/dam-256.png"; /* nowa ikona DAM (design system DK 1.3.1) */
   var MANIFEST_HREF = "manifest.webmanifest";
 
   /** Global accent CSS (chrome only) - once per page. */
@@ -154,7 +154,7 @@
     if (!head || head.querySelector('link[data-dam-accent-css]')) return;
     var link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "./assets/css/dam-accent.css?v=5.0.196";
+    link.href = "./assets/css/dam-accent.css?v=2.5.2";
     link.setAttribute("data-dam-accent-css", "1");
     head.appendChild(link);
   }
@@ -189,9 +189,9 @@
       el.setAttribute("content", content);
     }
 
-    upsertLink("icon", { type: "image/svg+xml", href: FAVICON_SRC + "?v=5.0.196" });
-    upsertLink("shortcut icon", { type: "image/svg+xml", href: FAVICON_SRC + "?v=5.0.196" });
-    upsertLink("apple-touch-icon", { href: LOGO_SRC_LIGHT });
+    upsertLink("icon", { type: "image/png", href: FAVICON_SRC + "?v=2.5.2" });
+    upsertLink("shortcut icon", { href: "assets/img/dam.ico?v=2.5.2" });
+    upsertLink("apple-touch-icon", { href: FAVICON_SRC + "?v=2.5.2" });
     upsertLink("manifest", { href: MANIFEST_HREF });
     upsertMeta("theme-color", "#008244");
     upsertMeta("apple-mobile-web-app-capable", "yes");
@@ -1464,20 +1464,20 @@
         '<ul class="geex-content__header__quickaction">' +
           '<li class="geex-content__header__quickaction__item">' +
             '<a href="#" class="geex-content__header__quickaction__link" aria-label="Szukaj" data-dam-tip="Szukaj">' +
-              '<i class="uil uil-search" style="font-size:22px;color:#464255"></i></a>' +
+              '<i class="uil uil-search" style="font-size:22px;color:var(--dam-ink, #464255)"></i></a>' +
             '<div class="geex-content__header__searchform geex-content__header__popup">' +
               '<input type="text" placeholder="Szukaj..." class="geex-content__header__btn" />' +
               '<i class="uil uil-search"></i></div>' +
           "</li>" +
           '<li class="geex-content__header__quickaction__item">' +
             '<a href="#" class="geex-content__header__quickaction__link" id="damMsgBellLink" aria-label="Wiadomości" data-dam-tip="Wiadomości Asana i Teams">' +
-              '<i class="uil uil-comment-alt-dots" style="font-size:22px;color:#464255"></i>' +
+              '<i class="uil uil-comment-alt-dots" style="font-size:22px;color:var(--dam-ink, #464255)"></i>' +
               '<span class="geex-content__header__badge dam-badge--msg" id="damMsgBadge" hidden>0</span></a>' +
             '<div class="geex-content__header__popup geex-content__header__popup--message" role="dialog" aria-label="Wiadomości"></div>' +
           "</li>" +
           '<li class="geex-content__header__quickaction__item">' +
             '<a href="#" class="geex-content__header__quickaction__link" id="damNotifBellLink" aria-label="Powiadomienia" data-dam-tip="Powiadomienia operacyjne">' +
-              '<i class="uil uil-bell" style="font-size:22px;color:#464255"></i>' +
+              '<i class="uil uil-bell" style="font-size:22px;color:var(--dam-ink, #464255)"></i>' +
               '<span class="geex-content__header__badge dam-badge--notif" id="damNotifBadge" hidden>0</span></a>' +
             '<div class="geex-content__header__popup geex-content__header__popup--notification" role="dialog" aria-label="Powiadomienia"></div>' +
           "</li>" +
@@ -3267,7 +3267,7 @@
     }
     if (!window.DamCacheSync && !document.querySelector("script[data-dam-cache-sync]")) {
       var cs = document.createElement("script");
-      cs.src = "assets/js/dam-cache-sync.js?v=6.0.13";
+      cs.src = "assets/js/dam-cache-sync.js?v=2.5.2";
       cs.setAttribute("data-dam-cache-sync", "1");
       document.head.appendChild(cs);
     }

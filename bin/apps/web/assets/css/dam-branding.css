@@ -473,7 +473,7 @@
   font-weight: 700;
   letter-spacing: 0.01em;
   border-color: color-mix(in srgb, var(--dam-primary, #005A29) 45%, var(--dam-border, #ececf2));
-  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #005A29) 10%, var(--dam-paper, #fff));
   color: var(--dam-text, #464255);
 }
 
@@ -703,7 +703,7 @@
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: none;
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 .dam-branding-thumb__nosync-id {
   font-size: 10px !important;
@@ -1135,7 +1135,7 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   margin-bottom: 6px;
 }
 
@@ -1199,7 +1199,7 @@
   text-transform: none;
   letter-spacing: 0;
   font-weight: 600;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 
 .dam-branding-tag-filters .dam-tag-group-pills .dam-viz-badge,
@@ -1358,7 +1358,7 @@
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   background: #faf9fc;
   text-align: center;
   -moz-appearance: textfield;
@@ -1426,7 +1426,7 @@
 .dam-branding-date-range__label {
   font-size: 12px;
   font-weight: 500;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 
 .dam-branding-date-range input[type="date"],
@@ -1671,7 +1671,7 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
   padding: 8px 14px;
   border: 1px solid var(--dam-hub-border, #e0e0ea);
   border-radius: 999px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   color: var(--dam-text, #1e1e2f);
   font-size: 13px;
   font-weight: 600;
@@ -2001,7 +2001,7 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
 
 .dam-media-preview__ext-tag--default {
   background: rgba(71, 85, 105, 0.1);
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 
 .dam-media-preview__title-meta {
@@ -2162,7 +2162,7 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 
 .dam-media-preview__variant-grid,
@@ -2314,7 +2314,7 @@ html[data-theme="dark"] .dam-media-preview__elementy-panel .dam-media-preview__a
   font-weight: 600;
   line-height: 1.3;
   text-align: center;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   width: 100%;
   cursor: pointer;
   word-break: normal;
@@ -2336,7 +2336,7 @@ html[data-theme="dark"] .dam-media-preview__elementy-panel .dam-media-preview__a
   font-size: 9px;
   font-weight: 500;
   line-height: 1.2;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   background: #f4f4f6;
   border: 1px solid #ececf1;
   max-width: 100%;
@@ -2378,12 +2378,12 @@ html[data-theme="dark"] .dam-media-preview__elementy-panel .dam-media-preview__a
 
 .dam-assoc-edit-toolbar__btn {
   border: 1px solid #e2e2ea;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-radius: 999px;
   padding: 6px 12px;
   font-size: 11px;
   font-weight: 600;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -2433,7 +2433,7 @@ html[data-theme="dark"] .dam-media-preview__elementy-panel .dam-media-preview__a
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 
 .dam-assoc-edit-popover__pinned {
@@ -2508,12 +2508,12 @@ html[data-theme="dark"] .dam-media-preview__elementy-panel .dam-media-preview__a
 .dam-assoc-edit-popover__label {
   font-size: 13px;
   font-weight: 600;
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 
 .dam-assoc-edit-popover__sub {
   font-size: 11px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
 }
 
 .dam-assoc-edit-popover__check {
@@ -2739,7 +2739,7 @@ body.dam-media-preview-open {
 }
 
 .dam-media-preview__quality-pill.is-active {
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-color: var(--dam-primary, #005A29);
   border-width: 1px;
   color: color-mix(in srgb, var(--dam-primary, #005A29) 72%, #3d2f4a);
@@ -2897,7 +2897,7 @@ body.dam-media-preview-open {
   padding: 8px;
   border: 1px solid #e7e7ec;
   border-radius: 6px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   cursor: pointer;
   text-align: left;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
@@ -2910,14 +2910,14 @@ body.dam-media-preview-open {
   object-fit: contain;
   border-radius: 6px;
   /* thumbPick20260721a: solid white media slot - no gray bleed under transparent PNGs */
-  background: #fff;
+  background: var(--dam-paper, #fff);
   background-image: none;
 }
 
 .dam-media-preview__all-file-label {
   font-size: 10px;
   font-weight: 600;
-  color: #464255;
+  color: var(--dam-ink, #464255);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2941,7 +2941,7 @@ body.dam-media-preview-open {
   padding: 4px 6px 6px;
   border: 1px solid #e7e7ec;
   border-radius: 6px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
 }
 
 .dam-media-preview__studio-frame[hidden] {
@@ -3024,7 +3024,7 @@ body.dam-media-preview-open {
 }
 
 .dam-media-preview__studio-chip.is-active {
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-color: var(--dam-primary, #005A29);
   border-width: 1px;
   color: color-mix(in srgb, var(--dam-primary, #005A29) 72%, #3d2f4a);
@@ -3090,7 +3090,7 @@ body.dam-media-preview-open {
   padding: 10px 6px 8px;
   min-height: 0;
   box-sizing: border-box;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-top: 1px solid rgba(70, 66, 85, 0.08);
   justify-content: flex-start !important;
   width: max-content;
@@ -3110,7 +3110,7 @@ body.dam-media-preview-open {
   position: sticky;
   bottom: 0;
   z-index: 40;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   padding-left: 6px;
   padding-right: 6px;
   margin-top: 0 !important;

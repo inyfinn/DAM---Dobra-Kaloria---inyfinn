@@ -1050,7 +1050,7 @@
       var meta = document.getElementById("damCostMeta");
       if (meta) {
         meta.innerHTML =
-          '<p style="color:#FF5653">Nie udalo sie zaladowac kosztów: ' +
+          '<p style="color:var(--dam-ink-danger, #FF5653)">Nie udalo sie zaladowac kosztów: ' +
           escapeHtml(err.message || String(err)) +
           "</p>" +
           '<p class="dam-cost-card__note">Uruchom: python apps/web/scripts/build-project-costs.py</p>';

@@ -1767,7 +1767,7 @@ html[data-theme="dark"] .dam-viz-modal__zoom-label {
   border-radius: 6px;
   border: 1px solid rgba(70, 66, 85, 0.14);
   background: rgba(255, 255, 255, 0.92);
-  color: #464255;
+  color: var(--dam-ink, #464255);
   display: inline-flex;
   align-items: center;
   justify-content: center;

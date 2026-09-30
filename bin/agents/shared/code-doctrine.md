@@ -2373,3 +2373,28 @@ mial chronic - dwa zapisy bez wersjonowania nadpisujace sie wzajemnie.
     istnieje, a build naprawiono pozniej, nie podbijaj wersji tylko po to, zeby
     dowiezc brakujacy plik - sciagnij artefakt i zrob `gh release upload <tag> <plik>`.
     Warunek: `git diff <tag>..<galaz-builda>` nie moze dotykac kodu aplikacji.
+
+15. **2026-09-30 — styl zestawu przegrywal z dam-accent.css (v2.5.2).**
+    Zolty przycisk glownej akcji (styl Dobra Kaloria) dzialal na logowaniu, ale w oknie
+    materialu "Przejdz" zostawal zielony. `dam-accent.css` jest wstrzykiwany PO arkuszach
+    strony i ma `button.geex-btn.geex-btn--primary { background: ... !important }`
+    (specyficznosc 0,3,1). Regula `html[data-dam-style="dk"] .geex-btn--primary` (0,2,1)
+    przegrywala mimo `!important`. Diagnoza w 1 kroku: w przegladarce przejdz po
+    `document.styleSheets`, zbierz reguly, dla ktorych `el.matches(selectorText)`, i wypisz
+    je z plikiem i priorytetem - zamiast zgadywac po kolejnosci `<link>`.
+    Zasada: nakladka motywu powtarza selektory "najsilniejszego" konkurenta (`button.`/`a.`
+    + podwojona klasa), a nie tylko podbija `!important`.
+
+16. **2026-09-30 — `os.kill(pid, 0)` na Windows ZABIJA proces (v2.5.2).**
+    Na POSIX to test "czy zyje". Na Windows Python wola `TerminateProcess(pid, 0)`.
+    Plansza startowa sprawdza, czy program jeszcze zyje, przez `OpenProcess` +
+    `GetExitCodeProcess == STILL_ACTIVE` (`dam_splash._parent_alive`); `os.kill` tylko
+    poza Windows.
+
+17. **2026-09-30 — pywebview + `file://...html?query` = "Nie mozna odnalezc pliku" (v2.5.2).**
+    Plansza `dam-splash.html` otwierana z dysku z `?eta=6` pokazywala strone bledu WebView2.
+    Parametry dla strony z dysku przekazuj we `#fragmencie` (`#eta=6&t0=...`).
+    Drugie odkrycie tej samej planszy: okno bez aktywacji (`focus=False`) Windows kladzie POD
+    aktywnym oknem innego programu. Jednorazowe `SetWindowPos(HWND_TOPMOST)` +
+    `SetWindowPos(HWND_NOTOPMOST)` z `SWP_NOACTIVATE` pokazuje je bez kradziezy fokusu
+    i bez zostawania na wierzchu (okno programu je potem przykrywa).

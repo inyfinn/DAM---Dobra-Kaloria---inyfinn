@@ -51,7 +51,7 @@ button.geex-btn.geex-btn--primary:hover {
 /* --- Chrome: ADMIN header --- */
 .dam-admin-header-switch {
   border-color: color-mix(in srgb, var(--dam-primary, #005a29) 35%, transparent);
-  background: color-mix(in srgb, var(--dam-primary, #005a29) 8%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #005a29) 8%, var(--dam-paper, #fff));
 }
 .dam-admin-header-switch .dam-switch__label {
   color: var(--dam-primary, #005a29);
@@ -126,13 +126,13 @@ a.geex-sidebar__menu__link[aria-current="page"] i {
 }
 .dam-search-scope__btn:hover:not(:disabled):not(.is-disabled):not(.is-on) {
   border-color: color-mix(in srgb, var(--dam-primary, #005a29) 45%, var(--dam-border, #e0d6f2));
-  background: color-mix(in srgb, var(--dam-primary, #005a29) 8%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #005a29) 8%, var(--dam-paper, #fff));
 }
 
 /* --- Chrome: explorer cards hover --- */
 .dam-explorer-card:hover {
   border-color: var(--dam-primary, #005a29);
-  background: color-mix(in srgb, var(--dam-primary, #005a29) 6%, #fff);
+  background: color-mix(in srgb, var(--dam-primary, #005a29) 6%, var(--dam-paper, #fff));
 }
 
 /* --- Chrome: brand tabs active --- */

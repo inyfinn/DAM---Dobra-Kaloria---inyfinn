@@ -1,6 +1,8 @@
 /**
  * DAM ETA - design tokens (powierzchnie + typografia + akcent).
  * Light/dark = nakladka CSS na html[data-theme]. Akcent = --dam-primary.
+ * 2.5.2: zestawy "Dobra Kaloria 1 - zielen" i "Dobra Kaloria 2 - krem" (dam-theme.js DK_PACKS)
+ * maluja powierzchnie inline i wlaczaja html[data-dam-style="dk"] - blok na koncu pliku.
  * Geex realign F2 (2026-07-21): draft ≤20 z audit; nowe tylko z konsumentem w primitives/docs.
  */
 :root {
@@ -12,6 +14,8 @@
   --dam-brand-green: #008244;
   --dam-primary: #007936;
   --dam-primary-hover: #00642E;
+  /* Tekst na wypelnieniu akcentem (zestawy DK: z DK_PACKS, np. ciemny na jasnym akcencie) */
+  --dam-on-primary: #FFFFFF;
   --primary-color: var(--dam-primary, #007936);
   --dam-dark: #060F0C;
   --dam-input-bg: #FFFFFF;
@@ -33,6 +37,9 @@
      Canvas #F6F7F6 (not sage #F4F7F5, not cream #FDF8EC). */
   --dam-surface-sunken: #F2F3F2;
   --dam-surface: #FFFFFF;
+  /* Twarda biel tla komponentow (dawne literaly #fff w arkuszach). Poza zestawami DK zawsze
+     #FFFFFF, takze w trybie ciemnym (wyglad bez zmian); w DK = powierzchnia karty (dam-theme.js). */
+  --dam-paper: #FFFFFF;
   --dam-surface-muted: #F6F7F6;
   --dam-surface-elevated: #FFFFFF;
   --dam-surface-raised: #FFFFFF;
@@ -172,6 +179,7 @@ html[data-theme="dark"] {
   /* Dark ladder — DS §10.7: canvas #060F0C, tiles #0B1814, chrome #0E1E19. */
   --dam-surface-sunken: #081310;
   --dam-surface: #0B1814;
+  --dam-paper: #FFFFFF;
   --dam-surface-muted: #060F0C;
   --dam-bg: #060F0C;
   --dam-border: #143028;
@@ -219,6 +227,65 @@ html[data-theme="dark"] {
   --danger-color-transparent: color-mix(in srgb, var(--dam-danger) 22%, transparent);
   --info-color-transparent: color-mix(in srgb, var(--info-color) 22%, transparent);
   --dark-color-transparent: color-mix(in srgb, var(--dam-dark) 35%, transparent);
+}
+
+/* Styl Dobra Kaloria (2.5.2, 2026-09-30) - zestawy "Dobra Kaloria 1 - zielen" (domyslny)
+   i "Dobra Kaloria 2 - krem", w trybie jasnym i ciemnym. Zrodlo: design system Dobra Kaloria
+   1.3.1 = wyglad programu "Stworz prezentacje" (skill ds-dobra-kaloria).
+   Kolory: dam-theme.js (DK_PACKS, inline). Tu tylko to, czego JS nie maluje: czcionki,
+   zolta glowna akcja, ksztalt, ruch. Komponenty: dam-theme-dk.css. Gestosc list bez zmian.
+   Decyzja usera 30.09: krem #FDF8EC dozwolony w zestawie DK 2 (dawny zapis "not cream"
+   w DESIGN_SYSTEM.md §10.7 dotyczy juz tylko zestawow nie-DK). */
+html[data-dam-style="dk"] {
+  --dam-font: "Lato", "Segoe UI", Arial, sans-serif;
+  --dam-font-display: "Mindset", "Arial Narrow", "Segoe UI", Arial, sans-serif;
+  /* Glowna akcja: zolty z brazowym tekstem, jedna na ekran - w obu trybach */
+  --dam-cta-bg: #FFD42A;
+  --dam-cta-bg-hover: #F6C700;
+  --dam-cta-ink: #3B2A20;
+  /* Ksztalt DS: przycisk 4, pole 8, karta 12 */
+  --dam-radius-md: 12px;
+  --dam-radius-sm: 8px;
+  --dam-radius-btn: 4px;
+  --dam-radius-btn-compact: 4px;
+  --dam-control-radius: 8px;
+  /* Cien karty podbarwiony (--dam-shadow-rgb z DK_PACKS: braz / sosna / las / kakao) */
+  --dam-shadow-card: 0 1px 2px rgb(var(--dam-shadow-rgb) / 0.06), 0 4px 14px rgb(var(--dam-shadow-rgb) / 0.08);
+  /* Spokojny ruch (DS .15-.28 s, ease-out) */
+  --dam-anim-hover: 0.18s;
+  /* Warstwa komponentow DK (dam-dk-components.css). Wartosci dokladne maluje dam-theme.js
+     (DK_PACKS); tu domyslne = DK 1 jasny, zeby arkusz dzialal takze przed skryptem. */
+  --dam-radius-lg: 16px;
+  --dam-surface-0: #F8FBF9;
+  --dam-surface-1: #EFF5F1;
+  --dam-surface-2: #E6F0E8;
+  --dam-surface-3: #DDEAE0;
+  --dam-surface-4: #D4E5D8;
+  --dam-brand-soft: #DDEBE1;
+  --dam-brand-soft-strong: #CFE0D4;
+  --dam-switch-off: #6E8C78;
+  --dam-disabled-bg: #E4EEE7;
+  --dam-inverse-bg: #17291D;
+  --dam-on-inverse: #FFFFFF;
+  --dam-warning-bg: #FFF4D6;
+  --dam-warning-border: #EBCB6B;
+  --dam-warning-text: #6F4A00;
+}
+html[data-dam-style="dk"][data-theme="dark"] {
+  --dam-surface-0: #0F1F15;
+  --dam-surface-1: #14281C;
+  --dam-surface-2: #1A3123;
+  --dam-surface-3: #203A2A;
+  --dam-surface-4: #264431;
+  --dam-brand-soft: #1D3526;
+  --dam-brand-soft-strong: #26422F;
+  --dam-switch-off: #7E9C88;
+  --dam-disabled-bg: #26422F;
+  --dam-inverse-bg: #F5F1E8;
+  --dam-on-inverse: #0F1F15;
+  --dam-warning-bg: #1D3526;
+  --dam-warning-border: #7A4E00;
+  --dam-warning-text: #EBCB6B;
 }
 
 /* iOS Safari zooms any focused control below 16 px. Desktop density stays 12. */

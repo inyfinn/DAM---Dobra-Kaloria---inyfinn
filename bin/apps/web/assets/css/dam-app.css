@@ -471,7 +471,7 @@
 }
 
 .dam-card-checklist .dam-check-brak .dam-check-icon {
-  color: #FF5653;
+  color: var(--dam-ink-danger, #FF5653);
 }
 
 .dam-card-checklist .dam-check-ok .dam-check-label {
@@ -721,7 +721,7 @@ a.geex-btn__primary {
 }
 
 .dam-action-tile:hover:not(:disabled) {
-  background: #fff;
+  background: var(--dam-paper, #fff);
   border-color: color-mix(in srgb, var(--dam-primary, #005A29) 35%, transparent);
   transform: translateY(-1px);
 }
@@ -936,7 +936,7 @@ h2.geex-content__header__title.dam-project-title--light,
 }
 
 .dam-slot-row.dam-check-brak .dam-check-icon {
-  color: #FF5653;
+  color: var(--dam-ink-danger, #FF5653);
 }
 
 .dam-slot-row .dam-check-label {

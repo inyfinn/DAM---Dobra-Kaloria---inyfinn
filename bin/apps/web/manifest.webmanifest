@@ -10,6 +10,12 @@
   "lang": "pl",
   "icons": [
     {
+      "src": "assets/img/dam-256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "assets/img/favicon-dk.svg",
       "sizes": "any",
       "type": "image/svg+xml",

@@ -293,7 +293,7 @@
         } else {
           // Lazy-load samouczka gdy strona nie dolaczyla skryptu w HTML
           var s = document.createElement("script");
-          s.src = "assets/js/dam-tutorial.js?v=2.1.0";
+          s.src = "assets/js/dam-tutorial.js?v=2.5.2";
           s.onload = function () {
             if (window.DamTutorial && typeof window.DamTutorial.restart === "function") {
               window.DamTutorial.restart();

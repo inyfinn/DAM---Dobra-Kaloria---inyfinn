@@ -17,7 +17,7 @@
       "display:inline-flex;align-items:center;justify-content:center;gap:6px;" +
       "min-height:34px;height:auto;padding:8px 12px;margin:0;box-sizing:border-box;" +
       "font-family:inherit;font-size:12px!important;font-weight:500;line-height:1.2;" +
-      "border-radius:8px;border:1px solid #e7e7e7;background:#fff;color:#464255;" +
+      "border-radius:8px;border:1px solid #e7e7e7;background:var(--dam-paper, #fff);color:var(--dam-ink, #464255);" +
       "text-decoration:none;cursor:pointer;box-shadow:none;" +
       "-webkit-appearance:none;appearance:none;" +
       "transition:background .15s ease,border-color .15s ease,color .15s ease}" +

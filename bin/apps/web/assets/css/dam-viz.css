@@ -126,8 +126,8 @@
   line-height: 1.2;
   border-radius: 8px;
   border: 1px solid #e7e7e7;
-  background: #fff;
-  color: #464255;
+  background: var(--dam-paper, #fff);
+  color: var(--dam-ink, #464255);
   text-decoration: none;
   cursor: pointer;
   box-shadow: none;
@@ -157,7 +157,7 @@
 
 .dam-changelog-bar__hint {
   font-size: 11px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   line-height: 1.25;
   max-width: min(340px, 36vw);
   overflow: hidden;
@@ -191,7 +191,7 @@
 .dam-global-search-block .dam-viz-grid-toolbar .dam-toolbar-status,
 .dam-global-search-block #vizStatus.dam-toolbar-status {
   font-size: 12px;
-  color: #8b8d97;
+  color: var(--dam-ink-muted, #8b8d97);
   line-height: 1.35;
   margin: 0 0 15px;
   min-width: 0;

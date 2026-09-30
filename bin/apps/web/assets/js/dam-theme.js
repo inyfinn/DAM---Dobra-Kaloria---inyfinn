@@ -1,5 +1,15 @@
 /**
  * DAM theme overlay - jasny / ciemny / jak system + zestawy + dostrojenie HSL.
+ * 2.5.2 (2026-09-30): zestaw "Dobra Kaloria" zastapiony dwoma zestawami w stylu programu
+ * "Stworz prezentacje" (design system Dobra Kaloria 1.3.1, skill ds-dobra-kaloria):
+ *   "dobra-kaloria"      = Dobra Kaloria 1 - zielen: jasny (L0 #F8FBF9) / ciemna zielen lesna (domyslny);
+ *   "dobra-kaloria-krem" = Dobra Kaloria 2 - krem:   jasny kremowy (L0 #FEFCF6) / ciemny krem.
+ * Kazdy dziala w obu trybach. Zestawy DK maluja dokladne wartosci DS (DK_PACKS) i wlaczaja
+ * styl DK (html[data-dam-style="dk"]: Lato, Mindset, zolty CTA - dam-theme-dk.css).
+ * Pozostale zestawy (DAM fiolet, colorify) bez zmian.
+ * 2026-09-30 (pelny styl DK): drabina powierzchni L0-L4 z DS 1.4.0 (l0..l4, bs0..bs4), tagi tag-1..8
+ *   (odcien stylu, przesuniecie Hue), nowe klucze (brandSoft, switchOff, inverseBg, warn*) i --dam-paper
+ *   (dawne literaly #fff) maluja warstwe komponentow dam-dk-components.css. Bez czystej bieli w DK.
  * Tylko data-theme + html.dark + CSS tokeny. Zero invert(), zero per-element black.
  * Persist: localStorage.theme, dam_theme_pref, dam_theme_tuning, dam_scheme
  */
@@ -64,6 +74,81 @@
     well: "#F2F3F2",
     accentHover: DK_ACCENT_HOVER,
   };
+  /* Design system Dobra Kaloria 1.3.1 (tokens.json themes-list), kontrast 79 par sprawdzony.
+     jasny krem = mapowanie DAM z themes/dam (papier krem, kafelki biale), akcent = brand DS #0F763E.
+     Etykiety (label) w trybie jasnym przyciemnione wzgledem DS (#5E7A4A, #AD8767): w DAM
+     etykiety maja 11-12 px, a DS liczy je jako 15 px - tu musza trzymac 4,5:1 na tle strony. */
+  /* Wartosci: design system Dobra Kaloria 1.4.0 (tokens.css, READY-1.4.0.txt 2026-09-30 13:04):
+     drabina l0..l4 = --dk-color-surface-0..4, bs0..bs4 = --dk-color-border-subtle-0..4, tags = --dk-color-tag-1..8
+     (bg, fg, border). Odstepstwo DAM: label w trybie jasnym przyciemniony (etykiety 11-12 px, 4,5:1).
+     DS 1.4.1: danger w kremie jasnym = red-700 #C0262C (#DA272D mial 4,48:1 na L1). */
+  var DK_PACKS = {
+    "dobra-kaloria": {
+      light: {
+        bg: "#F8FBF9", surface: "#EFF5F1", elevated: "#D4E5D8", input: "#E6F0E8",
+        chrome: "#D3E1D7", border: "#D3E1D7", borderStrong: "#B3C9BA", fieldBorder: "#6E8C78",
+        hover: "#E6F0E8", well: "#E6F0E8", text: "#17291D", muted: "#4A6352", label: "#56703F",
+        dark: "#17291D", accent: "#0F763E", accentHover: "#0B5F31", onAccent: "#FFFFFF",
+        danger: "#C0262C", shadowRgb: "23 41 29", shadowAlpha: "0.08",
+        l0: "#F8FBF9", l1: "#EFF5F1", l2: "#E6F0E8", l3: "#DDEAE0", l4: "#D4E5D8",
+        bs0: "#E2EDE4", bs1: "#D9E7DC", bs2: "#D0E2D4", bs3: "#CADBCE", bs4: "#C3D5C7",
+        brandSoft: "#DDEBE1", brandSoftStrong: "#CFE0D4", switchOff: "#6E8C78", disabledBg: "#E4EEE7",
+        inverseBg: "#17291D", onInverse: "#FFFFFF", warnBg: "#FFF4D6", warnBorder: "#EBCB6B", warnText: "#6F4A00",
+        tags: [["#D8EFD9", "#305F35", "#B6D6B7"], ["#D5F0DD", "#26603C", "#B1D7BC"], ["#DCEED6", "#3A5D2D", "#BBD5B3"], ["#D2F0E0", "#196144", "#ADD8C1"], ["#E0EDD3", "#435C26", "#C0D4AE"], ["#D0F1E4", "#06614B", "#A9D8C7"], ["#E3ECD1", "#4B5A1F", "#C6D2AB"], ["#CEF1E8", "#006152", "#A6D8CC"]],
+      },
+      dark: {
+        bg: "#0F1F15", surface: "#14281C", elevated: "#264431", input: "#1A3123",
+        chrome: "#2F4D39", border: "#2F4D39", borderStrong: "#44664F", fieldBorder: "#7E9C88",
+        hover: "#1A3123", well: "#1A3123", text: "#F5F1E8", muted: "#C9BEA6", label: "#D2B48F",
+        dark: "#F5F1E8", accent: "#6FC792", accentHover: "#8AD6A8", onAccent: "#0F1F15",
+        danger: "#F2878A", shadowRgb: "8 18 12", shadowAlpha: "0.35",
+        l0: "#0F1F15", l1: "#14281C", l2: "#1A3123", l3: "#203A2A", l4: "#264431",
+        bs0: "#1E3727", bs1: "#24412F", bs2: "#2A4A36", bs3: "#31543E", bs4: "#385E46",
+        brandSoft: "#1D3526", brandSoftStrong: "#26422F", switchOff: "#7E9C88", disabledBg: "#26422F",
+        inverseBg: "#F5F1E8", onInverse: "#0F1F15", warnBg: "#1D3526", warnBorder: "#7A4E00", warnText: "#EBCB6B",
+        tags: [["#2C442E", "#B7E1B9", "#446446"], ["#284531", "#B1E2C0", "#3E654B"], ["#31432A", "#BEE0B3", "#496341"], ["#244535", "#ABE3C6", "#386650"], ["#354227", "#C5DEAE", "#4F623C"], ["#204539", "#A6E4CD", "#336655"], ["#394124", "#CCDCA9", "#556038"], ["#1D453D", "#A2E4D4", "#2F665B"]],
+      },
+    },
+    "dobra-kaloria-krem": {
+      light: {
+        bg: "#FEFCF6", surface: "#FCF5E3", elevated: "#E8E1D0", input: "#F5EEDD",
+        chrome: "#EDE7DA", border: "#EDE7DA", borderStrong: "#D9CFBB", fieldBorder: "#9C8B72",
+        hover: "#F5EEDD", well: "#F5EEDD", text: "#3B2A20", muted: "#7D5E44", label: "#85654A",
+        dark: "#3B2A20", accent: "#0F763E", accentHover: "#0B5F31", onAccent: "#FFFFFF",
+        danger: "#C0262C", shadowRgb: "59 42 32", shadowAlpha: "0.08",
+        l0: "#FEFCF6", l1: "#FCF5E3", l2: "#F5EEDD", l3: "#EEE7D6", l4: "#E8E1D0",
+        bs0: "#F2EBDA", bs1: "#EBE4D3", bs2: "#E5DDCD", bs3: "#DED7C6", bs4: "#D7D0C0",
+        brandSoft: "#E9F2EC", brandSoftStrong: "#CFE0D4", switchOff: "#9C8B72", disabledBg: "#F0EBDD",
+        inverseBg: "#3B2A20", onInverse: "#FFFFFF", warnBg: "#FFF4D6", warnBorder: "#EBCB6B", warnText: "#7A4E00",
+        tags: [["#F2E7CC", "#65500B", "#DACBA4"], ["#EEE9CC", "#5F520D", "#D5CDA4"], ["#F5E6CC", "#6A4D0C", "#DEC9A4"], ["#EBEACD", "#595512", "#D0CFA6"], ["#F8E5CD", "#6E4A11", "#E2C7A5"], ["#E7EBCF", "#525718", "#CBD1A8"], ["#FAE3CE", "#724816", "#E6C6A7"], ["#E3ECD1", "#4B5A1F", "#C6D2AB"]],
+      },
+      dark: {
+        bg: "#1C1812", surface: "#252019", elevated: "#40392E", input: "#2E2820",
+        chrome: "#4A4135", border: "#4A4135", borderStrong: "#6B5E4B", fieldBorder: "#8C7D65",
+        hover: "#2E2820", well: "#2E2820", text: "#F5F1E8", muted: "#CBBFA8", label: "#D2B48F",
+        dark: "#F5F1E8", accent: "#4CC46A", accentHover: "#8AD6A8", onAccent: "#1C1812",
+        danger: "#F2878A", shadowRgb: "12 10 7", shadowAlpha: "0.35",
+        l0: "#1C1812", l1: "#252019", l2: "#2E2820", l3: "#373027", l4: "#40392E",
+        bs0: "#342D24", bs1: "#3D362B", bs2: "#473E32", bs3: "#50473A", bs4: "#5A5042",
+        brandSoft: "#302A21", brandSoftStrong: "#3A3329", switchOff: "#8C7D65", disabledBg: "#3A3329",
+        inverseBg: "#F5F1E8", onInverse: "#1C1812", warnBg: "#302A21", warnBorder: "#8E7C50", warnText: "#EBCB6B",
+        tags: [["#473C1E", "#E6D3A0", "#685930"], ["#443D1F", "#E0D5A0", "#645B31"], ["#4A3B1E", "#EBD0A0", "#6C5730"], ["#403F20", "#DAD8A2", "#5F5D32"], ["#4C391F", "#F0CEA1", "#705632"], ["#3D4022", "#D3DAA5", "#5A5F35"], ["#4E3821", "#F5CCA4", "#735434"], ["#394124", "#CCDCA9", "#556038"]],
+      },
+    },
+  };
+  var DK_SCHEME_LABELS = {
+    "dobra-kaloria": "Dobra Kaloria 1 \u00b7 ziele\u0144",
+    "dobra-kaloria-krem": "Dobra Kaloria 2 \u00b7 krem",
+  };
+  /* Zmienne malowane tylko w zestawach DK - przy innym zestawie zdejmowane (wraca dam-tokens.css). */
+  var DK_ONLY_VARS = [
+    "--dam-on-primary", "--dam-surface-hover", "--dam-border-strong", "--dam-field-border",
+    "--dam-label", "--dam-danger", "--danger-color", "--dam-shadow-rgb", "--dam-shadow-alpha",
+    "--dam-paper", "--dam-brand-soft", "--dam-brand-soft-strong", "--dam-switch-off", "--dam-disabled-bg",
+    "--dam-inverse-bg", "--dam-on-inverse", "--dam-warning-bg", "--dam-warning-border", "--dam-warning-text",
+    "--dam-surface-0", "--dam-surface-1", "--dam-surface-2", "--dam-surface-3", "--dam-surface-4",
+    "--dam-border-l0", "--dam-border-l1", "--dam-border-l2", "--dam-border-l3", "--dam-border-l4",
+  ];
   var DARK_ACCENT_L_FLOOR = 25.1;
   var LADDER_MIGRATE_KEY = "dam_theme_ladder_v8";
   var CONTRAST_AA = 4.5;
@@ -289,6 +374,9 @@
     violet: "colorify-violet",
     earth: "colorify-stone",
     brand: "dobra-kaloria",
+    "dobra-kaloria-zielen": "dobra-kaloria",
+    "dk-zielen": "dobra-kaloria",
+    "dk-krem": "dobra-kaloria-krem",
     ocean: "colorify-sky",
     slate: "colorify-slate",
     rose: "colorify-rose",
@@ -380,6 +468,37 @@
     return null;
   }
 
+  function packFromDk(p) {
+    var out = pack(p.bg, p.surface, p.elevated, p.chrome, p.border, p.text, p.muted, p.dark, p.accent);
+    out.input = p.input;
+    out.sidebar = p.bg;
+    out.sidebarEnd = p.bg;
+    return out;
+  }
+
+  function buildDkScheme(id) {
+    var src = DK_PACKS[id];
+    return {
+      id: id,
+      label: DK_SCHEME_LABELS[id],
+      group: "dam",
+      dk: true,
+      accent: src.light.accent,
+      light: packFromDk(src.light),
+      dark: packFromDk(src.dark),
+    };
+  }
+
+  function dkSchemeIdOf(scheme) {
+    if (!scheme) return "";
+    if (DK_PACKS[scheme.id]) return scheme.id;
+    if (scheme.id === "custom") {
+      var named = currentNamedSchemeId();
+      if (DK_PACKS[named]) return named;
+    }
+    return "";
+  }
+
   function buildDobraKaloriaScheme() {
     var built = colorifyToDam("dobra-kaloria", "Dobra Kaloria", "dam", DK_BG_DARK, DK_SURF_DARK, DK_ACCENT, DK_ACCENT_DARK);
     built.accent = DK_ACCENT;
@@ -406,7 +525,7 @@
     return built;
   }
 
-  var SCHEMES = [buildDobraKaloriaScheme(), buildDamVioletScheme()].concat(
+  var SCHEMES = [buildDkScheme("dobra-kaloria"), buildDkScheme("dobra-kaloria-krem"), buildDamVioletScheme()].concat(
     COLORIFY_POOL.map(function (row) {
       var built = colorifyToDam(row[0], row[1], row[2], row[3], row[4], row[5], row[6]);
       if (built.group === "green") applyGreenWhisper(built.light, built.accent);
@@ -723,9 +842,144 @@
     root.style.setProperty(name, value);
   }
 
+  /* Tagi w stylach DK (DS 1.4.0 §5c, components.md 22): odcien stylu z malym przesunieciem Hue na
+     kategorie, wartosci z tokens.css (tag-1..8). Przypisanie kategorii DAM do numeru tagu jest stale:
+     smak=1, typ=2, opakowanie=3, autor/osoba=4, opis=5, podkategoria=6, jezyk=7, mix/warianty/zrodlo=8.
+     Licznik "+12" i grupa "inne" = surface-3 + text-muted (bez koloru). Zmienne czyta dam-dk-components.css. */
+  var DK_TAG_INDEX = {
+    smak: 1, typ: 2, kategoria: 2, przeznaczenie: 2, opakowanie: 3, autor: 4, osoba: 4, opis: 5,
+    podkategoria: 6, jezyk: 7, mix: 8, warianty: 8, zrodlo: 8,
+  };
+  var DK_TAG_VARS = [];
+  function paintDkTags(root, p) {
+    function put(cat, bg, fg, bd) {
+      setVar(root, "--dam-tag-" + cat + "-bg", bg);
+      setVar(root, "--dam-tag-" + cat + "-fg", fg);
+      setVar(root, "--dam-tag-" + cat + "-border", bd);
+      if (DK_TAG_VARS.indexOf("--dam-tag-" + cat + "-bg") < 0) {
+        DK_TAG_VARS.push("--dam-tag-" + cat + "-bg", "--dam-tag-" + cat + "-fg", "--dam-tag-" + cat + "-border");
+      }
+    }
+    Object.keys(DK_TAG_INDEX).forEach(function (cat) {
+      var t = p.tags[DK_TAG_INDEX[cat] - 1];
+      put(cat, t[0], t[1], t[2]);
+    });
+    put("inne", p.l3, p.muted, p.bs3);
+  }
+
+  /* Zestawy Dobra Kaloria: dokladne wartosci DS, bez "whisper" i bez wyliczania z akcentu.
+     Dostrojenie HSL (suwaki) dziala jak w innych zestawach. */
+  function applyDkPaint(dkId, scheme, mode, tuning) {
+    var isDark = mode === "dark";
+    var p = DK_PACKS[dkId][isDark ? "dark" : "light"];
+    var t = (tuning && tuning[mode]) || TUNING_DEFAULTS[mode];
+    var bgB = effectiveTuningDelta(t.bg_brightness);
+    var bgS = effectiveTuningDelta(t.bg_saturation);
+    var accB = effectiveTuningDelta(t.accent_brightness);
+    var accS = effectiveTuningDelta(t.accent_saturation);
+    var tuned = !!(bgB || bgS);
+    function tb(hex, k) { return tuned ? adjustHexHsl(hex, bgB * (k || 1), bgS * (k || 1)) : hex; }
+    var bg = tb(p.bg);
+    var surface = tb(p.surface);
+    var elevated = tb(p.elevated);
+    var chrome = tb(p.chrome, 0.4);
+    var input = tb(p.input);
+    var accent = p.accent;
+    if (scheme && scheme.id === "custom") {
+      accent = isDark ? darkModeAccent(currentAccent()) : chromeAccent(currentAccent());
+    }
+    if (accB || accS) accent = adjustHexHsl(accent, accB, accS);
+    var accentHover = (accent === p.accent) ? p.accentHover : adjustHexHsl(accent, isDark ? 8 : -10, 0);
+    var onAccent = (accent === p.accent) ? p.onAccent
+      : (contrastRatio(accent, p.bg) > contrastRatio(accent, "#FFFFFF") ? p.bg : "#FFFFFF");
+    var root = document.documentElement;
+    root.setAttribute("data-dam-scheme", scheme.id);
+    root.setAttribute("data-dam-style", "dk");
+    setVar(root, "--dam-surface-muted", bg);
+    setVar(root, "--dam-bg", bg);
+    setVar(root, "--dam-surface", surface);
+    setVar(root, "--dam-surface-elevated", elevated);
+    setVar(root, "--dam-chrome", chrome);
+    setVar(root, "--dam-surface-sunken", tb(p.well));
+    setVar(root, "--dam-surface-raised", input);
+    setVar(root, "--dam-input-bg", input);
+    setVar(root, "--dam-border", tb(p.border, 0.3));
+    setVar(root, "--dam-border-strong", p.borderStrong);
+    setVar(root, "--dam-field-border", p.fieldBorder);
+    setVar(root, "--dam-surface-hover", tb(p.hover));
+    setVar(root, "--dam-text", p.text);
+    setVar(root, "--dam-text-muted", p.muted);
+    setVar(root, "--dam-muted", p.muted);
+    setVar(root, "--dam-label", p.label);
+    setVar(root, "--dam-dark", p.dark);
+    setVar(root, "--dam-primary", accent);
+    setVar(root, "--primary-color", accent);
+    setVar(root, "--dam-primary-hover", accentHover);
+    setVar(root, "--dam-on-primary", onAccent);
+    setVar(root, "--dam-hash", accent);
+    setVar(root, "--dam-danger", p.danger);
+    setVar(root, "--danger-color", p.danger);
+    setVar(root, "--dam-shadow-rgb", p.shadowRgb);
+    setVar(root, "--dam-shadow-alpha", p.shadowAlpha);
+    /* Warstwa komponentow DK (dam-dk-components.css): biel tla = powierzchnia karty zestawu. */
+    setVar(root, "--dam-paper", surface);
+    setVar(root, "--dam-surface-0", bg);
+    setVar(root, "--dam-surface-1", surface);
+    setVar(root, "--dam-surface-2", tb(p.l2));
+    setVar(root, "--dam-surface-3", tb(p.l3));
+    setVar(root, "--dam-surface-4", tb(p.l4));
+    setVar(root, "--dam-border-l0", p.bs0);
+    setVar(root, "--dam-border-l1", p.bs1);
+    setVar(root, "--dam-border-l2", p.bs2);
+    setVar(root, "--dam-border-l3", p.bs3);
+    setVar(root, "--dam-border-l4", p.bs4);
+    paintDkTags(root, p);
+    setVar(root, "--dam-brand-soft", tb(p.brandSoft, 0.4));
+    setVar(root, "--dam-brand-soft-strong", tb(p.brandSoftStrong, 0.4));
+    setVar(root, "--dam-switch-off", p.switchOff);
+    setVar(root, "--dam-disabled-bg", tb(p.disabledBg, 0.4));
+    setVar(root, "--dam-inverse-bg", p.inverseBg);
+    setVar(root, "--dam-on-inverse", p.onInverse);
+    setVar(root, "--dam-warning-bg", p.warnBg);
+    setVar(root, "--dam-warning-border", p.warnBorder);
+    setVar(root, "--dam-warning-text", p.warnText);
+    setVar(root, "--white-color", surface);
+    setVar(root, "--section-color", bg);
+    setVar(root, "--sectionTwo-color", bg);
+    setVar(root, "--sectionThree-color", surface);
+    setVar(root, "--body-color", p.text);
+    setVar(root, "--desc-color", p.text);
+    setVar(root, "--sec-color", p.muted);
+    setVar(root, "--gray-color", isDark ? p.muted : chrome);
+    setVar(root, "--light-color", bg);
+    setVar(root, "--dark-color", p.dark);
+    setVar(root, "--dam-bento-surface", surface);
+    setVar(root, "--dam-bento-muted", bg);
+    setVar(root, "--dam-bento-border", isDark
+      ? "color-mix(in srgb, " + p.border + " 80%, transparent)"
+      : "color-mix(in srgb, " + chrome + " 70%, transparent)");
+    setVar(root, "--dam-sticky-chrome-bg", bg);
+    setVar(root, "--card-bg", surface);
+    /* Sidebar = ten sam papier co strona, plasko (DS: bez gradientu akcentu). */
+    setVar(root, "--dam-sidebar-bg", bg);
+    setVar(root, "--dam-sidebar-bg-end", bg);
+    setVar(root, "--dam-sidebar-grad", "linear-gradient(165deg, " + bg + " 0%, " + bg + " 100%)");
+    setVar(root, "--dam-chrome-ink", isDark ? adjustHexHsl(accent, 8, -12) : adjustHexHsl(accent, -8, -6));
+    root.style.backgroundColor = bg;
+    return { bg: bg, surface: surface, elevated: elevated, chrome: chrome, accent: accent, scheme: scheme.id, style: "dk" };
+  }
+
   function applyTokenPaint(mode, tuning) {
     var isDark = mode === "dark";
     var scheme = resolveScheme();
+    var dkId = dkSchemeIdOf(scheme);
+    if (dkId) return applyDkPaint(dkId, scheme, mode, tuning);
+    (function clearDk() {
+      var r = document.documentElement;
+      r.removeAttribute("data-dam-style");
+      DK_ONLY_VARS.forEach(function (n) { r.style.removeProperty(n); });
+      DK_TAG_VARS.forEach(function (n) { r.style.removeProperty(n); });
+    })();
     var rawPack = (scheme && scheme[mode]) || (isDark ? DARK_BASE : LIGHT_BASE);
     var base = clonePack(rawPack);
     if (rawPack && rawPack.input) base.input = rawPack.input;

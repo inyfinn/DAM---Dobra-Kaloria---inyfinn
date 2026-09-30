@@ -11457,7 +11457,7 @@ html[data-theme="dark"] .ui-widget-content .ui-state-default {
 
 .single-contact-grid-area {
   border-radius: 30px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   padding: 30px;
 }
 
@@ -11555,7 +11555,7 @@ html[data-theme="dark"] .ui-widget-content .ui-state-default {
 
 .table-reviews-geex-1 {
   width: 100%;
-  background: #fff;
+  background: var(--dam-paper, #fff);
 }
 
 .table-reviews-geex-1 thead, .table-reviews-geex-1 tbody, .table-reviews-geex-1 tfoot, .table-reviews-geex-1 tr, .table-reviews-geex-1 td, .table-reviews-geex-1 th {
@@ -11572,7 +11572,7 @@ html[data-theme="dark"] .ui-widget-content .ui-state-default {
 
 .table-reviews-geex-1 thead tr th {
   padding: 25px 20px;
-  background: #fff;
+  background: var(--dam-paper, #fff);
   color: var(--primary-color);
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -11986,7 +11986,7 @@ html[dir="rtl"] .geex-content__todo__header__filter__sortby i {
 @media (max-width: 1692px) {
   .file-manager .table-reviews-geex-1 {
     width: 847px;
-    background: #fff;
+    background: var(--dam-paper, #fff);
   }
 }
 
@@ -12165,7 +12165,7 @@ html[dir="rtl"] .geex-content__todo__header__filter__sortby i {
 
 .kanban-drag-and-drop-area-wrapper .stages .stage.top-stage .stagename {
   font-weight: 500;
-  color: #464255;
+  color: var(--dam-ink, #464255);
 }
 
 .kanban-drag-and-drop-area-wrapper .stages .stage.top-stage a {
@@ -12282,7 +12282,7 @@ html[dir="rtl"] .geex-content__todo__header__filter__sortby i {
   -webkit-box-sizing: border-box;
           box-sizing: border-box;
   padding: 0.5rem 1rem 0.7rem;
-  background: white;
+  background: var(--dam-paper, #fff);
   cursor: -webkit-grab;
   border-radius: 24px;
   padding: 16px 26px;
@@ -12320,7 +12320,7 @@ html[dir="rtl"] .geex-content__todo__header__filter__sortby i {
   height: 55px;
   left: 0;
   right: 0;
-  background: white;
+  background: var(--dam-paper, #fff);
   border-top: 1px solid #e0e4e7;
   padding: 0.5rem;
 }
@@ -12346,7 +12346,7 @@ html[dir="rtl"] .geex-content__todo__header__filter__sortby i {
 }
 
 .kanban-drag-and-drop-area-wrapper .gu-mirror {
-  background: white;
+  background: var(--dam-paper, #fff);
   padding: 0.5rem 1rem 0.7rem;
   -webkit-box-sizing: border-box;
           box-sizing: border-box;
@@ -12385,7 +12385,7 @@ html[dir="rtl"] .geex-content__todo__header__filter__sortby i {
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
   padding: 0.5rem 1rem 0.7rem;
-  background: white;
+  background: var(--dam-paper, #fff);
   cursor: -webkit-grab;
   border-radius: 24px;
   padding: 16px 26px;

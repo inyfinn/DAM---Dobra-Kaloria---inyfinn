@@ -479,7 +479,7 @@
       ".dam-unsaved-close-overlay{position:fixed;inset:0;z-index:13050;display:flex;" +
       "align-items:center;justify-content:center;padding:24px;" +
       "background:rgba(28,25,38,.45);backdrop-filter:blur(2px);}" +
-      ".dam-unsaved-close-card{max-width:560px;width:min(560px,96vw);background:#fff;border-radius:16px;" +
+      ".dam-unsaved-close-card{max-width:560px;width:min(560px,96vw);background:var(--dam-paper, #fff);border-radius:16px;" +
       "box-shadow:0 18px 48px rgba(28,25,38,.22);padding:22px 22px 18px;border:1px solid rgba(70,66,85,.12);}" +
       ".dam-unsaved-close-card h4{margin:0 0 8px;font-size:18px;font-weight:700;color:#2d2a37;}" +
       ".dam-unsaved-close-card p{margin:0 0 18px;font-size:14px;line-height:1.45;color:#5c5668;}" +
@@ -740,13 +740,13 @@
       "flex:0 0 auto;width:100%;box-sizing:border-box;border-radius:16px 16px 0 0;position:relative;z-index:2;}" +
       ".dam-viz-modal-shell:has(.dam-preview-nav)>.dam-viz-modal-box{border-top-left-radius:0;border-top-right-radius:0;}" +
       ".dam-preview-nav__btn{width:32px;height:32px;border-radius:8px;border:1px solid rgba(70,66,85,.16);" +
-      "background:#fff;color:#464255;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;}" +
+      "background:var(--dam-paper, #fff);color:var(--dam-ink, #464255);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;}" +
       ".dam-preview-nav__btn:hover:not(:disabled){background:#f3f2f6;border-color:rgba(70,66,85,.28);}" +
       ".dam-preview-nav__btn:disabled{opacity:.4;cursor:not-allowed;}" +
       ".dam-preview-nav .dam-viz-modal-close,.dam-preview-nav__close{" +
       "margin-left:auto!important;position:static!important;top:auto!important;right:auto!important;" +
       "width:32px;height:32px;border-radius:8px;border:1px solid rgba(70,66,85,.16);" +
-      "background:#fff;color:#464255;display:inline-flex;align-items:center;justify-content:center;" +
+      "background:var(--dam-paper, #fff);color:var(--dam-ink, #464255);display:inline-flex;align-items:center;justify-content:center;" +
       "cursor:pointer;flex:0 0 auto;z-index:1;pointer-events:auto!important;}" +
       ".dam-preview-nav .dam-viz-modal-close:hover,.dam-preview-nav__close:hover{" +
       "background:rgba(239,68,68,.14)!important;border-color:#fecaca!important;color:#b91c1c!important;}";

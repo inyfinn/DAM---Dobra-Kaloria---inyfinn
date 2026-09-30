@@ -215,7 +215,7 @@
       "display:inline-flex;align-items:center;justify-content:center;",
       "border-radius:999px;font-size:12px;font-weight:600;letter-spacing:.01em;",
       "font-variant-numeric:tabular-nums;line-height:1.35;",
-      "background:#fff!important;color:var(--dam-primary,#005A29)!important;",
+      "background:var(--dam-paper, #fff)!important;color:var(--dam-primary,#005A29)!important;",
       "border:1px solid color-mix(in srgb,var(--dam-primary,#005A29) 35%,transparent)!important;",
       "box-shadow:0 1px 2px rgba(40,36,56,.08);pointer-events:none;}",
       ".dam-media-preview__assoc-item--group .dam-media-preview__assoc-name{",
@@ -6345,7 +6345,7 @@
   };
 
   function ensureVizModalCss() {
-    var href = "assets/css/dam-viz-modal.css?v=2.4.2";
+    var href = "assets/css/dam-viz-modal.css?v=2.5.2";
     var existing = document.getElementById("dam-viz-modal-css");
     if (existing) {
       if (existing.tagName === "LINK" && existing.getAttribute("href") !== href) {

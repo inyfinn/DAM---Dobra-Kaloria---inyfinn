@@ -1,12 +1,12 @@
 {
-  "last_check": 1789637584.6085222,
+  "last_check": 1790779237.1186688,
   "last_result": {
     "ok": true,
-    "current": "2.0.2",
-    "latest": "2.0.2",
+    "current": "2.5.2",
+    "latest": "2.5.2",
     "update_available": false,
     "download_url": "",
-    "published_at": "2026-09-17T09:32:18Z"
+    "published_at": "2026-09-29T13:46:44Z"
   },
-  "next_run": "2026-09-18T09:00:00"
+  "next_check_after": 1790800837.1186688
 }
