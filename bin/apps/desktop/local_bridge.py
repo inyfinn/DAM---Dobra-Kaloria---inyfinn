@@ -2588,7 +2588,11 @@ def switch_data_mode(mode: str) -> dict[str, Any]:
         return {"ok": False, "error": "bad_mode"}
     if _data_mode_switch["running"]:
         return {"ok": False, "error": "switch_running", "switch": dict(_data_mode_switch)}
-    if mode == data_mode.LOCAL and not _snapshot_root_alive():
+    # 05.10.2026: _snapshot_root_alive() ma sonde litery dysku z limitem 150 ms - pod
+    # obciazeniem mostu (budowa indeksu) M: "znikal" co drugie pytanie i LOKALNY dostawal
+    # root_unavailable mimo dzialajacego dysku. Tu pelna sonda ROOT (limit kilku sekund).
+    base = str(read_machine_config().get("base_path") or "").strip()
+    if mode == data_mode.LOCAL and (not base or _root_state(base)["state"] != "full"):
         # Tryb LOKALNY bez pelnego ROOT = pusty katalog. Nie przelaczamy.
         return {"ok": False, "error": "root_unavailable"}
     res = data_mode.set_mode(mode)

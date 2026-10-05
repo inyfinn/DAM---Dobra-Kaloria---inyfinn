@@ -2,7 +2,7 @@
  * Tryb danych tego komputera (most: GET/POST /data-mode, data_mode.py).
  * LIVE = katalog z bazy (jak na kazdym komputerze), LOKALNY = tylko to, co jest na ROOT.
  * Przelacznik w stopce panelu bocznego, nad wersja. Po przelaczeniu most przebudowuje
- * (LOKALNY) albo pobiera (LIVE) indeksy; strona odswieza sie po zakonczeniu.
+ * (LOKALNY) albo pobiera (LIVE) indeksy w tle; ekran nie jest blokowany.
  */
 (function () {
   "use strict";
@@ -121,13 +121,9 @@
   function switchTo(mode) {
     _busy = true;
     render(_mode, true);
-    if (window.DamLoader && typeof window.DamLoader.start === "function") {
-      window.DamLoader.start(
-        mode === "local"
-          ? tr("data_mode.loading_local", "Buduję katalog z ROOT…")
-          : tr("data_mode.loading_live", "Pobieram katalog z bazy…")
-      );
-    }
+    /* 05.10.2026: bez pelnoekranowego loadera. LOKALNY = skan calego ROOT (dziesiatki
+       minut przy M:) - blokowanie ekranu na ten czas bylo "dramatem". Przelaczenie jest
+       natychmiastowe, katalog odswieza sie w tle, a praca trwa dalej. */
     return fetch(bridgeBase() + "/data-mode", {
       method: "POST",
       headers: authHeaders(),
@@ -148,22 +144,28 @@
           );
         }
         render(d.mode, true);
+        notify(
+          mode === "local"
+            ? tr("data_mode.bg_local", "Tryb LOKALNY włączony. Katalog z ROOT buduje się w tle - możesz dalej pracować.")
+            : tr("data_mode.bg_live", "Tryb LIVE włączony. Katalog z bazy odświeża się w tle - możesz dalej pracować.")
+        );
         return waitDone();
       })
       .then(function (d) {
+        _busy = false;
+        render(d && d.mode, false);
         if (d && d.switch && d.switch.error) {
           notify(tr("data_mode.err", "Nie udało się przełączyć: ") + d.switch.error);
+        } else {
+          notify(tr("data_mode.ready", "Katalog gotowy. Odśwież stronę (F5), aby zobaczyć nowe dane."));
         }
-        window.location.reload();
       })
       .catch(function (err) {
         notify(err && err.message ? err.message : String(err));
         _busy = false;
         render(_mode, false);
       })
-      .finally(function () {
-        if (window.DamLoader && typeof window.DamLoader.done === "function") window.DamLoader.done();
-      });
+      ;
   }
 
   function start() {
@@ -178,8 +180,9 @@
         render(d.mode, running);
         if (running) {
           _busy = true;
-          waitDone().then(function () {
-            window.location.reload();
+          waitDone().then(function (s) {
+            _busy = false;
+            render(s && s.mode, false);
           });
         }
       })

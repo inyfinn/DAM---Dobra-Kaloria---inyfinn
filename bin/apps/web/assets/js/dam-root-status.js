@@ -381,7 +381,7 @@
   function loadDataMode() {
     if (window.DamDataMode || document.querySelector("script[data-dam-data-mode]")) return;
     var s = document.createElement("script");
-    s.src = "assets/js/dam-data-mode.js?v=2.4.8";
+    s.src = "assets/js/dam-data-mode.js?v=2.5.2";
     s.setAttribute("data-dam-data-mode", "1");
     document.head.appendChild(s);
   }
