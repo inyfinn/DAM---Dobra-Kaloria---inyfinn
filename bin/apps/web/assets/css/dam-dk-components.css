@@ -3824,3 +3824,57 @@ html[data-dam-style="dk"] [style*="font-size:13.5px"], html[data-dam-style="dk"]
 html[data-dam-style="dk"] [style*="font-size:14px"], html[data-dam-style="dk"] [style*="font-size: 14px"] { font-size: var(--dam-dk-fs-md) !important; }
 html[data-dam-style="dk"] [style*="font-size:15px"], html[data-dam-style="dk"] [style*="font-size: 15px"] { font-size: var(--dam-dk-fs-base) !important; }
 /* @generated dk-type-scale END */
+
+/* =====================================================================
+   19. Naglowki Mindset w skali programu "Stworz prezentacje" (05.10.2026)
+   User: "nie widzialem czcionek Mindset powiekszonych". Program: tytul 40-44 px,
+   naglowek karty 22 px, okno 26 px, liczba-bohater 40 px. Tylko zestawy DK.
+   ===================================================================== */
+html[data-dam-style="dk"] .geex-content__header__title,
+html[data-dam-style="dk"] .geex-content__authentication__title,
+html[data-dam-style="dk"] .dam-settings-hero__title {
+  font-size: clamp(32px, 2.9vw, 44px) !important;
+  line-height: 1.05 !important;
+}
+html[data-dam-style="dk"] .dam-widget__title,
+html[data-dam-style="dk"] .dam-help-page__group-title,
+html[data-dam-style="dk"] .dam-hub-section-title,
+html[data-dam-style="dk"] .dam-dash-panel__title,
+html[data-dam-style="dk"] .dam-catalog-marketing__heading,
+html[data-dam-style="dk"] .dam-inbox-side__title,
+html[data-dam-style="dk"] .dam-tasks-card__title,
+html[data-dam-style="dk"] .dam-cost-section-title,
+html[data-dam-style="dk"] .dam-catalog-panel__title,
+html[data-dam-style="dk"] .dam-int-card__title,
+html[data-dam-style="dk"] .dam-variant-marketing-block__title,
+html[data-dam-style="dk"] .dam-integration-card > h3,
+html[data-dam-style="dk"] .dam-cost-card__title {
+  font-size: 22px !important;
+  line-height: 1.1 !important;
+}
+html[data-dam-style="dk"] .dam-viz-modal__title,
+html[data-dam-style="dk"] .dam-media-preview__title,
+html[data-dam-style="dk"] .dam-help-modal__title,
+html[data-dam-style="dk"] .dam-basepath-box h3,
+html[data-dam-style="dk"] .dam-dash-modal__title,
+html[data-dam-style="dk"] .dam-note-dialog__title,
+html[data-dam-style="dk"] .dam-update-confirm-dialog__title,
+html[data-dam-style="dk"] .dam-thumb-picker__title,
+html[data-dam-style="dk"] .dam-scheme-picker__head h2 {
+  font-size: 26px !important;
+  line-height: 1.1 !important;
+}
+/* Kafle KPI: etykieta mniejsza, liczba jak liczba-bohater */
+html[data-dam-style="dk"] .dam-widget--fill-info .dam-widget__title,
+html[data-dam-style="dk"] .dam-widget--fill-primary .dam-widget__title,
+html[data-dam-style="dk"] .dam-widget--fill-success .dam-widget__title,
+html[data-dam-style="dk"] .dam-widget--fill-warning .dam-widget__title {
+  font-size: 18px !important;
+}
+html[data-dam-style="dk"] .dam-widget__kpi,
+html[data-dam-style="dk"] .dam-widget__value,
+html[data-dam-style="dk"] .dam-widget__number,
+html[data-dam-style="dk"] .dam-kpi__value {
+  font-size: 44px !important;
+  line-height: 1 !important;
+}
