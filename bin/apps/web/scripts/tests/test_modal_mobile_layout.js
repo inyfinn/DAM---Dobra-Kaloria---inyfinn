@@ -60,7 +60,9 @@ var html = ["explorer.html", "visualizations.html"].map(function (f) {
   return fs.readFileSync(path.join(WEB, f), "utf8");
 });
 html.forEach(function (h, i) {
-  ok(h.indexOf("dam-viz-modal.css?v=2.4.2") > 0, ["explorer.html", "visualizations.html"][i] + ": dam-viz-modal.css?v=2.4.2");
+  // Kontrakt wszedl w 2.4.2; kazdy pozniejszy bump arkusza jest poprawny (licznik wersji bez kropek, nie semver).
+  var m = h.match(/dam-viz-modal\.css\?v=(\d+)\.(\d+)\.(\d+)/);
+  ok(m && parseInt(m[1] + m[2] + m[3], 10) >= 242, ["explorer.html", "visualizations.html"][i] + ": dam-viz-modal.css?v= co najmniej 2.4.2");
 });
 
 if (fails) {

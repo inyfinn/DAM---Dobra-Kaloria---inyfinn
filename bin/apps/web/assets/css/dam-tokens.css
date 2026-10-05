@@ -256,15 +256,15 @@ html[data-dam-style="dk"] {
   /* Warstwa komponentow DK (dam-dk-components.css). Wartosci dokladne maluje dam-theme.js
      (DK_PACKS); tu domyslne = DK 1 jasny, zeby arkusz dzialal takze przed skryptem. */
   --dam-radius-lg: 16px;
-  --dam-surface-0: #F8FBF9;
-  --dam-surface-1: #EFF5F1;
-  --dam-surface-2: #E6F0E8;
-  --dam-surface-3: #DDEAE0;
-  --dam-surface-4: #D4E5D8;
-  --dam-brand-soft: #DDEBE1;
+  --dam-surface-0: #FFFFFF;
+  --dam-surface-1: #FDF8ED;
+  --dam-surface-2: #F8F1E0;
+  --dam-surface-3: #F2EBDA;
+  --dam-surface-4: #EBE4D3;
+  --dam-brand-soft: #E9F2EC;
   --dam-brand-soft-strong: #CFE0D4;
-  --dam-switch-off: #6E8C78;
-  --dam-disabled-bg: #E4EEE7;
+  --dam-switch-off: #9C8B72;
+  --dam-disabled-bg: #F0EBDD;
   --dam-inverse-bg: #17291D;
   --dam-on-inverse: #FFFFFF;
   --dam-warning-bg: #FFF4D6;
@@ -272,18 +272,18 @@ html[data-dam-style="dk"] {
   --dam-warning-text: #6F4A00;
 }
 html[data-dam-style="dk"][data-theme="dark"] {
-  --dam-surface-0: #0F1F15;
-  --dam-surface-1: #14281C;
-  --dam-surface-2: #1A3123;
-  --dam-surface-3: #203A2A;
-  --dam-surface-4: #264431;
-  --dam-brand-soft: #1D3526;
-  --dam-brand-soft-strong: #26422F;
-  --dam-switch-off: #7E9C88;
-  --dam-disabled-bg: #26422F;
-  --dam-inverse-bg: #F5F1E8;
-  --dam-on-inverse: #0F1F15;
-  --dam-warning-bg: #1D3526;
+  --dam-surface-0: #0F2315;
+  --dam-surface-1: #192C18;
+  --dam-surface-2: #24341C;
+  --dam-surface-3: #303C21;
+  --dam-surface-4: #3D4427;
+  --dam-brand-soft: #242F1E;
+  --dam-brand-soft-strong: #2C3A25;
+  --dam-switch-off: #889979;
+  --dam-disabled-bg: #2C3A25;
+  --dam-inverse-bg: #FBF3E0;
+  --dam-on-inverse: #0F190C;
+  --dam-warning-bg: #242F1E;
   --dam-warning-border: #7A4E00;
   --dam-warning-text: #EBCB6B;
 }
