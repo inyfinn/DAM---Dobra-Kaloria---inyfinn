@@ -373,7 +373,7 @@
     }
     if (document.querySelector("script[data-dam-cache-sync]")) return;
     var s = document.createElement("script");
-    s.src = "assets/js/dam-cache-sync.js?v=2.5.2";
+    s.src = "assets/js/dam-cache-sync.js?v=2.5.3";
     s.setAttribute("data-dam-cache-sync", "1");
     document.head.appendChild(s);
   }
@@ -381,7 +381,7 @@
   function loadDataMode() {
     if (window.DamDataMode || document.querySelector("script[data-dam-data-mode]")) return;
     var s = document.createElement("script");
-    s.src = "assets/js/dam-data-mode.js?v=2.5.2";
+    s.src = "assets/js/dam-data-mode.js?v=2.5.3";
     s.setAttribute("data-dam-data-mode", "1");
     document.head.appendChild(s);
   }

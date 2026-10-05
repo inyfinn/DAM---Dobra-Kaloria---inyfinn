@@ -154,7 +154,7 @@
     if (!head || head.querySelector('link[data-dam-accent-css]')) return;
     var link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "./assets/css/dam-accent.css?v=2.5.2";
+    link.href = "./assets/css/dam-accent.css?v=2.5.3";
     link.setAttribute("data-dam-accent-css", "1");
     head.appendChild(link);
   }
@@ -189,9 +189,9 @@
       el.setAttribute("content", content);
     }
 
-    upsertLink("icon", { type: "image/png", href: FAVICON_SRC + "?v=2.5.2" });
-    upsertLink("shortcut icon", { href: "assets/img/dam.ico?v=2.5.2" });
-    upsertLink("apple-touch-icon", { href: FAVICON_SRC + "?v=2.5.2" });
+    upsertLink("icon", { type: "image/png", href: FAVICON_SRC + "?v=2.5.3" });
+    upsertLink("shortcut icon", { href: "assets/img/dam.ico?v=2.5.3" });
+    upsertLink("apple-touch-icon", { href: FAVICON_SRC + "?v=2.5.3" });
     upsertLink("manifest", { href: MANIFEST_HREF });
     upsertMeta("theme-color", "#008244");
     upsertMeta("apple-mobile-web-app-capable", "yes");
@@ -3260,14 +3260,14 @@
     // Status ROOT plików (czerwona kropka gdy offline)
     if (!window.DamRootStatus) {
       var rs = document.createElement("script");
-      rs.src = "assets/js/dam-root-status.js?v=2.5.2";
+      rs.src = "assets/js/dam-root-status.js?v=2.5.3";
       document.head.appendChild(rs);
     } else if (typeof window.DamRootStatus.start === "function") {
       window.DamRootStatus.start();
     }
     if (!window.DamCacheSync && !document.querySelector("script[data-dam-cache-sync]")) {
       var cs = document.createElement("script");
-      cs.src = "assets/js/dam-cache-sync.js?v=2.5.2";
+      cs.src = "assets/js/dam-cache-sync.js?v=2.5.3";
       cs.setAttribute("data-dam-cache-sync", "1");
       document.head.appendChild(cs);
     }

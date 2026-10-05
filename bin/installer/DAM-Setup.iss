@@ -1,6 +1,6 @@
 ﻿; DAM Windows installer - pelny kreator (licencja, sciezka, aktualizacja)
 #ifndef MyAppVersion
-  #define MyAppVersion "2.5.2"
+  #define MyAppVersion "2.5.3"
 #endif
 #ifndef StageDir
   #define StageDir "..\..\work\dist\staging\DAM-install"

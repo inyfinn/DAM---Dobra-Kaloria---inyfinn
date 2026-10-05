@@ -87,16 +87,17 @@
   var DK_PACKS = {
     "dobra-kaloria": {
       light: {
-        bg: "#FFFFFF", surface: "#FDF8ED", elevated: "#EBE4D3", input: "#F8F1E0", chrome: "#EDE7DA",
+        brandGreen: "#3B2A20", ok: "#0F763E",
+        bg: "#FFFFFF", surface: "#FFFCF5", elevated: "#EBE4D3", input: "#F8F1E0", chrome: "#EDE7DA",
         border: "#EDE7DA", borderStrong: "#D9CFBB", fieldBorder: "#9C8B72", hover: "#F8F1E0",
-        well: "#F8F1E0", text: "#17291D", muted: "#4A6352", label: "#0F763E", dark: "#17291D",
-        accent: "#0F763E", accentHover: "#0B5F31", onAccent: "#FFFFFF", danger: "#C0262C",
-        shadowRgb: "59 42 32", shadowAlpha: "0.08", l0: "#FFFFFF", l1: "#FDF8ED", l2: "#F8F1E0",
+        well: "#F8F1E0", text: "#3B2A20", muted: "#7D5E44", label: "#85654A", dark: "#3B2A20",
+        accent: "#3B2A20", accentHover: "#2A1D15", onAccent: "#FFFFFF", danger: "#C0262C",
+        shadowRgb: "59 42 32", shadowAlpha: "0.08", l0: "#FFFFFF", l1: "#FFFCF5", l2: "#F8F1E0",
         l3: "#F2EBDA", l4: "#EBE4D3", bs0: "#F5EEDD", bs1: "#EEE7D6", bs2: "#E8E1D0", bs3: "#E1DAC9",
-        bs4: "#DBD4C3", brandSoft: "#E9F2EC", brandSoftStrong: "#CFE0D4", switchOff: "#9C8B72",
-        disabledBg: "#F0EBDD", inverseBg: "#17291D", onInverse: "#FFFFFF", warnBg: "#FFF4D6",
-        warnBorder: "#EBCB6B", warnText: "#6F4A00",
-        tags: [["#D8EFD9", "#305F35", "#B6D6B7"], ["#D5F0DD", "#26603C", "#B1D7BC"], ["#DCEED6", "#3A5D2D", "#BBD5B3"], ["#D2F0E0", "#196144", "#ADD8C1"], ["#E0EDD3", "#435C26", "#C0D4AE"], ["#D0F1E4", "#06614B", "#A9D8C7"], ["#E3ECD1", "#4B5A1F", "#C6D2AB"], ["#CEF1E8", "#006152", "#A6D8CC"]],
+        bs4: "#DBD4C3", brandSoft: "#F2EBDA", brandSoftStrong: "#E1DAC9", switchOff: "#9C8B72",
+        disabledBg: "#F0EBDD", inverseBg: "#3B2A20", onInverse: "#FFFFFF", warnBg: "#FFF4D6",
+        warnBorder: "#EBCB6B", warnText: "#7A4E00",
+        tags: [["#F2E7CC", "#65500B", "#DACBA4"], ["#EEE9CC", "#5F520D", "#D5CDA4"], ["#F5E6CC", "#6A4D0C", "#DEC9A4"], ["#EBEACD", "#595512", "#D0CFA6"], ["#F8E5CD", "#6E4A11", "#E2C7A5"], ["#E7EBCF", "#525718", "#CBD1A8"], ["#FAE3CE", "#724816", "#E6C6A7"], ["#E3ECD1", "#4B5A1F", "#C6D2AB"]],
       },
       dark: {
         bg: "#0F2315", surface: "#192C18", elevated: "#3D4427", input: "#24341C", chrome: "#3B4E37",
@@ -113,22 +114,24 @@
     },
     "dobra-kaloria-krem": {
       light: {
-        bg: "#FFFFFF", surface: "#FDF8ED", elevated: "#EBE4D3", input: "#F8F1E0", chrome: "#EDE7DA",
+        brandGreen: "#3B2A20", ok: "#0F763E",
+        bg: "#FFFFFF", surface: "#FFFCF5", elevated: "#EBE4D3", input: "#F8F1E0", chrome: "#EDE7DA",
         border: "#EDE7DA", borderStrong: "#D9CFBB", fieldBorder: "#9C8B72", hover: "#F8F1E0",
         well: "#F8F1E0", text: "#3B2A20", muted: "#7D5E44", label: "#85654A", dark: "#3B2A20",
-        accent: "#0F763E", accentHover: "#0B5F31", onAccent: "#FFFFFF", danger: "#C0262C",
-        shadowRgb: "59 42 32", shadowAlpha: "0.08", l0: "#FFFFFF", l1: "#FDF8ED", l2: "#F8F1E0",
+        accent: "#3B2A20", accentHover: "#2A1D15", onAccent: "#FFFFFF", danger: "#C0262C",
+        shadowRgb: "59 42 32", shadowAlpha: "0.08", l0: "#FFFFFF", l1: "#FFFCF5", l2: "#F8F1E0",
         l3: "#F2EBDA", l4: "#EBE4D3", bs0: "#F5EEDD", bs1: "#EEE7D6", bs2: "#E8E1D0", bs3: "#E1DAC9",
-        bs4: "#DBD4C3", brandSoft: "#E9F2EC", brandSoftStrong: "#CFE0D4", switchOff: "#9C8B72",
+        bs4: "#DBD4C3", brandSoft: "#F2EBDA", brandSoftStrong: "#E1DAC9", switchOff: "#9C8B72",
         disabledBg: "#F0EBDD", inverseBg: "#3B2A20", onInverse: "#FFFFFF", warnBg: "#FFF4D6",
         warnBorder: "#EBCB6B", warnText: "#7A4E00",
         tags: [["#F2E7CC", "#65500B", "#DACBA4"], ["#EEE9CC", "#5F520D", "#D5CDA4"], ["#F5E6CC", "#6A4D0C", "#DEC9A4"], ["#EBEACD", "#595512", "#D0CFA6"], ["#F8E5CD", "#6E4A11", "#E2C7A5"], ["#E7EBCF", "#525718", "#CBD1A8"], ["#FAE3CE", "#724816", "#E6C6A7"], ["#E3ECD1", "#4B5A1F", "#C6D2AB"]],
       },
       dark: {
+        brandGreen: "#6B5E4B",
         bg: "#120F0A", surface: "#1A1611", elevated: "#352E25", input: "#231E17", chrome: "#3F362A",
         border: "#3F362A", borderStrong: "#5F5240", fieldBorder: "#8C7D65", hover: "#231E17",
         well: "#231E17", text: "#F5F1E8", muted: "#CBBFA8", label: "#D2B48F", dark: "#F5F1E8",
-        accent: "#4CC46A", accentHover: "#8AD6A8", onAccent: "#1C1812", danger: "#F2878A",
+        accent: "#E6D3A0", accentHover: "#F5E6C0", onAccent: "#1C1812", danger: "#F2878A",
         shadowRgb: "6 5 3", shadowAlpha: "0.4", l0: "#120F0A", l1: "#1A1611", l2: "#231E17", l3: "#2C261E",
         l4: "#352E25", bs0: "#28231B", bs1: "#312B22", bs2: "#3B3429", bs3: "#443C31", bs4: "#4E4538",
         brandSoft: "#262017", brandSoftStrong: "#2F291F", switchOff: "#8C7D65", disabledBg: "#2F291F",
@@ -147,6 +150,7 @@
     "--dam-on-primary", "--dam-surface-hover", "--dam-border-strong", "--dam-field-border",
     "--dam-label", "--dam-danger", "--danger-color", "--dam-shadow-rgb", "--dam-shadow-alpha",
     "--dam-paper", "--dam-brand-soft", "--dam-brand-soft-strong", "--dam-switch-off", "--dam-disabled-bg",
+    "--dam-brand-green", "--dam-ok",
     "--dam-inverse-bg", "--dam-on-inverse", "--dam-warning-bg", "--dam-warning-border", "--dam-warning-text",
     "--dam-surface-0", "--dam-surface-1", "--dam-surface-2", "--dam-surface-3", "--dam-surface-4",
     "--dam-border-l0", "--dam-border-l1", "--dam-border-l2", "--dam-border-l3", "--dam-border-l4",
@@ -943,6 +947,8 @@
     setVar(root, "--dam-inverse-bg", p.inverseBg);
     setVar(root, "--dam-on-inverse", p.onInverse);
     setVar(root, "--dam-warning-bg", p.warnBg);
+    if (p.brandGreen) setVar(root, "--dam-brand-green", p.brandGreen); else root.style.removeProperty("--dam-brand-green");
+    if (p.ok) setVar(root, "--dam-ok", p.ok); else root.style.removeProperty("--dam-ok");
     setVar(root, "--dam-warning-border", p.warnBorder);
     setVar(root, "--dam-warning-text", p.warnText);
     setVar(root, "--white-color", surface);

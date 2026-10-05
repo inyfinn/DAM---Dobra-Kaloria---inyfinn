@@ -3531,12 +3531,12 @@
       var vizCss = document.createElement("link");
       vizCss.id = "dam-viz-modal-css";
       vizCss.rel = "stylesheet";
-      vizCss.href = "assets/css/dam-viz-modal.css?v=2.5.2";
+      vizCss.href = "assets/css/dam-viz-modal.css?v=2.5.3";
       document.head.appendChild(vizCss);
     } else {
       var existingVizCss = document.getElementById("dam-viz-modal-css");
       if (existingVizCss && existingVizCss.tagName === "LINK") {
-        existingVizCss.href = "assets/css/dam-viz-modal.css?v=2.5.2";
+        existingVizCss.href = "assets/css/dam-viz-modal.css?v=2.5.3";
       }
     }
     document.body.insertAdjacentHTML("beforeend", html);
