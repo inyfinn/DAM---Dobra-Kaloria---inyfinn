@@ -1322,8 +1322,37 @@ def _unix_to_iso(ts: float) -> str:
         return ""
 
 
-def local_tree_stats() -> dict:
-    """Folder scan used to decide fetch. Skips pack/manifest sidecars."""
+# Skan calego cache (48 tys. plikow, 7-20 s, caly rdzen) byl liczony na KAZDE
+# GET /thumb-cache/sync/status, a kazda otwarta strona pyta co 8 s (dam-cache-sync.js)
+# - py-spy 06.10.2026: 86 % CPU mostu to local_tree_stats/local_thumb_stats. Wynik
+# zmienia sie tylko przy pobieraniu, wiec pamietamy go STATS_TTL_SEC; pobieranie
+# (_set_sync) i wywolania z fresh=True czytaja dysk od nowa. Jeden skan naraz.
+STATS_TTL_SEC = 60.0
+_stats_lock = threading.Lock()
+_stats_memo: dict = {}
+
+
+def _memo_stats(key: str, compute, fresh: bool) -> dict:
+    with _stats_lock:
+        hit = _stats_memo.get(key)
+        if not fresh and hit and time.monotonic() - hit[0] < STATS_TTL_SEC:
+            return dict(hit[1])
+        value = compute()
+        _stats_memo[key] = (time.monotonic(), value)
+        return dict(value)
+
+
+def invalidate_local_stats() -> None:
+    with _stats_lock:
+        _stats_memo.clear()
+
+
+def local_tree_stats(fresh: bool = False) -> dict:
+    """Folder scan used to decide fetch. Skips pack/manifest sidecars. Pamietany STATS_TTL_SEC."""
+    return _memo_stats("tree", _local_tree_stats_scan, fresh)
+
+
+def _local_tree_stats_scan() -> dict:
     root = cache_root()
     file_count = 0
     total_bytes = 0
@@ -1844,7 +1873,12 @@ def _read_json_file(path: Path) -> dict:
         return {}
 
 
-def local_thumb_stats() -> dict:
+def local_thumb_stats(fresh: bool = False) -> dict:
+    """Liczba miniatur w cache/thumbs. Pamietana STATS_TTL_SEC (patrz local_tree_stats)."""
+    return _memo_stats("thumbs", _local_thumb_stats_scan, fresh)
+
+
+def _local_thumb_stats_scan() -> dict:
     thumbs = cache_root() / "thumbs"
     avif_n = 0
     jpg_n = 0
@@ -1879,6 +1913,7 @@ def _persist_sync_state() -> None:
 def _set_sync(**fields) -> None:
     with _sync_lock:
         _sync_state.update(fields)
+    invalidate_local_stats()  # stan pobierania sie zmienil - liczby z dysku od nowa
     _persist_sync_state()
 
 
@@ -2789,7 +2824,7 @@ def run_cache_download(*, force: bool = False) -> dict:
         except Exception:
             pass
         persisted = persist_cache_state(source=used_source or "synology", synced=True)
-        after = local_tree_stats()
+        after = local_tree_stats(fresh=True)
         _remote_cache["at"] = 0.0  # policz needs_download na swiezo po pobraniu
         _set_sync(
             running=False,

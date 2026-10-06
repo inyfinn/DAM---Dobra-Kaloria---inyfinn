@@ -224,7 +224,10 @@ class BaselinePersistenceTests(unittest.TestCase):
 
     def test_ostatni_pelny_skan_zapisany_i_wymaga_indeksu(self):
         w = self.w
-        self.assertEqual(w.read_last_full_epoch(self.status, self.index), 0.0)
+        # brak zapisu + zdrowy indeks (pierwszy start po aktualizacji) = mtime indeksu, nie pelny skan
+        self.assertAlmostEqual(
+            w.read_last_full_epoch(self.status, self.index), self.index.stat().st_mtime, delta=1.0
+        )
         w._mark_full_scan_done(self.status)
         self.assertGreater(w.read_last_full_epoch(self.status, self.index), 1_700_000_000.0)
         self.index.unlink()

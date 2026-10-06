@@ -864,11 +864,16 @@ def _mark_full_scan_done(status_file: Path) -> None:
 
 
 def read_last_full_epoch(status_file: Path, index_file: Path) -> float:
-    """Epoka ostatniego pelnego skanu albo 0.0 (brak zapisu / brak indeksu = zrob pelny skan jak dotad)."""
+    """Epoka ostatniego pelnego skanu albo 0.0 (brak indeksu = zrob pelny skan jak dotad).
+    Brak zapisu przy zdrowym indeksie (pierwszy start po aktualizacji 2.5.4) = czas modyfikacji
+    indeksu: 06.10.2026 kazdy komputer po instalacji dostawal 30-50 min pelnego skanu 4 min po starcie."""
     try:
         if not index_file.is_file() or index_file.stat().st_size < 1024:
             return 0.0
-        data = json.loads(_last_full_file(status_file).read_text(encoding="utf-8"))
+        last_full = _last_full_file(status_file)
+        if not last_full.is_file():
+            return float(index_file.stat().st_mtime)
+        data = json.loads(last_full.read_text(encoding="utf-8"))
         return float(data.get("finished_epoch") or 0.0)
     except (OSError, ValueError, TypeError):
         return 0.0
