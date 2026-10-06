@@ -164,7 +164,10 @@
       var other = allRevs.find(function (r) {
         return String(r.index) !== String(rev.index);
       });
-      if (other && !assetMatchesRevision(a, other, allRevs)) {
+      // Bez allRevs w wywolaniu wewnetrznym: z nim "other" sprawdzal z powrotem "rev" i tak w kolko -
+      // kazdy produkt z DWOMA wariantami i plikiem niepasujacym do zadnego konczyl sie
+      // "Maximum call stack size exceeded" na project.html (Cynamonka, test 06.10.2026).
+      if (other && !assetMatchesRevision(a, other, null)) {
         if (/\.tif(f)?$/i.test(a.name || "") && !/kar6x|6300783/.test(hay)) return true;
       }
     }
@@ -1606,7 +1609,7 @@
         if (window.DamShell && typeof window.DamShell.setTrailLeaf === "function") {
           var trailIdx =
             revs.length > 1
-              ? revs.length + " warianty"
+              ? revs.length + " warianty - " // bez separatora bylo "2 WARIANTYCYNAMONKA" (test 06.10.2026)
               : p.product_index
                 ? p.product_index + " - "
                 : "";
