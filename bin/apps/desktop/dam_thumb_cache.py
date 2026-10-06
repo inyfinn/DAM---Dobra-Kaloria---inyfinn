@@ -1479,6 +1479,11 @@ def decide_cache_action(
     remote_b = int(remote.get("total_bytes") or 0)
     if local_n == 0:
         return "download"
+    # Wlasna publikacja: ten komputer przed chwila wyslal paczke na NAS (manifest.publisher = my), wiec
+    # NAS nie ma nic, czego my nie mamy. Bez tego po kazdej publikacji (po kazdej przebudowie indeksu)
+    # manifest byl "nowszy" niz synced_at i wlasciciel sciagal wlasne 343 MB (pomiar 06.10.2026, 17:23).
+    if str(remote.get("publisher") or "").strip().lower() == _publisher_name().strip().lower():
+        return "noop"
 
     # Licz miniatury, nie cale drzewo. NAS trzyma obok nich cache-pack.tar,
     # files.tsv i manifest.json, ktorych lokalnie celowo nie zapisujemy
