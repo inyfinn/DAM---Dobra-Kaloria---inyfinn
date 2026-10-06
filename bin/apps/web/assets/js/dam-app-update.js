@@ -185,22 +185,30 @@
 
   /*
    * Chip mieszka w sidebarze tuz pod "Wyloguj" (prosba usera 2026-09-18: w rogu byl
-   * niewidoczny "na pierwszy rzut oka"). Gdy sidebara nie ma albo jest schowany
-   * (mobile off-canvas, signin) - zostaje fixed w lewym dolnym rogu jak dotad.
+   * niewidoczny "na pierwszy rzut oka"). Takze przy zwinietym sidebarze (sama ikona, CSS
+   * dam-app.css). Gdy sidebara nie ma albo jest schowany (mobile off-canvas, signin) albo
+   * pod "Wyloguj" brakuje miejsca (niskie okno) - zostaje fixed w lewym dolnym rogu jak dotad.
    */
   var SIDEBAR_CHIP_ROOM_PX = 96; /* wysokosc karty "Gotowa aktualizacja" + odstep */
+  var SIDEBAR_CHIP_ROOM_COLLAPSED_PX = 58; /* karta tylko-ikona w zwinietym sidebarze: 50 px + odstep 8 px */
 
   function sidebarLogoutItem() {
-    /* Zwiniety sidebar (72px, dol zajety przez logo) nie ma miejsca na karte -
-       wtedy karta obok sidebara na dole, jak dotad. */
-    if (document.body && document.body.classList.contains("dam-sidebar-collapsed")) return null;
     var link = document.getElementById("damShellLogout");
     var li = link && link.closest ? link.closest("li") : null;
     if (!li || !li.parentNode) return null;
     var r = li.getBoundingClientRect();
     if (!r.width || !r.height) return null;
     /* niskie okno: karta pod "Wyloguj" bylaby ucieta dolna krawedzia */
-    if (r.bottom + SIDEBAR_CHIP_ROOM_PX > global.innerHeight) return null;
+    var room = SIDEBAR_CHIP_ROOM_PX;
+    var limit = global.innerHeight;
+    if (document.body && document.body.classList.contains("dam-sidebar-collapsed")) {
+      /* zwiniety: karta tylko-ikona; od dolu miejsce zajmuje logo (position:absolute) */
+      var logo = document.querySelector(".dam-sidebar-logo-collapsed");
+      var lr = logo ? logo.getBoundingClientRect() : null;
+      room = SIDEBAR_CHIP_ROOM_COLLAPSED_PX;
+      if (lr && lr.height) limit = Math.min(limit, lr.top);
+    }
+    if (r.bottom + room > limit) return null;
     return li;
   }
 
@@ -233,6 +241,12 @@
       label: el.querySelector(".dam-update-chip__label"),
       actions: el.querySelector(".dam-update-chip__actions"),
     };
+  }
+
+  /* tekst karty = tez podpowiedz: zwiniety sidebar (72 px) pokazuje tylko ikone */
+  function setChipLabel(parts, text) {
+    parts.label.textContent = text;
+    parts.root.title = text;
   }
 
   function ensureToast() {
@@ -348,7 +362,7 @@
     var parts = chipParts();
     parts.root.hidden = false;
     startSpinner(parts.spinner);
-    parts.label.textContent = tr("update.checking_chip", "Sprawdzanie nowej wersji…");
+    setChipLabel(parts, tr("update.checking_chip", "Sprawdzanie nowej wersji…"));
     parts.actions.textContent = "";
     repositionToast();
   }
@@ -357,7 +371,7 @@
     var parts = chipParts();
     parts.root.hidden = false;
     startSpinner(parts.spinner);
-    parts.label.textContent = formatDownloading(state.target, state.pct, state.bytes, state.total);
+    setChipLabel(parts, formatDownloading(state.target, state.pct, state.bytes, state.total));
     parts.actions.textContent = "";
     parts.actions.appendChild(
       makeChipButton(
@@ -376,7 +390,7 @@
     var parts = chipParts();
     parts.root.hidden = false;
     startSpinner(parts.spinner);
-    parts.label.textContent = tr("update.verifying", "Sprawdzanie podpisu aktualizacji…");
+    setChipLabel(parts, tr("update.verifying", "Sprawdzanie podpisu aktualizacji…"));
     parts.actions.textContent = "";
     repositionToast();
   }
@@ -385,9 +399,9 @@
     var parts = chipParts();
     parts.root.hidden = false;
     stopSpinner(parts.spinner);
-    parts.label.textContent = tr("update.ready_chip", "Gotowa aktualizacja do v{target}", {
+    setChipLabel(parts, tr("update.ready_chip", "Gotowa aktualizacja do v{target}", {
       target: state.target || "?",
-    });
+    }));
     parts.actions.textContent = "";
     parts.actions.appendChild(
       makeChipButton(
@@ -406,7 +420,7 @@
     var parts = chipParts();
     parts.root.hidden = false;
     stopSpinner(parts.spinner);
-    parts.label.textContent = text;
+    setChipLabel(parts, text);
     parts.actions.textContent = "";
     repositionToast();
     clearErrorHintTimer();
@@ -421,7 +435,7 @@
     var parts = chipParts();
     parts.root.hidden = false;
     stopSpinner(parts.spinner);
-    parts.label.textContent = tr("update.installing", "Instalowanie… aplikacja uruchomi się ponownie");
+    setChipLabel(parts, tr("update.installing", "Instalowanie… aplikacja uruchomi się ponownie"));
     parts.actions.textContent = "";
     repositionToast();
   }
@@ -969,14 +983,19 @@
       repositionToast();
     };
     global.addEventListener("resize", replace);
-    /* zwiniecie/rozwiniecie sidebara zmienia klase body - karta od razu na swoje miejsce */
+    /* zwiniecie/rozwiniecie sidebara zmienia klase body - karta od razu na swoje miejsce.
+       Animacja (dam-sidebar-morphing) zdejmuje "collapsed" na starcie, a geometria jest wtedy przejsciowa:
+       liczymy dopiero po jej zakonczeniu (zdjecie klasy morphing). */
     if (global.MutationObserver && document.body) {
       var wasCollapsed = document.body.classList.contains("dam-sidebar-collapsed");
+      var wasMorphing = document.body.classList.contains("dam-sidebar-morphing");
       new MutationObserver(function () {
         var now = document.body.classList.contains("dam-sidebar-collapsed");
-        if (now === wasCollapsed) return;
+        var morphing = document.body.classList.contains("dam-sidebar-morphing");
+        var changed = !morphing && (now !== wasCollapsed || wasMorphing);
         wasCollapsed = now;
-        replace();
+        wasMorphing = morphing;
+        if (changed) replace();
       }).observe(document.body, { attributes: true, attributeFilter: ["class"] });
     }
   }

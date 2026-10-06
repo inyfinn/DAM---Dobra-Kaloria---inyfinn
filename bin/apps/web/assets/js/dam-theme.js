@@ -87,17 +87,20 @@
   var DK_PACKS = {
     "dobra-kaloria": {
       light: {
-        brandGreen: "#3B2A20", ok: "#0F763E",
-        bg: "#FFFFFF", surface: "#FFFCF5", elevated: "#EBE4D3", input: "#F8F1E0", chrome: "#EDE7DA",
-        border: "#EDE7DA", borderStrong: "#D9CFBB", fieldBorder: "#9C8B72", hover: "#F8F1E0",
-        well: "#F8F1E0", text: "#3B2A20", muted: "#7D5E44", label: "#85654A", dark: "#3B2A20",
-        accent: "#3B2A20", accentHover: "#2A1D15", onAccent: "#FFFFFF", danger: "#C0262C",
-        shadowRgb: "59 42 32", shadowAlpha: "0.08", l0: "#FFFFFF", l1: "#FFFCF5", l2: "#F8F1E0",
-        l3: "#F2EBDA", l4: "#EBE4D3", bs0: "#F5EEDD", bs1: "#EEE7D6", bs2: "#E8E1D0", bs3: "#E1DAC9",
-        bs4: "#DBD4C3", brandSoft: "#F2EBDA", brandSoftStrong: "#E1DAC9", switchOff: "#9C8B72",
-        disabledBg: "#F0EBDD", inverseBg: "#3B2A20", onInverse: "#FFFFFF", warnBg: "#FFF4D6",
-        warnBorder: "#EBCB6B", warnText: "#7A4E00",
-        tags: [["#F2E7CC", "#65500B", "#DACBA4"], ["#EEE9CC", "#5F520D", "#D5CDA4"], ["#F5E6CC", "#6A4D0C", "#DEC9A4"], ["#EBEACD", "#595512", "#D0CFA6"], ["#F8E5CD", "#6E4A11", "#E2C7A5"], ["#E7EBCF", "#525718", "#CBD1A8"], ["#FAE3CE", "#724816", "#E6C6A7"], ["#E3ECD1", "#4B5A1F", "#C6D2AB"]],
+        /* DS 2.0.0 "sklep": biel > panel L1 > BIALA karta L2 > kafel ecru L3 > bez L4 (L2 jasniejszy od L1).
+           DS 2.0.5 (S17): tagi w 8 roznych barwach, jedna GRUPA = jedna barwa, bez obrysu: smak roz, typ / kategoria
+           pomarancz, opakowanie zolty, autor morski, opis limonka, podkategoria czerwien, jezyk niebieski, marka zielen. */
+        brandGreen: "#007936", ok: "#007936",
+        bg: "#FFFFFF", surface: "#F8F7F5", elevated: "#FFFFFF", input: "#FFFFFF", chrome: "#DDDDDD",
+        border: "#DDDDDD", borderStrong: "#CED4DA", fieldBorder: "#868E96", hover: "#F6F2EF",
+        well: "#F8F7F5", text: "#222222", muted: "#666666", label: "#333333", dark: "#222222",
+        accent: "#007936", accentHover: "#00642E", onAccent: "#FFFFFF", danger: "#C0262C",
+        shadowRgb: "34 34 34", shadowAlpha: "0.08", l0: "#FFFFFF", l1: "#F8F7F5", l2: "#FFFFFF",
+        l3: "#FDF8EC", l4: "#F5ECD8", bs0: "#DDDDDD", bs1: "#DDDDDD", bs2: "#DDDDDD", bs3: "#EADFC6",
+        bs4: "#DDD0B4", brandSoft: "#E9F2EC", brandSoftStrong: "#CFE0D4", switchOff: "#E9E9E9",
+        disabledBg: "#F5F5F5", inverseBg: "#00642E", onInverse: "#FFFFFF", warnBg: "#FFF4D6",
+        warnBorder: "#EBCB6B", warnText: "#222222",
+        tags: [["#FFDEE9", "#73294B", "#FFDEE9"], ["#FFE2CB", "#6B3900", "#FFE2CB"], ["#F4E8BB", "#564700", "#F4E8BB"], ["#BAF5F1", "#005350", "#BAF5F1"], ["#DFF0C4", "#3B5001", "#DFF0C4"], ["#FFDFDC", "#782A28", "#FFDFDC"], ["#D3ECFF", "#014D73", "#D3ECFF"], ["#CBF4D5", "#005729", "#CBF4D5"]],
       },
       dark: {
         bg: "#0F2315", surface: "#192C18", elevated: "#3D4427", input: "#24341C", chrome: "#3B4E37",
@@ -114,27 +117,30 @@
     },
     "dobra-kaloria-krem": {
       light: {
-        brandGreen: "#3B2A20", ok: "#0F763E",
-        bg: "#FFFFFF", surface: "#FFFCF5", elevated: "#EBE4D3", input: "#F8F1E0", chrome: "#EDE7DA",
-        border: "#EDE7DA", borderStrong: "#D9CFBB", fieldBorder: "#9C8B72", hover: "#F8F1E0",
-        well: "#F8F1E0", text: "#3B2A20", muted: "#7D5E44", label: "#85654A", dark: "#3B2A20",
-        accent: "#3B2A20", accentHover: "#2A1D15", onAccent: "#FFFFFF", danger: "#C0262C",
-        shadowRgb: "59 42 32", shadowAlpha: "0.08", l0: "#FFFFFF", l1: "#FFFCF5", l2: "#F8F1E0",
-        l3: "#F2EBDA", l4: "#EBE4D3", bs0: "#F5EEDD", bs1: "#EEE7D6", bs2: "#E8E1D0", bs3: "#E1DAC9",
-        bs4: "#DBD4C3", brandSoft: "#F2EBDA", brandSoftStrong: "#E1DAC9", switchOff: "#9C8B72",
-        disabledBg: "#F0EBDD", inverseBg: "#3B2A20", onInverse: "#FFFFFF", warnBg: "#FFF4D6",
-        warnBorder: "#EBCB6B", warnText: "#7A4E00",
-        tags: [["#F2E7CC", "#65500B", "#DACBA4"], ["#EEE9CC", "#5F520D", "#D5CDA4"], ["#F5E6CC", "#6A4D0C", "#DEC9A4"], ["#EBEACD", "#595512", "#D0CFA6"], ["#F8E5CD", "#6E4A11", "#E2C7A5"], ["#E7EBCF", "#525718", "#CBD1A8"], ["#FAE3CE", "#724816", "#E6C6A7"], ["#E3ECD1", "#4B5A1F", "#C6D2AB"]],
+        /* DS 2.0.0 "sklep": biel > panel L1 > BIALA karta L2 > kafel ecru L3 > bez L4 (L2 jasniejszy od L1).
+           DS 2.0.5 (S17): tagi w 8 roznych barwach, jedna GRUPA = jedna barwa, bez obrysu: smak roz, typ / kategoria
+           pomarancz, opakowanie zolty, autor morski, opis limonka, podkategoria czerwien, jezyk niebieski, marka zielen. */
+        brandGreen: "#007936", ok: "#007936",
+        bg: "#FFFFFF", surface: "#FDF8EC", elevated: "#FFFFFF", input: "#FFFFFF", chrome: "#DDDDDD",
+        border: "#DDDDDD", borderStrong: "#CED4DA", fieldBorder: "#868E96", hover: "#F6F2EF",
+        well: "#FDF8EC", text: "#222222", muted: "#666666", label: "#333333", dark: "#222222",
+        accent: "#007936", accentHover: "#00642E", onAccent: "#FFFFFF", danger: "#C0262C",
+        shadowRgb: "34 34 34", shadowAlpha: "0.08", l0: "#FFFFFF", l1: "#FDF8EC", l2: "#FFFFFF",
+        l3: "#F5ECD8", l4: "#F0E6CF", bs0: "#DDDDDD", bs1: "#EADFC6", bs2: "#DDDDDD", bs3: "#DDD0B4",
+        bs4: "#D3C5A6", brandSoft: "#E9F2EC", brandSoftStrong: "#CFE0D4", switchOff: "#E9E9E9",
+        disabledBg: "#F5F5F5", inverseBg: "#00642E", onInverse: "#FFFFFF", warnBg: "#FFF4D6",
+        warnBorder: "#EBCB6B", warnText: "#222222",
+        tags: [["#FFDEE9", "#73294B", "#FFDEE9"], ["#FFE2CB", "#6B3900", "#FFE2CB"], ["#F4E8BB", "#564700", "#F4E8BB"], ["#BAF5F1", "#005350", "#BAF5F1"], ["#DFF0C4", "#3B5001", "#DFF0C4"], ["#FFDFDC", "#782A28", "#FFDFDC"], ["#D3ECFF", "#014D73", "#D3ECFF"], ["#CBF4D5", "#005729", "#CBF4D5"]],
       },
       dark: {
         brandGreen: "#6B5E4B",
         bg: "#120F0A", surface: "#1A1611", elevated: "#352E25", input: "#231E17", chrome: "#3F362A",
         border: "#3F362A", borderStrong: "#5F5240", fieldBorder: "#8C7D65", hover: "#231E17",
         well: "#231E17", text: "#F5F1E8", muted: "#CBBFA8", label: "#D2B48F", dark: "#F5F1E8",
-        accent: "#E6D3A0", accentHover: "#F5E6C0", onAccent: "#1C1812", danger: "#F2878A",
+        accent: "#E6D3A0", accentHover: "#F5F1E8", onAccent: "#1C1812", danger: "#F2878A",
         shadowRgb: "6 5 3", shadowAlpha: "0.4", l0: "#120F0A", l1: "#1A1611", l2: "#231E17", l3: "#2C261E",
         l4: "#352E25", bs0: "#28231B", bs1: "#312B22", bs2: "#3B3429", bs3: "#443C31", bs4: "#4E4538",
-        brandSoft: "#262017", brandSoftStrong: "#2F291F", switchOff: "#8C7D65", disabledBg: "#2F291F",
+        brandSoft: "#262017", brandSoftStrong: "#2F291F", switchOff: "#3F362A", disabledBg: "#2F291F",
         inverseBg: "#F5F1E8", onInverse: "#1C1812", warnBg: "#262017", warnBorder: "#8E7C50",
         warnText: "#EBCB6B",
         tags: [["#3A2F11", "#E6D3A0", "#5A4B22"], ["#373011", "#E0D5A0", "#564D23"], ["#3C2E11", "#EBD0A0", "#5E4A22"], ["#333213", "#DAD8A2", "#514F25"], ["#3F2C12", "#F0CEA1", "#614824"], ["#303315", "#D3DAA5", "#4D5127"], ["#412B14", "#F5CCA4", "#644626"], ["#2C3417", "#CCDCA9", "#47522B"]],
@@ -155,6 +161,77 @@
     "--dam-surface-0", "--dam-surface-1", "--dam-surface-2", "--dam-surface-3", "--dam-surface-4",
     "--dam-border-l0", "--dam-border-l1", "--dam-border-l2", "--dam-border-l3", "--dam-border-l4",
   ];
+  /* Role z design systemu Dobra Kaloria 2.0.0 (READY-2.0.0.txt) -> zmienne --dam-<rola>, malowane razem z DK_PACKS.
+     Zmiana palety = podmiana TYLKO tych tabel i DK_PACKS; CSS komponentow nie ma barw na sztywno.
+     Wartosc "var(--dam-...)" idzie za zestawem i za wlasnym akcentem usera. BASE = style jasne (sklep i krem). */
+  var DK_CTRL_BASE = {
+    "heading": "var(--dam-text)", "heading-accent": "#00642E", "overlay": "#FFFFFF", "strip": "#F8F4F1",
+    "zebra": "#F6F2EF", "progress": "#47C33D", "progress-track": "#E9E9E9",
+    "cta-bg": "#FFD821", "cta-bg-hover": "#F6C700", "cta-ink": "#222222",
+    "check-bg": "#FFFFFF", "check-border": "var(--dam-field-border)",
+    "check-border-hover": "var(--dam-primary)", "check-mark": "var(--dam-primary)",
+    "check-disabled-border": "var(--dam-border-strong)", "check-disabled-mark": "#ADB5BD",
+    "slider-track": "#E9E9E9", "slider-fill": "var(--dam-primary)", "slider-thumb": "#FFFFFF",
+    "slider-thumb-border": "var(--dam-primary)",
+    "switch-off-border": "var(--dam-field-border)", "switch-on": "var(--dam-primary)", "switch-knob": "#FFFFFF",
+    "btn2-bg": "#FFFFFF", "btn2-text": "var(--dam-text)", "btn2-border": "var(--dam-text)",
+    "btn2-hover-bg": "var(--dam-surface-hover)",
+    "step-active-bg": "var(--dam-primary)", "step-active-text": "var(--dam-on-primary)",
+    "step-idle-border": "var(--dam-border-strong)", "step-idle-text": "var(--dam-text-muted)",
+    "step-done": "var(--dam-primary)",
+    "icon": "var(--dam-primary)", "icon-bg": "#F5F5F5", "focus": "var(--dam-primary)",
+    "danger-soft": "#FCE8E9", "placeholder-ink": "var(--dam-text-muted)",
+  };
+  var DK_CTRL = {
+    "dobra-kaloria": {
+      light: {},
+      dark: {
+        "heading-accent": "var(--dam-primary)", "overlay": "var(--dam-surface-4)", "strip": "var(--dam-surface-1)",
+        "zebra": "var(--dam-surface-1)", "progress": "var(--dam-primary)", "progress-track": "#3B4E37",
+        "cta-bg": "#FFD42A", "cta-ink": "#3B2A20",
+        "check-bg": "var(--dam-surface-3)", "check-disabled-mark": "var(--dam-field-border)",
+        "slider-track": "#3B4E37", "slider-thumb": "var(--dam-surface-1)", "switch-knob": "#0F190C",
+        "btn2-bg": "var(--dam-surface-1)", "btn2-text": "var(--dam-primary)", "btn2-border": "var(--dam-primary)",
+        "btn2-hover-bg": "var(--dam-surface-2)", "icon-bg": "var(--dam-surface-3)", "focus": "#FFD42A",
+        "danger-soft": "#242F1E", "placeholder-ink": "var(--dam-label)",
+      },
+    },
+    "dobra-kaloria-krem": {
+      light: {},
+      dark: {
+        "heading-accent": "var(--dam-primary)", "overlay": "var(--dam-surface-4)", "strip": "var(--dam-surface-1)",
+        "zebra": "var(--dam-surface-1)", "progress": "var(--dam-primary)", "progress-track": "#3F362A",
+        "cta-bg": "#FFD42A", "cta-ink": "#3B2A20",
+        "check-bg": "var(--dam-surface-0)", "check-border": "var(--dam-text-muted)",
+        "check-disabled-mark": "var(--dam-field-border)",
+        "slider-track": "#3F362A", "slider-fill": "var(--dam-text-muted)", "slider-thumb": "var(--dam-surface-1)",
+        "switch-on": "#AD8767", "btn2-bg": "var(--dam-surface-1)", "btn2-border": "var(--dam-field-border)",
+        "btn2-hover-bg": "var(--dam-surface-2)", "icon": "var(--dam-text-muted)", "icon-bg": "var(--dam-surface-3)",
+        "danger-soft": "#262017", "placeholder-ink": "var(--dam-label)",
+      },
+    },
+  };
+  Object.keys(DK_CTRL_BASE).forEach(function (k) { DK_ONLY_VARS.push("--dam-" + k); });
+
+  /* Suwak zakresu z wypelnieniem (styl DK, regula S8): CSS rysuje wypelnienie toru z --dam-range-pct.
+     Obojetne dla innych zestawow (nikt tej zmiennej nie czyta). Suwaki dwubiegunowe (min < 0, strojenie barw) pomijamy.
+     ponytail: wartosc ustawiona z kodu PO starcie strony nie wywoluje zdarzenia - odswiezamy przy starcie, po zaladowaniu
+     i przy kazdym ruchu; gdyby suwaki mnozyly sie w oknach dynamicznych, podpiac sync pod ich render. */
+  function syncRangeFill(el) {
+    if (!el || el.type !== "range") return;
+    var min = parseFloat(el.min || "0"), max = parseFloat(el.max || "100"), val = parseFloat(el.value);
+    if (!(max > min) || min < 0 || isNaN(val)) return;
+    el.style.setProperty("--dam-range-pct", Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100)).toFixed(1) + "%");
+  }
+  function syncAllRangeFills() {
+    try {
+      Array.prototype.forEach.call(document.querySelectorAll('input[type="range"]'), syncRangeFill);
+    } catch (_e) { /* ignore */ }
+  }
+  document.addEventListener("input", function (e) { syncRangeFill(e.target); }, true);
+  document.addEventListener("change", function (e) { syncRangeFill(e.target); }, true);
+  document.addEventListener("DOMContentLoaded", syncAllRangeFills);
+  window.addEventListener("load", function () { syncAllRangeFills(); setTimeout(syncAllRangeFills, 1500); });
   var DARK_ACCENT_L_FLOOR = 25.1;
   var LADDER_MIGRATE_KEY = "dam_theme_ladder_v8";
   var CONTRAST_AA = 4.5;
@@ -854,7 +931,7 @@
      Licznik "+12" i grupa "inne" = surface-3 + text-muted (bez koloru). Zmienne czyta dam-dk-components.css. */
   var DK_TAG_INDEX = {
     smak: 1, typ: 2, kategoria: 2, przeznaczenie: 2, opakowanie: 3, autor: 4, osoba: 4, opis: 5,
-    podkategoria: 6, jezyk: 7, mix: 8, warianty: 8, zrodlo: 8,
+    podkategoria: 6, jezyk: 7, mix: 8, warianty: 8, zrodlo: 8, marka: 8,
   };
   var DK_TAG_VARS = [];
   function paintDkTags(root, p) {
@@ -943,6 +1020,8 @@
     setVar(root, "--dam-brand-soft", tb(p.brandSoft, 0.4));
     setVar(root, "--dam-brand-soft-strong", tb(p.brandSoftStrong, 0.4));
     setVar(root, "--dam-switch-off", p.switchOff);
+    var ctrl = (DK_CTRL[dkId] || {})[isDark ? "dark" : "light"] || {};
+    Object.keys(DK_CTRL_BASE).forEach(function (k) { setVar(root, "--dam-" + k, ctrl[k] || DK_CTRL_BASE[k]); });
     setVar(root, "--dam-disabled-bg", tb(p.disabledBg, 0.4));
     setVar(root, "--dam-inverse-bg", p.inverseBg);
     setVar(root, "--dam-on-inverse", p.onInverse);

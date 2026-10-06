@@ -603,23 +603,52 @@ def start_hard_reset_watchdog(api: "DamJsApi") -> None:
     threading.Thread(target=_loop, name="dam-hard-reset-watchdog", daemon=True).start()
 
 
-def preferred_window_size() -> tuple[int, int]:
-    """Szerokie okno startowe: UI miesci sie bez scrolla poziomego."""
-    width, height = 1680, 1000
-    if sys.platform == "win32":
-        try:
-            import ctypes
+def work_area_logical() -> tuple[int, int, int, int] | None:
+    """Obszar roboczy ekranu glownego (bez paska zadan) w pikselach LOGICZNYCH: left, top, width, height.
 
-            user32 = ctypes.windll.user32
-            sw = int(user32.GetSystemMetrics(0) or 0)  # SM_CXSCREEN
-            sh = int(user32.GetSystemMetrics(1) or 0)  # SM_CYSCREEN
-            if sw > 0 and sh > 0:
-                # ~92% szerokosci / ~88% wysokosci, z buforem na taskbar
-                width = max(1480, min(1920, int(sw * 0.92)))
-                height = max(900, min(1200, int(sh * 0.88)))
+    pywebview mnozy width/height/x/y przez skale DPI, wiec podajemy jednostki logiczne. SPI_GETWORKAREA zwraca
+    piksele w ukladzie procesu: fizyczne, gdy proces zna DPI (wtedy GetDpiForSystem > 96), logiczne, gdy nie zna
+    (GetDpiForSystem = 96) - dzielenie przez te skale daje w obu przypadkach jednostki logiczne.
+    """
+    if sys.platform != "win32":
+        return None
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        user32 = ctypes.windll.user32
+        rect = wintypes.RECT()
+        if not user32.SystemParametersInfoW(0x0030, 0, ctypes.byref(rect), 0):  # SPI_GETWORKAREA
+            return None
+        try:
+            scale = max(1.0, int(user32.GetDpiForSystem()) / 96.0)
         except Exception:
-            pass
+            scale = 1.0
+        width, height = int((rect.right - rect.left) / scale), int((rect.bottom - rect.top) / scale)
+        if width > 0 and height > 0:
+            return int(rect.left / scale), int(rect.top / scale), width, height
+    except Exception:
+        pass
+    return None
+
+
+def fit_window_size(area_w: int, area_h: int) -> tuple[int, int]:
+    """Szerokie okno startowe (~92% x ~88% ekranu, 1480-1920 x 900-1200), ale NIGDY wieksze niz obszar roboczy.
+
+    2026-10-06 (uwaga usera, regula G7): na laptopie 1920x1080 przy skali 125-150% obszar roboczy ma
+    1536x824 albo 1280x680 pikseli logicznych, a okno startowalo jako 1480x900 - dol ladowal pod paskiem zadan.
+    """
+    width = min(area_w, max(1480, min(1920, int(area_w * 0.92))))
+    height = min(area_h, max(900, min(1200, int(area_h * 0.88))))
     return width, height
+
+
+def preferred_window_size() -> tuple[int, int]:
+    """Rozmiar okna startowego w pikselach logicznych (patrz fit_window_size)."""
+    area = work_area_logical()
+    if area:
+        return fit_window_size(area[2], area[3])
+    return 1680, 1000
 
 
 def apply_native_window_icon(icon_path: str) -> None:
@@ -811,15 +840,24 @@ def main() -> None:
     js_api = DamJsApi()
     start_hard_reset_watchdog(js_api)
     win_w, win_h = preferred_window_size()
+    # Okno wysrodkowane w obszarze roboczym (nie na calym ekranie - inaczej dol wchodzi pod pasek zadan);
+    # minimalny rozmiar nie moze byc wiekszy od samego okna na malym ekranie.
+    area = work_area_logical()
+    win_pos = (
+        {"x": area[0] + max(0, (area[2] - win_w) // 2), "y": area[1] + max(0, (area[3] - win_h) // 2)}
+        if area
+        else {}
+    )
 
     window = webview.create_window(
         APP_TITLE,
         start_url,
         width=win_w,
         height=win_h,
-        min_size=(1400, 800),
+        min_size=(min(1400, win_w), min(800, win_h)),
         text_select=True,
         js_api=js_api,
+        **win_pos,
     )
     if icon_path:
         try:

@@ -165,7 +165,9 @@ async function loginErr(payload) {
   ok(/DamApi\.dbState\(\)/.test(html) && /checkDb\(\)\.then\(function \(st\)/.test(html), "signin: baza sprawdzana PRZED wyslaniem hasla");
   ok(/submitBtn\.disabled = busy \|\| !canSubmit\(\)/.test(html), "signin: przycisk Zaloguj zablokowany, gdy baza nie odpowiada");
   ok(!/—/.test(html), "signin: bez pauzy (em dash) w tresci");
-  ok(/dam-api\.js\?v=2\.5\.4/.test(html), "signin: dam-api.js?v=2.5.4");
+  /* wersja z version.json, nie wpisana na sztywno - test nie moze padac przy kazdym podbiciu (2.5.5) */
+  var APP_VER = JSON.parse(fs.readFileSync(path.join(WEB, "version.json"), "utf8")).version;
+  ok(html.indexOf("dam-api.js?v=" + APP_VER) >= 0, "signin: dam-api.js?v=" + APP_VER);
   ok(!/—/.test(fs.readFileSync(path.join(JS, "dam-api.js"), "utf8").split("var AUTH_MESSAGES")[1].split("function dbStateFrom")[0]),
     "dam-api: komunikaty bez pauzy (em dash)");
 
@@ -175,7 +177,7 @@ async function loginErr(payload) {
     var m = /dam-api\.js\?v=([0-9.]+)/.exec(fs.readFileSync(path.join(WEB, n), "utf8"));
     if (m) vers[m[1]] = (vers[m[1]] || 0) + 1;
   });
-  ok(Object.keys(vers).length === 1 && vers["2.5.4"] > 0, "dam-api.js?v= spojne w HTML: " + JSON.stringify(vers));
+  ok(Object.keys(vers).length === 1 && vers[APP_VER] > 0, "dam-api.js?v= spojne w HTML: " + JSON.stringify(vers));
 
   console.log(fails ? ("\n" + fails + " FAILED") : "\nALL OK");
   process.exit(fails ? 1 : 0);

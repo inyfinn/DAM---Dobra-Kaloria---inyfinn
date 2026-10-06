@@ -5,18 +5,33 @@
   var tokens = null;
   var campaigns = null;
   var CB = "liveidx20260914b";
-  /** B3: lokalny poster gdy bridge/ffmpeg nie odda klatki (data-URI SVG). */
-  var VIDEO_POSTER_FALLBACK =
-    "data:image/svg+xml," +
-    encodeURIComponent(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">' +
-        /* bez wlasnego tla: w ciemnym motywie jasny prostokat byl biala plama */
-        '<rect width="640" height="360" fill="none"/>' +
-        '<circle cx="320" cy="168" r="42" fill="#7A9A8C"/>' +
-        '<path d="M308 148 L308 188 L348 168 Z" fill="#fff"/>' +
-        '<text x="320" y="248" text-anchor="middle" fill="#7A9A8C" ' +
-        'font-family="Segoe UI,Arial,sans-serif" font-size="22">Wideo</text></svg>'
-    );
+  /** B3: lokalny poster gdy bridge/ffmpeg nie odda klatki (data-URI SVG). Kolor: token --dam-placeholder-ink (zestawy DK), domyslnie jak dotad. */
+  function buildVideoPosterFallback() {
+    var ink = "";
+    try {
+      ink = getComputedStyle(document.documentElement).getPropertyValue("--dam-placeholder-ink").trim();
+    } catch (_e) {
+      /* ignore */
+    }
+    ink = ink.replace(/["<>&]/g, "") || "#7A9A8C";
+    return "data:image/svg+xml," +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">' +
+          /* bez wlasnego tla: w ciemnym motywie jasny prostokat byl biala plama */
+          '<rect width="640" height="360" fill="none"/>' +
+          '<circle cx="320" cy="168" r="42" fill="' + ink + '"/>' +
+          '<path d="M308 148 L308 188 L348 168 Z" fill="#fff"/>' +
+          '<text x="320" y="248" text-anchor="middle" fill="' + ink + '" ' +
+          'font-family="Segoe UI,Arial,sans-serif" font-size="22">Wideo</text></svg>'
+      );
+  }
+  var VIDEO_POSTER_FALLBACK = buildVideoPosterFallback();
+  /* zmiana motywu / zestawu: kolor z tokenu liczymy od nowa */
+  ["dam:theme", "dam:scheme"].forEach(function (evt) {
+    window.addEventListener(evt, function () {
+      VIDEO_POSTER_FALLBACK = buildVideoPosterFallback();
+    });
+  });
   var TAG_COUNTS_KEY = "dam_branding_show_tag_counts";
   var BRANDING_SORT_KEY = "dam_branding_sort_mode";
   var BRANDING_SORT_DEFAULT = "newest";

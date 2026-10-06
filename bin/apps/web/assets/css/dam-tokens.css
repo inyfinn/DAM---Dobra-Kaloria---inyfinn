@@ -240,9 +240,9 @@ html[data-dam-style="dk"] {
   --dam-font: "Lato", "Segoe UI", Arial, sans-serif;
   --dam-font-display: "Mindset", "Arial Narrow", "Segoe UI", Arial, sans-serif;
   /* Glowna akcja: zolty z brazowym tekstem, jedna na ekran - w obu trybach */
-  --dam-cta-bg: #FFD42A;
+  --dam-cta-bg: #FFD821;
   --dam-cta-bg-hover: #F6C700;
-  --dam-cta-ink: #3B2A20;
+  --dam-cta-ink: #222222;
   /* Ksztalt DS: przycisk 4, pole 8, karta 12 */
   --dam-radius-md: 12px;
   --dam-radius-sm: 8px;
@@ -257,21 +257,23 @@ html[data-dam-style="dk"] {
      (DK_PACKS); tu domyslne = DK 1 jasny, zeby arkusz dzialal takze przed skryptem. */
   --dam-radius-lg: 16px;
   --dam-surface-0: #FFFFFF;
-  --dam-surface-1: #FFFCF5;
-  --dam-surface-2: #F8F1E0;
-  --dam-surface-3: #F2EBDA;
-  --dam-surface-4: #EBE4D3;
-  --dam-brand-soft: #F2EBDA;
-  --dam-brand-soft-strong: #E1DAC9;
-  --dam-switch-off: #9C8B72;
-  --dam-disabled-bg: #F0EBDD;
-  --dam-inverse-bg: #3B2A20;
+  --dam-surface-1: #F8F7F5;
+  --dam-surface-2: #FFFFFF;
+  --dam-surface-3: #FDF8EC;
+  --dam-surface-4: #F5ECD8;
+  --dam-brand-soft: #E9F2EC;
+  --dam-brand-soft-strong: #CFE0D4;
+  --dam-switch-off: #E9E9E9;
+  --dam-disabled-bg: #F5F5F5;
+  --dam-inverse-bg: #00642E;
   --dam-on-inverse: #FFFFFF;
   --dam-warning-bg: #FFF4D6;
   --dam-warning-border: #EBCB6B;
   --dam-warning-text: #6F4A00;
 }
 html[data-dam-style="dk"][data-theme="dark"] {
+  --dam-cta-bg: #FFD42A;
+  --dam-cta-ink: #3B2A20;
   --dam-surface-0: #0F2315;
   --dam-surface-1: #192C18;
   --dam-surface-2: #24341C;
@@ -287,6 +289,43 @@ html[data-dam-style="dk"][data-theme="dark"] {
   --dam-warning-border: #7A4E00;
   --dam-warning-text: #EBCB6B;
 }
+
+/* ==== Styl Dobra Kaloria: tokeny DS 2.0.0 (2.5.5) ==== */
+/* Tokeny NIE-kolorowe wg design systemu Dobra Kaloria 2.0.0 (--dk-control-*, --dk-radius-*, --dk-shadow-*).
+   Ten plik trafia do dam-tokens.css, NIE do sekcji 21.
+   KOLORY (drabina L0-L4, role --dam-heading-accent, --dam-overlay, --dam-zebra, --dam-strip, --dam-progress,
+   --dam-icon, --dam-icon-bg, --dam-btn2-*, --dam-step-*, --dam-check-*, --dam-slider-*, --dam-switch-*, --dam-focus,
+   --dam-cta-*, --dam-danger-soft, --dam-placeholder-ink) maluje dam-theme.js: DK_PACKS + DK_CTRL_BASE / DK_CTRL. */
+html[data-dam-style="dk"] {
+  --dam-check-size: 20px;
+  --dam-check-radius: 4px;
+  --dam-check-border-width: 1.5px;
+  --dam-btn2-border-width: 1px;
+  --dam-slider-thumb-border-width: 2px;
+  /* S17: przyciemnienie tla pod oknem dialogowym - cieply braz (user: "szczegolnie to przyciemnienie brazowe" - podoba sie) */
+  --dam-scrim: rgb(59 42 32 / 0.55);
+}
+/* Style jasne (sklep / krem) - ksztalt i cien DS 2.0: przycisk 4, pole 4, panel/karta/kafel 8; karty i panele bez
+   cienia; cien tylko nakladki. Style ciemne zostaja przy dotychczasowych wartosciach. */
+html[data-dam-style="dk"]:not([data-theme="dark"]) {
+  --dam-radius-btn: 4px;
+  --dam-radius-btn-compact: 4px;
+  --dam-radius-sm: 4px;
+  --dam-control-radius: 4px;
+  --dam-radius-md: 8px;
+  --dam-radius-lg: 12px;
+  --dam-shadow-card: none;
+  --dam-shadow-overlay: 0 10px 30px rgb(var(--dam-shadow-rgb) / 0.22);
+  --dam-shadow-raised: 0 1px 4px rgb(var(--dam-shadow-rgb) / 0.16);
+  --dam-shadow-focus-field: 0 0 0 3px color-mix(in srgb, var(--dam-primary) 22%, transparent);
+  /* S13 "budzet obrysow": element cichy (przycisk trzeciorzedny, nieaktywny segment, znaczek indeksu, licznik, litera
+     statusu) = samo wypelnienie, bez obrysu. Wypelnienie zalezy od podloza: na bieli #F5F5F5, na szarym panelu biel.
+     Zmienna kontekstowa: panel L1 ustawia ja na biel, biala karta w panelu z powrotem na #F5F5F5 (dziedziczenie). */
+  --dam-quiet-bg: var(--dam-icon-bg);
+  --dam-quiet-hover-bg: var(--dam-brand-soft);
+  --dam-quiet-text: var(--dam-text);
+}
+/* ==== koniec tokenow DS 2.0.0 ==== */
 
 /* iOS Safari zooms any focused control below 16 px. Desktop density stays 12. */
 @media (max-width: 767px) {

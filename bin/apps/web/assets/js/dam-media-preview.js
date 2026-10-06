@@ -4,28 +4,52 @@
 (function () {
   "use strict";
 
-  var PLACEHOLDER_SVG =
-    "data:image/svg+xml," +
-    encodeURIComponent(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="240" viewBox="0 0 320 240">' +
-        /* bez wlasnego tla: w ciemnym motywie jasny prostokat #f1f3f6 byl biala plama */
-        '<rect fill="none" width="320" height="240"/>' +
-        '<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#94a3b8" font-family="sans-serif" font-size="14">Brak podglądu</text>' +
-        "</svg>"
-    );
+  /* Kolor zastepczych obrazkow (data-URI nie widzi CSS): token --dam-placeholder-ink (zestawy DK), domyslnie jak dotad. */
+  function placeholderInk(dflt) {
+    var v = "";
+    try {
+      v = getComputedStyle(document.documentElement).getPropertyValue("--dam-placeholder-ink").trim();
+    } catch (_e) {
+      /* ignore */
+    }
+    return v.replace(/["<>&]/g, "") || dflt;
+  }
+
+  function buildPlaceholderSvg() {
+    return "data:image/svg+xml," +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="240" viewBox="0 0 320 240">' +
+          /* bez wlasnego tla: w ciemnym motywie jasny prostokat #f1f3f6 byl biala plama */
+          '<rect fill="none" width="320" height="240"/>' +
+          '<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="' + placeholderInk("#94a3b8") + '" font-family="sans-serif" font-size="14">Brak podglądu</text>' +
+          "</svg>"
+      );
+  }
 
   /** B3: lokalny poster gdy ffmpeg/bridge nie odda klatki. */
-  var VIDEO_POSTER_FALLBACK =
-    "data:image/svg+xml," +
-    encodeURIComponent(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">' +
-        /* bez wlasnego tla: w ciemnym motywie jasny prostokat byl biala plama */
-        '<rect width="640" height="360" fill="none"/>' +
-        '<circle cx="320" cy="168" r="42" fill="#7A9A8C"/>' +
-        '<path d="M308 148 L308 188 L348 168 Z" fill="#fff"/>' +
-        '<text x="320" y="248" text-anchor="middle" fill="#7A9A8C" ' +
-        'font-family="Segoe UI,Arial,sans-serif" font-size="22">Wideo</text></svg>'
-    );
+  function buildVideoPosterFallback() {
+    var ink = placeholderInk("#7A9A8C");
+    return "data:image/svg+xml," +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">' +
+          /* bez wlasnego tla: w ciemnym motywie jasny prostokat byl biala plama */
+          '<rect width="640" height="360" fill="none"/>' +
+          '<circle cx="320" cy="168" r="42" fill="' + ink + '"/>' +
+          '<path d="M308 148 L308 188 L348 168 Z" fill="#fff"/>' +
+          '<text x="320" y="248" text-anchor="middle" fill="' + ink + '" ' +
+          'font-family="Segoe UI,Arial,sans-serif" font-size="22">Wideo</text></svg>'
+      );
+  }
+
+  var PLACEHOLDER_SVG = buildPlaceholderSvg();
+  var VIDEO_POSTER_FALLBACK = buildVideoPosterFallback();
+  /* zmiana motywu / zestawu: kolor z tokenu liczymy od nowa */
+  ["dam:theme", "dam:scheme"].forEach(function (evt) {
+    window.addEventListener(evt, function () {
+      PLACEHOLDER_SVG = buildPlaceholderSvg();
+      VIDEO_POSTER_FALLBACK = buildVideoPosterFallback();
+    });
+  });
 
   function assocEmptyMaterialsHtml() {
     return '<p class="dam-media-preview__assoc-empty">Brak materiałów</p>';
