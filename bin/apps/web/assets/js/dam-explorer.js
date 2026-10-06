@@ -5332,8 +5332,18 @@
       var emptyDesc = !state.showAllRevisions
         ? "Włącz Pokaż wszystkie, aby przeszukiwać też warianty z archiwum kategorii (- ARCHIWUM)."
         : "Brak trafień w indeksie. Kliknij Odśwież z dysku, aby zindeksować archiwum na dysku.";
-      var emptyFilters = q
-        ? '<ul class="dam-branding-empty__filters"><li>Szukaj: ' + esc(q) + "</li></ul>"
+      // Stan pusty wymienia KAZDY aktywny filtr: nowicjusz z filtrem jezyka "Czechy" widzial
+      // "0 produktow" i tylko "Szukaj: mielone", choc to jezyk wycinal wyniki (test 06.10.2026).
+      var emptyItems = [];
+      if (q) emptyItems.push("Szukaj: " + esc(q));
+      if (state.langFilter) {
+        var langSel = document.getElementById("damExplorerLangFilter");
+        var langLabel = langSel && langSel.selectedIndex >= 0 ? langSel.options[langSel.selectedIndex].text : state.langFilter;
+        emptyItems.push("Język: " + esc(langLabel) + " - zmień na Wszystkie języki, aby zobaczyć pozostałe warianty");
+      }
+      if (!state.showAllRevisions) emptyItems.push("Archiwum ukryte (Pokaż wszystkie wyłączone)");
+      var emptyFilters = emptyItems.length
+        ? '<ul class="dam-branding-empty__filters"><li>' + emptyItems.join("</li><li>") + "</li></ul>"
         : "";
       html +=
         '<div class="dam-branding-empty-wrap">' +

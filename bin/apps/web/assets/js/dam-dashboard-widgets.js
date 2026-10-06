@@ -1181,13 +1181,21 @@
   function brandingThumbPlaceholderDataUri() {
     var label =
       (global.DamPreviewTruth && DamPreviewTruth.LABEL_HINT) || "brak podglądu";
+    /* kolor: token --dam-placeholder-ink (zestawy DK), domyslnie jak dotad */
+    var ink = "";
+    try {
+      ink = getComputedStyle(document.documentElement).getPropertyValue("--dam-placeholder-ink").trim();
+    } catch (_e) {
+      /* ignore */
+    }
+    ink = ink.replace(/["<>&]/g, "") || "#7A9A8C";
     /* bez wlasnego tla: jasny prostokat byl biala plama w ciemnym motywie */
     var svg =
       '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">' +
-      '<rect x="36" y="44" width="88" height="64" rx="8" fill="none" stroke="#7A9A8C" stroke-width="3"/>' +
-      '<circle cx="62" cy="68" r="8" fill="#7A9A8C"/>' +
-      '<path d="M44 96l22-20 18 16 12-10 20 22" fill="none" stroke="#7A9A8C" stroke-width="3" stroke-linecap="round"/>' +
-      '<text x="80" y="132" text-anchor="middle" font-family="Jost,sans-serif" font-size="11" fill="#7A9A8C">' +
+      '<rect x="36" y="44" width="88" height="64" rx="8" fill="none" stroke="' + ink + '" stroke-width="3"/>' +
+      '<circle cx="62" cy="68" r="8" fill="' + ink + '"/>' +
+      '<path d="M44 96l22-20 18 16 12-10 20 22" fill="none" stroke="' + ink + '" stroke-width="3" stroke-linecap="round"/>' +
+      '<text x="80" y="132" text-anchor="middle" font-family="Jost,sans-serif" font-size="11" fill="' + ink + '">' +
       String(label).replace(/[<&]/g, "") +
       "</text></svg>";
     return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
@@ -1768,6 +1776,7 @@
         }
         if (open) wrap.removeAttribute("hidden");
         else wrap.setAttribute("hidden", "");
+        wrap.classList.toggle("is-open", open); // dam-brand.css: display:none !important bez .is-open
         btn.setAttribute("aria-expanded", open ? "true" : "false");
       });
     });

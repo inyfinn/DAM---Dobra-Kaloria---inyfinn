@@ -250,16 +250,36 @@
     return [];
   }
 
-  var PLACEHOLDER_SVG =
-    "data:image/svg+xml," +
-    encodeURIComponent(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200">' +
-        /* bez wlasnego tla: jasny prostokat byl biala plama w ciemnym motywie;
-           fill="var(--dam-primary)" tez nie dziala - img w data-URI nie widzi CSS. */
-        '<rect fill="none" width="320" height="200"/>' +
-        '<text x="160" y="108" text-anchor="middle" fill="#7A9A8C" font-family="sans-serif" font-size="14">Brak miniatury</text>' +
-      "</svg>"
-    );
+  /* Kolor zastepczego obrazka (data-URI nie widzi CSS): token --dam-placeholder-ink (zestawy DK), domyslnie jak dotad. */
+  function placeholderInk(dflt) {
+    var v = "";
+    try {
+      v = getComputedStyle(document.documentElement).getPropertyValue("--dam-placeholder-ink").trim();
+    } catch (_e) {
+      /* ignore */
+    }
+    return v.replace(/["<>&]/g, "") || dflt;
+  }
+
+  function buildPlaceholderSvg() {
+    return "data:image/svg+xml," +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200">' +
+          /* bez wlasnego tla: jasny prostokat byl biala plama w ciemnym motywie;
+             fill="var(--dam-primary)" tez nie dziala - img w data-URI nie widzi CSS. */
+          '<rect fill="none" width="320" height="200"/>' +
+          '<text x="160" y="108" text-anchor="middle" fill="' + placeholderInk("#7A9A8C") + '" font-family="sans-serif" font-size="14">Brak miniatury</text>' +
+        "</svg>"
+      );
+  }
+
+  var PLACEHOLDER_SVG = buildPlaceholderSvg();
+  /* zmiana motywu / zestawu: kolor z tokenu liczymy od nowa */
+  ["dam:theme", "dam:scheme"].forEach(function (evt) {
+    window.addEventListener(evt, function () {
+      PLACEHOLDER_SVG = buildPlaceholderSvg();
+    });
+  });
 
   function esc(s) {
     return String(s || "")
@@ -517,7 +537,9 @@
 
   function parseFolderDateScore(folderName) {
     var s = String(folderName || "");
-    var m = s.match(/(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})/);
+    // Separator: kropka, ukośnik, myślnik ALBO spacja ("MINI - 18 06 2026 - 6300782.00 - F"):
+    // foldery ze spacjami dostawały 0 i lądowały na końcu "Wprowadzenie: najnowsze" (test 06.10.2026).
+    var m = s.match(/(?:^|[^\d.])(\d{1,2})[./ -](\d{1,2})[./ -](\d{4}|\d{2})(?![\d.])/);
     if (m) {
       var y = parseInt(m[3], 10);
       if (y < 100) y += 2000;
@@ -5670,6 +5692,9 @@
           var open = wrap.hasAttribute("hidden");
           if (open) wrap.removeAttribute("hidden");
           else wrap.setAttribute("hidden", "");
+          // dam-brand.css chowa .dam-viz-card__indexes-wrap display:none !important (anatomia karty),
+          // wiec samo zdjecie [hidden] nic nie pokazywalo - przycisk byl martwy (test 06.10.2026).
+          wrap.classList.toggle("is-open", open);
           btn.setAttribute("aria-expanded", open ? "true" : "false");
         });
       });

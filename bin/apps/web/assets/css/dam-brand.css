@@ -2913,6 +2913,11 @@ html[data-theme="dark"] .dam-viz-card .dam-viz-card__title {
   display: none !important;
 }
 
+/* "Pokaz indeksy" bez popovera (DamCardIndexPopover nie istnieje w paczce): rozwiniecie w karcie */
+.dam-viz-card:not(.dam-branding-card) .dam-viz-card__indexes-wrap.is-open {
+  display: block !important;
+}
+
 .dam-viz-card:not(.dam-branding-card) .dam-viz-card__badges {
   flex-shrink: 0;
 }
