@@ -9120,7 +9120,13 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         if self.command != "HEAD":
-            self.wfile.write(body)
+            try:
+                self.wfile.write(body)
+            except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+                # Klient (UI) zerwal polaczenie, zanim most odpowiedzial - to timeout po jego stronie,
+                # nie blad mostu. 06.10.2026: 13 374 takich tracebackow (WinError 10053) w 2 h
+                # w bridge-stderr.log przy przeciazonym moscie.
+                self.close_connection = True
 
     def _bytes(self, code: int, body: bytes, content_type: str):
         self.send_response(code)
