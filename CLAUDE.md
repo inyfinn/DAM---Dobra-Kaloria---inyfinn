@@ -31,7 +31,8 @@ When the user asks for "commit + push + build" / "zrób instalator" / "wyślij r
 3. `git push origin main` (if push was requested).
 4. Local build: `bin/scripts/ops/build-installer.ps1` → `bin/instalator/DAM-Setup.exe`.
 5. New GitHub Release on `inyfinn/DAM---Dobra-Kaloria---inyfinn` with **both** the installer and its signature:
-   `gh release create v{VERSION} bin/instalator/DAM-Setup.exe bin/instalator/DAM-Setup.exe.sig --title "DAM {VERSION}" --target HEAD --latest`
+   `gh release create v{VERSION} bin/instalator/DAM-Setup.exe bin/instalator/DAM-Setup.exe.sig --title "DAM {VERSION}" --target main --latest`
+   (`--target HEAD` and a short sha are rejected by the API with `422 Release.target_commitish is invalid` - seen 2026-10-06; push first so `main` already points at the release commit)
    Then verify: `gh release view v{VERSION} --json assets` lists `DAM-Setup.exe.sig`. The in-app updater (`app_updates._pick_setup_asset`) skips any release without `.sig` and silently offers an older signed one instead - that is exactly how 2.3.4/2.3.5 never reached users (fixed 2026-09-23 by signing them after the fact). If the build machine has no signing key (`sign-release.py` fails), do NOT publish a release without `.sig`; build on the machine with the key (KRZYSZTOFWI) or sign the exact released `.exe` there and upload the `.sig`.
 6. Report back the release URL: `https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v{VERSION}`
 
