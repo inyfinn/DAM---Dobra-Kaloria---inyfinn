@@ -139,10 +139,23 @@ class ChangeTrackerDebounceTests(unittest.TestCase):
         self.assertIsNone(tr.observe(s1, 1.0))               # pierwsza zmiana -> start okna ciszy
         self.assertTrue(tr.pending)
         s2 = {"p/A": 3.0, "p/B": 2.0}
-        self.assertIsNone(tr.observe(s2, 4.0))               # kolejny skok -> reset okna (cisza od 4.0)
-        self.assertIsNone(tr.observe(s2, 8.9))               # 4.9 s ciszy < 5
-        got = tr.observe(s2, 9.0)                            # 5.0 s ciszy -> gotowe
+        self.assertIsNone(tr.observe(s2, 4.0))               # skok w A: A liczy cisze od 4.0, B dalej od 1.0
+        self.assertEqual(tr.observe(s2, 8.9), ["p/B"])       # B cicho 7.9 s -> gotowe; A 4.9 s < 5 czeka
+        got = tr.observe(s2, 9.0)                            # A 5.0 s ciszy -> oba
         self.assertEqual(got, ["p/A", "p/B"])                # diff wzgledem bazy (obie zmienily sie)
+
+    def test_e_zmiany_w_innych_produktach_nie_resetuja_cudzej_ciszy(self):
+        """Ktos pracuje na M: (inny produkt zmienia sie co migawke) - klik F/X/D w produkcie A i tak
+        wychodzi po debounce (pomiar 06.10.2026: globalny reset dawal 111-764 s)."""
+        tr = self.w.ChangeTracker({"p/A": 1.0, "p/X": 1.0}, debounce_sec=5.0)
+        tr.observe({"p/A": 2.0, "p/X": 2.0}, 0.0)
+        for t in (2.0, 4.0, 6.0):
+            got = tr.observe({"p/A": 2.0, "p/X": 10.0 + t}, t)  # X skacze co takt
+            self.assertEqual(got, ["p/A"] if t >= 5.0 else None, f"t={t}")
+        tr.mark_built({"p/A": 2.0, "p/X": 16.0}, keys=["p/A"])  # przyrost: tylko A zbudowane
+        self.assertEqual(tr.baseline["p/A"], 2.0)
+        self.assertEqual(tr.baseline["p/X"], 1.0)              # X nadal czeka na swoja cisze
+        self.assertEqual(tr.observe({"p/A": 2.0, "p/X": 16.0}, 12.0), ["p/X"])
 
     def test_e_po_mark_built_baza_sie_przesuwa_i_nie_ma_powtorki(self):
         base = {"p/A": 1.0}

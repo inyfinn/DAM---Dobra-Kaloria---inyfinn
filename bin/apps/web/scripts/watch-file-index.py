@@ -324,15 +324,17 @@ def diff_snapshots(old: dict[str, float], new: dict[str, float]) -> list[str]:
 
 
 class ChangeTracker:
-    """Debounce: zmiana jest 'gotowa' dopiero po `debounce_sec` ciszy (rename daje kilka skokow mtime
-    w ciagu sekund; duze kopiowanie - dlugi ciag). Baza = snapshot z chwili WYKRYCIA (przed buildem),
-    wiec zmiany z czasu buildu nie gina (stary kod bral mtime PO buildzie)."""
+    """Debounce PER PRODUKT: zmiana produktu jest 'gotowa' po `debounce_sec` ciszy W TYM produkcie
+    (rename daje kilka skokow mtime w ciagu sekund; duze kopiowanie - dlugi ciag). Zmiany w innych
+    produktach (ktos pracuje na M:) nie resetuja cudzego okna - stary, globalny debounce przy migawce
+    trwajacej 14-22 s na SMB dawal 111-764 s od kliku F/X/D do przebudowy (pomiar 06.10.2026).
+    Baza = snapshot z chwili WYKRYCIA (przed buildem), wiec zmiany z czasu buildu nie gina."""
 
     def __init__(self, baseline: dict[str, float], debounce_sec: float = DEBOUNCE_DEFAULT_SEC) -> None:
         self.baseline = dict(baseline)
         self.debounce = float(debounce_sec)
         self._pending: dict[str, float] | None = None
-        self._quiet_since = 0.0
+        self._changed_at: dict[str, float] = {}
 
     @property
     def pending(self) -> bool:
@@ -341,17 +343,32 @@ class ChangeTracker:
     def observe(self, snapshot: dict[str, float], now: float) -> list[str] | None:
         if snapshot == self.baseline:
             self._pending = None
+            self._changed_at = {}
             return None
-        if self._pending is None or snapshot != self._pending:
-            self._pending = dict(snapshot)
-            self._quiet_since = now
-        if now - self._quiet_since >= self.debounce:
-            return diff_snapshots(self.baseline, snapshot)
-        return None
+        prev = self._pending if self._pending is not None else self.baseline
+        for k in set(prev) | set(snapshot):
+            if prev.get(k) != snapshot.get(k):
+                self._changed_at[k] = now
+        self._pending = dict(snapshot)
+        ready = [k for k in diff_snapshots(self.baseline, snapshot) if now - self._changed_at.get(k, now) >= self.debounce]
+        return ready or None
 
-    def mark_built(self, snapshot: dict[str, float]) -> None:
-        self.baseline = dict(snapshot)
-        self._pending = None
+    def mark_built(self, snapshot: dict[str, float], keys: list[str] | None = None) -> None:
+        """Po buildzie: cala migawka (pelny skan) albo tylko zbudowane produkty `keys` (przyrost) -
+        reszta zmian czeka dalej na swoja cisze."""
+        if keys is None:
+            self.baseline = dict(snapshot)
+            self._pending = None
+            self._changed_at = {}
+            return
+        for k in keys:
+            if k in snapshot:
+                self.baseline[k] = snapshot[k]
+            else:
+                self.baseline.pop(k, None)
+            self._changed_at.pop(k, None)
+        if self._pending is not None and self._pending == self.baseline:
+            self._pending = None
 
 
 def plan_rebuild(changed: list[str], max_incremental: int = INCREMENTAL_MAX_DEFAULT) -> str:
@@ -1243,8 +1260,9 @@ def main() -> None:
                 max_incremental=0 if args.no_incremental else args.incremental_max,
             )
             if rc == 0:
-                tracker.mark_built(cur_snap)
-                save_baseline(args.status_file, product_roots, cur_snap)
+                # przyrost: baza przesuwa sie tylko dla zbudowanych produktow; reszta czeka na swoja cisze
+                tracker.mark_built(cur_snap, keys=changed if rb_kind == "incremental" else None)
+                save_baseline(args.status_file, product_roots, tracker.baseline)
                 last_branding = cur_branding
                 print(f"[watch] rebuild OK ({rb_kind})")
             else:
