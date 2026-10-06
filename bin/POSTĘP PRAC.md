@@ -2,6 +2,22 @@
 
 ## GDZIE JESTEŚMY (aktualizowane na bieżąco)
 
+**06.10 po południu - test nieniszczący w oknie 2.5.4 + poprawki na main (do 2.5.6):** raport
+`work\2026-10-06\RAPORT-TEST.md`, dowody `work\2026-10-06\evidence\`, uprząż `work\2026-10-06\harness\`.
+2.5.5 (`6c2195e9`, styl DK 2.0) wydała sesja prezentacje-a4; zawiera 3 moje commity. Na main po 2.5.5
+(wejdą w 2.5.6): `3f33c57e` (bez tracebacków 10053), `2db761c3` (**klik F/X/D i „Dodaj produkt” =
+przyrost tylko tego produktu**: UI wołało `/index/rebuild` bez ścieżki = pełny skan 33 min po każdej
+zmianie, więc przyrost z 2.5.4 nie miał kiedy działać), `07182188` (watcher: cisza per produkt - migawka
+SMB 14-22 s + globalny reset dawały 111-764 s od kliku do przebudowy). Najważniejsze z testu: (1) most 2.5.4
+palił 2 rdzenie na `GET /thumb-cache/sync/status` (skan 48 tys. plików co 8 s z każdej strony; py-spy 98,8 %;
+24 równoległe = 60 s timeout) - naprawione w 2.5.5 (`0e273e65`), weryfikacja po instalacji 2.5.5 niżej;
+(2) strona Projektów padała dla produktów z 2 wariantami (`50e0e335`); (3) nowicjusz nie widzi dat ani F na
+kartach Wizualizacji, „mielone” nie prowadzi do GC MINCED, filtr języka „Czechy” ukrywa warianty z plakietką
+CZ; (4) wizualne (wąskie okno, plakietki, przeskok „«”) → `bin/design-system/evidence/2026-10-06-dk-round3/OD-D4.md`
+dla a4. Po teście: `09 - TEST` czysty (TEST CLAUDE w `M:\#recycle`), konto testowe `test.claude.grafik@inyfinn.test`
+(id 62, rola `user`) zostaje do decyzji usera - hasło do zmiany (worker wyświetlił je w transkrypcie).
+Spoza testu: `SERNIK WANILIOWY\04.10.2023 - 6300079.00` przemianowany na `MINI - …` o 09:32 (przed testem).
+
 **2.5.4 (06.10, KRZYSZTOFWI) - indeks przyrostowy, most bez wycieku, logowanie mówi prawdę:** https://github.com/inyfinn/DAM---Dobra-Kaloria---inyfinn/releases/tag/v2.5.4 (commit `6bb6e51a`)
 - **Indeks (błąd „każdy klik F/X/D = pół godziny CPU”):** pełny skan M: trwał 27-54 min i startował po każdej zmianie folderu oraz co godzinę (watcher skanował 45-90 % czasu; pomiar 06.10: 2474 s). Teraz `build-file-index.py --only-product <folder> --merge-into file-index.json` przebudowuje tylko zmieniony produkt (szacunek na M: ok. 9 s; cała kategoria tylko przy zmianie w ARCHIWUM), watcher pamięta mtime per folder produktu (debounce 5 s, do 40 produktów naraz), pełny skan awaryjny co 6 h (`DAM_INDEX_HOURLY_SEC=21600`) liczony od ostatniego pełnego skanu na dysku, po restarcie przyrost zamiast pełnego skanu. Kod wyjścia 5 = builder prosi o pełny skan (brak/uszkodzona baza). Bezpiecznik skurczenia działa też w przyroście. Testy: 14 (builder) + 23 (watcher), 5 mutantów zabitych. Niezmierzone na prawdziwym M: - pierwszy pomiar przy teście F/X/D. Raport: `work/2026-10-06/W-indeks/RAPORT.md`.
 - **Most (15-20 GB RSS, `/health` po kilka sekund):** wątek na każde zapytanie porzucany po timeoucie (`_thumb_cache_with_timeout`, sondy dysku, kodowanie) - 200 zablokowanych zapytań = +200 wątków; teraz pule (`dam_daemon_pool.py`): +8. `_load_json` parsował 310 MB `branding-index.json` równolegle (8× zamiast 1×) - blokada. `/health` z pamięci (odświeżane w tle): 1 500 ms → 5 ms przy zajętym SQLite; nowe pola `http.threads`, `http.rejected_503`. Limit 64 handlerów (`DAM_BRIDGE_MAX_THREADS`) z 503 `Retry-After: 1`, rezerwa 8 dla `/health`. Plik statusu indeksu pisany bez wyścigu `.tmp`. Przyczyna niepotwierdzona na żywym procesie (bez `py-spy`); ranking z kodu i odtworzenia w testach. Raport: `work/2026-10-06/W11/RAPORT.md`. Otwarte: ten sam wzorzec w `_root_state._list`/`_probe_root`, `index-live.json.<pid>.tmp` w `build-file-index.py` (źródło `.corrupt`), `/file-index` gzip na każde zapytanie, `/branding/asset` zimny start 310 MB w wątku zapytania.
