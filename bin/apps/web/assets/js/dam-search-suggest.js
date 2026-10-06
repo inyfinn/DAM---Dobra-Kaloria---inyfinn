@@ -213,7 +213,11 @@
       var q = input.value;
       suggestionsFor(q, opts.limit || 8).then(function (res) {
         if (norm(input.value) !== norm(q)) return;
-        items = res;
+        // Po wyborze (Enter/klik) wpisujemy termin i wysylamy "input" - bez tego filtra lista wracala
+        // z tym samym jednym terminem i zostawala otwarta nad wynikami (test okna 06.10.2026, OD-D4 nr 11).
+        items = (res || []).filter(function (it) {
+          return norm(it.term) !== norm(q);
+        });
         active = res.length ? 0 : -1;
         paint();
       });

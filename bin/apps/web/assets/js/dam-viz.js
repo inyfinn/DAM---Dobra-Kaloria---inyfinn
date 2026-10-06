@@ -4065,6 +4065,7 @@
           fnameEl.textContent = "";
           fnameEl.hidden = true;
           fnameEl.removeAttribute("title");
+          toggleFilenameLine(fnameEl, false);
         }
         if (variantStripCtrl && typeof variantStripCtrl.sync === "function") {
           variantStripCtrl.sync();
@@ -4161,6 +4162,13 @@
       titleEl.innerHTML = esc(name) + plHtml;
     }
 
+    /* Etykieta "Nazwa pliku" bez wartosci (widok produktu chowa sam <p>) - test okna 06.10.2026:
+       chowamy caly wiersz, zeby nie zostawala pusta etykieta. */
+    function toggleFilenameLine(fnameEl, visible) {
+      var line = fnameEl && fnameEl.closest ? fnameEl.closest(".dam-viz-modal__meta-line--filename") : null;
+      if (line) line.hidden = !visible;
+    }
+
     function syncVizModalFilename(v) {
       var fnameEl = document.getElementById("damVizModalFilename");
       if (productViewMode) {
@@ -4168,6 +4176,7 @@
           fnameEl.textContent = "";
           fnameEl.hidden = true;
           fnameEl.removeAttribute("title");
+          toggleFilenameLine(fnameEl, false);
         }
         return;
       }
@@ -4177,6 +4186,7 @@
         fnameEl.hidden = !fname;
         if (fname) fnameEl.setAttribute("title", fname);
         else fnameEl.removeAttribute("title");
+        toggleFilenameLine(fnameEl, !!fname);
         return;
       }
       if (!fname) return;
