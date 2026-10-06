@@ -1781,7 +1781,7 @@
       html +=
         '<div class="dam-folder-item" data-canon-cat="' +
         esc(c.id) +
-        '" data-dam-skeleton="1">' +
+        '" data-dam-skeleton="1" role="button" tabindex="0">' +
         '<i class="uil uil-folder dam-folder-item__icon" aria-hidden="true"></i>' +
         '<div class="dam-folder-item__text">' +
         '<div class="dam-folder-item__name">' +
@@ -4594,7 +4594,7 @@
     var html = '<div class="dam-cat-list">';
     cats.forEach(function (c) {
       var active = state.canonCat === c.id;
-      html += '<div class="dam-folder-item' + (active ? " is-active" : "") + '" data-canon-cat="' + esc(c.id) + '">' +
+      html += '<div class="dam-folder-item' + (active ? " is-active" : "") + '" data-canon-cat="' + esc(c.id) + '" role="button" tabindex="0"' + (active ? ' aria-current="true"' : "") + ">" +
         '<i class="uil uil-folder dam-folder-item__icon" aria-hidden="true"></i>' +
         '<div class="dam-folder-item__text">' +
           '<div class="dam-folder-item__name">' + esc(c.title) + "</div>" +
@@ -4613,15 +4613,26 @@
     if (!mount._damFolderClickBound) {
       mount._damFolderClickBound = true;
       mount._damFolderListenerCount = 1;
-      mount.addEventListener("click", function (e) {
-        var item = e.target && e.target.closest ? e.target.closest(".dam-folder-item") : null;
-        if (!item || !mount.contains(item)) return;
+      var openFolderItem = function (item) {
         state.canonCat = item.getAttribute("data-canon-cat");
         state.product = null;
         state.expandedCarriers = {};
         state.showOlderCarriers = {};
         navPush();
         renderAll();
+      };
+      mount.addEventListener("click", function (e) {
+        var item = e.target && e.target.closest ? e.target.closest(".dam-folder-item") : null;
+        if (!item || !mount.contains(item)) return;
+        openFolderItem(item);
+      });
+      // Klawiatura (kafle maja tabindex=0, role=button): Enter / spacja = klik (OD-D4, 06.10.2026)
+      mount.addEventListener("keydown", function (e) {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        var item = e.target && e.target.closest ? e.target.closest(".dam-folder-item") : null;
+        if (!item || !mount.contains(item)) return;
+        e.preventDefault();
+        openFolderItem(item);
       });
     }
   }
@@ -4838,7 +4849,7 @@
       rowCls +
       '" data-pid="' +
       esc(p.id) +
-      '">' +
+      '" role="button" tabindex="0">' +
       '<div class="dam-prod-row__main">' +
       '<div class="dam-prod-row__title">' +
       esc(name) +
@@ -5157,6 +5168,15 @@
       row._damProdBound = true;
       row.addEventListener("click", function (e) {
         if (productRowNavBlocked(e.target)) return;
+        var p = resolveProductFromIndexStrict(this.getAttribute("data-pid"));
+        if (!p) return;
+        openProduct(p);
+      });
+      // Klawiatura (wiersz ma tabindex=0, role=button): Enter / spacja na samym wierszu = klik
+      row.addEventListener("keydown", function (e) {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        if (e.target !== this || productRowNavBlocked(e.target)) return;
+        e.preventDefault();
         var p = resolveProductFromIndexStrict(this.getAttribute("data-pid"));
         if (!p) return;
         openProduct(p);
