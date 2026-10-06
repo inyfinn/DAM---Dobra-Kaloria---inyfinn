@@ -508,8 +508,10 @@
       });
   }
 
-  function triggerRebuild() {
-    return postJson("/index/rebuild", {}).catch(function () {
+  function triggerRebuild(productPath) {
+    /* Ze ścieżką produktu most przebudowuje tylko ten produkt (przyrost), bez niej pełny skan M:. */
+    var body = productPath ? { product_path: String(productPath) } : {};
+    return postJson("/index/rebuild", body).catch(function () {
       return null;
     });
   }
@@ -878,7 +880,7 @@
         }
         toast("Dodano warianty do produktu.", "ok");
         closeModal(VARIANT_MODAL_ID);
-        triggerRebuild().then(function () {
+        triggerRebuild(data.created_path || existingProductPath).then(function () {
           return reloadExplorer();
         }).catch(function () {
           /* ignore */
@@ -1361,7 +1363,7 @@
         stopCountdown();
         setButtonsDisabled(true);
         countdownEl.textContent = "Zatwierdzanie…";
-        var rebuildP = data.index_rebuild_suggested !== false ? triggerRebuild() : Promise.resolve();
+        var rebuildP = data.index_rebuild_suggested !== false ? triggerRebuild(createdPath) : Promise.resolve();
         rebuildP.then(function () {
           return reloadExplorer();
         }).then(function () {

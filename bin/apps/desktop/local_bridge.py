@@ -2175,7 +2175,23 @@ def _append_rebuild_log(line: str) -> None:
         pass
 
 
-def _run_index_rebuild() -> None:
+INDEX_NEEDS_FULL_RC = 5  # build-file-index.py: przyrost niemozliwy (brak/obca baza) - zrob pelny skan
+
+
+def _index_build_argv(only_products: list[str] | None = None) -> list[str]:
+    """Polecenie buildera: pelny skan albo przyrost dla wskazanych folderow produktow
+    (--only-product ... --merge-into file-index.json, jak watcher). Klik F/X/D i 'Dodaj produkt'
+    wolaly /index/rebuild bez sciezki = pelny skan M: 27-54 min, a przyrost watchera czekal na lock
+    (test 06.10.2026: 'kazdy klik = pol godziny CPU')."""
+    cmd = list(_payload_script_cmd(BUILD_INDEX, "index", python_flags=("-u",)))
+    for p in only_products or []:
+        cmd.extend(["--only-product", str(p)])
+    if only_products:
+        cmd.extend(["--merge-into", str(INDEX_FILE)])
+    return cmd
+
+
+def _run_index_rebuild(only_products: list[str] | None = None) -> None:
     global _index_state
     with _index_lock:
         if _index_state["running"]:
@@ -2184,7 +2200,8 @@ def _run_index_rebuild() -> None:
         _index_state["last_started"] = utc_now()
         _index_state["last_error"] = ""
         _index_state["stage"] = "starting"
-        _index_state["kind"] = "manual"
+        _index_state["kind"] = "incremental" if only_products else "manual"
+        _index_state["only_products"] = list(only_products or [])
     try:
         import index_supervisor
 
@@ -2228,7 +2245,7 @@ def _run_index_rebuild() -> None:
                 _rebuild_env = os.environ.copy()
                 _rebuild_env["DAM_INDEX_LIVE_FILE"] = str(DESKTOP_STATE_DIR / "index-live.json")
             proc = subprocess.Popen(
-                _payload_script_cmd(BUILD_INDEX, "index", python_flags=("-u",)),
+                _index_build_argv(only_products),
                 creationflags=_no_win,
                 stdin=subprocess.DEVNULL,
                 stdout=log_f,
@@ -2347,9 +2364,14 @@ def _run_index_rebuild() -> None:
                 pass
         with _index_lock:
             _index_state["running"] = False
+            needs_full = bool(only_products) and _index_state.get("last_rc") == INDEX_NEEDS_FULL_RC
+        if needs_full:
+            # Builder odmowil przyrostu (brak/obca baza) - jeden pelny skan, jak dotad.
+            _append_rebuild_log("incremental rc=5 -> full rebuild")
+            threading.Thread(target=_run_index_rebuild, daemon=True).start()
 
 
-def start_index_rebuild() -> dict:
+def start_index_rebuild(only_products: list[str] | None = None) -> dict:
     with _index_lock:
         if _index_state["running"]:
             return {"ok": True, "started": False, "running": True, "rebuild": dict(_index_state)}
@@ -2357,7 +2379,7 @@ def start_index_rebuild() -> dict:
     if blocked:
         return {"ok": False, "started": False, "running": False, "error": blocked,
                 "rebuild": dict(_index_state)}
-    threading.Thread(target=_run_index_rebuild, daemon=True).start()
+    threading.Thread(target=_run_index_rebuild, args=(only_products or None,), daemon=True).start()
     # Daj watkowi chwile na ustawienie flagi
     time.sleep(0.05)
     return {"ok": True, "started": True, "running": True, "rebuild": index_status()["rebuild"]}
@@ -11084,7 +11106,14 @@ class Handler(BaseHTTPRequestHandler):
             # Przebudowa indeksu z dysku = mutate (PI auth.roles_and_privilege) - tylko admin.
             if self._require_admin() is None:
                 return
-            self._json(200, start_index_rebuild())
+            # product_path / product_paths: przyrost tylko dla tych folderow (po F/X/D, Dodaj produkt);
+            # bez nich - pelny skan jak dotad ("Odswiez z dysku").
+            payload = data if isinstance(data, dict) else {}
+            raw_paths = payload.get("product_paths")
+            if not isinstance(raw_paths, list):
+                raw_paths = [payload.get("product_path")]
+            only = [str(p).strip() for p in raw_paths if isinstance(p, str) and str(p).strip()]
+            self._json(200, start_index_rebuild(only_products=only or None))
             return
         if parsed.path == "/index/publish":
             # "Wyslij indeks do bazy" - tylko admin i tylko z komputera z folderem Marketing.

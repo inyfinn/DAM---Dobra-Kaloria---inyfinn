@@ -3608,12 +3608,17 @@
         saveLocalStatus(local);
         state.statusStore = mergeStatusStore(state.statusStore);
         var keepProductId = body.product_id || opts.productId || (state.product && state.product.id) || "";
-        /* Po FS rename: przebuduj indeks z dysku, potem odśwież UI */
+        /* Po FS rename: przebuduj TYLKO ten produkt (most: --only-product + --merge-into), potem odśwież UI.
+           Bez ścieżki most robił pełny skan M: (27-54 min) po każdym kliknięciu F/X/D (test 06.10.2026). */
         showToast("Odświeżam listę plików…", "info");
+        var rebuildProductPath = res.data.final_product_path || "";
+        if (!rebuildProductPath && body.product_id && local.products[body.product_id]) {
+          rebuildProductPath = local.products[body.product_id].path || "";
+        }
         return fetch(bridgeUrl() + "/index/rebuild", {
           method: "POST",
           headers: authHeaders(),
-          body: JSON.stringify({})
+          body: JSON.stringify(rebuildProductPath ? { product_path: rebuildProductPath } : {})
         })
           .then(function (r) {
             return r.json().catch(function () {
