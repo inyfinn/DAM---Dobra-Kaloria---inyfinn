@@ -16,6 +16,7 @@ import os
 import secrets
 import threading
 import time
+import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -129,27 +130,55 @@ def _retry_pg_now_if_offline() -> None:
         pass
 
 
+def _pw_bytes(password: str) -> bytes:
+    """bcrypt liczy tylko pierwsze 72 bajty. bcrypt 5.x zamiast ucinac rzuca ValueError -
+    poprawne dlugie haslo (albo z polskimi znakami: 2 bajty na znak) wygladalo jak 'zle haslo',
+    a rejestracja takiego hasla konczyla sie wyjatkiem. Tniemy sami, tak jak robil bcrypt <= 4."""
+    return str(password or "").encode("utf-8")[:72]
+
+
 def _hash_password(password: str) -> str:
     if bcrypt is None:
         salt = secrets.token_hex(16)
         dig = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 390000)
         return "pbkdf2$" + salt + "$" + dig.hex()
-    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(rounds=12)).decode("utf-8")
+    return bcrypt.hashpw(_pw_bytes(password), bcrypt.gensalt(rounds=12)).decode("utf-8")
 
 
-def _verify_password(password: str, stored: str) -> bool:
-    if not stored:
-        return False
+def _verify_one(password: str, stored: str) -> bool:
     if stored.startswith("pbkdf2$"):
-        _, salt, hexdig = stored.split("$", 2)
+        try:
+            _, salt, hexdig = stored.split("$", 2)
+        except ValueError:
+            return False
         dig = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 390000)
         return secrets.compare_digest(dig.hex(), hexdig)
     if bcrypt is None:
         return False
     try:
-        return bcrypt.checkpw(password.encode("utf-8"), stored.encode("utf-8"))
+        return bcrypt.checkpw(_pw_bytes(password), stored.encode("utf-8"))
     except ValueError:
         return False
+
+
+def _verify_password(password: str, stored) -> bool:
+    if isinstance(stored, (bytes, bytearray, memoryview)):
+        stored = bytes(stored).decode("utf-8", "ignore")
+    stored = str(stored or "").strip()  # CHAR(n) z PG dopelnia spacjami
+    if not stored:
+        return False
+    password = str(password or "")
+    if _verify_one(password, stored):
+        return True
+    # Mac (NFD) vs Windows (NFC): to samo "ą" to inne bajty. Dopiero po porazce, tylko dla
+    # hasel z nie-ASCII, wiec zwykle haslo nie placi dodatkowego bcrypt.
+    if password.isascii():
+        return False
+    for form in ("NFC", "NFD"):
+        alt = unicodedata.normalize(form, password)
+        if alt != password and _verify_one(alt, stored):
+            return True
+    return False
 
 
 MIN_PASSWORD_LEN = 10
@@ -187,6 +216,47 @@ def _login_throttled(email_n: str) -> bool:
         fails = [t for t in _LOGIN_FAILS.get(email_n, []) if now - t < _LOGIN_WINDOW_S]
         _LOGIN_FAILS[email_n] = fails
         return len(fails) >= _LOGIN_MAX_FAILS
+
+
+def _login_retry_after(email_n: str) -> int:
+    """Ile sekund do konca blokady (0 = nie zablokowane) - UI mowi 'odczekaj N min' zamiast
+    sztywnych 5 minut."""
+    now = time.time()
+    with _LOGIN_LOCK:
+        fails = sorted(t for t in _LOGIN_FAILS.get(email_n, []) if now - t < _LOGIN_WINDOW_S)
+        if len(fails) < _LOGIN_MAX_FAILS:
+            return 0
+        return max(1, int(fails[len(fails) - _LOGIN_MAX_FAILS] + _LOGIN_WINDOW_S - now) + 1)
+
+
+def _throttled_result(email_n: str) -> dict:
+    return {"ok": False, "error": "too_many_attempts", "retry_after_s": _login_retry_after(email_n)}
+
+
+def _db_source() -> str:
+    """'postgres' = centralna baza; 'local' = lokalna SQLite (tryb bez Synology / dev bez PG).
+    Wchodzi do odpowiedzi invalid_credentials, zeby UI wiedzial, CZEMU haslo moze nie pasowac."""
+    return "postgres" if _use_pg() else "local"
+
+
+def _log_login_rejected(email_n: str, row, password: str) -> None:
+    """Jedna linia do bridge-stderr.log - bez hasla i bez emaila (tylko skrot). Wczesniej odrzucone
+    logowania nie zostawialy zadnego sladu, wiec 'zle haslo, choc dobre' nie dalo sie zbadac."""
+    try:
+        pw = str(password or "")
+        kind = str(_row_get(row, "password_hash", "") or "")[:4] or "-"
+        print(
+            "auth login rejected:",
+            "who=" + hashlib.sha256(email_n.encode("utf-8")).hexdigest()[:8],
+            "account=" + ("yes" if row is not None else "no"),
+            "source=" + _db_source(),
+            "hash=" + kind,
+            "pw_bytes=" + str(len(pw.encode("utf-8"))),
+            "pw_ascii=" + str(pw.isascii()),
+            flush=True,
+        )
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def _login_failed(email_n: str) -> None:
@@ -357,8 +427,38 @@ def set_user_password(email: str, new_password: str) -> dict:
             conn.close()
 
 
-def register_user(email: str, password: str, name: str = "", role: str = "user") -> dict:
+DB_NOT_CENTRAL_ERROR = {
+    "ok": False,
+    "error": "db_not_central",
+    "message": "Konto można założyć tylko przy połączeniu z centralną bazą.",
+}
+
+
+def registration_status(*, public_mode: bool = False) -> dict:
+    """Czy samodzielna rejestracja jest teraz otwarta: tylko gdy zywa centralna baza (PostgreSQL).
+    Zero polaczen sieciowych - tylko stan w pamieci. reason: public_mode | not_activated |
+    db_offline | db_not_central."""
+    if public_mode:
+        return {"open": False, "reason": "public_mode"}
+    if _activation_block():
+        return {"open": False, "reason": "not_activated"}
+    if _use_pg():
+        return {"open": True, "reason": ""}
+    return {"open": False, "reason": "db_offline" if _pg_configured_but_offline() else "db_not_central"}
+
+
+def register_user(
+    email: str, password: str, name: str = "", role: str = "user", *, central_only: bool = False
+) -> dict:
+    """central_only=True (sciezka HTTP): konto powstaje WYLACZNIE w centralnym PostgreSQL.
+    Bez PG (offline / tryb lokalny / brak konfiguracji) - blad, nigdy zapis do lokalnej SQLite
+    (konto 'zniknelo by' na innych komputerach i wrocilo jako seed po przywroceniu)."""
     init_db()
+    if central_only:
+        blocked = _activation_block()
+        if blocked:
+            return blocked
+        _retry_pg_now_if_offline()
     email_n = (email or "").strip().lower()
     if not email_n or "@" not in email_n:
         return {"ok": False, "error": "invalid_email"}
@@ -370,6 +470,8 @@ def register_user(email: str, password: str, name: str = "", role: str = "user")
     with _LOCK:
         conn = _connect()
         try:
+            if central_only and not _use_pg():
+                return dict(DB_OFFLINE_ERROR if _pg_configured_but_offline() else DB_NOT_CENTRAL_ERROR)
             if _use_pg():
                 cur = conn.cursor()
                 cur.execute(
@@ -486,10 +588,13 @@ def login(
                     "SELECT * FROM users WHERE email = ? COLLATE NOCASE", (email_n,)
                 ).fetchone()
             if _login_throttled(email_n):
-                return {"ok": False, "error": "too_many_attempts"}
+                return _throttled_result(email_n)
             if not row or not _verify_password(password, row["password_hash"]):
                 _login_failed(email_n)
-                return {"ok": False, "error": "invalid_credentials"}
+                _log_login_rejected(email_n, row, password)
+                # Jeden komunikat dla "brak konta" i "zle haslo" (nie zdradzamy istnienia konta);
+                # db_source mowi tylko, KTORA baza odpowiedziala.
+                return {"ok": False, "error": "invalid_credentials", "db_source": _db_source()}
             _login_ok(email_n)
             # Audyt 2026-09-17: konta seed mialy haslo "test" znane z publicznego repo.
             # Poprawne, ale slabe haslo NIE daje sesji - tylko prawo do zmiany hasla.
@@ -603,7 +708,7 @@ def change_password(email: str, old_password: str, new_password: str) -> dict:
     if blocked:
         return blocked
     if _login_throttled(email_n):
-        return {"ok": False, "error": "too_many_attempts"}
+        return _throttled_result(email_n)
     with _LOCK:
         conn = _connect()
         try:

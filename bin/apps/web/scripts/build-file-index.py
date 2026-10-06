@@ -1458,17 +1458,30 @@ def load_product_aliases() -> list[dict]:
         return []
 
 
-def apply_product_aliases(products: list[dict]) -> None:
+ALIAS_FIELDS = ("linked_products", "alias_langs", "alias_canonical_id")
+
+
+def apply_product_aliases(products: list[dict], only_ids: set[str] | None = None) -> None:
     """DK<->GC "ten sam produkt" (2026-07-18, P1/P9). Powiazanie z product-aliases.json
     (indeks lub reczne wskazanie folderu przez admina/power_user - Faza 4) - dopisuje
     kazdemu czlonkowi grupy `linked_products` + `alias_langs` (suma jezykow z WSZYSTKICH
-    czlonkow), tak aby modal wizualizacji mogl pokazac warianty jezykowe ponad marka."""
+    czlonkow), tak aby modal wizualizacji mogl pokazac warianty jezykowe ponad marka.
+
+    only_ids (tryb przyrostowy): licz tylko grupy, w ktorych jest ktorys z tych id (produkt
+    przebudowany albo wycieta pozycja). Pola aliasow takich grup czyszczone przed liczeniem,
+    wiec czlonek, ktoremu partner zniknal, traci stare `linked_products` (jak w pelnym skanie)."""
     groups = load_product_aliases()
     if not groups:
         return
     by_id = {p["id"]: p for p in products}
     for group in groups:
         member_ids = [m.get("product_id") for m in group.get("members") or [] if m.get("product_id")]
+        if only_ids is not None:
+            if not (set(member_ids) & only_ids):
+                continue
+            for mid in member_ids:
+                for key in ALIAS_FIELDS:
+                    by_id.get(mid, {}).pop(key, None)
         present = [by_id[mid] for mid in member_ids if mid in by_id]
         if len(present) < 2:
             continue
@@ -1503,34 +1516,37 @@ def attach_marketing_links(products: list[dict]) -> None:
         p["related_materials"] = related
 
 
-def discover_marketing_materials(products: list[dict], marketing_root: Path) -> None:
-    if not marketing_root.exists():
-        return
-    product_index: list[tuple[dict, str, set[str]]] = []
-    for p in products:
-        blob = norm(" ".join([
-            p.get("display_name") or p.get("name") or "",
-            " ".join(p.get("index_bases") or []),
-            " ".join(p.get("indexes") or []),
-        ]))
-        product_index.append((p, blob, set(p.get("index_bases") or [])))
+def collect_marketing_folders(marketing_root: Path) -> list[dict]:
+    """Foldery marketingowe wg MARKETING_SCAN_PATTERNS: JEDYNY spacer po calym `- POLSKA`.
 
+    Wynik nie zalezy od produktow - w trybie przyrostowym czytamy go z cache
+    (index-marketing-folders.json), zeby zmiana jednego produktu nie kosztowala spaceru
+    po calym udziale."""
+    out: list[dict] = []
     try:
         folders = [f for f in marketing_root.rglob("*") if f.is_dir()]
     except (PermissionError, OSError):
-        return
-
+        return out
     for folder in folders:
         fname = folder.name.upper()
+        path_str = str(folder).replace("\\", "/")
         matched_type = None
         for pattern, mtype in MARKETING_SCAN_PATTERNS:
             if pattern in fname or pattern in folder.as_posix().upper():
                 matched_type = mtype
                 break
-        if not matched_type:
-            continue
-        folder_blob = norm(folder.as_posix())
-        for p, pblob, bases in product_index:
+        if matched_type:
+            out.append({"path": path_str, "name": folder.name, "type": matched_type})
+    return out
+
+
+def apply_marketing_folders(products: list[dict], folders: list[dict]) -> None:
+    """Dopisz do produktow dopasowane foldery marketingowe (nazwa wyswietlana >=4 znaki
+    albo baza indeksu w sciezce folderu)."""
+    product_index: list[tuple[dict, set[str]]] = [(p, set(p.get("index_bases") or [])) for p in products]
+    for f in folders:
+        folder_blob = norm(f["path"])
+        for p, bases in product_index:
             hit = False
             dn = norm(p.get("display_name") or "")
             if dn and len(dn) >= 4 and dn in folder_blob:
@@ -1542,16 +1558,25 @@ def discover_marketing_materials(products: list[dict], marketing_root: Path) -> 
             if not hit:
                 continue
             existing_paths = {r.get("path") for r in p.get("related_materials") or []}
-            path_str = str(folder).replace("\\", "/")
-            if path_str in existing_paths:
+            if f["path"] in existing_paths:
                 continue
             p.setdefault("related_materials", []).append({
-                "title": folder.name,
-                "path": path_str,
-                "type": matched_type,
+                "title": f["name"],
+                "path": f["path"],
+                "type": f["type"],
                 "note": "Wykryto skanem Marketing",
-                "file_count": count_files_in_dir(folder),
+                "file_count": count_files_in_dir(Path(f["path"])),
             })
+
+
+def discover_marketing_materials(
+    products: list[dict], marketing_root: Path, folders: list[dict] | None = None
+) -> None:
+    if not marketing_root.exists():
+        return
+    if folders is None:
+        folders = collect_marketing_folders(marketing_root)
+    apply_marketing_folders(products, folders)
 
 
 def is_category_archive_folder(name: str) -> bool:
@@ -1665,8 +1690,18 @@ def scan_revision_children(product_dir: Path, root: Path, brand: str, cat_name: 
     return revisions
 
 
-def merge_category_archive(cat: Path, root: Path, brand: str, products: list[dict]) -> int:
-    """Dolacz warianty z — ARCHIWUM do istniejacych produktow (bez duplikatu produktu)."""
+def merge_category_archive(
+    cat: Path,
+    root: Path,
+    brand: str,
+    products: list[dict],
+    create_archive_only: bool = True,
+) -> int:
+    """Dolacz warianty z — ARCHIWUM do istniejacych produktow (bez duplikatu produktu).
+
+    create_archive_only=False (tryb przyrostowy, `products` = tylko przebudowywany produkt):
+    wrapper bez zywego celu wssposrod `products` jest POMIJANY po cichu - nalezy do innego
+    produktu albo jest produktem tylko-archiwalnym, a te obsluguje przebudowa calej kategorii."""
     arch_dir = None
     try:
         for child in cat.iterdir():
@@ -1700,6 +1735,8 @@ def merge_category_archive(cat: Path, root: Path, brand: str, products: list[dic
             pid = norm(key_name).replace(" ", "-")[:80]
             target = live_by_id.get(pid)
         if not target:
+            if not create_archive_only:
+                continue
             item = scan_product(cat_name, arch_prod, root, brand)
             if not item:
                 print(f"  [archive] brak produktu live dla: {arch_prod.name}")
@@ -2352,6 +2389,34 @@ def collect_viz_latest(products: list[dict], thumbs_dir: Path) -> list[dict]:
     return out
 
 
+def scan_category(cat: Path, root: Path, brand: str, products: list[dict], max_products: int, count: int) -> int:
+    """Skan JEDNEJ kategorii: produkty zywe + warianty z '— ARCHIWUM' tej kategorii.
+
+    Wspolne dla pelnego skanu (scan_root) i trybu przyrostowego (kategoria jako jednostka
+    przebudowy, gdy zmiana dotyczy archiwum albo dodania/usuniecia produktu z archiwalnym
+    odpowiednikiem). Dopisuje do `products`, zwraca nowy licznik."""
+    cat_name = cat.name
+    try:
+        prod_dirs = [p for p in cat.iterdir() if p.is_dir()]
+    except (PermissionError, OSError) as e:
+        print(f"  skip cat {cat_name}: {e}")
+        return count
+    for prod in sorted(prod_dirs, key=lambda p: p.name):
+        # Pomijaj folder archiwum kategorii (— ARCHIWUM) - warianty dolaczamy ponizej
+        pname = prod.name or ""
+        if is_category_archive_folder(pname):
+            continue
+        item = scan_product(cat_name, prod, root, brand)
+        if item:
+            products.append(item)
+            count += 1
+        if max_products and count >= max_products:
+            break
+    merge_category_archive(cat, root, brand, products)
+    print(f"  [{brand}] {cat_name}: products so far {count}")
+    return count
+
+
 def scan_root(root: Path, brand: str, max_products: int, products_so_far: int) -> tuple[list[dict], list[dict], int]:
     products: list[dict] = []
     categories: list[dict] = []
@@ -2367,24 +2432,7 @@ def scan_root(root: Path, brand: str, max_products: int, products_so_far: int) -
             "rel": str(cat.relative_to(root)).replace("\\", "/"),
             "brand": brand,
         })
-        try:
-            prod_dirs = [p for p in cat.iterdir() if p.is_dir()]
-        except (PermissionError, OSError) as e:
-            print(f"  skip cat {cat_name}: {e}")
-            continue
-        for prod in sorted(prod_dirs, key=lambda p: p.name):
-            # Pomijaj folder archiwum kategorii (— ARCHIWUM) - warianty dolaczamy ponizej
-            pname = prod.name or ""
-            if is_category_archive_folder(pname):
-                continue
-            item = scan_product(cat_name, prod, root, brand)
-            if item:
-                products.append(item)
-                count += 1
-            if max_products and count >= max_products:
-                break
-        merge_category_archive(cat, root, brand, products)
-        print(f"  [{brand}] {cat_name}: products so far {count}")
+        count = scan_category(cat, root, brand, products, max_products, count)
         if max_products and count >= max_products:
             break
     return products, categories, count
@@ -2438,7 +2486,272 @@ def merge_product_catalog_packaging(products: list[dict]) -> None:
                 p["tags"] = tags
 
 
-def main() -> None:
+# ---------------------------------------------------------------------------
+# Tryb przyrostowy (06.10.2026): --only-product <folder> (powtarzalny) + --merge-into <file-index.json>
+#
+# Cel: zmiana w JEDNYM folderze produktu przebudowuje tylko ten produkt i wlewa go do istniejacego
+# indeksu, zamiast skanowac cale ROOT (26-54 min na M:). Pelny skan zostaje dla: pierwszego
+# uruchomienia, braku/uszkodzenia indeksu (kod 5), recznego /index/rebuild i rzadkiego pelnego
+# przebiegu awaryjnego watchera.
+# ---------------------------------------------------------------------------
+NEEDS_FULL_RC = 5
+MARKETING_CACHE_NAME = "index-marketing-folders.json"
+# Cache wazny tak dlugo, jak przebieg awaryjny watchera (6 h): pelny skan odswieza go zawsze.
+MARKETING_CACHE_TTL_SEC = float(os.environ.get("DAM_MARKETING_CACHE_TTL_SEC", "21600") or "21600")
+
+
+class MergeNeedsFull(Exception):
+    """Przyrost niemozliwy albo niebezpieczny - wolajacy ma zrobic pelny skan (kod wyjscia 5)."""
+
+
+def _cf(s) -> str:
+    return str(s or "").replace("\\", "/").rstrip("/").casefold()
+
+
+def marketing_root_for(root: Path) -> Path:
+    """Korzen `- POLSKA` nad rootem produktow (dla --root: pierwszy przodek z '- POLSKA' / 'Marketing')."""
+    marketing_root = root
+    for p in root.parents:
+        if (p / "- POLSKA").is_dir() or p.name.upper() in ("MARKETING",):
+            marketing_root = p / "- POLSKA" if (p / "- POLSKA").is_dir() else p
+            break
+    return marketing_root
+
+
+def _marketing_cache_path(out_dir_mode: bool) -> Path:
+    # Obok pliku stanu biezacego uruchomienia (LOCALAPPDATA/DAM/state), NIE w apps/web/data:
+    # to dane handlowe, a repo jest publiczne. Fixtura (--out-dir) trzyma cache obok swojego wyniku.
+    return (OUT.parent if out_dir_mode else _LIVE_PATH.parent) / MARKETING_CACHE_NAME
+
+
+def load_marketing_cache(path: Path, marketing_root: Path) -> list[dict] | None:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict) or _cf(data.get("marketing_root")) != _cf(marketing_root):
+        return None
+    age = time.time() - float(data.get("saved_epoch") or 0)
+    if age > MARKETING_CACHE_TTL_SEC or age < -300:
+        return None
+    folders = data.get("folders")
+    return folders if isinstance(folders, list) else None
+
+
+def save_marketing_cache(path: Path, marketing_root: Path, folders: list[dict]) -> None:
+    try:
+        _atomic_write_json(
+            path,
+            {
+                "marketing_root": str(marketing_root).replace("\\", "/"),
+                "saved_epoch": time.time(),
+                "folders": folders,
+            },
+        )
+    except OSError:
+        pass  # cache jest opcjonalny: brak = nastepny przyrost zrobi jeden spacer
+
+
+def _merge_roots(args) -> list[tuple[str, Path]]:
+    if args.root:
+        return [(args.brand or "DK", Path(args.root))]
+    _ensure_roots()
+    return [(cfg["brand"], cfg["path"]) for cfg in ROOTS]
+
+
+def _classify_unit(p: Path, roots: list[tuple[str, Path]]):
+    """Sciezka -> jednostka przebudowy: ('prod', ri, kat, produkt) albo ('cat', ri, kat).
+    Kategoria jest jednostka, gdy zmiana dotyczy samej kategorii albo '— ARCHIWUM' (archiwum
+    wplywa na kilka produktow naraz). Dowolnie gleboka sciezka w produkcie -> ten produkt."""
+    for ri, (_brand, root) in enumerate(roots):
+        try:
+            parts = p.relative_to(root).parts
+        except ValueError:
+            continue
+        if not parts:
+            return None
+        if len(parts) == 1 or is_category_archive_folder(parts[1]):
+            return ("cat", ri, parts[0])
+        return ("prod", ri, parts[0], parts[1])
+    return None
+
+
+def _archive_wrapper_matches(cat_dir: Path, name: str) -> bool:
+    """Czy w '— ARCHIWUM' tej kategorii jest wrapper, ktory merge_category_archive przypisalby
+    do produktu `name` (po nazwie bez sufiksu F/X/D albo po id)? Wtedy dodanie/usuniecie tego
+    produktu zmienia tez produkty archiwalne -> przebudowa calej kategorii."""
+    try:
+        arch = [c for c in cat_dir.iterdir() if c.is_dir() and is_category_archive_folder(c.name)]
+        if not arch:
+            return False
+        pid = norm(name).replace(" ", "-")[:80]
+        for ap in arch[0].iterdir():
+            if not ap.is_dir():
+                continue
+            key = strip_product_folder_status_suffix(ap.name)
+            if key == name or norm(key).replace(" ", "-")[:80] == pid:
+                return True
+    except OSError:
+        return False
+    return False
+
+
+def entry_order_key(p: dict, brand_order: dict) -> tuple:
+    """Kolejnosc jak w pelnym skanie: root, kategoria, zywe przed tylko-archiwalnymi, nazwa folderu."""
+    return (
+        brand_order.get(p.get("brand"), 99),
+        p.get("category") or "",
+        1 if p.get("archive_only") else 0,
+        p.get("name") or "",
+    )
+
+
+def _load_merge_base(path: Path, roots: list[tuple[str, Path]]) -> dict:
+    try:
+        base = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise MergeNeedsFull(f"baza_nieczytelna:{exc.__class__.__name__}") from exc
+    if not isinstance(base, dict) or not isinstance(base.get("products"), list) or not base["products"]:
+        raise MergeNeedsFull("baza_pusta")
+    base_roots = [(r.get("brand"), _cf(r.get("path"))) for r in base.get("roots") or [] if isinstance(r, dict)]
+    if base_roots != [(b, _cf(r)) for b, r in roots]:
+        # indeks z innego komputera/rootu: sciezki w nim nie pasuja do tego dysku
+        raise MergeNeedsFull("inne_rooty_w_bazie")
+    return base
+
+
+def incremental_scan(base: dict, roots: list[tuple[str, Path]], only_paths: list[str]) -> dict:
+    """Przeskanuj tylko wskazane jednostki i wlej je do `base["products"]`."""
+    base_products: list[dict] = base["products"]
+    brand_order = {b: i for i, (b, _r) in enumerate(roots)}
+    cat_units: dict[tuple, tuple] = {}
+    prod_units: dict[tuple, tuple] = {}
+    for raw in only_paths:
+        u = _classify_unit(Path(raw), roots)
+        if u is None:
+            raise MergeNeedsFull(f"sciezka_poza_rootami:{raw}")
+        if u[0] == "cat":
+            cat_units[(u[1], u[2].casefold())] = (u[1], u[2])
+        else:
+            prod_units[(u[1], u[2].casefold(), u[3].casefold())] = (u[1], u[2], u[3])
+    for ri in {u[0] for u in cat_units.values()} | {u[0] for u in prod_units.values()}:
+        if not roots[ri][1].is_dir():
+            raise MergeNeedsFull(f"root_niedostepny:{roots[ri][1]}")
+
+    have = {(e.get("brand"), _cf(e.get("rel"))) for e in base_products}
+    for (ri, cat, prod) in list(prod_units.values()):
+        brand, root = roots[ri]
+        exists = (root / cat / prod).is_dir()
+        present = (brand, _cf(f"{cat}/{prod}")) in have
+        if exists != present and _archive_wrapper_matches(root / cat, prod):
+            cat_units[(ri, cat.casefold())] = (ri, cat)
+    for key in [k for k in prod_units if (k[0], k[1]) in cat_units]:
+        del prod_units[key]
+
+    total = len(prod_units)
+    for (ri, cat) in cat_units.values():
+        try:
+            total += sum(1 for p in (roots[ri][1] / cat).iterdir() if p.is_dir())
+        except OSError:
+            pass
+    _LIVE["products_total"] = max(1, total)
+    _LIVE["products_done"] = 0
+    _write_index_live(force=True)
+
+    new_items: list[dict] = []
+    drop_cats: set[tuple] = set()
+    drop_rels: set[tuple] = set()
+    for (ri, cat) in cat_units.values():
+        brand, root = roots[ri]
+        drop_cats.add((brand, cat.casefold()))
+        cat_dir = root / cat
+        if cat_dir.is_dir():
+            scan_category(cat_dir, root, brand, new_items, 0, 0)
+    for (ri, cat, prod) in prod_units.values():
+        brand, root = roots[ri]
+        drop_rels.add((brand, _cf(f"{cat}/{prod}")))
+        prod_dir = root / cat / prod
+        if not prod_dir.is_dir():
+            continue
+        item = scan_product(cat, prod_dir, root, brand)
+        if item:
+            one = [item]
+            # warianty z '— ARCHIWUM' kategorii, ktore naleza do TEGO produktu
+            merge_category_archive(root / cat, root, brand, one, create_archive_only=False)
+            new_items.extend(one)
+
+    kept: list[dict] = []
+    replaced_ids: set[str] = set()
+    for e in base_products:
+        brand = e.get("brand")
+        if (brand, _cf(e.get("category"))) in drop_cats or (brand, _cf(e.get("rel"))) in drop_rels:
+            if e.get("id"):
+                replaced_ids.add(e["id"])
+            continue
+        kept.append(e)
+    merged = kept + new_items
+    merged.sort(key=lambda p: entry_order_key(p, brand_order))
+
+    categories: list[dict] = []
+    for brand, root in roots:
+        if root.is_dir():
+            for cat in sorted([p for p in root.iterdir() if p.is_dir()], key=lambda p: p.name):
+                categories.append({
+                    "name": cat.name,
+                    "rel": str(cat.relative_to(root)).replace("\\", "/"),
+                    "brand": brand,
+                })
+        else:
+            categories.extend(c for c in base.get("categories") or [] if c.get("brand") == brand)
+    return {
+        "products": merged,
+        "new_items": new_items,
+        "categories": categories,
+        "replaced_ids": replaced_ids,
+        "affected_ids": {p["id"] for p in new_items if p.get("id")} | replaced_ids,
+        "units": {"cat": len(cat_units), "prod": len(prod_units)},
+    }
+
+
+def _run_enrichers(redirect: bool) -> None:
+    """enrich-search-tags + enrich-product-associations. Domyslnie pisza do apps/web/data;
+    przy --out-dir (fixtura/test) kierujemy je na pliki wyniku, zeby fixtura NIE
+    wzbogacala (i nie przepisywala) zywych indeksow."""
+    import importlib.util
+
+    here = Path(__file__).resolve().parent
+
+    def _load(fname: str, modname: str):
+        spec = importlib.util.spec_from_file_location(modname, here / fname)
+        if not spec or not spec.loader:
+            raise RuntimeError(f"brak {fname}")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    # Po rebuildzie: dolacz authors / by_tag imion (Sylwia/Krzysztof/Szymon) z product-people + Asana.
+    # Bez tego "Skanuj dysk" / build wycina wyszukiwanie po osobach.
+    try:
+        mod = _load("enrich-search-tags.py", "enrich_search_tags")
+        if redirect:
+            mod.FILE_INDEX = OUT
+            mod.SEARCH_INDEX = SEARCH_OUT
+        code = mod.main()
+        print(f"enrich-search-tags: exit={code}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"WARN: enrich-search-tags failed: {exc}")
+
+    try:
+        mod2 = _load("enrich-product-associations.py", "enrich_product_associations")
+        if redirect:
+            mod2.SEARCH_FILE = SEARCH_OUT
+        code2 = mod2.main()
+        print(f"enrich-product-associations: exit={code2}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"WARN: enrich-product-associations failed: {exc}")
+
+
+def main(argv: list[str] | None = None) -> None:
     global OUT, SEARCH_OUT, THUMBS_DIR
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", default="", help="Single root override (disables multi-root)")
@@ -2449,7 +2762,25 @@ def main() -> None:
         default="",
         help="Write file-index/search-index here (fixtures/tests). Default: apps/web/data",
     )
-    args = ap.parse_args()
+    ap.add_argument(
+        "--only-product",
+        action="append",
+        default=[],
+        help="Tryb przyrostowy: przebuduj tylko ten folder produktu (powtarzalny; nowa nazwa, stara "
+        "nazwa i usuniety folder tez sa poprawne). Wymaga --merge-into.",
+    )
+    ap.add_argument(
+        "--merge-into",
+        default="",
+        help="Istniejacy file-index.json, do ktorego wlewamy wynik --only-product. Brak/uszkodzony/"
+        "z innych rootow = kod wyjscia 5 (wolajacy robi pelny skan).",
+    )
+    args = ap.parse_args(argv)
+    if bool(args.only_product) != bool(args.merge_into):
+        ap.error("--only-product i --merge-into dzialaja tylko razem")
+    if args.only_product and args.max_products:
+        ap.error("--max-products nie laczy sie z trybem przyrostowym")
+    merge_mode = bool(args.only_product)
 
     if args.out_dir:
         out_dir = Path(args.out_dir)
@@ -2478,24 +2809,40 @@ def main() -> None:
             _LIVE["files_total"] = int(prev_idx.get("viz_count") or 0)
         except (OSError, json.JSONDecodeError, TypeError):
             pass
+    _LIVE["products_done"] = 0
+    _LIVE["files_done"] = 0
     _LIVE["running"] = True
     _write_index_live(force=True)
     products: list[dict] = []
     categories: list[dict] = []
     roots_meta: list[dict] = []
+    new_items: list[dict] = []
+    inc: dict = {}
+    base: dict = {}
 
-    if args.root:
+    if merge_mode:
+        try:
+            roots = _merge_roots(args)
+            base = _load_merge_base(Path(args.merge_into), roots)
+            inc = incremental_scan(base, roots, args.only_product)
+        except MergeNeedsFull as exc:
+            print(f"MERGE_NEEDS_FULL: {exc}", flush=True)
+            _LIVE["running"] = False
+            _write_index_live(force=True)
+            raise SystemExit(NEEDS_FULL_RC)
+        products = inc["products"]
+        categories = inc["categories"]
+        new_items = inc["new_items"]
+        roots_meta = [{"brand": b, "path": str(r).replace("\\", "/")} for b, r in roots]
+        marketing_root = marketing_root_for(roots[0][1]) if args.root else MARKETING_ROOT
+    elif args.root:
         brand = args.brand or "DK"
         root = Path(args.root)
         roots_meta.append({"brand": brand, "path": str(root).replace("\\", "/")})
         prods, cats, _ = scan_root(root, brand, args.max_products, 0)
         products.extend(prods)
         categories.extend(cats)
-        marketing_root = root
-        for p in root.parents:
-            if (p / "- POLSKA").is_dir() or p.name.upper() in ("MARKETING",):
-                marketing_root = p / "- POLSKA" if (p / "- POLSKA").is_dir() else p
-                break
+        marketing_root = marketing_root_for(root)
     else:
         _ensure_roots()
         total = 0
@@ -2510,11 +2857,31 @@ def main() -> None:
                 break
         marketing_root = MARKETING_ROOT
 
-    attach_marketing_links(products)
-    discover_marketing_materials(products, marketing_root)
-    apply_product_aliases(products)
-    apply_lang_overrides(products)
-    merge_product_catalog_packaging(products)
+    cache_path = _marketing_cache_path(bool(args.out_dir))
+    if merge_mode:
+        # Tylko przebudowane produkty. Foldery marketingowe z cache (spacer po calym `- POLSKA`
+        # robi pelny skan i odswieza cache); aliasy tylko dla grup dotknietych zmiana.
+        attach_marketing_links(new_items)
+        folders = None
+        if marketing_root is not None and marketing_root.exists():
+            folders = load_marketing_cache(cache_path, marketing_root)
+            if folders is None:
+                folders = collect_marketing_folders(marketing_root)
+                save_marketing_cache(cache_path, marketing_root, folders)
+        discover_marketing_materials(new_items, marketing_root, folders=folders)
+        apply_product_aliases(products, only_ids=inc["affected_ids"])
+        apply_lang_overrides(new_items)
+        merge_product_catalog_packaging(new_items)
+    else:
+        attach_marketing_links(products)
+        folders = None
+        if marketing_root is not None and marketing_root.exists():
+            folders = collect_marketing_folders(marketing_root)
+            save_marketing_cache(cache_path, marketing_root, folders)
+        discover_marketing_materials(products, marketing_root, folders=folders)
+        apply_product_aliases(products)
+        apply_lang_overrides(products)
+        merge_product_catalog_packaging(products)
 
     search = build_search(products)
     viz = collect_viz_latest(products, THUMBS_DIR)
@@ -2537,20 +2904,28 @@ def main() -> None:
     # do bazy - komputery bez ROOT dostaly 9 produktow. Skan, ktory gubi ponad
     # ponad 20% produktow wzgledem obecnego indeksu, to niepelny odczyt dysku, nie
     # usuniecie: zapisujemy go obok (*.rejected.json) i nie ruszamy indeksu.
-    if not args.max_products and not args.root and OUT.is_file():
-        try:
-            prev_count = len((json.loads(OUT.read_text(encoding="utf-8")) or {}).get("products") or [])
-        except (OSError, ValueError):
-            prev_count = 0
-        if prev_count >= 20 and len(products) < prev_count * 0.8:
-            rejected = OUT.with_name(OUT.stem + ".rejected.json")
-            _atomic_write_json(rejected, payload)
-            print(
-                f"ODRZUCONE: skan widzi {len(products)} produktow, indeks ma {prev_count} - "
-                f"niepelny odczyt dysku. Indeks bez zmian, wynik w {rejected}",
-                file=sys.stderr,
-            )
-            raise SystemExit(3)
+    # Tryb przyrostowy: ten sam prog wzgledem bazy scalania (pojedyncza zmiana nigdy go nie
+    # dotyka, ale np. niedostepna kategoria "usunieta" naraz tak).
+    prev_count = None
+    if not args.max_products:
+        if merge_mode:
+            prev_count = len(base.get("products") or [])
+        elif not args.root and OUT.is_file():
+            try:
+                prev_count = len((json.loads(OUT.read_text(encoding="utf-8")) or {}).get("products") or [])
+            except (OSError, ValueError):
+                prev_count = 0
+    if prev_count is not None and prev_count >= 20 and len(products) < prev_count * 0.8:
+        rejected = OUT.with_name(OUT.stem + ".rejected.json")
+        _atomic_write_json(rejected, payload)
+        print(
+            f"ODRZUCONE: skan widzi {len(products)} produktow, indeks ma {prev_count} - "
+            f"niepelny odczyt dysku. Indeks bez zmian, wynik w {rejected}",
+            file=sys.stderr,
+        )
+        _LIVE["running"] = False
+        _write_index_live(force=True)
+        raise SystemExit(3)
     _atomic_write_json(OUT, payload)
     _atomic_write_json(
         SEARCH_OUT,
@@ -2570,6 +2945,11 @@ def main() -> None:
     print(f"Wrote {SEARCH_OUT} ({SEARCH_OUT.stat().st_size // 1024} KB)")
     print(f"Thumbs dir: {THUMBS_DIR} ({len(list(THUMBS_DIR.glob('*.jpg')))} files)")
     print(f"products={len(products)} viz={len(viz)} elapsed={payload['elapsed_sec']}s")
+    if merge_mode:
+        print(
+            f"merge: units={inc['units']} rebuilt={len(new_items)} replaced={len(inc['replaced_ids'])} "
+            f"kept={len(products) - len(new_items)}"
+        )
     if orange:
         for v in orange[:6]:
             line = (
@@ -2583,34 +2963,7 @@ def main() -> None:
         p = sample[0]
         print("TARTA display_name:", p.get("display_name"), "related:", len(p.get("related_materials") or []))
 
-    # Po rebuildzie: dolacz authors / by_tag imion (Sylwia/Krzysztof/Szymon) z product-people + Asana.
-    # Bez tego "Skanuj dysk" / build wycina wyszukiwanie po osobach.
-    try:
-        import importlib.util
-
-        enrich_path = Path(__file__).resolve().parent / "enrich-search-tags.py"
-        spec = importlib.util.spec_from_file_location("enrich_search_tags", enrich_path)
-        if not spec or not spec.loader:
-            raise RuntimeError("brak enrich-search-tags.py")
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        code = mod.main()
-        print(f"enrich-search-tags: exit={code}")
-    except Exception as exc:  # noqa: BLE001
-        print(f"WARN: enrich-search-tags failed: {exc}")
-
-    try:
-        import importlib.util
-
-        enrich_assoc = Path(__file__).resolve().parent / "enrich-product-associations.py"
-        spec2 = importlib.util.spec_from_file_location("enrich_product_associations", enrich_assoc)
-        if spec2 and spec2.loader:
-            mod2 = importlib.util.module_from_spec(spec2)
-            spec2.loader.exec_module(mod2)
-            code2 = mod2.main()
-            print(f"enrich-product-associations: exit={code2}")
-    except Exception as exc:  # noqa: BLE001
-        print(f"WARN: enrich-product-associations failed: {exc}")
+    _run_enrichers(redirect=bool(args.out_dir))
 
 
 if __name__ == "__main__":

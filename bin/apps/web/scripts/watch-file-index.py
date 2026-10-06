@@ -8,6 +8,13 @@ Status + log sterowane przez index_supervisor (bridge owner).
 Po udanym file-index: hook branding (scripts/ops/rebuild-branding-pipeline.py) —
 jeden watcher, bez drugiego demona.
 
+Od 06.10.2026 zmiana w folderze produktu NIE przebudowuje juz calego ROOT (26-54 min na M:):
+watcher zapamietuje mtime per folder produktu (product_snapshot), po 5 s ciszy (ChangeTracker)
+wola build-file-index.py --only-product <folder> --merge-into file-index.json tylko dla
+zmienionych produktow. Pelny skan zostaje dla pierwszego uruchomienia, braku/uszkodzenia
+indeksu (kod 5 buildera), zbyt wielu zmian naraz (--incremental-max) i rzadkiego przebiegu
+awaryjnego (--hourly, domyslnie 6 h, liczony od ostatniego PELNEGO skanu).
+
 Usage:
   python apps/web/scripts/watch-file-index.py
   python apps/web/scripts/watch-file-index.py --interval 5 --no-initial
@@ -16,6 +23,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import itertools
 import json
 import os
 import subprocess
@@ -56,6 +64,11 @@ def _state_dir() -> Path:
 STATE_DIR = _state_dir()
 DEFAULT_STATUS = STATE_DIR / "index-watcher-status.json"
 DEFAULT_LOCK = STATE_DIR / "index-rebuild.lock.json"
+# Kod wyjscia build-file-index.py: przyrost niemozliwy (brak/uszkodzony indeks, inne rooty)
+NEEDS_FULL_RC = 5
+HOURLY_DEFAULT_SEC = 21600.0  # przebieg awaryjny co 6 h (patrz --hourly)
+DEBOUNCE_DEFAULT_SEC = 5.0
+INCREMENTAL_MAX_DEFAULT = 40
 BIN_ROOT = SCRIPT.parents[3]
 BRANDING_PIPELINE = BIN_ROOT / "scripts" / "ops" / "rebuild-branding-pipeline.py"
 WEB_DATA = SCRIPT.parents[1] / "data"
@@ -235,6 +248,140 @@ def roots_mtime(roots: list[Path], max_depth: int = 5) -> float:
     return max((tree_mtime(r, max_depth=max_depth) for r in roots), default=0.0)
 
 
+def _subdirs(path: str) -> list[str]:
+    """Podkatalogi `path`. BLAD LISTOWANIA = wyjatek OSError (nie pusta lista): snapshot z dziurami
+    (odmontowany dysk, zerwane SMB) wygladalby jak 'wszystkie produkty zniknely' i wyzwolilby
+    pelny skan; petla glowna lapie OSError i po prostu pomija ten takt."""
+    with os.scandir(path) as it:
+        return [e.path for e in it if e.is_dir()]
+
+
+def _subtree_mtime(top: str, start_depth: int, max_depth: int) -> float:
+    """Najnowszy mtime drzewa `top` (lezy na glebokosci `start_depth` od rootu) do max_depth.
+
+    Te same granice co tree_mtime (wpisy do poziomu max_depth+1), ale przez os.scandir:
+    mtime wpisu pochodzi z samego listowania katalogu (na Windows bez dodatkowego zapytania
+    na kazdy plik) - na SMB to polowa ruchu sieciowego co Path.iterdir()+stat()."""
+    try:
+        latest = os.stat(top).st_mtime
+    except OSError:
+        return 0.0
+    stack = [(top, start_depth)]
+    while stack:
+        p, depth = stack.pop()
+        if depth > max_depth:
+            continue
+        try:
+            with os.scandir(p) as it:
+                entries = list(it)
+        except OSError:
+            continue
+        for e in entries:
+            try:
+                st = e.stat()
+                is_dir = e.is_dir()
+            except OSError:
+                continue
+            if st.st_mtime > latest:
+                latest = st.st_mtime
+            if is_dir and depth < max_depth:
+                stack.append((e.path, depth + 1))
+    return latest
+
+
+def product_snapshot(roots: list[Path], max_depth: int = 5) -> dict[str, float]:
+    """{folder produktu -> najnowszy mtime jego drzewa do max_depth}.
+
+    Folder produktu = poziom 2 od rootu (root/kategoria/produkt); folder '— ARCHIWUM' kategorii
+    tez jest takim kluczem (builder zamienia go na przebudowe kategorii). Na SMB plik gleboko
+    w produkcie NIE podnosi mtime folderu produktu, dlatego przechodzimy do max_depth jak dotad,
+    ale ZAPISUJEMY, ktory produkt sie zmienil. Dodany/zmieniony/usuniety produkt = inny
+    wpis albo jego brak."""
+    snap: dict[str, float] = {}
+    for root in roots:
+        for cat in _subdirs(os.fspath(root)):
+            for prod in _subdirs(cat):
+                snap[prod] = _subtree_mtime(prod, 2, max_depth)
+    return snap
+
+
+def snapshot_with_retry(roots: list[Path], max_depth: int = 5, attempts: int = 3, delay: float = 2.0) -> dict[str, float]:
+    """product_snapshot z ponowieniami (start watchera: SMB bywa chwilowo niedostepne)."""
+    last: OSError | None = None
+    for _ in range(max(1, attempts)):
+        try:
+            return product_snapshot(roots, max_depth=max_depth)
+        except OSError as exc:
+            last = exc
+            time.sleep(delay)
+    assert last is not None
+    raise last
+
+
+def diff_snapshots(old: dict[str, float], new: dict[str, float]) -> list[str]:
+    """Foldery produktow, ktorych mtime sie zmienil, ktore doszly albo zniknely (posortowane)."""
+    return sorted(k for k in set(old) | set(new) if old.get(k) != new.get(k))
+
+
+class ChangeTracker:
+    """Debounce: zmiana jest 'gotowa' dopiero po `debounce_sec` ciszy (rename daje kilka skokow mtime
+    w ciagu sekund; duze kopiowanie - dlugi ciag). Baza = snapshot z chwili WYKRYCIA (przed buildem),
+    wiec zmiany z czasu buildu nie gina (stary kod bral mtime PO buildzie)."""
+
+    def __init__(self, baseline: dict[str, float], debounce_sec: float = DEBOUNCE_DEFAULT_SEC) -> None:
+        self.baseline = dict(baseline)
+        self.debounce = float(debounce_sec)
+        self._pending: dict[str, float] | None = None
+        self._quiet_since = 0.0
+
+    @property
+    def pending(self) -> bool:
+        return self._pending is not None
+
+    def observe(self, snapshot: dict[str, float], now: float) -> list[str] | None:
+        if snapshot == self.baseline:
+            self._pending = None
+            return None
+        if self._pending is None or snapshot != self._pending:
+            self._pending = dict(snapshot)
+            self._quiet_since = now
+        if now - self._quiet_since >= self.debounce:
+            return diff_snapshots(self.baseline, snapshot)
+        return None
+
+    def mark_built(self, snapshot: dict[str, float]) -> None:
+        self.baseline = dict(snapshot)
+        self._pending = None
+
+
+def plan_rebuild(changed: list[str], max_incremental: int = INCREMENTAL_MAX_DEFAULT) -> str:
+    """'incremental' dla 1..max_incremental zmienionych produktow, inaczej 'full'
+    (0 = przyrost wylaczony). Wiele naraz = np. kopiowanie calej kategorii; pelny skan jest wtedy
+    tanszy niz dziesiatki osobnych skanow produktow + scalanie."""
+    if max_incremental > 0 and 0 < len(changed) <= max_incremental:
+        return "incremental"
+    return "full"
+
+
+def build_command(
+    py: str,
+    root_args: list[str] | None,
+    out_dir: Path | None,
+    only_products: list[str] | None = None,
+    merge_into: Path | None = None,
+) -> list[str]:
+    cmd = [py, "-u", str(BUILD)]
+    for r in root_args or []:
+        cmd.extend(["--root", r])
+    if out_dir is not None:
+        cmd.extend(["--out-dir", str(out_dir)])
+    for p in only_products or []:
+        cmd.extend(["--only-product", str(p)])
+    if merge_into is not None:
+        cmd.extend(["--merge-into", str(merge_into)])
+    return cmd
+
+
 def _read_status(path: Path) -> dict:
     """Read the status JSON without ever raising.
 
@@ -262,13 +409,43 @@ def _read_status(path: Path) -> dict:
     return {}
 
 
+_LOCAL_STATUS_LOCK = threading.RLock()
+_LOCAL_TMP_SEQ = itertools.count()
+
+
+def _status_lock():
+    """Ta sama blokada co index_supervisor.write_watcher_status: w tym procesie plik statusu pisza
+    dwa watki (petla glowna + "dam-index-live"). 05.10.2026 (W11): wspolna nazwa "<plik>.<pid>.tmp"
+    dawala poprawny JSON z ogonem starszej wersji (index-watcher-status.json.corrupt)."""
+    try:
+        import index_supervisor
+
+        return index_supervisor.STATUS_WRITE_LOCK
+    except Exception:  # noqa: BLE001
+        return _LOCAL_STATUS_LOCK
+
+
 def _write_status(path: Path, payload: dict, *, preserve_last: bool = True) -> None:
+    with _status_lock():
+        _write_status_locked(path, payload, preserve_last=preserve_last)
+
+
+def _write_status_locked(path: Path, payload: dict, *, preserve_last: bool = True) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     body = dict(payload)
     if preserve_last and path.is_file():
         prev = _read_status(path)
         if isinstance(prev, dict):
-            for key in ("last_ok", "last_rc", "last_error", "last_started", "last_finished", "last_duration_sec"):
+            for key in (
+                "last_ok",
+                "last_rc",
+                "last_error",
+                "last_started",
+                "last_finished",
+                "last_duration_sec",
+                "last_incremental_sec",
+                "last_incremental_products",
+            ):
                 if key not in body and prev.get(key) is not None:
                     body[key] = prev.get(key)
     if body.get("last_ok") is None:
@@ -276,7 +453,7 @@ def _write_status(path: Path, payload: dict, *, preserve_last: bool = True) -> N
     elif body.get("last_ok") is True:
         body["awaiting_first_rebuild"] = False
     body["updated_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    tmp = path.with_name(path.name + f".{os.getpid()}.tmp")
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.{threading.get_ident()}.{next(_LOCAL_TMP_SEQ)}.tmp")
     try:
         tmp.write_text(json.dumps(body, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     except OSError:
@@ -379,8 +556,12 @@ def rebuild_with_lock(
     stage_prefix: str = "product",
     branding_hook: bool = True,
     last_duration_sec: float | None = None,
+    only_products: list[str] | None = None,
 ) -> int:
-    """Acquire shared lock, then run build-file-index. No scan before lock."""
+    """Acquire shared lock, then run build-file-index. No scan before lock.
+
+    only_products: tryb przyrostowy (--only-product ... --merge-into file-index.json) - jedna
+    blokada, jeden build; czas przyrostu NIE nadpisuje last_duration_sec pelnego skanu."""
     try:
         from rebuild_lock import acquire_lock
     except ImportError:
@@ -427,27 +608,37 @@ def rebuild_with_lock(
             return 2
 
     py = _script_python()
-    cmd = [py, "-u", str(BUILD)]
-    for r in root_args or []:
-        cmd.extend(["--root", r])
-    if out_dir is not None:
-        cmd.extend(["--out-dir", str(out_dir)])
+    incremental = bool(only_products)
+    merge_into = ((out_dir / "file-index.json") if out_dir is not None else (WEB_DATA / "file-index.json")) if incremental else None
+    cmd = build_command(py, root_args, out_dir, only_products=only_products, merge_into=merge_into)
 
     started_ts = time.time()
     started_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     kind = "hourly" if stage_prefix == "hourly" else ("watch" if stage_prefix == "product" else stage_prefix)
+    if incremental:
+        kind = "incremental"
+        # Orientacyjny czas: ~10 s stalych (wczytanie/zapis indeksu, wzbogacanie) + ~12 s na produkt.
+        # NIE bierzemy last_duration_sec pelnego skanu (54 min), bo pasek stalby na 1%.
+        last_duration_sec_eta = 10 + 12 * len(only_products or [])
+    else:
+        last_duration_sec_eta = last_duration_sec
+    msg_building = (
+        "Indeksowanie ROOT" if stage_prefix == "hourly"
+        else (f"Indeksowanie zmienionych produktow ({len(only_products or [])})" if incremental else "Indeksowanie")
+    )
+    dur_fields = {} if incremental else {"last_duration_sec": last_duration_sec}
 
     def _tick() -> None:
         elapsed = int(time.time() - started_ts)
         eta = None
         remaining = None
-        if last_duration_sec:
-            remaining = max(0, int(float(last_duration_sec) - elapsed))
+        if last_duration_sec_eta:
+            remaining = max(0, int(float(last_duration_sec_eta) - elapsed))
             eta = remaining
         pct = None
-        if last_duration_sec:
+        if last_duration_sec_eta:
             try:
-                pct = max(1, min(99, int(100.0 * elapsed / float(last_duration_sec))))
+                pct = max(1, min(99, int(100.0 * elapsed / float(last_duration_sec_eta))))
             except (TypeError, ValueError, ZeroDivisionError):
                 pct = None
         _write_status(
@@ -463,8 +654,8 @@ def rebuild_with_lock(
                 "eta_sec": eta,
                 "remaining_sec": remaining,
                 "progress_pct": pct,
-                "last_duration_sec": last_duration_sec,
-                "progress_message": "Indeksowanie ROOT" if stage_prefix == "hourly" else "Indeksowanie",
+                **dur_fields,
+                "progress_message": msg_building,
                 "hourly_pending": False,
                 "current_item": (idx_sup.read_live() if idx_sup is not None else {}).get("current_item") or "",
                 "current_name": (idx_sup.read_live() if idx_sup is not None else {}).get("current_name") or "",
@@ -485,10 +676,10 @@ def rebuild_with_lock(
             "kind": kind,
             "last_started": started_iso,
             "elapsed_sec": 0,
-            "eta_sec": int(last_duration_sec) if last_duration_sec else None,
-            "remaining_sec": int(last_duration_sec) if last_duration_sec else None,
-            "last_duration_sec": last_duration_sec,
-            "progress_message": "Indeksowanie ROOT" if stage_prefix == "hourly" else "Indeksowanie",
+            "eta_sec": int(last_duration_sec_eta) if last_duration_sec_eta else None,
+            "remaining_sec": int(last_duration_sec_eta) if last_duration_sec_eta else None,
+            **dur_fields,
+            "progress_message": msg_building,
             "hourly_pending": False,
         },
     )
@@ -565,26 +756,48 @@ def rebuild_with_lock(
 
     duration = int(time.time() - started_ts)
     cancelled = rc == 130
-    _write_status(
-        status_file,
-        {
-            "ok": rc == 0,
-            "watcher_ok": True,
-            "last_ok": rc == 0,
-            "last_rc": rc,
-            "last_error": "cancelled" if cancelled else ("" if rc == 0 else f"build_rc_{rc}"),
-            "last_finished": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            "last_duration_sec": duration if rc == 0 else last_duration_sec,
-            "elapsed_sec": duration,
-            "eta_sec": 0,
-            "remaining_sec": 0,
-            "stage": "cancelled" if cancelled else (f"{stage_prefix}:idle" if rc == 0 else f"{stage_prefix}:error"),
-            "rebuild_kind": kind,
-        },
-    )
+    needs_full = incremental and rc == NEEDS_FULL_RC
+    if needs_full:
+        # Nie jest to porazka: wolajacy (rebuild_changed) zaraz zrobi pelny skan. Bez last_ok=False,
+        # zeby pulpit nie mrugnal "aktualizacja nie dziala" miedzy przyrostem a pelnym skanem.
+        _write_status(
+            status_file,
+            {
+                "ok": True,
+                "watcher_ok": True,
+                "stage": f"{stage_prefix}:fallback_full",
+                "rebuild_kind": kind,
+                "progress_message": "Przyrost niemozliwy - pelny skan",
+            },
+        )
+    else:
+        done_fields = (
+            {"last_incremental_sec": duration, "last_incremental_products": len(only_products or [])}
+            if incremental
+            else {"last_duration_sec": duration if rc == 0 else last_duration_sec}
+        )
+        _write_status(
+            status_file,
+            {
+                "ok": rc == 0,
+                "watcher_ok": True,
+                "last_ok": rc == 0,
+                "last_rc": rc,
+                "last_error": "cancelled" if cancelled else ("" if rc == 0 else f"build_rc_{rc}"),
+                "last_finished": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                **done_fields,
+                "elapsed_sec": duration,
+                "eta_sec": 0,
+                "remaining_sec": 0,
+                "stage": "cancelled" if cancelled else (f"{stage_prefix}:idle" if rc == 0 else f"{stage_prefix}:error"),
+                "rebuild_kind": kind,
+            },
+        )
+    if rc == 0 and not incremental and out_dir is None:
+        _mark_full_scan_done(status_file)
     if handle is not None:
         handle.release()
-    if idx_sup is not None:
+    if idx_sup is not None and not needs_full:
         try:
             idx_sup.complete_run_report(ok=(rc == 0), cancelled=cancelled, rc=rc)
         except Exception:
@@ -605,6 +818,94 @@ def rebuild_with_lock(
     if rc == 0 and out_dir is None:
         _publish_cache_after_index()
     return int(rc)
+
+
+def rebuild_changed(
+    changed: list[str],
+    *,
+    lock_file: Path,
+    status_file: Path,
+    root_args: list[str] | None = None,
+    out_dir: Path | None = None,
+    branding_hook: bool = True,
+    last_duration_sec: float | None = None,
+    max_incremental: int = INCREMENTAL_MAX_DEFAULT,
+) -> tuple[int, str]:
+    """Przebuduj zmienione produkty: przyrostowo, a gdy to niemozliwe (kod 5) albo zmian za duzo - pelnym skanem.
+    Zwraca (rc, 'incremental' | 'full'). rc 2 = blokada zajeta (nic nie wystartowalo)."""
+    common = dict(
+        lock_file=lock_file,
+        status_file=status_file,
+        root_args=root_args,
+        out_dir=out_dir,
+        branding_hook=branding_hook,
+    )
+    if plan_rebuild(changed, max_incremental) == "full":
+        return rebuild_with_lock(**common, last_duration_sec=last_duration_sec), "full"
+    rc = rebuild_with_lock(**common, last_duration_sec=last_duration_sec, only_products=list(changed))
+    if rc == NEEDS_FULL_RC:
+        print("[watch] przyrost niemozliwy (rc=5) - pelny skan ROOT")
+        return rebuild_with_lock(**common, last_duration_sec=last_duration_sec), "full"
+    return rc, "incremental"
+
+
+def _last_full_file(status_file: Path) -> Path:
+    return status_file.with_name("index-last-full.json")
+
+
+def _mark_full_scan_done(status_file: Path) -> None:
+    """Zapisz moment ostatniego udanego PELNEGO skanu (osobny plik: supervisor przepisuje status
+    watchera bez znajomosci tego klucza). Po restarcie aplikacji przebieg awaryjny liczy sie od niego,
+    a nie od startu - inaczej kazde uruchomienie programu = 30-54 min pelnego skanu po 20 s."""
+    try:
+        _last_full_file(status_file).write_text(json.dumps({"finished_epoch": time.time()}), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def read_last_full_epoch(status_file: Path, index_file: Path) -> float:
+    """Epoka ostatniego pelnego skanu albo 0.0 (brak zapisu / brak indeksu = zrob pelny skan jak dotad)."""
+    try:
+        if not index_file.is_file() or index_file.stat().st_size < 1024:
+            return 0.0
+        data = json.loads(_last_full_file(status_file).read_text(encoding="utf-8"))
+        return float(data.get("finished_epoch") or 0.0)
+    except (OSError, ValueError, TypeError):
+        return 0.0
+
+
+def _baseline_file(status_file: Path) -> Path:
+    return status_file.with_name("index-product-snapshot.json")
+
+
+def _roots_key(roots: list[Path]) -> list[str]:
+    return [str(r).replace("\\", "/").rstrip("/").casefold() for r in roots]
+
+
+def save_baseline(status_file: Path, roots: list[Path], snapshot: dict[str, float]) -> None:
+    """Zapisz snapshot, dla ktorego indeks jest aktualny. Po restarcie aplikacji roznica wzgledem niego =
+    produkty zmienione, gdy watcher nie dzialal (przebudowa przyrostowa zamiast pelnego skanu na starcie)."""
+    body = {"roots": _roots_key(roots), "saved_epoch": time.time(), "snapshot": snapshot}
+    target = _baseline_file(status_file)
+    tmp = target.with_name(target.name + f".{os.getpid()}.tmp")
+    try:
+        tmp.write_text(json.dumps(body, ensure_ascii=False), encoding="utf-8")
+    except OSError:
+        return
+    _replace_with_retry(tmp, target)
+
+
+def load_baseline(status_file: Path, roots: list[Path], index_file: Path) -> dict[str, float] | None:
+    """Zapisany snapshot albo None (brak/uszkodzony/inne rooty/brak indeksu = zacznij od biezacego)."""
+    try:
+        if not index_file.is_file() or index_file.stat().st_size < 1024:
+            return None
+        data = json.loads(_baseline_file(status_file).read_text(encoding="utf-8"))
+        if data.get("roots") != _roots_key(roots) or not isinstance(data.get("snapshot"), dict):
+            return None
+        return {str(k): float(v) for k, v in data["snapshot"].items()}
+    except (OSError, ValueError, TypeError, AttributeError):
+        return None
 
 
 def main() -> None:
@@ -630,8 +931,21 @@ def main() -> None:
     ap.add_argument(
         "--hourly",
         type=float,
-        default=float(os.environ.get("DAM_INDEX_HOURLY_SEC", "3600") or "3600"),
-        help="Pelny skan ROOT co N sekund (0 = wylacz). Domyslnie 3600.",
+        default=float(os.environ.get("DAM_INDEX_HOURLY_SEC", str(int(HOURLY_DEFAULT_SEC))) or HOURLY_DEFAULT_SEC),
+        help="Przebieg awaryjny: PELNY skan ROOT co N sekund od ostatniego pelnego skanu "
+        "(0 = wylacz). Domyslnie 21600 (6 h); zwykle zmiany obsluguje tryb przyrostowy.",
+    )
+    ap.add_argument(
+        "--debounce",
+        type=float,
+        default=float(os.environ.get("DAM_INDEX_DEBOUNCE_SEC", str(DEBOUNCE_DEFAULT_SEC)) or DEBOUNCE_DEFAULT_SEC),
+        help="Sekundy ciszy po ostatniej zmianie mtime, zanim ruszy przebudowa (rename = kilka skokow).",
+    )
+    ap.add_argument(
+        "--incremental-max",
+        type=int,
+        default=INCREMENTAL_MAX_DEFAULT,
+        help="Maks. liczba zmienionych produktow obslugiwana przyrostowo; wiecej = pelny skan. 0 = bez przyrostu.",
     )
     ap.add_argument(
         "--first-delay",
@@ -644,6 +958,11 @@ def main() -> None:
         type=Path,
         default=None,
         help="Przekaz do build-file-index --out-dir (OBOWIAZKOWE przy --root fixture)",
+    )
+    ap.add_argument(
+        "--no-incremental",
+        action="store_true",
+        help="Awaryjnie: kazda zmiana produktu = pelny skan ROOT (zachowanie sprzed 06.10.2026)",
     )
     ap.add_argument(
         "--no-branding-hook",
@@ -731,7 +1050,30 @@ def main() -> None:
             )
         )
 
-    last_product = roots_mtime(product_roots, max_depth=depth) if product_roots else 0.0
+    # Przebieg awaryjny liczymy od ostatniego PELNEGO skanu sprzed restartu: bez tego kazdy start
+    # programu = pelny skan 20 s po starcie, mimo swiezego indeksu.
+    index_file = (args.out_dir / "file-index.json") if args.out_dir else (WEB_DATA / "file-index.json")
+    seed_last_full = read_last_full_epoch(args.status_file, index_file) if args.no_initial else 0.0
+    # Baza zmian = snapshot PRZED buildem: to, co zmieni sie w trakcie (30+ min pelnego skanu), wyjdzie
+    # jako roznica po nim i zostanie przebudowane przyrostowo.
+    saved_baseline = (
+        load_baseline(args.status_file, product_roots, index_file) if (args.no_initial and product_roots) else None
+    )
+    try:
+        start_snap = (
+            saved_baseline
+            if saved_baseline is not None
+            else (snapshot_with_retry(product_roots, max_depth=depth) if product_roots else {})
+        )
+    except OSError as exc:
+        _write_status(
+            args.status_file,
+            {"ok": False, "watcher_ok": False, "last_error": f"snapshot_failed:{exc}", "stage": "snapshot_failed"},
+        )
+        raise SystemExit(f"Nie moge wylistowac rootow produktow: {exc}")
+    tracker = ChangeTracker(start_snap, args.debounce)
+    if saved_baseline is not None:
+        print(f"[watch] baza zmian z poprzedniej sesji: {len(saved_baseline)} produktow (zmiany z czasu przerwy -> przyrost)")
     last_branding = roots_mtime(branding_roots, max_depth=depth) if branding_roots else 0.0
     if not args.no_initial:
         print("[watch] initial rebuild...")
@@ -743,12 +1085,11 @@ def main() -> None:
             branding_hook=branding_hook,
         )
         if rc == 0:
-            last_product = (
-                roots_mtime(product_roots, max_depth=depth) if product_roots else last_product
-            )
             last_branding = (
                 roots_mtime(branding_roots, max_depth=depth) if branding_roots else last_branding
             )
+            if product_roots:
+                save_baseline(args.status_file, product_roots, tracker.baseline)
             print("[watch] initial OK")
         else:
             print(f"[watch] initial rebuild failed rc={rc} - dalej monitoruje")
@@ -764,7 +1105,7 @@ def main() -> None:
                 "hourly_sec": float(args.hourly),
                 "first_delay_sec": float(args.first_delay),
                 "control_file": str(args.control_file),
-                "hourly_pending": True,
+                "hourly_pending": seed_last_full <= 0,
             },
         )
 
@@ -774,7 +1115,13 @@ def main() -> None:
         idx_sup = None  # type: ignore
 
     loop_started = time.time()
-    last_hourly = 0.0
+    retry_after = 0.0
+    last_hourly = seed_last_full
+    if last_hourly > 0:
+        print(
+            f"[watch] ostatni pelny skan {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_hourly))} "
+            f"- nastepny przebieg awaryjny po {float(args.hourly) / 3600.0:.1f} h od niego"
+        )
     last_duration = None
     try:
         prev = _read_status(args.status_file)
@@ -798,7 +1145,9 @@ def main() -> None:
             if last_hourly <= 0:
                 due_hourly = (now - loop_started) >= max(0.0, float(args.first_delay))
             else:
-                due_hourly = (now - last_hourly) >= hourly_sec
+                due_hourly = (now - last_hourly) >= hourly_sec and (now - loop_started) >= max(
+                    0.0, float(args.first_delay)
+                )
         if due_hourly:
             print("[watch] hourly full ROOT scan...")
             _write_status(
@@ -812,6 +1161,11 @@ def main() -> None:
                     "pid": os.getpid(),
                 },
             )
+            try:
+                pre_snap = product_snapshot(product_roots, max_depth=depth) if product_roots else {}
+            except OSError as exc:
+                print(f"[watch] snapshot przed pelnym skanem nieudany ({exc}) - baza z konca skanu")
+                pre_snap = None
             rc = rebuild_with_lock(
                 lock_file=args.lock_file,
                 status_file=args.status_file,
@@ -821,6 +1175,8 @@ def main() -> None:
                 branding_hook=branding_hook,
                 last_duration_sec=last_duration,
             )
+            # rc==2 (blokada zajeta, np. reczny /index/rebuild z mostu = tez pelny skan) liczy sie jak
+            # wykonany przebieg: nie powtarzamy go co 2 s, nastepny za --hourly.
             last_hourly = time.time()
             if rc == 0:
                 try:
@@ -829,9 +1185,15 @@ def main() -> None:
                         last_duration = float(st.get("last_duration_sec"))
                 except (TypeError, ValueError):
                     pass
-                last_product = (
-                    roots_mtime(product_roots, max_depth=depth) if product_roots else last_product
-                )
+                if pre_snap is None and product_roots:
+                    try:
+                        pre_snap = product_snapshot(product_roots, max_depth=depth)
+                    except OSError:
+                        pre_snap = None
+                if pre_snap is not None:
+                    tracker.mark_built(pre_snap)
+                    if product_roots:
+                        save_baseline(args.status_file, product_roots, pre_snap)
                 last_branding = (
                     roots_mtime(branding_roots, max_depth=depth) if branding_roots else last_branding
                 )
@@ -854,32 +1216,37 @@ def main() -> None:
             )
             continue
         try:
-            cur_product = roots_mtime(product_roots, max_depth=depth) if product_roots else 0.0
+            cur_snap = product_snapshot(product_roots, max_depth=depth) if product_roots else {}
             cur_branding = roots_mtime(branding_roots, max_depth=depth) if branding_roots else 0.0
         except OSError as e:
             print(f"[watch] skip: {e}")
             continue
-        product_changed = bool(product_roots) and cur_product > last_product
+        now = time.time()
+        changed = tracker.observe(cur_snap, now) if product_roots else None
         branding_changed = bool(branding_roots) and cur_branding > last_branding
-        if not product_changed and not branding_changed:
-            continue
-        if product_changed:
-            print(f"[watch] product change {last_product:.0f} -> {cur_product:.0f}; rebuild...")
-            rc = rebuild_with_lock(
+        if changed is not None and now >= retry_after:
+            shown = ", ".join(Path(c).name for c in changed[:3]) + (" ..." if len(changed) > 3 else "")
+            print(f"[watch] product change: {len(changed)} folder(s) [{shown}]; rebuild...")
+            rc, rb_kind = rebuild_changed(
+                changed,
                 lock_file=args.lock_file,
                 status_file=args.status_file,
                 root_args=root_args,
                 out_dir=args.out_dir,
                 branding_hook=branding_hook,
                 last_duration_sec=last_duration,
+                max_incremental=0 if args.no_incremental else args.incremental_max,
             )
             if rc == 0:
-                last_product = cur_product
+                tracker.mark_built(cur_snap)
+                save_baseline(args.status_file, product_roots, cur_snap)
                 last_branding = cur_branding
-                print("[watch] rebuild OK")
+                print(f"[watch] rebuild OK ({rb_kind})")
             else:
-                print(f"[watch] rebuild failed rc={rc}")
-        elif branding_changed:
+                # blokada zajeta (2): ponow za chwile; blad buildu: nie mielimy w petli co 2 s
+                retry_after = time.time() + (10.0 if rc == 2 else 60.0)
+                print(f"[watch] rebuild failed rc={rc} ({rb_kind}); ponowie po {retry_after - time.time():.0f} s")
+        elif branding_changed and not tracker.pending:
             print(
                 f"[watch] branding change {last_branding:.0f} -> {cur_branding:.0f}; "
                 "branding pipeline only..."

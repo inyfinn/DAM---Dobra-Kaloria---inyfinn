@@ -15,6 +15,7 @@ import hashlib
 import io
 import json
 import os
+import queue
 import shutil
 import subprocess
 import sys
@@ -28,6 +29,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, Optional
 
 import platform_compat
+import dam_daemon_pool
 
 try:
     import dam_redis
@@ -493,6 +495,38 @@ def _lookup_by_rel(rel: str, profile: str) -> tuple[Optional[Path], str, str]:
     return None, "", digest
 
 
+# 05.10.2026 (W11): sondy dysku (stat/isdir/odczyt 64 KB) szly do NOWEGO watku na kazde
+# wywolanie i po timeoucie watek byl porzucany - przy zawieszonym SMB tysiace sierot.
+# Teraz stala pula daemon; nadmiar/timeout = "dysk nie odpowiada" (None/False) i zadanie
+# jeszcze nie rozpoczete jest anulowane. Tlo odswiezania miniatur: 2 watki, bez duplikatow.
+_PROBE_POOL = dam_daemon_pool.DaemonPool(workers=24, queue_max=512, name="dam-probe")
+_REVAL_POOL = dam_daemon_pool.DaemonPool(workers=2, queue_max=64, name="dam-thumb-revalidate")
+_ENCODE_POOL = dam_daemon_pool.DaemonPool(workers=4, queue_max=16, name="dam-backfill-encode")
+
+
+def _isdir_safe(path: str) -> bool:
+    try:
+        return bool(os.path.isdir(path))
+    except (OSError, ValueError):
+        return False
+
+
+def _getmtime_safe(path: str) -> float | None:
+    try:
+        return float(os.path.getmtime(path))
+    except (OSError, ValueError):
+        return None
+
+
+def _read_head_safe(path: str) -> bool:
+    try:
+        with open(path, "rb") as fh:
+            fh.read(64 * 1024)
+        return True
+    except (OSError, ValueError):
+        return False
+
+
 _DRIVE_ALIVE: dict[str, tuple[float, bool]] = {}
 _DRIVE_ALIVE_LOCK = threading.Lock()
 DRIVE_ALIVE_TTL_S = 15.0
@@ -515,18 +549,10 @@ def _drive_letter_alive(path: str) -> bool:
         hit = _DRIVE_ALIVE.get(letter)
         if hit and now - hit[0] < DRIVE_ALIVE_TTL_S:
             return hit[1]
-    result = {"ok": False}
-
-    def probe() -> None:
-        try:
-            result["ok"] = os.path.isdir(letter + "\\")
-        except OSError:
-            result["ok"] = False
-
-    t = threading.Thread(target=probe, daemon=True, name="dam-drive-probe")
-    t.start()
-    t.join(timeout=DRIVE_PROBE_TIMEOUT_S)
-    alive = bool(result["ok"]) and not t.is_alive()
+    try:
+        alive = bool(_PROBE_POOL.call(DRIVE_PROBE_TIMEOUT_S, _isdir_safe, letter + "\\"))
+    except (dam_daemon_pool.FutureTimeout, queue.Full):
+        alive = False
     with _DRIVE_ALIVE_LOCK:
         _DRIVE_ALIVE[letter] = (time.monotonic(), alive)
     return alive
@@ -536,20 +562,10 @@ def _mtime_quick(path: str, timeout_s: float = 0.08) -> float | None:
     """mtime oryginalu z twardym timeoutem. None = dysk nie odpowiada."""
     if not path or not _drive_letter_alive(path):
         return None
-    box: dict = {}
-
-    def _worker() -> None:
-        try:
-            box["mt"] = float(os.path.getmtime(path))
-        except OSError:
-            box["mt"] = None
-
-    t = threading.Thread(target=_worker, daemon=True)
-    t.start()
-    t.join(timeout=max(0.02, timeout_s))
-    if "mt" not in box:
+    try:
+        return _PROBE_POOL.call(max(0.02, timeout_s), _getmtime_safe, path)
+    except (dam_daemon_pool.FutureTimeout, queue.Full):
         return None
-    return box["mt"]
 
 
 def _marketing_cache_only() -> bool:
@@ -748,6 +764,39 @@ def get_or_build_thumb(
     Cache-first: najpierw indeks rel|profile, potem oryginal.
     Returns (http_code, body, content_type, meta).
     """
+    return _get_or_build_thumb(
+        path, email=email, profile=profile, resolve_physical=resolve_physical,
+        marketing_relative=marketing_relative,
+    )
+
+
+def get_cache_hit(
+    path: str,
+    *,
+    email: str = "",
+    profile: str = "grid",
+    resolve_physical: Optional[Callable[..., str]] = None,
+    marketing_relative: Optional[Callable[..., str]] = None,
+) -> Optional[tuple[int, bytes, str, dict]]:
+    """Tylko trafienie w indeks rel|profile (pamiec + lokalny plik miniatury): wynik jak z
+    get_or_build_thumb albo None, gdy trzeba isc dalej (brak wpisu, wpis nieaktualny - to wymaga
+    sieci/dysku ROOT). Most obsluguje to w watku zapytania, zeby trafienia nie czekaly w kolejce
+    za wolnymi budowami na M: (W11)."""
+    return _get_or_build_thumb(
+        path, email=email, profile=profile, resolve_physical=resolve_physical,
+        marketing_relative=marketing_relative, cache_hit_only=True,
+    )
+
+
+def _get_or_build_thumb(
+    path: str,
+    *,
+    email: str = "",
+    profile: str = "grid",
+    resolve_physical: Optional[Callable[..., str]] = None,
+    marketing_relative: Optional[Callable[..., str]] = None,
+    cache_hit_only: bool = False,
+) -> Optional[tuple[int, bytes, str, dict]]:
     prof = (profile or "grid").strip().lower()
     if prof not in PROFILES:
         prof = "grid"
@@ -758,20 +807,18 @@ def get_or_build_thumb(
     cached_path, cached_ctype, cached_digest = _lookup_by_rel(rel, prof)
     if cached_path is not None:
         if not cache_only:
-            threading.Thread(
-                target=_revalidate_thumb,
-                kwargs={
-                    "path": path,
-                    "email": email,
-                    "profile": prof,
-                    "resolve_physical": resolve_physical,
-                    "marketing_relative": marketing_relative,
-                    "known_digest": cached_digest,
-                    "lookup_rel": rel,
-                },
-                daemon=True,
-                name="dam-thumb-revalidate",
-            ).start()
+            # Jedno odswiezenie na (rel, profil) naraz i stala liczba watkow; pelna kolejka = pomin.
+            _REVAL_POOL.fire_once(
+                (rel, prof),
+                _revalidate_thumb,
+                path=path,
+                email=email,
+                profile=prof,
+                resolve_physical=resolve_physical,
+                marketing_relative=marketing_relative,
+                known_digest=cached_digest,
+                lookup_rel=rel,
+            )
         # Plan naprawy etap 4 p.3 ("po zmianie zawartosci nie serwuj starej
         # miniatury jako aktualnej"): ta galaz serwuje cache NATYCHMIAST, bez
         # stat() na oryginale (celowo - stat() na odlaczonym udziale sieciowym
@@ -790,10 +837,15 @@ def get_or_build_thumb(
         # aktualnej (zrzuty W7: B i C pokazywaly V1 dla V2). Wersja z katalogu: lokalnie
         # albo z magazynu centralnego (po digescie z _ASSET_MT), inaczej 404 "pending".
         # Zero stat() na oryginale; PC z ROOT i tak przebuduje w tle (_revalidate_thumb).
+        if cache_hit_only:
+            return None
         fresh = _thumb_without_root(path, prof, network=True)
         if fresh is not None:
             return fresh
         return _pending_outdated(rel, prof)
+
+    if cache_hit_only:
+        return None
 
     def _fallback_or(default: tuple[int, bytes, str, dict]) -> tuple[int, bytes, str, dict]:
         # Bez oryginalu: najpierw lokalne pliki po kluczach z NAS/bazy, potem profil
@@ -1018,20 +1070,10 @@ def _thumb_404_with_fallback(
 
 def _readable_within(physical: str, budget_s: float) -> bool:
     """True when the first bytes of a local file arrive within budget (never call on placeholders)."""
-    box: dict = {}
-
-    def _worker() -> None:
-        try:
-            with open(physical, "rb") as fh:
-                fh.read(64 * 1024)
-            box["ok"] = True
-        except OSError:
-            box["ok"] = False
-
-    t = threading.Thread(target=_worker, daemon=True, name="dam-original-probe")
-    t.start()
-    t.join(timeout=max(0.01, budget_s))
-    return bool(box.get("ok"))
+    try:
+        return bool(_PROBE_POOL.call(max(0.01, budget_s), _read_head_safe, physical))
+    except (dam_daemon_pool.FutureTimeout, queue.Full):
+        return False
 
 
 def media_preview_gate(
@@ -3703,21 +3745,19 @@ def preview_state_for_path(path: str, profile: str = "grid") -> dict:
 def _encode_with_timeout(physical: str, digest: str, max_side: int, timeout_s: float) -> tuple[Optional[Path], str, bool]:
     """(plik, ctype, timed_out). Watek daemon + join(timeout): zawieszony odczyt X:
     nie blokuje kolejki (lekcja z sekcji 9 doktryny - shutdown(wait=True) wisial)."""
-    box: dict = {}
     avif_p, jpg_p = _cache_paths(digest)
 
-    def work() -> None:
+    def work() -> tuple:
         try:
-            box["r"] = _encode_thumb(physical, avif_p, jpg_p, max_side)
+            return _encode_thumb(physical, avif_p, jpg_p, max_side)
         except Exception:  # noqa: BLE001
-            box["r"] = (None, "")
+            return (None, "")
 
-    t = threading.Thread(target=work, daemon=True, name="dam-backfill-encode")
-    t.start()
-    t.join(timeout=max(1.0, timeout_s))
-    if t.is_alive():
+    # W11: stala pula (zamiast watku na kazde kodowanie porzucanego po timeoucie na zawieszonym M:).
+    try:
+        hit, ctype = _ENCODE_POOL.call(max(1.0, timeout_s), work) or (None, "")
+    except (dam_daemon_pool.FutureTimeout, queue.Full):
         return None, "", True
-    hit, ctype = box.get("r") or (None, "")
     return hit, ctype, False
 
 

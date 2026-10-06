@@ -591,6 +591,105 @@
     return e;
   }
 
+  /*
+   * 06.10.2026: JEDNA mapa kodow bledow mostu (/auth/login, /auth/register, /auth/saved/login)
+   * na komunikaty po polsku. Kazda przyczyna NIE zwiazana z danymi logowania ma wlasny tekst,
+   * zeby "zle haslo" nie bylo workiem na wszystko. "Brak konta" i "zle haslo" to celowo jeden
+   * kod (invalid_credentials): anonim nie moze sprawdzac, czyje konta istnieja.
+   */
+  var NOT_ACTIVATED_TEXT = "Aplikacja nie jest aktywowana - wpisz kod aktywacyjny od administratora.";
+  var AUTH_MESSAGES = {
+    "invalid_credentials": "Nieprawidłowy email lub hasło.",
+    "too_many_attempts": "Za dużo nieudanych prób. Odczekaj 5 minut.",
+    "password_change_required": "To hasło jest za słabe. Ustaw nowe hasło, żeby się zalogować.",
+    "db_offline": "Baza chwilowo niedostępna, spróbuj za chwilę. Hasło nie zostało sprawdzone - to nie jest błąd loginu ani hasła.",
+    "db_not_central": "Konto można założyć tylko przy połączeniu z centralną bazą. Sprawdź sieć i spróbuj ponownie.",
+    "not_activated": NOT_ACTIVATED_TEXT,
+    "stale_bridge_running": STALE_BRIDGE_MESSAGE,
+    "machine_id_required": "Brak ID maszyny - uruchom DAM przez skrót na pulpicie.",
+    "login_failed": "Logowanie nie powiodło się po stronie aplikacji (nie z powodu hasła). Spróbuj ponownie za chwilę.",
+    "ip_blocked": "Ten adres IP został zablokowany po nieudanych logowaniach. Odblokowuje administrator.",
+    "saved_login_unreadable": "Nie można odczytać zapisanego hasła na tym koncie Windows. Zaloguj się ręcznie.",
+    "email_taken": "Konto z tym emailem już istnieje. Zaloguj się.",
+    "password_too_short": "Hasło musi mieć co najmniej 10 znaków.",
+    "password_too_weak": "To hasło jest zbyt oczywiste. Wybierz inne.",
+    "invalid_email": "Podaj poprawny email.",
+    "admin_required": "Nowe konta zakłada tylko administrator.",
+    "database_unavailable": "Brak połączenia z bazą. Sprawdź most DAM i sieć do Synology.",
+    "bridge_unreachable": "Most DAM niedostępny (port 8766). Uruchom DAM z pulpitu."
+  };
+
+  /** Tekst bledu dla kodu z mostu. ctx.saved = logowanie zapisanym haslem. */
+  function authMessage(code, data, ctx) {
+    data = data || {};
+    ctx = ctx || {};
+    var m = AUTH_MESSAGES[code];
+    if (code === "invalid_credentials") {
+      if (ctx.saved) return "Zapisane hasło jest już nieaktualne. Wpisz hasło ręcznie.";
+      /* Baza lokalna (tryb bez Synology / dev bez PG) moze miec starsze haslo niz centralna. */
+      if (data.db_source === "local") {
+        return m + " Uwaga: ten komputer loguje do lokalnej kopii kont (bez centralnej bazy) - hasło zmienione na innym komputerze może tu nie działać.";
+      }
+      return m;
+    }
+    if (code === "too_many_attempts") {
+      var s = Number(data.retry_after_s) || 0;
+      if (s > 0) {
+        var min = Math.max(1, Math.ceil(s / 60));
+        return "Za dużo nieudanych prób. Odczekaj ok. " + min + " min i spróbuj ponownie.";
+      }
+      return m;
+    }
+    if (code === "not_activated") return data.message || m;
+    if (code === "db_offline" && data.message && !/niedostępna/.test(data.message)) return data.message;
+    if (code === "admin_required") return data.hint || m;
+    if (m) return m;
+    return "Nie udało się wykonać operacji (kod: " + String(code || "nieznany") + ").";
+  }
+
+  function authError(code, data, ctx) {
+    data = data || {};
+    var e = new Error(authMessage(code, data, ctx));
+    e.code = code;
+    if (code === "password_change_required") e.canSkip = !!data.can_skip;
+    if (code === "not_activated") e.activationAvailable = data.activation_available !== false;
+    if (code === "too_many_attempts") e.retryAfter = Number(data.retry_after_s) || 0;
+    if (code === "invalid_credentials") e.dbSource = data.db_source || "";
+    return e;
+  }
+
+  /**
+   * Stan bazy dla ekranu logowania (czysta funkcja - testowalna). status = /db/status,
+   * ping = /db/ping (swiezy, bez cache 30 s) albo null. Zwraca:
+   *  bridge_down | not_activated | online | offline | local
+   */
+  function dbStateFrom(status, ping) {
+    if (!status || typeof status !== "object") return { state: "bridge_down" };
+    if (status.activation_required === true) return { state: "not_activated" };
+    var info = ping && typeof ping === "object" && ping.engine ? ping : status;
+    /* Tuz po starcie watek zdrowia jeszcze nie odpowiedzial - nie strasz "brak polaczenia". */
+    if (info.error === "health_pending") return { state: "checking" };
+    var engine = String(info.engine || "");
+    var offline = !!(info.offline_mode || info.writes_paused || engine === "sqlite-offline");
+    if (engine === "postgres" && !offline) return { state: "online", host: info.host || status.host || "" };
+    if (offline) return { state: "offline" };
+    if (info.ok === false) return { state: "offline" };
+    return { state: "local" };
+  }
+
+  async function dbState() {
+    var base = String(bridgeAuthUrl()).replace(/\/+$/, "");
+    async function get(path) {
+      var r = await fetch(base + path, { cache: "no-store" });
+      return r.json();
+    }
+    var status = null;
+    try { status = await get("/db/status"); } catch (e) { return { state: "bridge_down" }; }
+    var ping = null;
+    try { ping = await get("/db/ping"); } catch (e2) { ping = null; }
+    return dbStateFrom(status, ping);
+  }
+
   /**
    * null = most jest tej samej wersji co serwer UI (albo nie da sie tego sprawdzic).
    * Wersje serwera UI podaje /dam-runtime.json (app_version, DAM 2.4.9+). Tryb publiczny
@@ -861,6 +960,11 @@
     },
     deviceId: deviceId,
     machineId: machineId,
+    authMessage: authMessage,
+    authError: authError,
+    dbState: dbState,
+    dbStateFrom: dbStateFrom,
+    AUTH_MESSAGES: AUTH_MESSAGES,
     fetchIdentity: fetchIdentity,
     clearLocalAuth: clearLocalAuth,
     async login(email, password, opts) {
@@ -897,53 +1001,18 @@
           persistSession(bdata);
           return bdata;
         }
-        if (bdata && bdata.error === "invalid_credentials") {
-          throw new Error("Nieprawidłowy email lub hasło.");
-        }
-        /* 29.09.2026 (DAM 2.4.7 na Macu): instalacja bez konfiguracji bazy odpowiadala
-           "Nieprawidłowy email lub hasło". Most mówi teraz wprost, że brakuje aktywacji -
-           pokazujemy komunikat i od razu okno kodu (dam-activation.js), jeśli kod coś da. */
+        /* 29.09.2026: not_activated nie moze wygladac jak "zle haslo" - pokaz komunikat i od razu
+           okno kodu (dam-activation.js), jesli kod coś da. */
         if (bdata && bdata.error === "not_activated") {
-          var na = new Error(
-            bdata.message || "Aplikacja nie jest aktywowana - wpisz kod aktywacyjny od administratora."
-          );
-          na.code = "not_activated";
-          na.activationAvailable = bdata.activation_available !== false;
+          var na = authError("not_activated", bdata);
           if (na.activationAvailable && window.DamActivation && typeof window.DamActivation.show === "function") {
             try { window.DamActivation.show("not_activated"); } catch (eAct) { /* komunikat i tak wyjdzie */ }
           }
           throw na;
         }
-        if (bdata && bdata.error === "machine_id_required") {
-          throw new Error("Brak ID maszyny - uruchom DAM przez skrót na pulpicie.");
-        }
-        if (bdata && bdata.error === "password_change_required") {
-          var pcr = new Error("To hasło jest za słabe. Ustaw nowe hasło, żeby się zalogować.");
-          pcr.code = "password_change_required";
-          pcr.canSkip = !!bdata.can_skip;
-          throw pcr;
-        }
-        if (bdata && bdata.error === "too_many_attempts") {
-          var tma = new Error("Za dużo nieudanych prób. Odczekaj 5 minut.");
-          tma.code = "too_many_attempts";
-          throw tma;
-        }
-        /* Most dziala, ale baza nie odpowiada / blad logowania po stronie aplikacji -
-           nie wolno tego pokazac jako "Most DAM niedostepny" (zgloszenie 28.09.2026). */
-        if (bdata && bdata.error === "db_offline") {
-          var dbo = new Error(bdata.message || "Baza chwilowo niedostępna, spróbuj za chwilę.");
-          dbo.code = "db_offline";
-          throw dbo;
-        }
-        if (bdata && bdata.error === "login_failed") {
-          var lf = new Error(
-            bdata.message || "Logowanie nie powiodło się po stronie aplikacji. Spróbuj ponownie za chwilę."
-          );
-          lf.code = "login_failed";
-          throw lf;
-        }
+        /* Kazdy inny kod z mostu ma wlasny komunikat (AUTH_MESSAGES) - nic nie wpada do "zle haslo". */
         if (bdata && bdata.error) {
-          throw new Error(String(bdata.error));
+          throw authError(String(bdata.error), bdata);
         }
       } catch (e) {
         if (e && (e.code || (e.message && /Nieprawid(ł|l)owy|Brak ID/.test(e.message)))) throw e;
@@ -968,13 +1037,15 @@
           (bridgeErr && bridgeErr.message ? " (" + bridgeErr.message + ")" : "")
       );
     },
-    async register(email, password, name) {
+    /* opts.selfRegister: samodzielne zakladanie konta na ekranie logowania - bez cudzego tokenu
+       w localStorage (inaczej konto powstaje, ale nikt sie nim nie loguje) i z logowaniem po sukcesie. */
+    async register(email, password, name, opts) {
       try {
         if (window.DamRuntime && typeof window.DamRuntime.ensureServices === "function") {
           await window.DamRuntime.ensureServices({ skipEnsure: false });
         }
       } catch (eEnsure) { /* ignore */ }
-      var t = token();
+      var t = opts && opts.selfRegister ? "" : token();
       var headers = { "Content-Type": "application/json", Accept: "application/json" };
       if (t) headers.Authorization = "Bearer " + t;
       var sid = localStorage.getItem("dam_session_id") || "";
@@ -983,25 +1054,21 @@
       if (sid) headers["X-Dam-Session-Id"] = sid;
       if (did) headers["X-Dam-Device-Id"] = did;
       if (mid) headers["X-Dam-Machine-Id"] = mid;
-      var r = await fetch(bridgeAuthUrl() + "/auth/register", {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify({ email: email, password: password, name: name || "" }),
-      });
+      var r;
+      try {
+        r = await fetch(bridgeAuthUrl() + "/auth/register", {
+          method: "POST",
+          headers: headers,
+          body: JSON.stringify({ email: email, password: password, name: name || "" }),
+        });
+      } catch (eNet) {
+        throw authError("bridge_unreachable", {});
+      }
       var data = await r.json().catch(function () { return null; });
       if (!data || !data.ok) {
         var err = (data && data.error) || "register_failed";
-        if (err === "email_taken") throw new Error("Konto z tym emailem już istnieje.");
-        if (err === "password_too_short") throw new Error("Hasło musi mieć co najmniej 10 znaków.");
-        if (err === "password_too_weak") throw new Error("To hasło jest zbyt oczywiste. Wybierz inne.");
-        if (err === "invalid_email") throw new Error("Podaj poprawny email.");
-        if (err === "admin_required") {
-          throw new Error((data && data.hint) || "Nowe konta zakłada tylko administrator.");
-        }
-        if (err === "database_unavailable") {
-          throw new Error("Brak połączenia z bazą. Sprawdź most DAM i sieć do Synology.");
-        }
-        throw new Error((data && data.hint) || "Nie udało się utworzyć konta.");
+        if (err === "register_failed") throw new Error((data && data.hint) || "Nie udało się utworzyć konta.");
+        throw authError(err, data || {});
       }
       if (t) return data;
       return this.login(email, password);
@@ -1054,7 +1121,8 @@
       if (err === "password_too_weak") throw new Error("To hasło jest zbyt oczywiste. Wybierz inne.");
       if (err === "password_unchanged") throw new Error("Nowe hasło musi być inne niż stare.");
       if (err === "invalid_credentials") throw new Error("Stare hasło jest nieprawidłowe.");
-      if (err === "too_many_attempts") throw new Error("Za dużo nieudanych prób. Odczekaj 5 minut.");
+      if (err === "too_many_attempts") throw authError(err, data || {});
+      if (err === "db_offline") throw authError(err, data || {});
       if (err === "not_activated") {
         throw new Error((data && data.message) || "Aplikacja nie jest aktywowana - wpisz kod aktywacyjny od administratora.");
       }

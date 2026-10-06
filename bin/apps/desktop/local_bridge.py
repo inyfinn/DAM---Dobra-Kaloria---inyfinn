@@ -103,6 +103,7 @@ from auth_store import (
     login as auth_login,
     logout as auth_logout,
     register_user,
+    registration_status,
     rehydrate_session as auth_rehydrate,
     resolve_session,
     seed_owner_from_env,
@@ -146,6 +147,17 @@ except ImportError:
 # Klient <img> nie dostaje onerror przy pending — hard timeout na odpowiedzi HTTP.
 THUMB_CACHE_TIMEOUT_S = float(os.environ.get("DAM_THUMB_CACHE_TIMEOUT_S", "2.5"))
 
+import queue as _queue  # noqa: E402
+import socket as _socket  # noqa: E402
+
+import dam_daemon_pool as _dpool  # noqa: E402
+
+# 05.10.2026 (W11): wczesniej KAZDE /thumb-cache = nowy watek "dam-thumb-cache", a po timeoucie
+# porzucany (zyl dalej na zawieszonym M:) - po ~3 h 20 000 watkow i 15-20 GB. Teraz: stala
+# pula + jedno wykonanie na (sciezka, profil); nadmiar dostaje 504 od razu, bez nowego watku.
+THUMB_BUILD_WORKERS = int(os.environ.get("DAM_THUMB_BUILD_WORKERS", "8"))
+_THUMB_POOL = _dpool.DaemonPool(workers=THUMB_BUILD_WORKERS, queue_max=256, name="dam-thumb-cache")
+
 
 def _thumb_cache_with_timeout(
     path: str,
@@ -154,29 +166,35 @@ def _thumb_cache_with_timeout(
     resolve_physical=None,
     timeout_s: float | None = None,
 ) -> tuple[int, bytes, str, dict]:
-    """Uruchom get_or_build_thumb w watku; po timeout zwroc 504 (onerror → /media)."""
+    """get_or_build_thumb w stalej puli (dedup po sciezce+profilu); po timeout 504 (onerror → /media)."""
     if not dam_thumb_cache:
         return 500, b"", "application/json", {"ok": False, "error": "dam_thumb_cache_missing"}
     limit = THUMB_CACHE_TIMEOUT_S if timeout_s is None else float(timeout_s)
-    box: dict = {}
-
-    def _worker() -> None:
+    # Trafienie w indeks (pamiec + lokalny plik) bez kolejki: nie moze czekac za wolnymi budowami na M:.
+    fast_lane = getattr(dam_thumb_cache, "get_cache_hit", None)
+    if fast_lane is not None:
         try:
-            box["result"] = dam_thumb_cache.get_or_build_thumb(
-                path,
-                profile=profile,
-                resolve_physical=resolve_physical,
-            )
-        except Exception as exc:  # noqa: BLE001
-            box["error"] = str(exc)
+            hit = fast_lane(path, profile=profile, resolve_physical=resolve_physical)
+        except Exception:  # noqa: BLE001 - dalej zwykla sciezka (ta sama usterka da 500 z opisem)
+            hit = None
+        if hit is not None:
+            return hit
 
-    t = threading.Thread(target=_worker, daemon=True, name="dam-thumb-cache")
-    t.start()
-    t.join(timeout=max(0.2, limit))
-    if "result" in box:
-        return box["result"]
-    if "error" in box:
-        return 500, b"", "application/json", {"ok": False, "error": "thumb_build_failed", "detail": box["error"]}
+    def _build():
+        return dam_thumb_cache.get_or_build_thumb(
+            path,
+            profile=profile,
+            resolve_physical=resolve_physical,
+        )
+
+    try:
+        return _THUMB_POOL.run_once((path, profile), max(0.2, limit), _build)
+    except _queue.Full:
+        return 504, b"", "application/json", {"ok": False, "error": "thumb_busy", "path": path, "profile": profile}
+    except _dpool.FutureTimeout:
+        pass
+    except Exception as exc:  # noqa: BLE001
+        return 500, b"", "application/json", {"ok": False, "error": "thumb_build_failed", "detail": str(exc)}
     return (
         504,
         b"",
@@ -1970,6 +1988,75 @@ def _assoc_status_payload() -> dict:
         return assoc_repo.status_counts(db_path)
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "counts": {}, "schema_error": str(exc), "total": 0}
+
+
+class _BgValue:
+    """Wartosc liczona w TLE co `period_s`; get() nie robi zadnego IO.
+
+    W11 05.10.2026: /health liczyl assoc (SQLite, timeout=60 s, plus CREATE IF NOT EXISTS) i
+    public_status (kilka plikow) w watku zapytania. Przy zajetej bazie / zajetym GIL /health nie
+    odpowiadal 40 s, a supervisor mogl uznac most za martwy. Teraz zapytanie czyta ostatnia
+    wartosc z pamieci; zablokowany SQLite blokuje tylko ten jeden watek tla."""
+
+    def __init__(self, fn, period_s: float, name: str, initial: dict) -> None:
+        self._fn = fn
+        self._period = period_s
+        self._name = name
+        self._value = initial
+        self._at = 0.0
+        self._first = threading.Event()
+        self._lock = threading.Lock()
+        self._started = False
+        self._waited = False
+        self._stop = threading.Event()
+
+    def ensure_started(self) -> None:
+        with self._lock:
+            if self._started:
+                return
+            self._started = True
+        threading.Thread(target=self._loop, daemon=True, name=self._name).start()
+
+    def stop(self) -> None:
+        self._stop.set()
+
+    def _loop(self) -> None:
+        while not self._stop.is_set():
+            try:
+                self._value = self._fn()
+                self._at = time.monotonic()
+            except Exception:  # noqa: BLE001 - zostaje poprzednia wartosc
+                pass
+            self._first.set()
+            self._stop.wait(self._period)
+
+    def get(self, wait_first_s: float = 0.02) -> tuple[dict, float | None]:
+        self.ensure_started()
+        if not self._waited:
+            self._waited = True  # tylko PIERWSZE pytanie czeka chwile na pierwszy wynik; potem zero czekania
+            self._first.wait(wait_first_s)
+        return self._value, (round(time.monotonic() - self._at, 1) if self._at else None)
+
+
+_HEALTH_ASSOC = _BgValue(
+    lambda: _assoc_status_payload(), 5.0, "dam-health-assoc",
+    {"ok": True, "counts": {}, "schema_error": "", "total": 0, "pending": True},
+)
+
+
+def _watcher_status_payload() -> dict:
+    try:
+        import index_supervisor
+
+        return index_supervisor.public_status()
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "watcher_ok": False, "last_error": str(exc)}
+
+
+_HEALTH_WATCHER = _BgValue(
+    lambda: _watcher_status_payload(), 2.0, "dam-health-watcher",
+    {"ok": True, "watcher_ok": False, "pending": True},
+)
 
 
 def _index_db_snapshot() -> dict:
@@ -4495,6 +4582,14 @@ def _invalidate_branding_data_caches() -> None:
         _drop_json_cache(WEB_ROOT / rel)
 
 
+# 05.10.2026 (W11): bez blokady N rownoleglych zapytan o zimny cache parsowalo TEN SAM plik
+# N razy naraz (branding-index.json ~310 MB = kilka GB obiektow na kazde wywolanie, GIL zajety
+# przez cale parsowanie) - to tlumaczy 15-20 GB RSS i brak odpowiedzi /health. Teraz: jeden
+# parsuje, reszta czeka na blokade i bierze wynik z cache.
+_JSON_LOAD_LOCKS: dict[str, threading.Lock] = {}
+_JSON_LOAD_LOCKS_GUARD = threading.Lock()
+
+
 def _load_json(path: Path, default):
     """Czytaj lokalny cache. (Prawda jest w PG - watcher odswieza co 30 min.)"""
     if not path.exists():
@@ -4505,9 +4600,15 @@ def _load_json(path: Path, default):
         cached = _JSON_FILE_CACHE.get(key)
         if cached is not None and cached[0] == mtime:
             return cached[1]
-        data = json.loads(path.read_text(encoding="utf-8"))
-        _JSON_FILE_CACHE[key] = (mtime, data)
-        return data
+        with _JSON_LOAD_LOCKS_GUARD:
+            load_lock = _JSON_LOAD_LOCKS.setdefault(key, threading.Lock())
+        with load_lock:
+            cached = _JSON_FILE_CACHE.get(key)
+            if cached is not None and cached[0] == mtime:
+                return cached[1]
+            data = json.loads(path.read_text(encoding="utf-8"))
+            _JSON_FILE_CACHE[key] = (mtime, data)
+            return data
     except json.JSONDecodeError:
         return default
 
@@ -9030,6 +9131,44 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _json_file_with_ok(self, path: Path) -> bool:
+        """Wyslij plik z JSON-owym OBIEKTEM jako {"ok": true, ...zawartosc...} BEZ parsowania.
+
+        W11 05.10.2026: /branding-index?full=1 (~310 MB) i /branding-search-index (~50 MB) robily
+        json.loads calego pliku + json.dumps + gzip w watku zapytania (GIL zajety, kilka GB RAM).
+        False = plik nie wyglada na kompletny obiekt JSON (brak/obciety) - wywolujacy ma stara sciezke."""
+        started = False
+        try:
+            size = path.stat().st_size
+            with open(path, "rb") as fh:
+                head = fh.read(64)
+                lead = head.lstrip()
+                if not lead.startswith(b"{"):
+                    return False
+                fh.seek(max(0, size - 64))
+                if not fh.read(64).rstrip().endswith(b"}"):
+                    return False
+                skip = len(head) - len(lead) + 1  # bajty do (i z) otwierajacego '{'
+                empty = lead[1:].lstrip().startswith(b"}")
+                prefix = b'{"ok": true' if empty else b'{"ok": true,'
+                self.send_response(200)
+                self._cors()
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Content-Length", str(len(prefix) + size - skip))
+                self.end_headers()
+                started = True
+                if self.command != "HEAD":
+                    self.wfile.write(prefix)
+                    fh.seek(skip)
+                    while True:
+                        chunk = fh.read(1 << 20)
+                        if not chunk:
+                            break
+                        self.wfile.write(chunk)
+        except OSError:
+            return started  # po wyslaniu naglowkow (zerwane polaczenie) nie wysylamy drugiej odpowiedzi
+        return True
+
     def do_OPTIONS(self):  # noqa: N802
         if not self._origin_ok():
             self.send_response(403)
@@ -9232,14 +9371,9 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, {"ok": True, "service": "dam-local-bridge"})
             return
         if parsed.path == "/health":
-            assoc = _assoc_status_payload()
-            watcher = {}
-            try:
-                import index_supervisor
-
-                watcher = index_supervisor.public_status()
-            except Exception as exc:  # noqa: BLE001
-                watcher = {"ok": False, "watcher_ok": False, "last_error": str(exc)}
+            # W11: zero IO w zapytaniu - assoc (SQLite) i watcher (pliki) odswieza tlo, tu tylko pamiec.
+            assoc, assoc_age = _HEALTH_ASSOC.get()
+            watcher, watcher_age = _HEALTH_WATCHER.get()
             self._json(
                 200,
                 {
@@ -9247,6 +9381,8 @@ class Handler(BaseHTTPRequestHandler):
                     "service": "dam-local-bridge",
                     "port": PORT,
                     "api_version": BRIDGE_API_VERSION,
+                    "health_cache_age_s": {"assoc": assoc_age, "watcher": watcher_age},
+                    "http": getattr(self.server, "http_stats", lambda: {"threads": threading.active_count()})(),
                     # 29.09.2026: tozsamosc - nowa aplikacja nie uzywa mostu innej
                     # wersji / instalacji (Mac 2.4.7 -> 2.4.9 logowal do starej bazy).
                     **_bridge_identity(),
@@ -9355,20 +9491,15 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, background_jobs_status())
             return
         if parsed.path == "/auth/registration-open":
-            n = users_count()
+            # 06.10.2026: samodzielna rejestracja (rola user) jest otwarta, gdy zywa centralna
+            # baza. Bez "bootstrapu pierwszego admina" - pierwsze konto admina = CLI
+            # (python auth_store.py <haslo>), nie przycisk na ekranie logowania.
             me = resolve_session(self._bearer())
             is_admin = bool(
                 me.get("ok") and str((me.get("user") or {}).get("role") or "").lower() == "admin"
             )
-            self._json(
-                200,
-                {
-                    "ok": True,
-                    "open": n == 0 or is_admin,
-                    "users": n,
-                    "bootstrap": n == 0,
-                },
-            )
+            st = registration_status(public_mode=PUBLIC_MODE and not is_admin)
+            self._json(200, {"ok": True, "open": bool(st["open"]), "reason": st["reason"]})
             return
         if parsed.path == "/auth/identity":
             try:
@@ -10270,6 +10401,8 @@ class Handler(BaseHTTPRequestHandler):
                     },
                 )
                 return
+            if self._json_file_with_ok(BRANDING_INDEX_FILE):
+                return
             data = _load_json(BRANDING_INDEX_FILE, None)
             if not isinstance(data, dict):
                 self._json(404, {"ok": False, "error": "branding_index_missing"})
@@ -10348,6 +10481,8 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, out)
             return
         if parsed.path == "/branding-search-index":
+            if self._json_file_with_ok(BRANDING_SEARCH_INDEX_FILE):
+                return
             data = _load_json(BRANDING_SEARCH_INDEX_FILE, None)
             if not isinstance(data, dict):
                 self._json(404, {"ok": False, "error": "branding_search_index_missing"})
@@ -10758,33 +10893,37 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200 if res.get("ok") else 401, res)
             return
         if parsed.path == "/auth/register":
-            # Pierwsze konto (bootstrap) albo zalogowany admin. Bez sesji + istniejace
-            # konta = 403 — UI mylilo to z "brak bazy".
-            n = users_count()
+            # Samodzielna rejestracja (rola user) przy zywej centralnej bazie; role wyzsze
+            # ustawia tylko zalogowany admin. W trybie publicznym (internet) - tylko admin.
+            # Konto powstaje WYLACZNIE w PostgreSQL (central_only), nigdy w lokalnej SQLite.
             admin = self._session_user()
             is_admin = bool(admin and str(admin.get("role") or "").lower() == "admin")
-            bootstrap = n == 0
-            if not is_admin and not bootstrap:
-                self._json(
-                    403,
-                    {
-                        "ok": False,
-                        "error": "admin_required",
-                        "hint": "Nowe konta zaklada tylko administrator (albo pierwsze konto na pustej bazie).",
-                    },
-                )
+            st = registration_status(public_mode=PUBLIC_MODE and not is_admin)
+            if not st["open"]:
+                if st["reason"] == "public_mode":
+                    self._json(
+                        403,
+                        {
+                            "ok": False,
+                            "error": "admin_required",
+                            "hint": "Nowe konta zaklada tylko administrator.",
+                        },
+                    )
+                else:  # not_activated / db_offline / db_not_central
+                    self._json(503, {"ok": False, "error": st["reason"]})
                 return
-            requested_role = (data.get("role") or "user").strip().lower()
-            if requested_role not in ("admin", "power_user", "user"):
-                requested_role = "user"
-            if bootstrap:
-                requested_role = "admin"
+            requested_role = "user"
+            if is_admin:
+                requested_role = (data.get("role") or "user").strip().lower()
+                if requested_role not in ("admin", "power_user", "user"):
+                    requested_role = "user"
             try:
                 res = register_user(
                     data.get("email") or "",
                     data.get("password") or "",
                     data.get("name") or "",
                     requested_role,
+                    central_only=True,
                 )
             except Exception as exc:  # noqa: BLE001
                 self._json(
@@ -10795,6 +10934,9 @@ class Handler(BaseHTTPRequestHandler):
                         "hint": str(exc)[:240],
                     },
                 )
+                return
+            if res.get("error") in ("db_offline", "db_not_central", "not_activated"):
+                self._json(503, res)
                 return
             self._json(200 if res.get("ok") else 400, res)
             return
@@ -12318,6 +12460,79 @@ class BridgeHTTPServer(ThreadingHTTPServer):
 
     request_queue_size = 128
     daemon_threads = True
+    # 05.10.2026 (W11): ThreadingHTTPServer tworzy watek na KAZDE polaczenie bez limitu; zapytania
+    # blokujace sie na M:/SQLite/JSON-ie 310 MB piętrzyly sie do 20 000 watkow (15-20 GB). Twardy
+    # limit: powyzej niego most odpowiada 503 + Retry-After od razu (watek akceptujacy nie czeka),
+    # a /health ma wlasna rezerwe, zeby nadzorca widzial zywy, choc przeciazony most.
+    max_handler_threads = int(os.environ.get("DAM_BRIDGE_MAX_THREADS", "64"))
+    health_reserve = 8
+
+    def __init__(self, *args, **kwargs) -> None:
+        self._slots = threading.BoundedSemaphore(self.max_handler_threads)
+        self._health_slots = threading.BoundedSemaphore(self.health_reserve)
+        self._rejected = 0
+        super().__init__(*args, **kwargs)
+
+    @staticmethod
+    def _peek_is_health(request) -> bool:
+        try:
+            request.settimeout(0.05)
+            try:
+                return request.recv(32, _socket.MSG_PEEK).startswith(b"GET /health")
+            finally:
+                request.settimeout(None)
+        except OSError:
+            return False
+
+    def _reject_busy(self, request) -> None:
+        self._rejected += 1
+        body = b'{"ok": false, "error": "bridge_busy"}'
+        origin = (_origin_of(CORS_ORIGIN) or CORS_ORIGIN).encode("latin-1", "ignore")
+        head = (
+            b"HTTP/1.1 503 Service Unavailable\r\nRetry-After: 1\r\nConnection: close\r\n"
+            b"Content-Type: application/json\r\nAccess-Control-Allow-Origin: " + origin +
+            b"\r\nContent-Length: " + str(len(body)).encode() + b"\r\n\r\n"
+        )
+        try:
+            request.settimeout(0.05)
+            try:
+                request.recv(8192)  # odbierz zapytanie, inaczej zamkniecie z nieodczytanymi danymi = RST i klient gubi 503
+            except OSError:
+                pass
+            request.settimeout(0.2)
+            request.sendall(head + body)
+        except OSError:
+            pass
+        self.shutdown_request(request)
+
+    def process_request(self, request, client_address) -> None:
+        slot = self._slots
+        if not slot.acquire(blocking=False):
+            if self._peek_is_health(request) and self._health_slots.acquire(blocking=False):
+                slot = self._health_slots
+            else:
+                self._reject_busy(request)
+                return
+        try:
+            threading.Thread(
+                target=self._run_slot, args=(request, client_address, slot), daemon=True
+            ).start()
+        except RuntimeError:  # system nie daje wiecej watkow
+            slot.release()
+            self._reject_busy(request)
+
+    def _run_slot(self, request, client_address, slot) -> None:
+        try:
+            self.process_request_thread(request, client_address)
+        finally:
+            slot.release()
+
+    def http_stats(self) -> dict:
+        return {
+            "max_handler_threads": self.max_handler_threads,
+            "rejected_503": self._rejected,
+            "threads": threading.active_count(),
+        }
 
 
 def main() -> None:
@@ -12467,6 +12682,8 @@ def main() -> None:
     threading.Thread(target=_tag_proposal_watcher, daemon=True).start()
     threading.Thread(target=_kv_cache_watcher, daemon=True).start()
     threading.Thread(target=_pg_backup_watcher, daemon=True, name="dam-pg-backup").start()
+    _HEALTH_ASSOC.ensure_started()  # W11: /health czyta tylko pamiec, wiec rozgrzej ja przed pierwszym pytaniem
+    _HEALTH_WATCHER.ensure_started()
     print(f"DAM local bridge http://{HOST}:{PORT}")
     try:
         httpd.serve_forever()

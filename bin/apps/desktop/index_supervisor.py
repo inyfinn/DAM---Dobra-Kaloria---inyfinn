@@ -7,6 +7,7 @@ Uses O_EXCL supervisor lock so duplicates become no-ops.
 from __future__ import annotations
 
 import hashlib
+import itertools
 import json
 import os
 import re
@@ -91,7 +92,13 @@ _CAT_RE = re.compile(r"\[([A-Za-z]{1,8})\]\s+(.+?):\s+products so far\s+(\d+)")
 _ARCH_RE = re.compile(r"\[archive\][^\n:]*:\s+(.+)$")
 _SKIP_ROOT_RE = re.compile(r"skip missing root \[([A-Za-z]{1,8})\]:\s+(.+)$")
 _SKIP_CAT_RE = re.compile(r"skip cat\s+(.+?):")
-HOURLY_SEC_DEFAULT = float(os.environ.get("DAM_INDEX_HOURLY_SEC", "3600") or "3600")
+# 06.10.2026: przebieg awaryjny = PELNY skan ROOT (27-54 min na M:, mierzone 3262 s). Przy 3600 s watcher
+# skanowal prawie bez przerwy (45-90% czasu). Zmiany pojedynczych produktow obsluguje tryb przyrostowy
+# (watch-file-index.py --only-product), pelny skan lapie to, czego zegar mtime nie widzi (glebiej niz
+# --depth, zmiany z czasu wylaczonej aplikacji bez zapisanego snapshotu, foldery marketingowe, edycje
+# katalogu/aliasow). 6 h = ok. 10-15% czasu zegarowego w najgorszym razie, a opoznienie nadrobienia
+# takiej zmiany to maks. 6 h (reczny /index/rebuild dziala od razu). Nadpisanie: DAM_INDEX_HOURLY_SEC.
+HOURLY_SEC_DEFAULT = float(os.environ.get("DAM_INDEX_HOURLY_SEC", "21600") or "21600")
 FIRST_DELAY_SEC_DEFAULT = float(os.environ.get("DAM_INDEX_FIRST_DELAY_SEC", "20") or "20")
 
 CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
@@ -106,6 +113,20 @@ def index_builder_env(base: dict[str, str] | None = None) -> dict[str, str]:
 
 _state_lock = threading.Lock()
 _owner: "IndexSupervisor | None" = None
+
+# 05.10.2026 (W11): plik <status>.json pisza w TYM SAMYM procesie dwa watki (glowna petla
+# watch-file-index.py: _write_status/_tick, oraz watek "dam-index-live": merge_live_into_watcher_status
+# -> write_watcher_status). Plik tymczasowy nazywal sie "<plik>.<pid>.tmp" - dla obu watkow
+# identycznie: oba otwieraly go "w" i pisaly naraz, wynik = poprawny JSON z ogonem dluzszej,
+# starszej wersji ("Extra data", index-watcher-status.json.corrupt). Teraz nazwa jest unikalna
+# per zapis, a odczyt-scalenie-zapis jest szeregowany jedna blokada (dzieli ja watch-file-index.py).
+STATUS_WRITE_LOCK = threading.RLock()
+_TMP_SEQ = itertools.count()
+
+
+def unique_tmp(path: Path) -> Path:
+    """Plik tymczasowy unikalny dla procesu, watku i zapisu (pid sam nie wystarcza)."""
+    return path.with_name(f"{path.name}.{os.getpid()}.{threading.get_ident()}.{next(_TMP_SEQ)}.tmp")
 
 
 def _replace_with_retry(tmp, target, attempts: int = 8, delay: float = 0.03) -> bool:
@@ -145,6 +166,11 @@ def _rotate_log_if_needed(path: Path) -> None:
 
 
 def write_watcher_status(payload: dict[str, Any], *, preserve_last: bool = True) -> None:
+    with STATUS_WRITE_LOCK:
+        _write_watcher_status_locked(payload, preserve_last=preserve_last)
+
+
+def _write_watcher_status_locked(payload: dict[str, Any], *, preserve_last: bool = True) -> None:
     WATCHER_STATUS.parent.mkdir(parents=True, exist_ok=True)
     body = dict(payload)
     if preserve_last:
@@ -173,7 +199,7 @@ def write_watcher_status(payload: dict[str, Any], *, preserve_last: bool = True)
             body.pop(key, None)
     body["updated_at"] = _utc()
     text = json.dumps(body, ensure_ascii=False, indent=2) + "\n"
-    tmp = WATCHER_STATUS.with_name(WATCHER_STATUS.name + f".{os.getpid()}.tmp")
+    tmp = unique_tmp(WATCHER_STATUS)
     try:
         tmp.write_text(text, encoding="utf-8")
     except OSError:
@@ -257,7 +283,7 @@ def supervisor_lock_status() -> dict[str, Any]:
 
 def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(path.name + f".{os.getpid()}.tmp")
+    tmp = unique_tmp(path)
     text = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
     try:
         tmp.write_text(text, encoding="utf-8")
