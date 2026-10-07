@@ -12,6 +12,15 @@
   var _lastOnline = null;
   var _refreshBusy = false;
   var _checkSeq = 0;
+  /* Jedna odpowiedz "dysku nie ma" nie jest rozstrzygajaca: most oddaje "nie odpowiada" od razu,
+     gdy rownolegle trwa inna sonda tego samego folderu (zmierzone 07.10.2026: 7 z 10 wejsc na
+     strone, alarm 3-9 s przy dzialajacym M:). Alarm dopiero po drugiej z rzedu takiej odpowiedzi;
+     ponowne pytanie po CONFIRM_MS (sama sonda mostu trwa najwyzej 3 s). */
+  var CONFIRM_MS = 2000;
+  var _misses = 0;
+  var _known = false;
+  var _checkFlight = null;
+  var _confirmTimer = null;
 
   function bridgeBase() {
     if (window.DamRuntime && typeof window.DamRuntime.bridgeUrl === "function") {
@@ -145,7 +154,7 @@
       '<span class="dam-root-status__text">' +
         '<span class="dam-root-status__label">' +
           '<span class="dam-status-line">Pliki</span>' +
-          '<span class="dam-status-line">online</span>' +
+          '<span class="dam-status-line"></span>' +
         "</span>" +
       "</span>" +
       '<button type="button" class="dam-root-status__refresh" id="damRootRefreshBtn" title="Przeskanuj Marketing i odśwież indeks plików" data-dam-tip="Skan dysku Marketing → file-index → miniatury. Jak „Odśwież z dysku” w eksploratorze." aria-label="Odśwież pliki z dysku">' +
@@ -155,6 +164,10 @@
         '<i class="uil uil-folder-open" aria-hidden="true"></i>' +
         '<span>Wskaż folder</span>' +
       "</button>";
+    /* Do pierwszej rozstrzygajacej odpowiedzi: stan neutralny, nie "online" i nie "offline". */
+    el.classList.add("is-checking");
+    el.title = tr("root.status.checking", "Sprawdzam dysk...");
+    ensurePartialCss();
     host.insertBefore(el, host.firstChild);
     var refreshBtn = el.querySelector("#damRootRefreshBtn");
     if (refreshBtn && !refreshBtn.getAttribute("data-bound")) {
@@ -197,7 +210,8 @@
       ".dam-root-status.is-partial .dam-root-status__dot{background:var(--dam-warn);" +
       "box-shadow:0 0 0 3px color-mix(in srgb,var(--dam-warn) 25%,transparent);}" +
       /* Tryb bez dysku: kropka spokojna (kolor tekstu pomocniczego), bez pulsowania. */
-      ".dam-root-status.is-nodisk .dam-root-status__dot{background:var(--dam-text-muted);}";
+      ".dam-root-status.is-nodisk .dam-root-status__dot," +
+      ".dam-root-status.is-checking .dam-root-status__dot{background:var(--dam-text-muted);}";
     document.head.appendChild(s);
   }
 
@@ -209,6 +223,8 @@
        wiec bez czerwonej kropki i bez czerwonego paska u gory okna. */
     var nodisk = !online && reason === "no_root";
     ensurePartialCss();
+    _known = true;
+    el.classList.toggle("is-checking", false);
     el.classList.toggle("is-offline", !online && !nodisk);
     el.classList.toggle("is-nodisk", nodisk);
     el.classList.toggle("is-online", !!online && !partial);
@@ -313,10 +329,43 @@
       });
   }
 
+  /* Wynik sprawdzenia dysku albo mostu. "Jest" wchodzi od razu. "Nie ma" za pierwszym razem
+     niczego nie zmienia na ekranie (stan neutralny albo poprzedni) i tylko zamawia potwierdzenie. */
+  function settle(online, detail, reason) {
+    if (_confirmTimer) clearTimeout(_confirmTimer);
+    _confirmTimer = null;
+    if (online) {
+      _misses = 0;
+      setState(online, detail, reason);
+      return true;
+    }
+    _misses += 1;
+    if (_misses >= 2) {
+      setState(false, detail, reason);
+      return true;
+    }
+    ensureUi(); /* pigulka w stanie neutralnym albo poprzednim - bez czerwieni */
+    _confirmTimer = setTimeout(check, CONFIRM_MS);
+    return false;
+  }
+
+  /* Kilka zdarzen startu wola check() naraz (runtime-ready, bridge-ready): jedno pytanie do mostu. */
   function check() {
+    if (_checkFlight) return _checkFlight;
+    var p = checkNow();
+    _checkFlight = p;
+    function done() {
+      if (_checkFlight === p) _checkFlight = null;
+    }
+    p.then(done, done);
+    return p;
+  }
+
+  function checkNow() {
     var root = rootPath();
     if (!root) {
       _checkSeq++;
+      _misses = 0;
       setState(
         false,
         tr(
@@ -350,14 +399,14 @@
               : res && res.missing && res.missing.length
                 ? ("brak " + res.missing.join(", "))
                 : "nie można odczytać plików"));
-        setState(online, detail, partial ? "partial" : online ? "ok" : "path");
+        settle(online, detail, partial ? "partial" : online ? "ok" : "path");
         return res;
       })
       .catch(function () {
         if (window.DamRuntime && typeof window.DamRuntime.ensureServices === "function") {
           return window.DamRuntime.ensureServices().then(function (boot) {
-            if (boot && boot.ok) return check();
-            setState(
+            if (boot && boot.ok) return checkNow();
+            settle(
               false,
               "Most plików (bridge) nie odpowiada. Uruchom skrót DAM ETA na pulpicie.",
               "bridge"
@@ -365,7 +414,7 @@
             return { online: false, reason: "bridge" };
           });
         }
-        setState(
+        settle(
           false,
           "Most plików (bridge) nie odpowiada na porcie 8766. Uruchom DAM albo serve_browser.py.",
           "bridge"

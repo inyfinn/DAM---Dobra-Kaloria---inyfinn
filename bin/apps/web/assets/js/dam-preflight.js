@@ -288,6 +288,27 @@
   }
 
   var _deferredOnce = false;
+  /* Folder Marketing "niedostepny" pokazujemy dopiero po drugim z rzedu takim raporcie: most
+     oddaje "dysk nie odpowiada" od razu, gdy rownolegle trwa inna sonda tego samego folderu
+     (falszywy baner przy dzialajacym M:, 07.10.2026). Pozostale punkty raportu bez zmian. */
+  var MARKETING_CONFIRM_MS = 2000;
+  var _marketingMisses = 0;
+
+  function confirmMarketing(report) {
+    var items = (report && Array.isArray(report.items)) ? report.items : [];
+    var bad = items.some(function (i) { return i && i.id === "marketing" && !i.ok; });
+    if (!bad) {
+      _marketingMisses = 0;
+      return report;
+    }
+    _marketingMisses += 1;
+    if (_marketingMisses >= 2) return report;
+    scheduleRecheck(MARKETING_CONFIRM_MS);
+    return Object.assign({}, report, {
+      items: items.filter(function (i) { return !(i && i.id === "marketing"); }),
+      marketingUnconfirmed: true
+    });
+  }
 
   function check() {
     if (_busy) return Promise.resolve(null);
@@ -303,7 +324,9 @@
         scheduleRecheck(4000);
         return report;
       }
-      var shown = render(report);
+      var checked = confirmMarketing(report);
+      var shown = render(checked);
+      if (checked.marketingUnconfirmed) return report;
       if (shown) {
         var wait = RECHECK_STEPS_MS[_recheckStep] || RECHECK_MS;
         if (_recheckStep < RECHECK_STEPS_MS.length) _recheckStep += 1;

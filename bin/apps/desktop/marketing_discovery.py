@@ -45,7 +45,8 @@ CACHE_TTL_SEC = 60.0
 
 _lock = threading.Lock()
 _cache: dict[tuple[str, ...], tuple[float, list[dict]]] = {}
-_inflight: set[str] = set()
+# klucz sondy w toku -> (zdarzenie konca, pudelko z wynikiem); drugi pytajacy czeka na TEN SAM wynik
+_inflight: dict[str, tuple[threading.Event, dict]] = {}
 
 
 # ---------------------------------------------------------------- OS access
@@ -123,46 +124,43 @@ def _probe_letter(letter: str, required: Sequence[str]) -> list[dict]:
 def _run_parallel(jobs: dict[str, "callable"], wait_sec: float) -> tuple[dict[str, object], list[str]]:
     """Run each job in a daemon thread; return (results, timed_out_keys).
 
-    Keys already in flight from an earlier call are reported as timed out
-    without starting a second thread for them.
+    A key already in flight from an earlier call is NOT probed twice and is NOT reported
+    as timed out straight away (07.10.2026: that produced a false "dysk nie odpowiada"
+    whenever two HTTP requests asked about the same folder at once). The second caller
+    waits for the first caller's result, up to its own ``wait_sec``.
     """
-    results: dict[str, object] = {}
-    done = threading.Event()
-    pending: set[str] = set()
-    state_lock = threading.Lock()
+    deadline = time.monotonic() + max(0.0, wait_sec)
+    waits: dict[str, tuple[threading.Event, dict]] = {}
 
-    def runner(key: str, fn) -> None:
+    def runner(key: str, fn, ev: threading.Event, box: dict) -> None:
         try:
-            value = fn()
+            box["value"] = fn()
         except Exception:  # noqa: BLE001
-            value = None
-        with state_lock:
-            results[key] = value
-            pending.discard(key)
-            if not pending:
-                done.set()
+            box["value"] = None
         with _lock:
-            _inflight.discard(key)
+            if _inflight.get(key, (None,))[0] is ev:
+                _inflight.pop(key, None)
+        ev.set()
 
-    skipped: list[str] = []
-    to_start: list[tuple[str, object]] = []
+    to_start = []
     with _lock:
         for key, fn in jobs.items():
-            if key in _inflight:
-                skipped.append(key)
-                continue
-            _inflight.add(key)
-            to_start.append((key, fn))
-    with state_lock:
-        pending.update(k for k, _ in to_start)
-        if not pending:
-            done.set()
-    for key, fn in to_start:
-        threading.Thread(target=runner, args=(key, fn), daemon=True, name=f"dam-drive-probe-{key}").start()
-    done.wait(max(0.0, wait_sec))
-    with state_lock:
-        timed_out = sorted(pending) + skipped
-        return dict(results), timed_out
+            slot = _inflight.get(key)
+            if slot is None:
+                slot = (threading.Event(), {})
+                _inflight[key] = slot
+                to_start.append((key, fn, slot))
+            waits[key] = slot
+    for key, fn, (ev, box) in to_start:
+        threading.Thread(target=runner, args=(key, fn, ev, box), daemon=True, name=f"dam-drive-probe-{key}").start()
+    results: dict[str, object] = {}
+    timed_out: list[str] = []
+    for key, (ev, box) in waits.items():
+        if ev.wait(max(0.0, deadline - time.monotonic())) and "value" in box:
+            results[key] = box["value"]
+        else:
+            timed_out.append(key)
+    return results, sorted(timed_out)
 
 
 def sort_key(path: Path | str) -> tuple[int, str]:

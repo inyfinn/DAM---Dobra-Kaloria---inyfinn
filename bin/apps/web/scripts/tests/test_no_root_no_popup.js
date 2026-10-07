@@ -259,7 +259,7 @@ function makeStatus(o) {
   ok(pill.title.indexOf("Tryb bez dysku - widzisz katalog z bazy") === 0, "naglowek bez ROOT: podpowiedz mowi, ze katalog z bazy dziala");
   ok(pill.classList.contains("is-nodisk") && !pill.classList.contains("is-offline") && !pill.classList.contains("is-online"), "naglowek bez ROOT: stan is-nodisk, nie is-offline");
   ok(!s.body.classList.contains("dam-bridge-offline") && !(s.bar() && s.bar().classList.contains("is-active")), "naglowek bez ROOT: bez czerwonego paska u gory okna");
-  ok(s.log.styles.join("").indexOf(".dam-root-status.is-nodisk .dam-root-status__dot{background:var(--dam-text-muted);}") !== -1 && !/#[0-9a-fA-F]{3,6}|rgb\(/.test(s.log.styles.join("")), "kropka: kolor z tokenu, bez surowych kolorow");
+  ok(/\.dam-root-status\.is-nodisk \.dam-root-status__dot,[^{]*\{background:var\(--dam-text-muted\);\}/.test(s.log.styles.join("")) && !/#[0-9a-fA-F]{3,6}|rgb\(/.test(s.log.styles.join("")), "kropka: kolor z tokenu, bez surowych kolorow");
   var pick = pill.querySelector("#damRootResetBtn");
   ok(pick.hidden === false, "naglowek bez ROOT: przycisk Wskaż folder widoczny");
   s = makeStatus({ root: "" });
@@ -273,11 +273,14 @@ function makeStatus(o) {
   await s.status.check();
   pill = s.pill();
   ok(pill.classList.contains("is-online") && !pill.classList.contains("is-nodisk") && /Pliki.*online/.test(pill.querySelector(".dam-root-status__label").innerHTML) && !s.body.classList.contains("dam-bridge-offline"), "z ROOT: Pliki online, jak dotad");
+  /* "Nie ma" jest alarmem dopiero po drugiej z rzedu takiej odpowiedzi (test_root_status_no_false_alarm.js). */
   s = makeStatus({ root: "M:\\", status: { online: false, exists: false } });
+  await s.status.check();
   await s.status.check();
   pill = s.pill();
   ok(pill.classList.contains("is-offline") && !pill.classList.contains("is-nodisk") && s.body.classList.contains("dam-bridge-offline"), "sciezka ustawiona, dysku nie ma: Pliki offline z paskiem, jak dotad");
   s = makeStatus({ root: "M:\\", bridgeDown: true });
+  await s.status.check();
   await s.status.check();
   pill = s.pill();
   ok(pill.classList.contains("is-offline") && /Most.*offline/.test(pill.querySelector(".dam-root-status__label").innerHTML) && s.body.classList.contains("dam-bridge-offline"), "most nie odpowiada: Most offline z paskiem, jak dotad");

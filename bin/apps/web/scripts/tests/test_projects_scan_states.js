@@ -297,6 +297,9 @@ async function scan(o) {
     },
   });
   await c.guardScanButton(b);
+  ok(b.getAttribute("aria-disabled") === null && c.state.noRoot === false && c.log.modeReads === 1, "brak ROOT, pierwsza odpowiedz: przycisk jeszcze aktywny (jedno 'nie ma' moze byc falszywe)");
+  await new Promise(function (r) { setTimeout(r, 30); });
+  ok(c.log.modeReads === 2, "brak ROOT: drugie pytanie do mostu dla potwierdzenia");
   ok(b.getAttribute("aria-disabled") === "true" && b.disabled === false, "brak ROOT: przycisk nieaktywny przez aria-disabled (dymek programu pomija disabled)");
   ok(b.getAttribute("data-dam-tip").indexOf("nie ma podłączonego całego folderu Marketing") !== -1 && b.getAttribute("data-dam-tip") === b.getAttribute("title"), "brak ROOT: podpowiedz w dymku programu i w natywnym title");
   await c.scanDisk({}, {}, b);
@@ -307,7 +310,15 @@ async function scan(o) {
   b.removeAttribute("title");
   alive = false;
   await c.log.listeners.focus();
+  await new Promise(function (r) { setTimeout(r, 30); });
   ok(b.getAttribute("aria-disabled") === "true" && !b.hasAttribute("title"), "title zabrany przez dam-tooltips.js: nie dokladamy natywnego dymka obok programu");
+  /* Falszywe "nie ma" z mostu (zajety inna sonda dysku), potem "jest": przycisk ani na chwile nieaktywny. */
+  b = fakeBtn();
+  var flaky = [false, true];
+  c = makeCtx({ dataMode: function (n) { return Promise.resolve(res(200, { ok: true, mode: "live", root_alive: flaky[Math.min(n - 1, 1)] })); } });
+  await c.guardScanButton(b);
+  await new Promise(function (r) { setTimeout(r, 30); });
+  ok(c.log.modeReads === 2 && b.getAttribute("aria-disabled") === null && c.state.noRoot === false, "jedno falszywe 'nie ma': przycisk Skanuj dysk zostaje aktywny");
   var silent = [res(500, "x"), res(200, { ok: false, error: "boom" }), res(200, { ok: true, mode: "live" })];
   for (var s = 0; s < silent.length; s++) {
     b = fakeBtn();

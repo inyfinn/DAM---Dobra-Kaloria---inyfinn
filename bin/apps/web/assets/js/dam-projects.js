@@ -1503,6 +1503,7 @@
   function guardScanButton(btn) {
     var title = btn.getAttribute("title");
     var tip = btn.getAttribute("data-dam-tip");
+    var misses = 0;
     function check() {
       return fetch(bridgeUrl() + "/data-mode", { cache: "no-store" })
         .then(function (r) {
@@ -1513,6 +1514,13 @@
         })
         .then(function (d) {
           if (!d || d.ok === false || typeof d.root_alive !== "boolean" || state.scanning) return;
+          /* Jedno "nie ma" nie wylacza przycisku: most potrafi tak odpowiedziec, gdy rownolegle
+             trwa inna sonda dysku. Potwierdzenie drugim pytaniem po 2 s. */
+          misses = d.root_alive ? 0 : misses + 1;
+          if (misses === 1 && !state.noRoot) {
+            setTimeout(check, 2000);
+            return;
+          }
           state.noRoot = !d.root_alive;
           if (state.noRoot) btn.setAttribute("aria-disabled", "true");
           else btn.removeAttribute("aria-disabled");
