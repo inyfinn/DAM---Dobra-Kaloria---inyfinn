@@ -7581,6 +7581,10 @@ html[data-dam-style="dk"]:not([data-theme="dark"]) body .dam-settings-hero {
   margin-top: 8px;
   align-items: center;
 }
+/* ciemny: ten sam odstep nad hero (panel i padding zostaja) */
+html[data-dam-style="dk"][data-theme="dark"] body .dam-settings-hero {
+  margin-top: 8px;
+}
 html[data-dam-style="dk"]:not([data-theme="dark"]) body .dam-settings-hero__sub {
   color: var(--dam-text-muted);
 }
@@ -9089,7 +9093,9 @@ html[data-dam-style="dk"]:not([data-theme="dark"]):not(#dk-r4) .dam-widget__coun
 
 /* Pusty pas miedzy podtytulem strony a trescia (47 px marginesu naglowka + odstepy kontenerow, ktore stracily tlo):
    po S14 nie ma panelu, ktory by ten odstep "niosl" - rytm jak na ekranie programu: 24 px pod naglowkiem. */
-html[data-dam-style="dk"]:not([data-theme="dark"]):not(#dk-r4) .geex-content__header {
+/* Odstep pod naglowkiem w OBU motywach DK: z :not([data-theme="dark"]) ciemny zostawal przy 12 px i tresc
+   zaczynala sie 12-16 px wyzej niz w jasnym ("ciemny przesuwa sie do gory", user 07.10.2026). */
+html[data-dam-style="dk"]:not([data-dam-never]):not(#dk-r4) .geex-content__header {
   margin-bottom: 24px;
 }
 html[data-dam-style="dk"]:not([data-theme="dark"]):not(#dk-r4) .dam-search-wrap--panel {
