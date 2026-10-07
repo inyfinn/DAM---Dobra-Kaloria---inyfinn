@@ -2252,6 +2252,18 @@ Skrót — **bind = dwie osobne rzeczy**:
 
 **Wersja:** `5.0.206`.
 
+#### Lekcja 2026-10-07: styl pisany "tylko dla jasnego" rozjezdza motywy (S19, v2.5.9)
+
+**Objaw:** w zestawach Dobra Kaloria po przelaczeniu jasny -> ciemny tresc "przesuwa sie do gory": inne odstepy, panele i obrysy, ktorych w jasnym nie ma. Pomiar w oknie 2.5.8: na Ustawieniach 1710 z 1740 elementow mialo inne polozenie w ciemnym.
+
+**Przyczyna:** styl "sklep" z 2.5.5-2.5.7 dopisano w `dam-dk-components.css` pod `html[data-dam-style="dk"]:not([data-theme="dark"])` (386 selektorow) plus 161 z wyjatkiem `:not([data-dam-scheme="dobra-kaloria"][data-theme="dark"])`. Warunek motywu obejmowal cala regule, czyli takze odstepy, rozmiary, tla i obrysy, a nie tylko kolor. Drugie zrodlo: ogolne reguly `html[data-theme="dark"] X` z arkuszy bazowych maja wyzsza wage niz regula DK bez warunku motywu (np. `dam-brand.css` tytul karty: interlinia 1.3 i 2 wiersze w ciemnym, 1.15 i 3 w jasnym).
+
+**Zasada (S19, user 07.10.2026):** "tryb dark ma byc doslownie tym samym, co tryb light. Zmieniaja sie tylko kolorki. Nigdy nie dodawaj dodatkowych kafelkow, tel, ani nie przesuwaj tresci." Regula DK NIE ma warunku motywu; kolor idzie ze zmiennej `--dam-*` malowanej przez `dam-theme.js` (`DK_PACKS` / `DK_CTRL`) osobno dla jasnego i ciemnego. Warunek `[data-theme="dark"]` wolno dac tylko regule, ktora zmienia sam kolor. Gdy ogolna regula ciemnego wygrywa waga, dopisz wyjatek w sekcji 22 `dam-dk-components.css` (`:not(#dk-s19)`). Bramka: `python -m unittest tests.test_dk_theme_parity (z bin/apps/desktop)`. Pomiar: kazdy element strony w jasnym i ciemnym - obrys x/y/w/h, widoczny kafel, widoczna linia, wlasciwosci niekolorowe - ma dac 0 roznic. Widocznosc licz po nalozeniu koloru na tlo: bialy 10 % na bieli to brak linii, na ciemnym to linia.
+
+**Pulapka pomiaru:** sesja konta w DAM jest jedna na (konto, komputer). Kazde logowanie formularzem kasuje poprzedni token, wiec dwie sesje agentow na tym samym koncie testowym wylogowuja sie nawzajem w polowie pomiaru. Jeden plik z tokenem, logowanie tylko gdy token z pliku jest martwy.
+
+**Wersja:** `2.5.9`.
+
 ## 13. Jeden plik ma jednego pisarza (2026-09-10, HARD)
 
 **Co sie stalo.** Dwie strefy dostaly rownolegle zlecenia dotykajace

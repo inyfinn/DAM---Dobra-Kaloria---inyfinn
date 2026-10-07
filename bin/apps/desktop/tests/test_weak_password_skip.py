@@ -72,6 +72,17 @@ class BridgeWiringTests(unittest.TestCase):
             "skip_password_change nie jest przekazywane jako allow_weak_password",
         )
 
+    def test_saved_login_skips_weak_password_gate(self):
+        """Logowanie zapisanym kontem nie ma jak pokazac "Pomin" (haslo nie jest w karcie),
+        wiec most pomija bramke slabego hasla sam - inaczej jedno klikniecie konczy sie
+        komunikatem "To haslo wymaga zmiany" (user 07.10.2026)."""
+        src = (DESKTOP / "local_bridge.py").read_text(encoding="utf-8", errors="replace")
+        idx = src.find('if parsed.path == "/auth/saved/login":')
+        self.assertGreater(idx, -1, "nie znalazlem trasy /auth/saved/login")
+        blok = src[idx: src.find('if parsed.path == "/auth/saved/delete":', idx)]
+        self.assertIn("allow_weak_password=True", blok)
+        self.assertNotIn("allow_weak_password=False", blok)
+
     def test_frontend_sends_the_flag(self):
         """Druga strona kontraktu - gdyby UI przestalo wysylac, test tez ma paść."""
         js = DESKTOP.parent / "web" / "assets" / "js" / "dam-api.js"

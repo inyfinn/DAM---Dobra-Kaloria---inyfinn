@@ -306,8 +306,8 @@ html[data-dam-style="dk"] {
   --dam-scrim: rgb(59 42 32 / 0.55);
 }
 /* Style jasne (sklep / krem) - ksztalt i cien DS 2.0: przycisk 4, pole 4, panel/karta/kafel 8; karty i panele bez
-   cienia; cien tylko nakladki. Style ciemne zostaja przy dotychczasowych wartosciach. */
-html[data-dam-style="dk"]:not([data-theme="dark"]) {
+   cienia; cien tylko nakladki. Od 2.5.9 (S19) takze style ciemne: ksztalt i cien nie zaleza od motywu. */
+html[data-dam-style="dk"]:not([data-dam-never]) {
   --dam-radius-btn: 4px;
   --dam-radius-btn-compact: 4px;
   --dam-radius-sm: 4px;

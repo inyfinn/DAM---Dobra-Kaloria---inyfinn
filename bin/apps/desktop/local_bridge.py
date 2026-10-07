@@ -11043,12 +11043,17 @@ class Handler(BaseHTTPRequestHandler):
             if pw is None:
                 self._json(200, {"ok": False, "error": "saved_login_unreadable"})
                 return
+            # allow_weak_password=True: karta nie zna zapisanego hasla, wiec nie moze
+            # otworzyc okna "Ustaw nowe haslo" z przyciskiem Pomin. Z False slabe
+            # (ale poprawne) haslo konczylo sie slepym zaulkiem "To haslo wymaga
+            # zmiany. Zaloguj sie recznie" i logowanie jednym kliknieciem nie dzialalo
+            # (user 07.10.2026). Reczne logowanie i tak pozwala te zmiane pominac.
             res = _auth_login_safe(
                 email_in,
                 pw,
                 payload.get("device_id") or "",
                 payload.get("machine_id") or "",
-                allow_weak_password=False,
+                allow_weak_password=True,
             )
             if res.get("error") == "login_failed":
                 self._json(500, res)
