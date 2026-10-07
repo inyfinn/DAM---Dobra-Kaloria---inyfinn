@@ -78,6 +78,28 @@ if (Test-Path -LiteralPath $dst) {
 Write-Host "Worktree gotowy: $dst (dokladnie stan z commita $commit, bez lokalnych zmian w bin/apps/web/data)."
 Write-Host ""
 
+function Get-TreeFileCount([string]$root, [string[]]$xd, [string[]]$xf) {
+  # Pliki pod $root bez katalogow z $xd i plikow z $xf (wzorce jak w robocopy /XD /XF, po nazwie).
+  # Nie wchodzi w dowiazania katalogow (robocopy /XJD tez ich nie kopiuje).
+  $n = 0
+  $stack = New-Object System.Collections.Stack
+  $stack.Push((Get-Item -LiteralPath $root -Force))
+  while ($stack.Count -gt 0) {
+    $dir = $stack.Pop()
+    foreach ($item in (Get-ChildItem -LiteralPath $dir.FullName -Force)) {
+      $name = $item.Name
+      if ($item.PSIsContainer) {
+        if ($item.LinkType) { continue }  # Junction / SymbolicLink; sam atrybut ReparsePoint (Synology Drive) to nie dowiazanie
+        if ($xd | Where-Object { $name -like $_ }) { continue }
+        $stack.Push($item)
+      } elseif (-not ($xf | Where-Object { $name -like $_ })) {
+        $n++
+      }
+    }
+  }
+  return $n
+}
+
 function Copy-GitignoredTree([string]$relSrc, [string]$relDst, [string[]]$xd, [string[]]$xf) {
   $src = Join-Path $GitRoot $relSrc
   if (-not (Test-Path -LiteralPath $src)) {
@@ -92,7 +114,15 @@ function Copy-GitignoredTree([string]$relSrc, [string]$relDst, [string[]]$xd, [s
   # Zwykle kopiowanie: bez /MIR, /PURGE, /MOVE - zrodlo zostaje nietkniete.
   & robocopy @rcArgs | Out-Null
   if ($LASTEXITCODE -ge 8) { throw "robocopy failed ($LASTEXITCODE): $src -> $dstPath" }
-  Write-Host "Skopiowano (gitignored, build input): $relSrc -> $relDst"
+  # Bramka liczby plikow: przerwane kopiowanie (proces zabity w polowie - 07.10.2026 w celu bylo
+  # 394 z 13 261 plikow work\tooling\go i build padal dopiero na "package os/exec is not in std")
+  # ma zatrzymac skrypt tutaj, z liczbami. Liczenie tymi samymi wykluczeniami co kopiowanie.
+  $srcCount = Get-TreeFileCount $src $xd $xf
+  $dstCount = Get-TreeFileCount $dstPath $xd $xf
+  if ($dstCount -lt $srcCount) {
+    throw "Kopiowanie niepelne: $relSrc ma $srcCount plikow, w celu jest $dstCount ($dstPath). Powtorz z -Resume."
+  }
+  Write-Host "Skopiowano (gitignored, build input): $relSrc -> $relDst ($dstCount plikow, zrodlo $srcCount)"
 }
 
 Copy-GitignoredTree "bin\runtime" "bin\runtime" @() @()
@@ -111,10 +141,11 @@ if (Test-Path -LiteralPath $damSrc) {
 
 # Pliki indeksow, ktorych build potrzebuje, a nie ma ich w commicie (zywy stan
 # aplikacji, gitignored) - ta sama lista co "onlyifdoesntexist" w DAM-Setup.iss.
+# 2.6.0 (decyzja wlasciciela 07.10.2026): BEZ spisu katalogu (file-index, search-index, campaigns,
+# branding-grid-*, branding-search-index) - instalator go nie wozi, swieza instalacja pobiera z bazy.
 $dataFiles = @(
-  "app-settings.json", "branding-build-status.json", "branding-grid-head.json",
-  "branding-grid-index.json", "branding-search-index.json", "campaigns.json",
-  "file-index.json", "lifecycle-status.json", "product-people.json", "search-index.json",
+  "app-settings.json", "branding-build-status.json",
+  "lifecycle-status.json", "product-people.json",
   "thumb-cache-manifest.json", "program-instructions.json"
 )
 $dataSrcDir = Join-Path $GitRoot "bin\apps\web\data"

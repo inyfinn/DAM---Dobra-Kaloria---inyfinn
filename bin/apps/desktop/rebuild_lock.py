@@ -34,11 +34,16 @@ def resolve_state_dir() -> Path:
         cand = Path(base) / "DAM" / "state"
     try:
         cand.mkdir(parents=True, exist_ok=True)
-        probe = cand / ".write-probe"
+        # 07.10.2026 (audyt publikacji, Z6): stala nazwa ".write-probe" - drugi proces kasowal sonde
+        # pierwszemu i stan ladowal w katalogu zapasowym (blokada w dwoch miejscach). Wzor: platform_compat.
+        probe = cand / f".write-probe-{os.getpid()}-{os.urandom(4).hex()}"
         probe.write_text("1", encoding="utf-8")
-        probe.unlink()
     except OSError:
         return DATA_DIR
+    try:
+        probe.unlink()
+    except OSError:
+        pass  # zapis sie udal = katalog jest zapisywalny; sprzatanie nie decyduje
     return cand
 
 

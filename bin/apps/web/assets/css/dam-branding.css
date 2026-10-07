@@ -1069,6 +1069,40 @@
   box-sizing: border-box;
 }
 
+/* Karta prezentacji (07.10.2026): rozwijana lista wariantow = typ pliku + nazwa, jedna kolumna, przewijana.
+   Szkielet (kotwica, przycisk, wrap) jak w "Pokaz indeksy"; zamrozona anatomia .dam-viz-card__body bez zmian. */
+.dam-branding-card--presentation .dam-viz-card__indexes-anchor.is-expanded .dam-viz-card__indexes-wrap {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  justify-content: flex-start;
+  max-height: 10.5rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.dam-branding-card--presentation .dam-viz-card__variant-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.dam-branding-card--presentation .dam-viz-card__variant-type {
+  flex: 0 0 auto;
+  font-weight: 600;
+}
+
+.dam-branding-card--presentation .dam-viz-card__variant-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .dam-index-popover {
   box-sizing: border-box;
   padding: 12px;
@@ -1632,14 +1666,6 @@ html[data-theme="dark"] .dam-branding-grid > .dam-skeleton__card--viz::after {
   object-fit: contain;
   object-position: center center;
   pointer-events: none;
-}
-
-.dam-branding-thumb-stack__layer--back {
-  /* Mniejszy offset — caly stack miesci sie w clipowanym .dam-viz-thumb */
-  transform: translate(5px, 5px) scale(0.92);
-  opacity: 0.55;
-  filter: saturate(0.85);
-  z-index: 0;
 }
 
 .dam-branding-thumb-stack__layer--front {

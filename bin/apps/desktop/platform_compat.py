@@ -407,6 +407,14 @@ def marketing_root_prefixes(windows_prefixes) -> tuple[str, ...]:
 # back to XDG_STATE_HOME.
 
 
+# 07.10.2026 (audyt publikacji, Z6): sonda zapisu miala STALA nazwe ".write-probe" i szla
+# przy KAZDYM wywolaniu - drugi watek/proces kasowal ja pierwszemu, FileNotFoundError
+# dawal katalog zapasowy i stan (index-snapshots.json, index-authority.json) zyl w dwoch
+# katalogach naraz. Teraz: sonda raz na proces (na kandydata) i z unikalna nazwa.
+# Porazki nie pamietamy - chwilowy blad nie moze przykleic procesu do katalogu zapasowego.
+_STATE_DIR_OK: dict[str, Path] = {}
+
+
 def user_state_dir() -> Path:
     raw = (os.environ.get("DAM_STATE_DIR") or "").strip()
     if raw:
@@ -421,13 +429,20 @@ def user_state_dir() -> Path:
     else:
         base = os.environ.get("XDG_STATE_HOME") or str(Path.home() / ".local" / "state")
         cand = Path(base) / "DAM"
+    hit = _STATE_DIR_OK.get(str(cand))
+    if hit is not None and hit.is_dir():  # skasowany w trakcie pracy -> zaloz od nowa
+        return hit
     try:
         cand.mkdir(parents=True, exist_ok=True)
-        probe = cand / ".write-probe"
+        probe = cand / f".write-probe-{os.getpid()}-{os.urandom(4).hex()}"
         probe.write_text("1", encoding="utf-8")
-        probe.unlink()
     except OSError:
         return _DATA_DIR_FALLBACK
+    try:
+        probe.unlink()
+    except OSError:
+        pass  # zapis sie udal = katalog jest zapisywalny; sprzatanie nie decyduje
+    _STATE_DIR_OK[str(cand)] = cand
     return cand
 
 

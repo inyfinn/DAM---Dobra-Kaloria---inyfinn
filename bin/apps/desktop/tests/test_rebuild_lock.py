@@ -10,9 +10,12 @@ finally caught it. See rebuild_lock._process_start_ticks docstring.
 """
 import os
 import sys
+import tempfile
+import threading
 import time
 import unittest
 from pathlib import Path
+from unittest import mock
 
 DESKTOP_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(DESKTOP_DIR))
@@ -85,6 +88,48 @@ class LockPidReuseTest(unittest.TestCase):
             "heartbeat_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         }
         self.assertTrue(rebuild_lock.lock_is_stale(payload, ttl_sec=7200.0))
+
+
+class StateDirProbeTest(unittest.TestCase):
+    """07.10.2026 (audyt publikacji, Z6): sonda zapisu miala stala nazwe ".write-probe" - dwa procesy
+    kasowaly ja sobie nawzajem i resolve_state_dir() oddawal katalog zapasowy (blokada w dwoch miejscach)."""
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.state = Path(tmp.name) / "state"
+        p = mock.patch.dict(os.environ, {"DAM_STATE_DIR": str(self.state)})
+        p.start()
+        self.addCleanup(p.stop)
+
+    def test_eight_threads_always_get_the_primary_dir(self):
+        got: list = []
+        start = threading.Barrier(8)
+
+        def work():
+            start.wait()
+            for _ in range(200):
+                got.append(rebuild_lock.resolve_state_dir())
+
+        threads = [threading.Thread(target=work) for _ in range(8)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join(timeout=60)
+        self.assertEqual(len(got), 1600)
+        self.assertEqual(set(got), {self.state})
+        self.assertEqual([p.name for p in self.state.iterdir()], [])  # sondy posprzatane
+
+    def test_failed_probe_cleanup_does_not_fall_back(self):
+        with mock.patch.object(Path, "unlink", side_effect=PermissionError("inny proces")):
+            self.assertEqual(rebuild_lock.resolve_state_dir(), self.state)
+        left = [p.name for p in self.state.iterdir()]
+        self.assertEqual(len(left), 1)
+        self.assertTrue(left[0].startswith(f".write-probe-{os.getpid()}-"), left[0])
+
+    def test_unwritable_dir_still_falls_back_to_data_dir(self):
+        with mock.patch.object(Path, "write_text", side_effect=PermissionError("tylko odczyt")):
+            self.assertEqual(rebuild_lock.resolve_state_dir(), rebuild_lock.DATA_DIR)
 
 
 if __name__ == "__main__":

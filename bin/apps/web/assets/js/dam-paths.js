@@ -813,9 +813,11 @@
         if (pn.indexOf("explorer.html") !== -1 || pn.indexOf("visualizations.html") !== -1) {
           return Promise.resolve(window._DAM_FILE_INDEX || null);
         }
-        /* Wspolne Promise strony (dam-file-index.js). */
+        /* Wspolne Promise strony (dam-file-index.js). Spis jest tu opcjonalny (tylko
+           podpowiedz bazy z roots): wait:false, zeby wykrywanie ROOT nie wisialo na
+           pierwszym pobraniu katalogu z bazy (swiezy komputer nie ma jeszcze pliku). */
         return (window.DamFileIndex && typeof window.DamFileIndex.get === "function"
-          ? window.DamFileIndex.get()
+          ? window.DamFileIndex.get({ wait: false })
           : fetch("data/file-index.json?v=" + Date.now())
               .then(function (r) { return r.ok ? r.json() : null; }))
           .catch(function () { return null; });
@@ -856,11 +858,19 @@
         };
       }
 
+      /* 07.10.2026: zapis przy wczytaniu strony TYLKO gdy most odpowiedzial (200, ok) i sam nie ma
+         zadnego ROOT. devicePath/machine === null to nieudany odczyt (401, limit czasu, most zajety),
+         a nie "brak wpisu" - dawniej kazdy taki blad konczyl sie POST /machine-config +
+         /user-device-paths, czyli podbiciem generacji ROOT (albo cichym przelaczeniem ROOT na
+         sciezke z cudzego localStorage). */
+      var bridgeHasNoRoot = !!(devicePath && devicePath.ok === true &&
+        machine && machine.ok === true && !String(machine.base_path || "").trim());
+
       // 2) Cache lokalny juz pod to urzadzenie
       var current = getBasePath();
       if (current) {
-        // Migacja: jesli jest lokalny cache a brak wpisu w bazie - wypchnij do UDP
-        if (did) {
+        // Migracja: lokalny cache, a most nie ma zadnej sciezki - wypchnij do mostu i UDP
+        if (did && bridgeHasNoRoot) {
           persistBasePathToBridge(current, { device_id: did, hostname: hostname });
         }
         return {
@@ -877,9 +887,6 @@
       var saved = machine && machine.base_path ? String(machine.base_path).trim() : "";
       if (saved) {
         setBasePathLocalCache(saved, did);
-        if (did) {
-          persistBasePathToBridge(saved, { device_id: did, hostname: hostname });
-        }
         return {
           base: saved,
           source: "machine-config-fallback",
@@ -972,8 +979,7 @@
    */
   function openInDefaultApp(indexPath) {
     if (!hasBasePath()) {
-      openSetupModal();
-      showToast("Najpierw ustaw sciezke bazowa");
+      promptSetupForAction();
       return Promise.resolve({ ok: false, error: "no_base_path" });
     }
     var local = toLocal(indexPath);
@@ -1016,8 +1022,7 @@
       return Promise.resolve({ ok: false, error: "path_required" });
     }
     if (!hasBasePath()) {
-      openSetupModal();
-      showToast("Najpierw ustaw sciezke bazowa");
+      promptSetupForAction();
       return Promise.resolve({ ok: false, error: "no_base_path" });
     }
     var local = toLocal(indexPath);
@@ -1070,8 +1075,7 @@
    */
   function revealInExplorer(indexPath) {
     if (!hasBasePath()) {
-      openSetupModal();
-      showToast("Najpierw ustaw sciezke bazowa");
+      promptSetupForAction();
       return Promise.resolve({ ok: false, error: "no_base_path" });
     }
     var local = toLocal(indexPath);
@@ -1117,8 +1121,7 @@
    */
   function openFolderInExplorer(indexPath) {
     if (!hasBasePath()) {
-      openSetupModal();
-      showToast("Najpierw ustaw sciezke bazowa");
+      promptSetupForAction();
       return Promise.resolve({ ok: false, error: "no_base_path" });
     }
     var local = toLocal(indexPath);
@@ -1162,8 +1165,7 @@
    */
   function shareViaSynology(indexPath) {
     if (!hasBasePath()) {
-      openSetupModal();
-      showToast("Najpierw ustaw sciezke bazowa");
+      promptSetupForAction();
       return Promise.resolve({ ok: false, error: "no_base_path" });
     }
     var local = toLocal(indexPath);
@@ -1447,17 +1449,35 @@
   }
 
   var SETUP_LATER_KEY = "dam_basepath_later";
+  var SETUP_PROMPTED_KEY = "dam_basepath_prompted";
+  var _setupPrompted = false;
 
+  /* Komputer bez folderu Marketing ma widziec katalog z bazy bez przeszkod (07.10.2026):
+     samo wejscie na strone NIE otwiera okna z pytaniem o sciezke. Tu tylko ustalenie
+     sciezki urzadzenia (most / pamiec), jak dotad. Stan "bez dysku" pokazuje wskaznik
+     w naglowku (dam-root-status.js) z przyciskiem "Wskaż folder". */
   function maybePromptSetup() {
-    // "Zrobie to pozniej" = nie pokazuj samoczynnie do konca sesji (cache dziala bez Marketingu).
-    try { if (sessionStorage.getItem(SETUP_LATER_KEY) === "1") return; } catch (_e) { /* ignore */ }
-    ensureUserBase().then(function (res) {
-      if (res && res.base) return;
-      if (hasBasePath()) return;
-      setTimeout(openSetupModal, 600);
-    }).catch(function () {
-      if (!hasBasePath()) setTimeout(openSetupModal, 600);
-    });
+    ensureUserBase().catch(function () { /* brak mostu: zostaje stan z pamieci */ });
+  }
+
+  /* Akcja, ktora naprawde wymaga dysku (otwarcie oryginalu, folderu, udostepnienie):
+     okno z pytaniem o sciezke najwyzej raz na uruchomienie programu (sessionStorage zyje
+     tyle co okno programu); "Zrobię to później" tez sie liczy. Potem krotki komunikat.
+     Swiadome otwarcie okna ("Wskaż folder" w naglowku, Pulpit, Ustawienia) = openSetupModal(). */
+  function promptSetupForAction() {
+    var seen = _setupPrompted;
+    try {
+      seen = seen || sessionStorage.getItem(SETUP_PROMPTED_KEY) === "1" || sessionStorage.getItem(SETUP_LATER_KEY) === "1";
+    } catch (_e) { /* ignore */ }
+    if (seen) {
+      showToast("Ta akcja wymaga folderu Marketing - kliknij „Wskaż folder” w nagłówku");
+      return false;
+    }
+    _setupPrompted = true;
+    try { sessionStorage.setItem(SETUP_PROMPTED_KEY, "1"); } catch (_e) { /* ignore */ }
+    openSetupModal();
+    showToast("Najpierw wskaż folder Marketing na tym komputerze");
+    return true;
   }
 
   window.DamPaths = {
@@ -1502,6 +1522,7 @@
     ensureUserBase: ensureUserBase,
     ensureMachineBase: ensureMachineBase,
     openSetupModal: openSetupModal,
+    promptSetupForAction: promptSetupForAction,
     maybePromptSetup: maybePromptSetup,
     showToast: showToast
   };

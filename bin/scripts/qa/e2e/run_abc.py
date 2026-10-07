@@ -68,7 +68,7 @@ PG_SECRET = Path(os.environ.get("DAM_TEST_PG_SECRET") or r"D:\DAM-lokalne\testpg
 PG_HOST = os.environ.get("DAM_TEST_PG_HOST", "inyfinn.synology.me")
 PG_PORT = int(os.environ.get("DAM_TEST_PG_PORT", "5433"))
 PG_DB = "dam_eta_test"
-PG_USER = "dam_test"
+PG_USER = os.environ.get("DAM_TEST_PG_USER", "dam_test")
 # W8: katalog dowodow z env (domyslnie W8); W7 zostaje nietkniety.
 OUT_BASE = Path(os.environ.get("DAM_E2E_OUT_BASE") or (REPO / "work" / "2026-09-28" / "W8"))
 
@@ -170,7 +170,7 @@ def inst_web(name: str) -> Path:
 
 
 def _pg_password() -> str:
-    return PG_SECRET.read_text(encoding="utf-8").strip()
+    return os.environ.get("DAM_TEST_PG_PASSWORD") or PG_SECRET.read_text(encoding="utf-8").strip()
 
 
 def schema_name() -> str:
@@ -498,7 +498,9 @@ def isolation_check() -> dict:
             ok = (inside or bool(shared)) and not hits
             if key.startswith("dam_db.resolve_marketing_root") or key.startswith("marketing_roots.resolve"):
                 want = str(INSTANCES[name]["root"] or "")
-                ok = (not path and not want) or (bool(want) and _norm(path) == _norm(want))
+                # sonda podaje sciezke rozwinieta (Path.resolve); ROOT podpiety litera dysku (subst)
+                # rozwija sie do katalogu docelowego, wiec porownujemy takze z rozwinietym ROOT.
+                ok = (not path and not want) or (bool(want) and _norm(path) in (_norm(want), _norm(str(Path(want).resolve()))))
             rows.append({"key": key, "path": path, "source": probe["sources"].get(key, ""),
                          "inside_instance": inside, "shared_test_service": shared, "forbidden_hits": hits, "ok": ok})
             if not ok:

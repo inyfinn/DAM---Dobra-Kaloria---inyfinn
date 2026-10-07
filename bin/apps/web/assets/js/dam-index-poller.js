@@ -46,6 +46,7 @@
 
     var state = {
       lastGen: "",
+      sawEmpty: false,
       timer: null,
       backoffMs: MIN_BACKOFF_MS,
       stopped: false,
@@ -82,7 +83,10 @@
           }
           state.backoffMs = MIN_BACKOFF_MS;
           var gen = getGeneration(st);
-          if (gen && state.lastGen && gen !== state.lastGen) {
+          /* Swiezy komputer: pliku spisu jeszcze nie ma, most nie podaje znacznika (gen "").
+             Pierwszy znacznik po takim odczycie to tez zmiana - spis wlasnie sie pojawil.
+             Pierwszy odczyt po otwarciu strony (nic wczesniej nie widzielismy) zmiana nie jest. */
+          if (gen && gen !== state.lastGen && (state.lastGen || state.sawEmpty)) {
             try {
               onChange(gen, st);
             } catch (eCb) {
@@ -90,6 +94,7 @@
             }
           }
           if (gen) state.lastGen = gen;
+          else state.sawEmpty = true;
           schedule(intervalMs);
         })
         .catch(function () {

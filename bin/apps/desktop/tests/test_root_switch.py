@@ -69,6 +69,11 @@ class RootSwitchBase(unittest.TestCase):
             # Prawdziwe reset_scan_memory czysci last_seen w bin/DATABASE - w testach
             # zawsze temp: DB_CANONICAL wskazuje na plik w katalogu tymczasowym.
             mock.patch.object(lb.dam_db, "DB_CANONICAL", self.tmp / "never-real.sqlite"),
+            # 07.10.2026: prawdziwe _index_rebuild_running czyta stan ZAINSTALOWANEGO programu.
+            # Gdy na tym komputerze trwal akurat skan godzinny, watek restartu watchera z
+            # wczesniejszego testu trzymal zamek do konca skanu i kolejne testy dostawaly
+            # "pending". Testy, ktore badaja trwajaca przebudowe, podstawiaja wlasna wartosc.
+            mock.patch.object(lb, "_index_rebuild_running", return_value=False),
         ]
         for p in self.patches:
             p.start()

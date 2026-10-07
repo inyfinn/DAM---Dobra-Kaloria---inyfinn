@@ -154,10 +154,14 @@ ok(LB.t("lightbox.close") === en["lightbox.close"], "z DamI18n (EN) - tekst z en
 /* ---------- 5. strony ---------- */
 ["branding.html", "dashboard.html", "explorer.html", "visualizations.html"].forEach(function (f) {
   var h = fs.readFileSync(path.join(WEB, f), "utf8");
-  var iLb = h.indexOf('src="./assets/js/dam-lightbox.js?v=2.4.2"');
+  /* 07.10.2026: ?v= wszystkich zasobow programu idzie razem z wersja (2.6.0), wiec sprawdzamy
+     "co najmniej 2.4.2 i ten sam znacznik dla js i css", nie dokladny numer. */
+  var mLb = h.match(/src="\.\/assets\/js\/dam-lightbox\.js\?v=(\d+)\.(\d+)\.(\d+)"/);
+  var mLbCss = h.match(/href="\.\/assets\/css\/dam-lightbox\.css\?v=(\d+)\.(\d+)\.(\d+)"/);
+  var iLb = mLb ? mLb.index : -1;
   var iMp = h.indexOf("dam-media-preview.js?v=");
-  ok(iLb > 0, f + ": laduje dam-lightbox.js?v=2.4.2");
-  ok(h.indexOf('href="./assets/css/dam-lightbox.css?v=2.4.2"') > 0, f + ": laduje dam-lightbox.css?v=2.4.2");
+  ok(iLb > 0 && Number(mLb[1]) * 10000 + Number(mLb[2]) * 100 + Number(mLb[3]) >= 20402, f + ": laduje dam-lightbox.js?v>=2.4.2");
+  ok(!!mLbCss && !!mLb && mLbCss[0].split("?v=")[1] === mLb[0].split("?v=")[1], f + ": dam-lightbox.css z tym samym ?v= co dam-lightbox.js");
   ok(iLb > 0 && iMp > iLb, f + ": dam-lightbox.js przed dam-media-preview.js");
 });
 
@@ -291,7 +295,7 @@ var vh = fs.readFileSync(path.join(WEB, "visualizations.html"), "utf8");
    zmiana dam-viz.js podbija ?v= i nie moze wywracac tego testu. */
 var vzVer = (vh.match(/dam-viz\.js\?v=(\d+)\.(\d+)\.(\d+)/) || []).slice(1).map(Number);
 ok(vzVer.length === 3 && (vzVer[0] * 10000 + vzVer[1] * 100 + vzVer[2]) >= 20402, "visualizations.html: dam-viz.js?v>=2.4.2");
-ok(vh.indexOf("dam-lightbox.js?v=2.4.2") > 0 && vh.indexOf("dam-lightbox.js") < vh.indexOf("dam-viz.js?v="), "visualizations.html: dam-lightbox.js przed dam-viz.js");
+ok(vh.indexOf("dam-lightbox.js?v=") > 0 && vh.indexOf("dam-lightbox.js") < vh.indexOf("dam-viz.js?v="), "visualizations.html: dam-lightbox.js przed dam-viz.js");
 ok(/#damVizModalHero[\s\S]{0,40}touch-action: manipulation/.test(css), "CSS: hero okna produktu bez przegladarkowego zoomu na double-tap");
 
 if (fails) {

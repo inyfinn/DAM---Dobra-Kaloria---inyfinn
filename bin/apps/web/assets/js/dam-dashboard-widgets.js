@@ -2554,6 +2554,13 @@
     );
   }
 
+  /* Linia produktu ("Z kreatyną") - jedno zrodlo: DamLabels.productLine. */
+  function productLineOf(p) {
+    return global.DamLabels && typeof DamLabels.productLine === "function"
+      ? DamLabels.productLine(p)
+      : null;
+  }
+
   /**
    * Najnowsze produkty Final (F), zgrupowane w serie po znormalizowanej nazwie.
    * Licznik kafelków = liczba serii. Data serii = najnowszy wariant.
@@ -2588,6 +2595,7 @@
           brand: prod.brand || (viz && viz.brand) || "",
           carrier: rev.carrier || (viz && viz.carrier) || "",
           carrier_label: viz && viz.carrier_label,
+          line: productLineOf(prod),
           index: idx,
           index_base: rev.index_base || (viz && viz.index_base) || "",
           revision_folder: rev.folder || (viz && viz.revision_folder) || "",
@@ -2685,10 +2693,20 @@
     var seriesCount = Number(v.series_count) || 0;
     var variantBadge = productVariantBadgeHtml(seriesCount);
     var indexesBlock = productIndexesBlockHtml(v.series_variants);
+    /* Wiersz wizualizacji nie ma nazwy folderu produktu - nawias stoi w sciezce wariantu. */
+    var line =
+      v.line ||
+      productLineOf({
+        subcategory_slug: v.subcategory_slug,
+        subcategory_label: v.subcategory_label,
+        name: v.revision_path
+      });
     var badges =
       global.DamBadges && typeof DamBadges.render === "function"
         ? DamBadges.render({
             brand: v.brand || "",
+            subcategory: line ? line.slug : "",
+            subcategoryLabel: line ? line.label : "",
             carrier: v.carrier || "",
             carrierLabel:
               global.DamLabels && typeof DamLabels.carrierLabel === "function"
@@ -3493,7 +3511,11 @@
           if (!list.length) {
             el.outerHTML = shell(
               self,
-              '<p class="dam-widget__meta">Brak wizualizacji powiazanych z projektem Asana</p>',
+              '<p class="dam-widget__meta">' +
+                (catalogNoteNow
+                  ? escapeHtml(catalogNoteNow)
+                  : "Brak wizualizacji powiazanych z projektem Asana") +
+                "</p>",
               "dam-widget--viz-latest dam-widget--media-latest",
               layoutToggleHtml(self.id, layout)
             );
@@ -3563,7 +3585,11 @@
           if (!list.length) {
             el.outerHTML = shell(
               self,
-              '<p class="dam-widget__meta">Brak wariantow ze statusem Final (F) w indeksie</p>',
+              '<p class="dam-widget__meta">' +
+                (catalogNoteNow
+                  ? escapeHtml(catalogNoteNow)
+                  : "Brak wariantow ze statusem Final (F) w indeksie") +
+                "</p>",
               "dam-widget--viz-latest dam-widget--media-latest",
               layoutToggleHtml(self.id, layout)
             );
@@ -3838,10 +3864,11 @@
                   self,
                   '<p class="dam-widget__meta">' +
                     escapeHtml(
-                      t(
-                        "dash.widget.branding_index_unavailable",
-                        "Nie udało się wczytać indeksu branding."
-                      )
+                      catalogNoteNow ||
+                        t(
+                          "dash.widget.branding_index_unavailable",
+                          "Nie udało się wczytać indeksu branding."
+                        )
                     ) +
                     ' <a href="branding.html">' +
                     escapeHtml(t("dash.widget.open_branding", "Otwórz Branding")) +
@@ -5036,10 +5063,44 @@
     }
   }
 
+  /* Pierwsze pobranie katalogu z bazy (swiezy komputer): dam-dashboard.js podaje w
+     ctx.catalogNote spokojny tekst. Widzety liczone ze spisu pokazuja go zamiast zera
+     albo "Brak ...". Powloka (rozmiar, kolor kafla, naglowek) zostaje wlasna widzetu. */
+  var catalogNoteNow = "";
+  var CATALOG_WIDGETS = {
+    products_count: 1,
+    projects_this_month: 1,
+    checklists_ok: 1,
+    checklists_gap: 1,
+    newest_viz_3: 1,
+    newest_products_f: 1,
+    langs_mix: 1,
+    carriers_top: 1,
+    index_health: 1,
+    missing_thumbs: 1,
+    demo_vs_prod: 1
+  };
+
+  /* Szkielet startowy (dane jeszcze nie przyszly): kafle liczone ze spisu maja pusta tresc,
+     nie "0" - zero wygladalo jak prawdziwy wynik. Te dwa rysuja w szkielecie wlasne szare
+     karty, wiec ich nie czyscimy. */
+  var OWN_SKELETON = { newest_viz_3: 1, newest_products_f: 1 };
+
+  /* Tresc kafla: spokojny tekst (catalogNoteNow) albo pusto, gdy tekstu nie ma. */
+  function calmCatalogBody(mount, id) {
+    var body = mount.querySelector('[data-widget-id="' + id + '"] .dam-widget__body');
+    if (body) {
+      body.innerHTML = catalogNoteNow
+        ? '<p class="dam-widget__meta">' + escapeHtml(catalogNoteNow) + "</p>"
+        : "";
+    }
+  }
+
   function renderGrid(mount, ctx) {
     if (!mount) return;
     ctx = ctx || {};
     var isSkeleton = !!ctx.dashLoading;
+    catalogNoteNow = String(ctx.catalogNote || "");
     defineWidgets();
     var layout = loadLayout();
     var order = layout.order.slice();
@@ -5058,6 +5119,9 @@
       mount.appendChild(placeholder);
       try {
         w.render(placeholder, ctx);
+        if (CATALOG_WIDGETS[id] && (catalogNoteNow || (isSkeleton && !OWN_SKELETON[id]))) {
+          calmCatalogBody(mount, id);
+        }
       } catch (e) {
         console.warn("DAM widget fail", id, e);
         placeholder.outerHTML = shell(

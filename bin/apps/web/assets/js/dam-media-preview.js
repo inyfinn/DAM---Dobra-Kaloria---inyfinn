@@ -6369,7 +6369,7 @@
   };
 
   function ensureVizModalCss() {
-    var href = "assets/css/dam-viz-modal.css?v=2.5.3";
+    var href = "assets/css/dam-viz-modal.css?v=" + encodeURIComponent(String(window.DAM_APP_VERSION || Date.now()));
     var existing = document.getElementById("dam-viz-modal-css");
     if (existing) {
       if (existing.tagName === "LINK" && existing.getAttribute("href") !== href) {

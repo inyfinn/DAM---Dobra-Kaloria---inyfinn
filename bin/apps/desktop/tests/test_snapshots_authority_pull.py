@@ -2,8 +2,9 @@
 """ADR-012 (28.09.2026), klient - testy na atrapach (bez sieci, bez bazy).
 
 pkt 3: index_snapshots.pull_newer - regula "lokalny nowszy plik wygrywa" tylko,
-       gdy index_authority.may_publish() jest True albo None (brak klucza = jak dotad).
-       False -> zawsze wersja z bazy.
+       gdy index_authority.may_publish() jest True. False -> zawsze wersja z bazy; od
+       07.10.2026 tak samo None (lista nieznana: "nie wiem" = "nie wolno", ekran pokazuje
+       stan bazy).
 pkt 2 (klient): odmowa bramki migawek ("dam_not_authority:") to "skipped:
        not_authority", nie blad sieci (publish_changed). dam_assets (runda 2): bramka
        pomija wiersz (RETURN NULL) - run_once nie zuzywa obserwacji pominietych operacji.
@@ -115,9 +116,19 @@ class PullNewerAuthorityTests(_Base):
         self.assertIn("file-index", res["current"])
         self.assertEqual((self.data / "file-index.json").read_bytes(), local)
 
-    def test_brak_klucza_jak_dotad_lokalny_nowszy_wygrywa(self):
-        _db, _db_raw, local = self._prepare()
+    def test_lista_nieznana_lokalny_nie_przeslania_bazy(self):
+        """07.10.2026: brak klucza / nieudany odczyt bez zapamietanej wartosci (None) = "nie wiem"
+        = "nie wolno": nawet nowszy lokalny build zbudowany tu nie przeslania wersji z bazy."""
+        _db, db_raw, _local = self._prepare()
         self._authority(None)
+        res = ix.pull_newer(self.data, root_alive=True)
+        self.assertEqual(res["pulled"][0]["key"], "file-index")
+        self.assertEqual((self.data / "file-index.json").read_bytes(), db_raw)
+        self.assertEqual(res["authority"], "unknown")
+
+    def test_lista_znana_wlasciciel_lokalny_nowszy_wygrywa(self):
+        _db, _db_raw, local = self._prepare()
+        self._authority(True)
         res = ix.pull_newer(self.data, root_alive=True)
         self.assertEqual(res["pulled"], [])
         self.assertEqual((self.data / "file-index.json").read_bytes(), local)
@@ -133,7 +144,7 @@ class PublishNotAuthorityTests(_Base):
         db = _GateFakeDb(reject=True)
         self._use_db(db)
         self._two_built_files()
-        m = self._authority(None)  # nieaktualna pamiec klienta: "wolno"
+        m = self._authority(True)  # nieaktualna pamiec klienta: "wolno"
         res = ix.publish_changed(self.data, root_alive=True)
         self.assertTrue(res["ok"], res)
         self.assertEqual(res.get("skipped"), "not_authority")
@@ -147,11 +158,30 @@ class PublishNotAuthorityTests(_Base):
         db = _GateFakeDb(reject=True, message="could not connect to server")
         self._use_db(db)
         self._two_built_files()
-        self._authority(None)
+        self._authority(True)
         res = ix.publish_changed(self.data, root_alive=True)
         self.assertFalse(res["ok"])
         self.assertNotIn("skipped", res)
         self.assertEqual(len(res["errors"]), 2)
+
+    def test_lista_nieznana_nie_publikuje(self):
+        db = _GateFakeDb(reject=False)
+        self._use_db(db)
+        self._two_built_files()
+        self._authority(None)
+        res = ix.publish_changed(self.data, root_alive=True)
+        self.assertEqual(res, {"ok": True, "skipped": "authority_unknown"})
+        self.assertEqual(db.attempts, [])
+
+    def test_lista_nieznana_force_admina_publikuje(self):
+        """Reczne "Wyslij indeks do bazy" (POST /index/publish, force) to jawna decyzja admina."""
+        db = _GateFakeDb(reject=False)
+        self._use_db(db)
+        self._two_built_files()
+        self._authority(None)
+        res = ix.publish_changed(self.data, root_alive=True, force=True)
+        self.assertTrue(res["ok"], res)
+        self.assertEqual(sorted(res["published"]), ["campaigns", "file-index"])
 
     def test_is_not_authority_error(self):
         self.assertTrue(ix.is_not_authority_error(RuntimeError("dam_not_authority: x")))

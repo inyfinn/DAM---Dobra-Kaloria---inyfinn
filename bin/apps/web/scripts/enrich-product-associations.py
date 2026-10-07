@@ -3,8 +3,23 @@
 from __future__ import annotations
 
 import json
+import os
+import time
 import unicodedata
 from pathlib import Path
+
+
+def _write_atomic(path: Path, text: str) -> None:
+    """Tmp + os.replace: czytelnik (UI, most) nigdy nie widzi urwanego JSON w trakcie zapisu."""
+    tmp = path.with_suffix(path.suffix + f".{os.getpid()}.tmp")
+    tmp.write_text(text, encoding="utf-8")
+    for _ in range(20):
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError:  # Windows: plik chwilowo otwarty przez czytelnika
+            time.sleep(0.05)
+    os.replace(tmp, path)
 
 WEB = Path(__file__).resolve().parents[1]
 ASSOC_FILE = WEB / "data" / "product-associations.json"
@@ -73,7 +88,7 @@ def main() -> int:
         if add and add not in blob:
             entry["search_blob"] = (blob + " " + add).strip()
     search["association_reverse"] = reverse
-    SEARCH_FILE.write_text(json.dumps(search, ensure_ascii=False, indent=2), encoding="utf-8")
+    _write_atomic(SEARCH_FILE, json.dumps(search, ensure_ascii=False, indent=2))
     print(f"enriched search-index association_reverse keys={len(reverse)}")
     return 0
 

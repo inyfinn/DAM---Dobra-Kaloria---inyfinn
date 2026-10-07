@@ -42,6 +42,15 @@
     metaById: {},
     rawById: {},
     sortMode: "date_desc",
+    shown: 0,
+    busy: "",
+    notice: "",
+    scanning: false,
+    seenGen: "",
+    waitSince: 0,
+    fail: "",
+    stamp: "",
+    noRoot: false,
   };
 
   function includeArchive() {
@@ -681,60 +690,55 @@
     });
   }
 
+  /* RRRRMMDD albo 0. Odrzuca niemozliwe daty i dalsze niz rok w przyszlosc:
+     "doy_65g_2026_08_31" czytane jako 26.08.2031 stalo zawsze na gorze sortu (07.10.2026). */
+  function ymdScore(y, m, d) {
+    if (y < 100) y += 2000;
+    if (!(m >= 1 && m <= 12 && d >= 0 && d <= 31)) return 0;
+    var now = new Date();
+    var max = (now.getFullYear() + 1) * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+    var score = y * 10000 + m * 100 + d;
+    return score > max ? 0 : score;
+  }
+
   function parseFolderDateScore(folderName) {
     var s = String(folderName || "");
-    var m = s.match(/(\d{1,2})[./_-](\d{1,2})[./_-](\d{2,4})/);
-    if (m) {
-      var y = parseInt(m[3], 10);
-      if (y < 100) y += 2000;
-      return y * 10000 + parseInt(m[2], 10) * 100 + parseInt(m[1], 10);
-    }
-    m = s.match(/\b(\d{1,2})[./_-](\d{2})\b/);
-    if (m) return (2000 + parseInt(m[2], 10)) * 10000 + parseInt(m[1], 10) * 100;
-    return 0;
+    /* RRRR-MM-DD (takze _ . i spacja) PRZED DD.MM.RRRR: inaczej "2026_08_31" daje rok 2031. */
+    var m = s.match(/(?:^|[^\d.])(20\d{2})[._ -](\d{1,2})[._ -](\d{1,2})(?![\d.])/);
+    var score = m ? ymdScore(+m[1], +m[2], +m[3]) : 0;
+    if (score) return score;
+    /* Wzorzec z dam-viz.js (lewa granica, spacja) plus podkreslenie: "RĘKAW - 17_09_2026". */
+    m = s.match(/(?:^|[^\d.])(\d{1,2})[./_ -](\d{1,2})[./_ -](\d{4}|\d{2})(?![\d.])/);
+    score = m ? ymdScore(+m[3], +m[2], +m[1]) : 0;
+    if (score) return score;
+    /* MM.RR bez dnia ("DOYPACK - 03.26"); granice, zeby nie lapac kawalka odrzuconej pelnej daty. */
+    m = s.match(/(?:^|[^\d._-])(\d{1,2})[./-](\d{2})(?![\d._-])/);
+    return m ? ymdScore(+m[2], +m[1], 0) : 0;
+  }
+
+  /* Wariant: najpierw data ze spisu (rev.date, ISO), dopiero potem nazwa folderu. */
+  function revisionDateScore(r) {
+    if (!r) return 0;
+    var iso = String(r.date || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
+    var score = iso ? ymdScore(+iso[1], +iso[2], +iso[3]) : 0;
+    if (score) return score;
+    var seg = String(r.revision_path || r.path || "").replace(/\\/g, "/").split("/").pop();
+    return parseFolderDateScore(r.folder || r.revision_folder) || parseFolderDateScore(seg);
   }
 
   function projectDateScore(p) {
-    var meta = state.metaById[p.id] || {};
     var raw = rawProduct(p);
     var best = 0;
-    var rev = pickLatestRevision(raw || p, state.query);
-    var folder =
-      (rev && (rev.folder || rev.revision_folder)) ||
-      meta.revisionFolder ||
-      "";
-    best = Math.max(best, parseFolderDateScore(folder));
-    if (rev && rev.revision_path) {
-      var revSeg = String(rev.revision_path).replace(/\\/g, "/").split("/").pop() || "";
-      best = Math.max(best, parseFolderDateScore(revSeg));
-    }
-    if (rev && rev.path) {
-      var rpSeg = String(rev.path).replace(/\\/g, "/").split("/").pop() || "";
-      best = Math.max(best, parseFolderDateScore(rpSeg));
-    }
-    var path = p.path || (raw && raw.path) || "";
-    if (path) {
-      var parts = String(path).replace(/\\/g, "/").split("/");
-      for (var pi = 0; pi < parts.length; pi++) {
-        best = Math.max(best, parseFolderDateScore(parts[pi]));
-      }
-    }
-    if (raw && raw.revisions) {
-      raw.revisions.forEach(function (r) {
-        if (!r) return;
-        if (r.folder) best = Math.max(best, parseFolderDateScore(r.folder));
-        if (r.date) {
-          var t = Date.parse(String(r.date || ""));
-          if (t && !isNaN(t)) {
-            var dt = new Date(t);
-            best = Math.max(
-              best,
-              dt.getFullYear() * 10000 + (dt.getMonth() + 1) * 100 + dt.getDate()
-            );
-          }
-        }
-      });
-    }
+    ((raw && raw.revisions) || []).forEach(function (r) {
+      best = Math.max(best, revisionDateScore(r));
+    });
+    if (best) return best;
+    /* Zaden wariant nie ma daty: nazwy folderow na sciezce produktu. */
+    var meta = state.metaById[p.id] || {};
+    best = parseFolderDateScore(meta.revisionFolder);
+    String(p.path || (raw && raw.path) || "").replace(/\\/g, "/").split("/").forEach(function (part) {
+      best = Math.max(best, parseFolderDateScore(part));
+    });
     return best;
   }
 
@@ -757,6 +761,17 @@
       (raw.revisions || []).forEach(function (r) {
         if (r) bump(r.mtime_ms || r.mtime);
       });
+      /* Stary spis (sprzed pol mtime produktu/wariantu): najnowszy plik wariantow. */
+      if (!best) {
+        (raw.revisions || []).forEach(function (r) {
+          var byRole = (r && r.files_by_role) || {};
+          Object.keys(byRole).forEach(function (role) {
+            (byRole[role] || []).forEach(function (f) {
+              if (f) bump(f.mtime_ms || f.mtime);
+            });
+          });
+        });
+      }
     }
     return best;
   }
@@ -868,9 +883,13 @@
       return out;
     }
     if (mode === "mtime_desc") {
+      var mtimeById = {};
+      out.forEach(function (p) {
+        mtimeById[p.id] = projectMtimeMs(p);
+      });
       out.sort(function (a, b) {
-        var da = projectMtimeMs(a);
-        var db = projectMtimeMs(b);
+        var da = mtimeById[a.id];
+        var db = mtimeById[b.id];
         if (da !== db) return db - da;
         return projectDisplayName(a).localeCompare(projectDisplayName(b), "pl", { sensitivity: "base" });
       });
@@ -997,7 +1016,7 @@
     var rows = filteredRows();
     if (!state.all.length) {
       grid.innerHTML =
-        '<div class="col-12"><p class="dam-page-status">Brak projektów. Kliknij <strong>Wczytaj z dysku</strong> (admin) albo odśwież indeks w Eksplorerze.</p></div>';
+        '<div class="col-12"><p class="dam-page-status">Brak projektów. Kliknij <strong>Odśwież listę</strong> albo poproś administratora o <strong>Skanuj dysk</strong>.</p></div>';
     } else if (!rows.length) {
       grid.innerHTML = projectsEmptySearchHtml();
       var clearBtn = grid.querySelector(".dam-projects-clear-filters");
@@ -1031,21 +1050,63 @@
         });
       }
     }
-    if (statusEl) {
-      var src =
-        state.source === "file-index"
-          ? " · indeks Marketing"
-          : state.source === "local"
-            ? " · dane lokalne"
-            : "";
-      var variantsHint = state.variantsHint ? " · " + state.variantsHint + " wariantów" : "";
-      if (state.query) {
-        statusEl.textContent =
-          rows.length + " / " + state.all.length + " produktów" + variantsHint + src;
-      } else {
-        statusEl.textContent =
-          state.all.length + " produktów" + variantsHint + src;
-      }
+    state.shown = rows.length;
+    paintStatus(statusEl);
+  }
+
+  /* "2026-10-07T09:08:45" (generated_at spisu) -> "07.10 09:08". */
+  function indexStamp() {
+    var idx = window._DAM_FILE_INDEX;
+    return String((idx && idx.generated_at) || "");
+  }
+
+  function indexStampLabel() {
+    var m = indexStamp().match(/^\d{4}-(\d{2})-(\d{2})T(\d{2}:\d{2})/);
+    return m ? m[2] + "." + m[1] + " " + m[3] : "";
+  }
+
+  /* Licznik + z kiedy i skad jest spis. state.busy (trwa pobieranie / skan) zastepuje licznik,
+     state.notice (wynik ostatniej akcji) stoi przed nim i przezywa kolejne przerysowania.
+     state.waitSince (pierwsze pobranie katalogu z bazy) wygrywa ze wszystkim; state.fail
+     (katalogu nie udalo sie pobrac) zastepuje licznik "0 produktów". */
+  function paintStatus(statusEl) {
+    if (!statusEl) return;
+    /* Twarda spacja po "o", "z", "w" itd. - wspolny pomocnik z dam-i18n.js. */
+    var pl =
+      window.DamI18n && typeof window.DamI18n.nbspPl === "function"
+        ? window.DamI18n.nbspPl
+        : String;
+    if (state.waitSince) {
+      /* Sekundy w aria-hidden i odswiezane w miejscu: wiersz jest aria-live, czytnik
+         ekranu ma uslyszec "Pobieram katalog z bazy..." raz, nie co sekunde. */
+      statusEl.textContent = pl("Pobieram katalog z bazy...");
+      _waitSpan = document.createElement("span");
+      _waitSpan.setAttribute("aria-hidden", "true");
+      _waitSpan.textContent = waitSeconds();
+      statusEl.appendChild(_waitSpan);
+      return;
+    }
+    if (state.busy || state.fail) {
+      statusEl.textContent = pl(state.busy || state.fail);
+      return;
+    }
+    var parts = [];
+    if (state.notice) parts.push(state.notice);
+    parts.push((state.query ? state.shown + " / " : "") + state.all.length + " produktów");
+    if (state.variantsHint) parts.push(state.variantsHint + " wariantów");
+    if (state.source === "file-index") {
+      var stamp = indexStampLabel();
+      parts.push(stamp ? "spis z " + stamp : "indeks Marketing");
+    } else if (state.source === "local") {
+      parts.push("dane lokalne");
+    }
+    statusEl.textContent = pl(parts.join(" · "));
+    if (state.source === "file-index" && window.DamIndexSource) {
+      /* Osobny wezel na kazde malowanie: spozniona odpowiedz dla starego tekstu trafia
+         w odlaczony element i nie dokleja zrodla np. do "Skanuję dysk...". */
+      var srcHost = document.createElement("span");
+      statusEl.appendChild(srcHost);
+      window.DamIndexSource.decorate(srcHost, "file-index");
     }
   }
 
@@ -1121,8 +1182,10 @@
 
   async function loadProjects(grid, statusEl) {
     try {
-      if (statusEl) statusEl.textContent = "Ładowanie...";
+      if (statusEl && !state.waitSince) statusEl.textContent = "Ładowanie...";
       var res = await DamApi.projects();
+      state.fail = "";
+      state.stamp = indexStamp();
       state.all = (res && res.data) || [];
       state.source = (res && res.source) || "";
       state.variantsHint = "";
@@ -1147,9 +1210,324 @@
         }
       } catch (ignore) {}
     } catch (e) {
-      grid.innerHTML = '<div class="col-12"><p class="text-danger">' + e.message + "</p></div>";
-      if (statusEl) statusEl.textContent = "Błąd API";
+      showIndexFail(grid, statusEl, e);
     }
+  }
+
+  function clockNow() {
+    var d = new Date();
+    return (d.getHours() < 10 ? "0" : "") + d.getHours() + ":" + (d.getMinutes() < 10 ? "0" : "") + d.getMinutes();
+  }
+
+  var _waitTimer = null;
+  var _waitSpan = null;
+
+  function waitSeconds() {
+    return " " + Math.max(0, Math.round((Date.now() - state.waitSince) / 1000)) + " s";
+  }
+
+  /* Pierwsze pobranie katalogu z bazy (dam-file-index.js: zdarzenie dam:file-index-state).
+     Na swiezym komputerze pliku spisu jeszcze nie ma: zamiast bledu licznik czasu, a lista
+     pojawia sie sama (wiszace DamApi.projects() rozwiazuje sie, gdy spis przyjdzie). */
+  function onIndexState(d, grid, statusEl) {
+    clearInterval(_waitTimer);
+    _waitTimer = null;
+    state.waitSince = d && d.state === "waiting" ? d.since || Date.now() : 0;
+    if (state.waitSince) {
+      state.fail = "";
+      if (!state.all.length) {
+        grid.innerHTML =
+          '<div class="col-12"><p class="dam-page-status">Pobieram katalog produktów z bazy. Lista pojawi się sama.</p></div>';
+      }
+      _waitTimer = setInterval(function () {
+        if (_waitSpan) _waitSpan.textContent = waitSeconds();
+      }, 1000);
+    }
+    /* "ready" przy pustej liscie: zostaje ostatni tekst czekania, licznik produktow
+       namaluje dopiero gotowa lista (bez mrugniecia "0 produktów"). */
+    if (!d || d.state !== "ready" || state.all.length) paintStatus(statusEl);
+  }
+
+  function indexFailText(e) {
+    return e && e.code === "index_first_sync_failed" && e.message
+      ? e.message
+      : "Nie udało się wczytać spisu produktów";
+  }
+
+  /* Tekst dla czlowieka zamiast "Brak file-index.json (404)" / "Błąd API". Ponowienie = "Odśwież listę". */
+  function showIndexFail(grid, statusEl, e) {
+    state.fail = indexFailText(e);
+    if (!state.all.length) {
+      grid.innerHTML =
+        '<div class="col-12"><p class="dam-page-status">' +
+        esc(state.fail) +
+        ". Kliknij <strong>Odśwież listę</strong>, żeby spróbować ponownie.</p></div>";
+    }
+    paintStatus(statusEl);
+  }
+
+  var _reload = null;
+
+  /* Swiezy spis z serwera i przerysowanie listy. Zapytanie i sort siedza w state / polach
+     strony, wiec zostaja; przewijanie przywracamy, bo siatka jest budowana od nowa.
+     Nieudane pobranie nie kasuje listy. Rownolegle wywolania dziela jedno pobranie.
+     alreadyFresh: ktos (naglowkowe "Pliki") wlasnie pobral swiezy spis do DamFileIndex -
+     rysujemy z niego, bez drugiego pobrania 8 MB. */
+  function reloadProjects(grid, statusEl, notice, alreadyFresh) {
+    if (!_reload) {
+      var y = window.scrollY;
+      state.busy = "Pobieram aktualny spis...";
+      paintStatus(statusEl);
+      if (window.DamIndexSource) window.DamIndexSource.reload();
+      _reload = (alreadyFresh ? DamApi.loadLocalIndex() : DamApi.reloadLocalIndex())
+        .then(function () {
+          state.busy = "";
+          return loadProjects(grid, statusEl);
+        })
+        .then(
+          function () {
+            window.scrollTo({ top: y, behavior: "instant" });
+            return true;
+          },
+          function (e) {
+            if (!state.all.length) showIndexFail(grid, statusEl, e);
+            return false;
+          }
+        )
+        .then(function (ok) {
+          _reload = null;
+          state.busy = "";
+          return ok;
+        });
+    }
+    return _reload.then(function (ok) {
+      state.notice = ok
+        ? notice + " o " + clockNow()
+        : "Nie udało się pobrać nowego spisu - lista pokazuje poprzedni";
+      paintStatus(statusEl);
+      return ok;
+    });
+  }
+
+  function bridgeUrl() {
+    var base =
+      window.DamRuntime && typeof window.DamRuntime.bridgeUrl === "function"
+        ? window.DamRuntime.bridgeUrl()
+        : "http://127.0.0.1:8766";
+    return String(base).replace(/\/+$/, "");
+  }
+
+  /* Kody mostu (POST /index/rebuild, rebuild.last_error) -> tekst dla czlowieka. */
+  var SCAN_ERRORS = {
+    login_required: "Sesja wygasła - zaloguj się ponownie, żeby uruchomić skan dysku",
+    admin_required: "Skan dysku może uruchomić tylko administrator",
+    root_partial: "Folder Marketing jest podłączony tylko częściowo - skan wstrzymany, żeby nie zgubić produktów",
+    lock_held: "Inny skan dysku już trwa - poczekaj na jego koniec",
+    cancelled: "Skan dysku został przerwany - lista pokazuje poprzedni spis",
+    bridge_unreachable: "Most DAM nie odpowiada - nie wiadomo, czy skan się zakończył",
+    bridge_no_start: "Most DAM nie odpowiada - skan nie został uruchomiony",
+  };
+
+  function scanErrorText(code, httpStatus) {
+    if (httpStatus === 401) code = "login_required";
+    if (httpStatus === 403) code = "admin_required";
+    return SCAN_ERRORS[code] || "Skan dysku nie powiódł się - lista pokazuje poprzedni spis";
+  }
+
+  /* Blad z tekstem dla czlowieka; kazdy inny wyjatek scanDisk zamienia na tekst ogolny. */
+  function scanFail(code, httpStatus) {
+    var e = new Error(scanErrorText(code, httpStatus));
+    e.forUser = true;
+    return e;
+  }
+
+  function scanProgressText(st) {
+    var p = (st && st.progress) || {};
+    var text = "Skanuję dysk...";
+    if (p.products_total > 0) text += " " + (p.products_done || 0) + " z " + p.products_total + " produktów";
+    if (p.eta_sec > 0) text += " · jeszcze ok. " + Math.max(1, Math.round(p.eta_sec / 60)) + " min";
+    return text;
+  }
+
+  function scanRunning(st) {
+    if (window.DamIndexPoller && typeof window.DamIndexPoller.isRunning === "function") {
+      return window.DamIndexPoller.isRunning(st);
+    }
+    return !!(st && (st.rebuild_running || (st.rebuild && st.rebuild.running)));
+  }
+
+  /* Czeka na koniec skanu (GET /index/status co 2 s). Bez limitu czasu: pelny skan trwa
+     ok. 20 min, a "gotowe" po 2 minutach byloby nieprawda. 5 nieudanych odczytow = blad
+     (odpowiedz inna niz 200 to tez nieudany odczyt, nie "skan zakonczony").
+     Wynik: { st: ostatni stan, sawRunning: czy choc raz widzielismy trwajacy skan }. */
+  function waitForScan(statusEl) {
+    var misses = 0;
+    var sawRunning = false;
+    return new Promise(function (resolve, reject) {
+      (function poll() {
+        fetch(bridgeUrl() + "/index/status", { cache: "no-store" })
+          .then(function (r) {
+            if (!r.ok) throw new Error("index_status_" + r.status);
+            return r.json();
+          })
+          .then(function (st) {
+            misses = 0;
+            if (!scanRunning(st)) return resolve({ st: st, sawRunning: sawRunning });
+            sawRunning = true;
+            state.busy = scanProgressText(st);
+            paintStatus(statusEl);
+            setTimeout(poll, 2000);
+          })
+          .catch(function () {
+            misses += 1;
+            if (misses >= 5) return reject(new Error("bridge_unreachable"));
+            setTimeout(poll, 2000);
+          });
+      })();
+    });
+  }
+
+  /* "Skanuj dysk": prawdziwy skan = POST <most>/index/rebuild (tylko admin), potem swiezy spis. */
+  async function scanDisk(grid, statusEl, btn) {
+    /* Przycisk "nieaktywny" przez aria-disabled (dymek dziala, klawiatura go widzi):
+       klikniecie mowi to samo co dymek, do mostu nic nie idzie. */
+    if (state.noRoot) {
+      state.notice = SCAN_NO_ROOT;
+      paintStatus(statusEl);
+      return;
+    }
+    /* Pelny skan dysku sieciowego: mowimy, ile to trwa, ZANIM ruszy. */
+    if (
+      !window.confirm(
+        "Pełny skan folderów Marketing trwa 20-50 minut. " +
+          "Do pobrania aktualnej listy wystarczy „Odśwież listę”. Uruchomić skan dysku?"
+      )
+    ) {
+      return;
+    }
+    btn.disabled = true;
+    var before = state.all.length;
+    state.scanning = true;
+    state.notice = "";
+    state.busy = "Skanuję dysk... pełny skan trwa 20-50 minut";
+    paintStatus(statusEl);
+    try {
+      /* Jak Eksplorator: najpierw odnow sesje mostu, zeby 401 znaczylo naprawde "zaloguj sie". */
+      var sess = await DamApi.ensureSession().catch(function () {
+        return null;
+      });
+      if (!sess || !sess.ok) throw scanFail("login_required");
+      var r;
+      try {
+        r = await fetch(bridgeUrl() + "/index/rebuild", {
+          method: "POST",
+          headers: DamApi.authHeaders(),
+          body: "{}",
+        });
+      } catch (eNet) {
+        throw scanFail("bridge_no_start");
+      }
+      var data = await r.json().catch(function () {
+        return {};
+      });
+      if (!r.ok || (data && data.ok === false)) throw scanFail(data && data.error, r.status);
+      var waited;
+      try {
+        waited = await waitForScan(statusEl);
+      } catch (eWait) {
+        throw scanFail("bridge_unreachable");
+      }
+      var st = waited.st;
+      var rb = (st && st.rebuild) || {};
+      /* lock_held = skan robil juz ktos inny (obserwator). Jesli doczekalismy jego konca,
+         spis jest swiezy - "poczekaj na koniec" po fakcie byloby nieprawda. */
+      var othersScanDone = rb.last_error === "lock_held" && waited.sawRunning;
+      if (rb.last_ok === false && !othersScanDone) throw scanFail(rb.last_error);
+      state.seenGen = indexGeneration(st);
+      state.busy = "";
+      var ok = await reloadProjects(grid, statusEl, "Skan zakończony");
+      var diff = state.all.length - before;
+      if (ok && diff) {
+        state.notice += diff > 0 ? " · przybyło " + diff : " · ubyło " + -diff;
+        paintStatus(statusEl);
+      }
+    } catch (e) {
+      state.busy = "";
+      state.notice = e && e.forUser ? e.message : scanErrorText();
+      paintStatus(statusEl);
+    } finally {
+      state.scanning = false;
+      btn.disabled = false;
+    }
+  }
+
+  /* Naglowkowe "Pliki" (dam-root-status.js) czeka na skan najwyzej 120 s i wtedy oglasza
+     dam:index-refreshed, choc pelny skan trwa dalej. Ten sam znacznik spisu = nic nowego:
+     nie piszemy "Odświeżono". Koniec skanu zglosi poller (zmiana znacznika). */
+  function onHeaderRefreshed(grid, statusEl, detail) {
+    if (state.scanning) return Promise.resolve();
+    if (detail && detail.scanRunning) {
+      state.notice = "Skan jeszcze trwa - lista odświeży się sama";
+      paintStatus(statusEl);
+      return Promise.resolve();
+    }
+    var before = state.stamp;
+    return reloadProjects(grid, statusEl, "Odświeżono", true).then(function (ok) {
+      if (!ok || !before || state.stamp !== before) return;
+      state.notice = "";
+      paintStatus(statusEl);
+      return fetch(bridgeUrl() + "/index/status", { cache: "no-store" })
+        .then(function (r) {
+          return r.ok ? r.json() : null;
+        })
+        .catch(function () {
+          return null;
+        })
+        .then(function (st) {
+          state.notice = scanRunning(st) ? "Skan jeszcze trwa - lista odświeży się sama" : "Spis bez zmian";
+          paintStatus(statusEl);
+        });
+    });
+  }
+
+  var SCAN_NO_ROOT = "Ten komputer nie ma podłączonego całego folderu Marketing - skan dysku jest tu niedostępny";
+  var SCAN_NO_ROOT_TIP = SCAN_NO_ROOT + ". Aktualną listę pobiera Odśwież listę.";
+
+  /* Admin na komputerze bez zywego folderu Marketing: skan nic by nie przeczytal
+     (build-file-index.py konczy "NO_MARKETING_ROOT" z kodem 0, a strona oglosilaby
+     "Skan zakończony"). GET <most>/data-mode -> root_alive (true = caly folder widoczny).
+     Brak odpowiedzi albo pola = przycisku nie ruszamy. Ponowne sprawdzenie przy powrocie
+     do okna (dysk podlaczony pozniej). aria-disabled zamiast disabled: dam-tooltips.js
+     pomija elementy disabled, a podpowiedz ma byc widac; styl .dam-int-cta[aria-disabled]
+     juz istnieje. Natywny title ruszamy tylko, gdy dam-tooltips.js go nie zabral. */
+  function guardScanButton(btn) {
+    var title = btn.getAttribute("title");
+    var tip = btn.getAttribute("data-dam-tip");
+    function check() {
+      return fetch(bridgeUrl() + "/data-mode", { cache: "no-store" })
+        .then(function (r) {
+          return r.ok ? r.json() : null;
+        })
+        .catch(function () {
+          return null;
+        })
+        .then(function (d) {
+          if (!d || d.ok === false || typeof d.root_alive !== "boolean" || state.scanning) return;
+          state.noRoot = !d.root_alive;
+          if (state.noRoot) btn.setAttribute("aria-disabled", "true");
+          else btn.removeAttribute("aria-disabled");
+          btn.setAttribute("data-dam-tip", state.noRoot ? SCAN_NO_ROOT_TIP : tip);
+          if (btn.hasAttribute("title")) btn.setAttribute("title", state.noRoot ? SCAN_NO_ROOT_TIP : title);
+        });
+    }
+    window.addEventListener("focus", check);
+    return check();
+  }
+
+  /* Znacznik spisu dla pollera. Swiezy komputer nie ma jeszcze pliku spisu (mtime null):
+     bez wlasnej wartosci "brak" poller nie zauwazylby pierwszego pobrania z bazy. */
+  function indexGeneration(st) {
+    return (window.DamIndexPoller && window.DamIndexPoller.pickGeneration(st)) || "brak";
   }
 
   function bindProjectsSortControl(grid, statusEl) {
@@ -1181,30 +1559,15 @@
     }
 
     if (ingestBtn) {
-      var role = DamApi.role();
-      if (role !== "admin" && role !== "power_user") {
+      /* Most wpuszcza do /index/rebuild tylko admina (_require_admin): innym rolom nie
+         pokazujemy przycisku, ktory moglby tylko odmowic. */
+      if (DamApi.role() !== "admin") {
         ingestBtn.classList.add("d-none");
       } else {
-        ingestBtn.addEventListener("click", async function () {
-          ingestBtn.disabled = true;
-          if (statusEl) statusEl.textContent = "Wczytywanie z dysku Marketing...";
-          try {
-            var res = await DamApi.ingestPointers();
-            if (statusEl) {
-              statusEl.textContent =
-                "Wczytano: " +
-                (res.data.projects || 0) +
-                " produktów, " +
-                (res.data.assets || 0) +
-                " plików";
-            }
-            await loadProjects(grid, statusEl);
-          } catch (e) {
-            if (statusEl) statusEl.textContent = e.message;
-          } finally {
-            ingestBtn.disabled = false;
-          }
+        ingestBtn.addEventListener("click", function () {
+          scanDisk(grid, statusEl, ingestBtn);
         });
+        guardScanButton(ingestBtn);
       }
     }
 
@@ -1273,9 +1636,48 @@
 
     if (refreshBtn) {
       refreshBtn.addEventListener("click", function () {
-        loadProjects(grid, statusEl);
+        refreshBtn.disabled = true;
+        reloadProjects(grid, statusEl, "Odświeżono").then(function () {
+          refreshBtn.disabled = false;
+        });
       });
     }
+
+    /* Nowy spis (skan na tym komputerze albo pobranie z bazy) -> lista sama, bez F5.
+       Ten sam rytm co Eksplorator / Wizualizacje: wspolny poller GET /index/status. */
+    if (window.DamIndexPoller && typeof window.DamIndexPoller.create === "function") {
+      window.DamIndexPoller.create({
+        name: "projects",
+        statusPath: "/index/status",
+        getGeneration: indexGeneration,
+        onChange: function (gen) {
+          /* Wlasny skan sam przeladuje spis po zakonczeniu - bez drugiego pobrania 8 MB. */
+          if (state.scanning || gen === state.seenGen) return;
+          state.seenGen = gen;
+          reloadProjects(grid, statusEl, "Nowy spis wczytany");
+        },
+      });
+    }
+
+    /* Naglowek. "Pliki" (dam-root-status.js) po skanie sam pobiera swiezy spis i oglasza
+       dam:index-refreshed. "Baza" (dam-db-status.js) nie oglasza konca odswiezenia, wiec
+       pamietamy klikniecie i przeladowujemy liste przy jej najblizszym dam:db-status. */
+    window.addEventListener("dam:index-refreshed", function (e) {
+      onHeaderRefreshed(grid, statusEl, e && e.detail);
+    });
+    var dbRefreshClicked = false;
+    document.addEventListener(
+      "click",
+      function (e) {
+        if (e.target && e.target.closest && e.target.closest("#damDbRefreshBtn")) dbRefreshClicked = true;
+      },
+      true
+    );
+    window.addEventListener("dam:db-status", function () {
+      if (!dbRefreshClicked || state.scanning) return;
+      dbRefreshClicked = false;
+      reloadProjects(grid, statusEl, "Odświeżono");
+    });
 
     if (window.DamTagBar) {
       window.DamTagBar.bind({
@@ -1297,6 +1699,15 @@
     document.addEventListener("dam-tag-tiers-changed", function () {
       renderGrid(grid, statusEl);
     });
+
+    /* Inny skrypt mogl zaczac czekac na katalog przed nami - stan czytamy tez na starcie. */
+    window.addEventListener("dam:file-index-state", function (e) {
+      onIndexState(e.detail, grid, statusEl);
+    });
+    if (window.DamFileIndex && typeof window.DamFileIndex.state === "function") {
+      var idxState = window.DamFileIndex.state();
+      if (idxState.state === "waiting") onIndexState(idxState, grid, statusEl);
+    }
 
     await loadProjects(grid, statusEl);
   }

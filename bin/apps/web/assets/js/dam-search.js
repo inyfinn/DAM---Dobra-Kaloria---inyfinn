@@ -31,6 +31,26 @@
     return String(s || "").replace(/\D/g, "");
   }
 
+  /**
+   * Zapytanie (po norm()) -> slowa. Produkt/wariant pasuje, gdy pasuja WSZYSTKIE
+   * ("kulki z kreatyna" = kulki + kreatyna). Jednoliterowe ("z", "x") pomijamy,
+   * chyba ze nic innego nie zostaje. Jedno slowo i sam numer indeksu
+   * ("6300 863", "6300863.00") zostaja jednym ciagiem - jak przed 2.6.0.
+   * Gramatura ("65 g", "200 ml") to jedno slowo: samo "65" trafialoby w indeksy
+   * i daty ("40 g" znajdowalo 5 produktow, choc zaden nie ma 40 g).
+   */
+  function queryWords(nq) {
+    nq = String(nq || "");
+    if (!nq) return [];
+    if (nq.indexOf(" ") === -1 || /^[\d. ]+$/.test(nq)) return [nq];
+    var words = nq
+      .replace(/(^| )([\d.]+) (g|kg|ml|l|szt)(?= |$)/g, "$1$2\u0001$3")
+      .split(" ")
+      .map(function (w) { return w.replace("\u0001", " "); })
+      .filter(function (w) { return w.length > 1; });
+    return words.length ? words : [nq];
+  }
+
   function pageIsViz() {
     try {
       var pv = String((typeof location !== "undefined" && location.pathname) || "").toLowerCase();
@@ -142,6 +162,112 @@
     });
   }
 
+  /* ---- Swiezy komputer: instalator nie wozi search-index.json --------------------------
+     Plik przychodzi z bazy razem ze spisem. 404 to wtedy nie blad, tylko "jeszcze nie ma":
+     czekamy, ponawiajac odczyt pliku co 3 s, najwyzej 3 minuty. Mostu sami nie pytamy -
+     o porazce pierwszego pobrania mowi wspolny loader (DamFileIndex.state() i zdarzenie
+     "dam:file-index-state"); bez niego konczy sam limit czasu. Jedna petla na strone. */
+  var CATALOG_WAIT_TEXT = "Pobieram katalog z bazy...";
+  var CATALOG_FAIL_TEXT = "Nie udało się pobrać katalogu z bazy - sprawdź połączenie";
+  var SEARCH_INDEX_RETRY_MS = 3000;
+  var SEARCH_INDEX_WAIT_MAX_MS = 180000;
+  var searchIndexWait = null;
+
+  function fileIndexLoaderState() {
+    try {
+      var FI = window.DamFileIndex;
+      return (FI && typeof FI.state === "function" && FI.state()) || {};
+    } catch (eSt) {
+      return {};
+    }
+  }
+
+  /* Czy trwa pierwsze pobranie katalogu (spisu wyszukiwarki albo spisu plikow). */
+  function catalogWaiting() {
+    return !!searchIndexWait || fileIndexLoaderState().state === "waiting";
+  }
+
+  function catalogError(message) {
+    var e = new Error(message || CATALOG_FAIL_TEXT);
+    e.code = "index_first_sync_failed";
+    return e;
+  }
+
+  function fetchSearchIndexOnce() {
+    return fetch("data/search-index.json?v=20260717ux3&_=" + Date.now()).then(function (r) {
+      if (r.ok) return r.json();
+      var e = new Error("search-index.json");
+      if (r.status === 404) e.code = "search_index_missing";
+      throw e;
+    });
+  }
+
+  function waitForSearchIndex() {
+    if (searchIndexWait) return searchIndexWait;
+    var since = Date.now();
+    var timer = null;
+    var onState = null;
+    var p = new Promise(function (resolve, reject) {
+      function done(fn, value) {
+        clearTimeout(timer);
+        if (onState) window.removeEventListener("dam:file-index-state", onState);
+        if (searchIndexWait === p) searchIndexWait = null;
+        fn(value);
+      }
+      function attempt() {
+        clearTimeout(timer);
+        var st = fileIndexLoaderState();
+        if (st.state === "failed") return done(reject, catalogError(st.message));
+        if (Date.now() - since >= SEARCH_INDEX_WAIT_MAX_MS) return done(reject, catalogError(""));
+        timer = setTimeout(function () {
+          fetchSearchIndexOnce().then(
+            function (data) {
+              done(resolve, data);
+            },
+            function (e) {
+              if (e && e.code === "search_index_missing") attempt();
+              else done(reject, e);
+            }
+          );
+        }, SEARCH_INDEX_RETRY_MS);
+      }
+      onState = function (ev) {
+        var st = (ev && ev.detail) || {};
+        if (st.state === "failed") {
+          done(reject, catalogError(st.message));
+        } else if (st.state === "ready") {
+          /* Spis plikow wlasnie przyszedl - sprawdz od razu, nie za 3 s. */
+          clearTimeout(timer);
+          fetchSearchIndexOnce().then(
+            function (data) {
+              done(resolve, data);
+            },
+            function () {
+              attempt();
+            }
+          );
+        }
+      };
+      window.addEventListener("dam:file-index-state", onState);
+      attempt();
+    });
+    searchIndexWait = p;
+    try {
+      window.dispatchEvent(new CustomEvent("dam:search-index-state", { detail: { state: "waiting", since: since } }));
+    } catch (eEv) {
+      /* ignore */
+    }
+    return p;
+  }
+
+  function fetchSearchIndex() {
+    if (searchIndexWait) return searchIndexWait;
+    return fetchSearchIndexOnce().catch(function (e) {
+      if (!e || e.code !== "search_index_missing") throw e;
+      return waitForSearchIndex();
+    });
+  }
+
   function loadIndexes(opts) {
     opts = opts || {};
     if (opts.force) {
@@ -189,12 +315,7 @@
       !!(typeof window !== "undefined" && window._DAM_FILE_INDEX && window._DAM_FILE_INDEX.products);
     var needFile = !fileIndex && !skipFile;
     loading = Promise.all([
-      needSearch
-        ? fetch("data/search-index.json?v=20260717ux3&_=" + bust).then(function (r) {
-            if (!r.ok) throw new Error("search-index.json");
-            return r.json();
-          })
-        : Promise.resolve(searchIndex),
+      needSearch ? fetchSearchIndex() : Promise.resolve(searchIndex),
       needFile
         ? window.DamFileIndex && typeof window.DamFileIndex.get === "function"
           ? /* Wspolne Promise strony (dam-file-index.js); force -> invalidate wyzej. */
@@ -454,9 +575,21 @@
     return pathInCategoryArchive(p.path || p.name || "");
   }
 
-  function revisionMatchesQuery(rev, nq, dig, includeArchive, useDesc) {
+  /* parentBlob: tekst produktu-rodzica; liczy sie tylko przy wielu slowach
+     ("doypack arbuz": tag stoi na produkcie, nazwa w sciezce wariantu). */
+  function revisionMatchesQuery(rev, nq, dig, includeArchive, useDesc, parentBlob) {
     if (!rev) return false;
     if (!includeArchive && revisionInArchive(rev)) return false;
+    var words = queryWords(nq);
+    if (words.length > 1) {
+      return words.every(function (w) {
+        return (
+          (!!parentBlob && parentBlob.indexOf(w) !== -1) ||
+          revisionMatchesQuery(rev, w, digitsOnly(w), includeArchive, useDesc)
+        );
+      });
+    }
+    nq = words[0] || nq;
     /* Opis jest czesto jedyna trescia odrozniajaca wariant - sprawdzamy go
        PRZED blobem, bo notatka nie siedzi w indeksie na dysku. */
     if (resolveDesc(useDesc) && revisionNoteMatches(rev, nq)) return true;
@@ -498,29 +631,54 @@
     return revs.length === 0;
   }
 
-  function productMatchesTextQuery(p, nq, dig, includeArchive, useDesc) {
-    if (!p) return false;
-    if (!includeArchive && productPathInArchive(p) && !productHasLivePresence(p)) {
-      /* Produkt tylko w archiwum kategorii */
-    }
-    var pblob = norm(
+  /* Tekst produktu do szukania. p.name niesie nawias linii ("ARBUZ - [ z kreatyna ]"),
+     subcategory_* to ta sama linia nazwana przez indekser (w starym spisie puste). */
+  function productBlob(p) {
+    return norm(
       [
         p.display_name,
         p.name,
         p.category,
+        p.subcategory_label,
+        p.subcategory_slug,
         p.path,
         (p.indexes || []).join(" "),
         (p.tags || []).join(" ")
       ].join(" ")
     );
-    var productDirect =
+  }
+
+  /** Trafienie w sam produkt (bez wariantow). Wiele slow: kazde z osobna. */
+  function productDirectMatch(p, pblob, nq, dig) {
+    var words = queryWords(nq);
+    if (words.length > 1) {
+      return words.every(function (w) {
+        return productDirectMatch(p, pblob, w, digitsOnly(w));
+      });
+    }
+    nq = words[0] || nq;
+    return !!(
       (nq && pblob.indexOf(nq) !== -1) ||
       (dig &&
         dig.length >= 3 &&
         (p.indexes || []).some(function (ix) {
           var d = digitsOnly(ix);
           return d.indexOf(dig) === 0 || dig.indexOf(d) === 0 || String(ix).toLowerCase().indexOf(nq) !== -1;
-        }));
+        }))
+    );
+  }
+
+  function productMatchesTextQuery(p, nq, dig, includeArchive, useDesc) {
+    if (!p) return false;
+    var words = queryWords(nq);
+    if (words.length > 1) {
+      /* Kazde slowo tak, jakby bylo wpisane samo; produkt musi miec wszystkie. */
+      return words.every(function (w) {
+        return productMatchesTextQuery(p, w, digitsOnly(w), includeArchive, useDesc);
+      });
+    }
+    nq = words[0] || nq;
+    var productDirect = productDirectMatch(p, productBlob(p), nq, dig);
     if (productDirect) {
       if (includeArchive || productHasLivePresence(p) || !productPathInArchive(p)) return true;
     }
@@ -582,29 +740,26 @@
     var hits = [];
     (products || []).forEach(function (p) {
       if (!p) return;
-      var pname = norm(p.display_name || p.name || "");
-      var pblob = norm(
-        [p.display_name, p.name, p.category, p.path, (p.indexes || []).join(" "), (p.tags || []).join(" ")].join(" ")
-      );
-      var productMatch =
-        !nq ||
-        pname.indexOf(nq) !== -1 ||
-        pblob.indexOf(nq) !== -1 ||
-        (dig && dig.length >= 3 && (p.indexes || []).some(function (ix) {
-          var d = digitsOnly(ix);
-          return d.indexOf(dig) === 0 || dig.indexOf(d) === 0 || String(ix).toLowerCase().indexOf(nq) !== -1;
-        }));
+      var pblob = productBlob(p);
+      var productMatch = !nq || productDirectMatch(p, pblob, nq, dig);
       var matchingRevs = revisionsForSearch(p, includeArchive).filter(function (r) {
-        return revisionMatchesQuery(r, nq, dig, includeArchive, useDesc);
+        return revisionMatchesQuery(r, nq, dig, includeArchive, useDesc, pblob);
       });
       /* Gdy brak dopasowania wariantu, a produkt pasuje - pokaz wszystkie latest jako kontekst opcjonalnie nie */
       if (scope.products && productMatch) {
+        /* Linia z nawiasu ("Z kreatyną"): bez niej wynik "Arbuz" nie mowi, ktory to produkt. */
+        var line =
+          window.DamLabels && typeof window.DamLabels.productLine === "function"
+            ? window.DamLabels.productLine(p)
+            : null;
         hits.push({
           kind: "product",
           product: p,
           revision: null,
           label: p.display_name || p.name,
-          meta: (p.category || "") + (p.indexes && p.indexes.length ? " · " + p.indexes.slice(0, 3).join(", ") : ""),
+          meta: [p.category, line && line.label, (p.indexes || []).slice(0, 3).join(", ")]
+            .filter(Boolean)
+            .join(" · "),
           childCount: matchingRevs.length
         });
       }
@@ -731,12 +886,13 @@
           var rev = searchIndex.association_reverse || {};
           nq.split(/\s+/).forEach(function (tok) {
             if (!tok) return;
-            (rev[tok] || []).forEach(function (id) {
+            /* Array.isArray: slowo "constructor" trafialo w wlasciwosc obiektu i search() padal. */
+            (Array.isArray(rev[tok]) ? rev[tok] : []).forEach(function (id) {
               assocIds.push(id);
             });
           });
           assocIds = unique(assocIds);
-          var tagHits = (searchIndex.by_tag && searchIndex.by_tag[nq]) || [];
+          var tagHits = searchIndex.by_tag && Array.isArray(searchIndex.by_tag[nq]) ? searchIndex.by_tag[nq] : [];
           if (tagHits.length) {
             mode = "tag";
             productIds = unique(tagHits.concat(assocIds));
@@ -795,6 +951,42 @@
             }
           }
         }
+
+      /* Wiele slow: tagi i skojarzenia wyzej zbieraja kandydatow po JEDNYM slowie
+         ("kulki z kreatyna" -> wszystkie kulki). Zostaja tylko ci, ktorzy maja kazde
+         slowo - w tekscie produktu/wariantu, jako skojarzenie albo jako tag ze spisu
+         wyszukiwania (osoby: "krzysztof wieczorek" nie stoi w tekscie produktu).
+         Reszte dopasowan doklada skan spisu ponizej (productMatchesTextQuery). */
+      var qWords = queryWords(nq);
+      if (qWords.length > 1) {
+        var assocRev = searchIndex.association_reverse || {};
+        var byTag = searchIndex.by_tag || {};
+        var tagNames = Object.keys(byTag);
+        var idsByWord = qWords.map(function (w) {
+          var ids = [];
+          tagNames.forEach(function (tag) {
+            if (norm(tag).indexOf(w) !== -1) ids = ids.concat(byTag[tag] || []);
+          });
+          /* Skojarzenie liczy sie cale slowo klucza: "hot dog" -> hot, dog. */
+          Object.keys(assocRev).forEach(function (key) {
+            if ((" " + norm(key) + " ").indexOf(" " + w + " ") !== -1) ids = ids.concat(assocRev[key] || []);
+          });
+          return ids;
+        });
+        productIds = unique(productIds.concat.apply(productIds, idsByWord)).filter(function (pid) {
+          var cand =
+            (fi && fi.products && fi.products.find(function (x) { return x.id === pid; })) || productById(pid);
+          return (
+            !!cand &&
+            qWords.every(function (w, i) {
+              return (
+                idsByWord[i].indexOf(pid) !== -1 ||
+                productMatchesTextQuery(cand, w, digitsOnly(w), includeArchive, useDesc)
+              );
+            })
+          );
+        });
+      }
 
       /* Dolacz produkty z file-index — ALWAYS budgeted when light/limit (picker). */
       productIds = appendFileIndexMatches(productIds, nq, dig, includeArchive, fi, {
@@ -1147,13 +1339,26 @@
         opts.onResults(res, q);
       }
     }
+    /* Pierwsze pobranie katalogu z bazy: zapytanie czeka, a pole mowi dlaczego. */
+    var pendingSearches = 0;
+    function showCatalogWait() {
+      if (!resultsEl || !pendingSearches || !catalogWaiting()) return;
+      resultsEl.innerHTML =
+        '<div class="dam-search-msg" role="status">' + escapeHtml(CATALOG_WAIT_TEXT) + "</div>";
+      resultsEl.style.display = "block";
+    }
+    window.addEventListener("dam:search-index-state", showCatalogWait);
+    window.addEventListener("dam:file-index-state", showCatalogWait);
     function runSearch() {
       var q = inputEl.value;
-      return search(q, {
+      var counted = !!String(q || "").trim();
+      if (counted) pendingSearches += 1;
+      var p = search(q, {
         limit: opts.limit || 30,
         includeArchive: explorerShowAllEnabled(),
         fileIndex: opts.fileIndex || window._DAM_FILE_INDEX
       }).then(function (res) {
+        if (counted) pendingSearches -= 1;
         if (opts.enrichResults && typeof opts.enrichResults === "function") {
           res = opts.enrichResults(res, q) || res;
         }
@@ -1161,10 +1366,19 @@
         notifyResults(res, q);
         return res;
       }).catch(function (err) {
-        resultsEl.innerHTML = '<div class="dam-search-msg">Blad indeksu: ' + escapeHtml(err.message) + "</div>";
+        if (counted) pendingSearches -= 1;
+        /* Nieudane pobranie katalogu ma gotowy tekst dla czlowieka - bez "Błąd indeksu:". */
+        var human = err && err.code === "index_first_sync_failed";
+        resultsEl.innerHTML =
+          '<div class="dam-search-msg">' +
+          (human ? "" : "Błąd indeksu: ") +
+          escapeHtml(err.message) +
+          "</div>";
         resultsEl.style.display = "block";
         notifyResults({ query: q, hits: [], products: [], message: err.message }, q);
       });
+      showCatalogWait();
+      return p;
     }
     if (scopeEl) {
       bindScopeChips(
@@ -1814,6 +2028,9 @@
     parseJsonInWorker: parseJsonInWorker,
     normQuery: norm,
     digitsOnly: digitsOnly,
+    queryWords: queryWords,
+    /** True, gdy trwa pierwsze pobranie katalogu z bazy (zapytania czekaja). */
+    catalogWaiting: catalogWaiting,
     productMatchesTextQuery: productMatchesTextQuery,
     /** Sync-adopt window._DAM_* without fetch/JSON.parse. */
     adoptWarmCaches: adoptWarmCaches,

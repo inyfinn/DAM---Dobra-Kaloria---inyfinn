@@ -7370,10 +7370,63 @@
    * "Skojarzone produkty" jest przerysowywany po dociagnieciu miniatur (listenery
    * przypiete do starych wezlow gina). Prawy przycisk = menu (Przejdz/Eksplorator/link).
    */
+  var ASSOC_NAV_SEL = "[data-assoc-thumb-go], [data-assoc-name]";
+  var _assocMenuReq = null;
+
+  /* Menu produktu (prawy przycisk na etykiecie). Na swiezym komputerze spisu jeszcze nie
+     ma (dam-file-index.js: stan "waiting"): od razu mowimy, ze katalog sie pobiera, a menu
+     otwiera sie samo po "ready"; po "failed" - komunikat loadera, bez menu. Poza czekaniem
+     zachowanie jak dotad. Ostatnie klikniecie wygrywa; panel bywa przerysowywany, wiec
+     po czekaniu szukamy zywej etykiety tego samego produktu.
+     ponytail: stan "idle" (pierwsze milisekundy strony, zanim loader dostal 404) idzie
+     stara sciezka bez komunikatu; gdyby to bylo widac, sluchac zdarzenia takze tam. */
+  function openAssocProductMenu(btn, pid) {
+    var req = (_assocMenuReq = {});
+    var loader = global.DamFileIndex;
+    function open(load) {
+      return load
+        .catch(function () {
+          return null;
+        })
+        .then(function (fi) {
+          if (req !== _assocMenuReq) return;
+          var el = btn.isConnected ? btn : null;
+          var chips = el ? [] : document.querySelectorAll(ASSOC_NAV_SEL);
+          for (var i = 0; i < chips.length && !el; i++) {
+            if (chips[i].getAttribute("data-product-id") === pid) el = chips[i];
+          }
+          if (!el) return;
+          var p = ((fi && fi.products) || []).find(function (x) {
+            return x.id === pid;
+          });
+          openActionMenu(el, p || { id: pid, display_name: el.textContent.trim() });
+        });
+    }
+    if (!(loader && typeof loader.state === "function" && loader.state().state === "waiting")) {
+      return open(ensureFileIndex());
+    }
+    toast("Pobieram katalog z bazy - menu otworzy się za chwilę");
+    return new Promise(function (resolve) {
+      function onState(e) {
+        var d = (e && e.detail) || {};
+        if (d.state === "waiting") return;
+        global.removeEventListener("dam:file-index-state", onState);
+        if (req !== _assocMenuReq) return resolve();
+        if (d.state === "failed") {
+          toast(d.message || "Nie udało się pobrać katalogu z bazy - sprawdź połączenie");
+          return resolve();
+        }
+        /* Prosto z loadera: DamSearch.load() moze jeszcze nie miec search-index.json. */
+        resolve(open(loader.get()));
+      }
+      global.addEventListener("dam:file-index-state", onState);
+    });
+  }
+
   function installAssocProductNav() {
     if (global.__damAssocProductNavInstalled) return;
     global.__damAssocProductNavInstalled = true;
-    var SEL = "[data-assoc-thumb-go], [data-assoc-name]";
+    var SEL = ASSOC_NAV_SEL;
     document.addEventListener(
       "click",
       function (e) {
@@ -7398,12 +7451,7 @@
         var pid = btn.getAttribute("data-product-id") || "";
         if (!pid) return;
         e.preventDefault();
-        ensureFileIndex().then(function (fi) {
-          var p = (fi.products || []).find(function (x) {
-            return x.id === pid;
-          });
-          openActionMenu(btn, p || { id: pid, display_name: btn.textContent.trim() });
-        });
+        openAssocProductMenu(btn, pid);
       },
       true
     );

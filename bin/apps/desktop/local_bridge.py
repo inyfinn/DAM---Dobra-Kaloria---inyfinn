@@ -1071,12 +1071,22 @@ def write_machine_config(base_path: str, *, expected_generation: int | None = No
                 "root_generation": current_gen,
                 "path": str(target),
             }
-        new_gen = current_gen + 1
-        users[key] = {"base_path": stored, "updated_at": utc_now(), "root_generation": new_gen}
+        # 07.10.2026: ta sama sciezka i licznik w pliku rowny biezacemu = nic do zapisania.
+        # Ponowny zapis BIEZACEGO ROOT (dam-paths.js persistBasePathToBridge przy wczytaniu
+        # strony: POST /machine-config + POST /user-device-paths) podbijal generacje o 2,
+        # a asset_sync_runner bral to za nowy ROOT i porzucal obserwacje (1|m: -> 3|m:).
+        # Licznik w pliku nizszy niz w pamieci (stara wersja nadpisala plik) = zapis jak dotad.
+        existing_base = str(existing.get("base_path") or "").strip()
+        unchanged = (bool(existing_base)
+                     and _normalize_base_path(existing_base).lower() == stored.lower()
+                     and _entry_generation(existing) == current_gen)
+        new_gen = current_gen if unchanged else current_gen + 1
         user = key
-        payload = {"users": users}
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        if not unchanged:
+            users[key] = {"base_path": stored, "updated_at": utc_now(), "root_generation": new_gen}
+            payload = {"users": users}
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         _ROOT_GENERATION_MEMORY[user] = new_gen
     # 2026-09-27: bez dam_db.reset_path_cache()+init_db(). Baza nie zalezy od ROOT
     # (kanon bin/DATABASE, dam_db.canonical_db_path). Reset przy kazdym zapisie ROOT
@@ -1087,8 +1097,9 @@ def write_machine_config(base_path: str, *, expected_generation: int | None = No
         "ok": True,
         "user": user,
         "base_path": stored,
-        "updated_at": users[user]["updated_at"],
+        "updated_at": users[user].get("updated_at") or "",
         "root_generation": new_gen,
+        "unchanged": unchanged,
         "path": str(target),
         "db": dam_db.status() if dam_db else None,
     }
@@ -1221,6 +1232,54 @@ def _root_state(base_path: str, timeout: float | None = None) -> dict:
     out["listable"] = listable
     out["state"] = "full" if (not out["missing"] and listable) else "partial"
     return out
+
+
+_POSIX_MOUNT_PARENTS = ("volumes", "mnt", "media")
+
+
+def _root_definitely_missing(stored: str, rs: dict | None = None) -> bool:
+    """True TYLKO gdy wiadomo na pewno, ze folderu ROOT nie ma (07.10.2026).
+
+    Warunki lacznie: sonda sciezki odpowiedziala w limicie czasu i folderu brak, sciezka
+    lezy GLEBIEJ niz jej kotwica (korzen dysku, udzial UNC, punkt montowania POSIX
+    /Volumes|/mnt|/media/<nazwa>), a sama kotwica odpowiada i jest folderem.
+    Wszystko inne to "nie wiem" -> False, czyli zapis jak dotad: dysk nie odpowiada,
+    kotwicy nie widac (odlaczony dysk sieciowy, VPN, wylaczony RaiDrive) albo sciezka
+    sama jest kotwica (sam korzen dysku: nie da sie odroznic braku litery od odlaczonego
+    dysku sieciowego)."""
+    if not stored:
+        return False
+    rs = rs if rs is not None else _root_state(stored)
+    if rs.get("timeout") or rs.get("exists"):
+        return False
+    if stored.startswith("/") and not stored.startswith("//"):
+        segs = [s for s in stored.split("/") if s]
+        depth = 2 if segs and segs[0].lower() in _POSIX_MOUNT_PARENTS else 0
+        if len(segs) <= depth:
+            return False
+        anchor = "/" + "/".join(segs[:depth])
+    else:
+        from pathlib import PureWindowsPath  # noqa: PLC0415
+
+        pw = PureWindowsPath(stored)
+        if not pw.root or len(pw.parts) < 2:
+            return False
+        anchor = pw.anchor
+    probe = _probe_root(anchor)
+    return bool(probe.get("exists")) and not probe.get("timeout")
+
+
+def _root_missing_reply(stored: str) -> dict:
+    """Odmowa zapisu ROOT: ten sam kod bledu co /root/switch (root_missing)."""
+    return {
+        "ok": False,
+        "error": "root_missing",
+        "reason": "missing",
+        "base_path": stored,
+        "root_alive": False,
+        "root_state": "none",
+        "hint": "Folder nie istnieje - ścieżka nie została zapisana.",
+    }
 
 
 def _scan_blocked_reason() -> str:
@@ -2176,6 +2235,27 @@ def _append_rebuild_log(line: str) -> None:
 
 
 INDEX_NEEDS_FULL_RC = 5  # build-file-index.py: przyrost niemozliwy (brak/obca baza) - zrob pelny skan
+# 07.10.2026: przyrost (--only-product --merge-into) ma dwa nowe wyniki:
+# - kod 0 + linia "MERGE_UNCHANGED" = wynik identyczny ze spisem, plikow NIE zapisano;
+# - kod 6 ("MERGE_UNREACHABLE: <sciezka>") = folder chwilowo nieosiagalny, nic nie zapisano.
+INDEX_UNREACHABLE_RC = 6
+INDEX_UNREACHABLE_ERROR = "folder_unreachable"
+INDEX_UNREACHABLE_MESSAGE = "Folder jest chwilowo niedostępny - spróbuj ponownie za chwilę"
+INDEX_MERGE_UNCHANGED_MARK = "MERGE_UNCHANGED"
+
+
+def _rebuild_log_has_line(start: int | None, prefix: str) -> bool:
+    """Czy indekser wypisal linie zaczynajaca sie od `prefix` w TYM biegu (log od bajtu start).
+    Brak pozycji / blad odczytu = False, czyli zachowanie jak przy zmienionym spisie."""
+    if start is None:
+        return False
+    try:
+        with INDEX_REBUILD_LOG_FILE.open("rb") as fh:
+            fh.seek(start)
+            mark = prefix.encode("utf-8")
+            return any(line.lstrip().startswith(mark) for line in fh)
+    except OSError:
+        return False
 
 
 def _index_build_argv(only_products: list[str] | None = None) -> list[str]:
@@ -2202,6 +2282,8 @@ def _run_index_rebuild(only_products: list[str] | None = None) -> None:
         _index_state["stage"] = "starting"
         _index_state["kind"] = "incremental" if only_products else "manual"
         _index_state["only_products"] = list(only_products or [])
+        _index_state["unchanged"] = False
+        _index_state["last_message"] = ""
     try:
         import index_supervisor
 
@@ -2209,6 +2291,7 @@ def _run_index_rebuild(only_products: list[str] | None = None) -> None:
     except Exception:
         pass
     lock_handle = None
+    log_start: int | None = None
     try:
         from rebuild_lock import acquire_lock
 
@@ -2238,6 +2321,10 @@ def _run_index_rebuild(only_products: list[str] | None = None) -> None:
             log_f.write(f"\n==== rebuild start {utc_now()} pid={os.getpid()} ====\n")
             log_f.flush()
             try:
+                log_start = os.fstat(log_f.fileno()).st_size
+            except OSError:
+                log_start = None
+            try:
                 import index_supervisor as _idx_sup
 
                 _rebuild_env = _idx_sup.index_builder_env()
@@ -2266,13 +2353,21 @@ def _run_index_rebuild(only_products: list[str] | None = None) -> None:
                 )
             except Exception:
                 rc = int(proc.wait())
+        # Przyrost bez zmian: indekser nie zapisal spisu - nie ma czego oznaczac ani rozglaszac.
+        merge_unchanged = (rc == 0 and bool(only_products)
+                           and _rebuild_log_has_line(log_start, INDEX_MERGE_UNCHANGED_MARK))
+        unreachable = bool(only_products) and rc == INDEX_UNREACHABLE_RC
         with _index_lock:
             _index_state["last_rc"] = rc
             _index_state["last_ok"] = rc == 0
             _index_state["last_finished"] = utc_now()
             _index_state["stage"] = "cancelled" if rc == 130 else ("idle" if rc == 0 else "error")
+            _index_state["unchanged"] = merge_unchanged
             if rc == 130:
                 _index_state["last_error"] = "cancelled"
+            elif unreachable:
+                _index_state["last_error"] = INDEX_UNREACHABLE_ERROR
+                _index_state["last_message"] = INDEX_UNREACHABLE_MESSAGE
             elif rc != 0:
                 _index_state["last_error"] = f"build_rc_{rc}"
         _append_rebuild_log(f"finished rc={rc}")
@@ -2312,9 +2407,20 @@ def _run_index_rebuild(only_products: list[str] | None = None) -> None:
                 "meta": {"rc": rc},
             }
         )
-        if rc == 0:
+        if merge_unchanged:
+            # Plik spisu jest ten sam co przed biegiem (moze pochodzic z bazy) - znacznik
+            # "zbudowane tutaj" zostaje, jaki byl; branding i publikacja miniatur nie ruszaja.
+            _append_rebuild_log("merge_unchanged: bez mark_built_here, brandingu i publikacji miniatur")
+        elif rc == 0:
             _drop_json_cache(INDEX_FILE)
             _append_rebuild_log(f"mark_built_here file-index {_mark_built_here('file-index', INDEX_FILE)}")
+            # 07.10.2026: build-file-index.py pisze search-index.json w tym samym biegu co
+            # file-index.json. Watcher oznacza oba (watch-file-index.py), most oznaczal tylko
+            # pierwszy - po przebudowie z mostu migawka search-index nie byla "zbudowana tutaj".
+            _append_rebuild_log(
+                "mark_built_here search-index "
+                + _mark_built_here("search-index", INDEX_FILE.with_name("search-index.json"))
+            )
             try:
                 import meta_store
 
@@ -2859,6 +2965,40 @@ def asset_sync_confirm_folder(folder: str) -> dict[str, Any]:
     return {"ok": True, "folder": folder, "confirmed_dirs": confirmed}
 
 
+_ASSET_SYNC_START_DELAY_S = 15.0
+
+
+def _asset_sync_start_delay_s() -> float:
+    """Ile watek dam-asset-sync czeka po starcie mostu, zanim zrobi pierwszy cykl.
+
+    15 s ("najpierw UI, potem siec") - jak dotad. 0 s, gdy ten komputer nie ma jeszcze
+    lokalnego katalogu materialow (swieza instalacja): brak siatki albo pusta lokalna
+    tabela wierszy - nie ma wtedy czego pokazac, a czekanie tylko opoznia pierwsze dane.
+    Blad odczytu (np. baza zajeta) = nie wiadomo -> 15 s, czyli bez zmiany zachowania."""
+    try:
+        grid = BRANDING_INDEX_FILE.with_name("branding-grid-index.json")
+        if not grid.is_file() or grid.stat().st_size < 1024:
+            return 0.0
+        db_path = getattr(dam_db, "DB_CANONICAL", None) if dam_db is not None else None
+        if db_path:
+            if not Path(db_path).is_file():
+                return 0.0
+            import sqlite3  # noqa: PLC0415
+
+            conn = sqlite3.connect(Path(db_path).resolve().as_uri() + "?mode=ro", uri=True)
+            try:
+                has_table = conn.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type='table' AND name='asset_rows'"
+                ).fetchone()
+                if not has_table or conn.execute("SELECT 1 FROM asset_rows LIMIT 1").fetchone() is None:
+                    return 0.0
+            finally:
+                conn.close()
+    except Exception:  # noqa: BLE001 - nie wiadomo, co jest lokalnie: czekaj jak dotad
+        pass
+    return _ASSET_SYNC_START_DELAY_S
+
+
 def start_asset_sync_watch() -> dict[str, Any]:
     global _asset_sync_thread
     with _asset_sync_lock:
@@ -2866,7 +3006,9 @@ def start_asset_sync_watch() -> dict[str, Any]:
             return {"ok": True, "started": False}
 
         def _loop() -> None:
-            _asset_sync_wake.wait(15.0)  # po starcie mostu: najpierw UI, potem siec
+            start_delay = _asset_sync_start_delay_s()  # swieza instalacja: 0 s
+            if start_delay > 0:
+                _asset_sync_wake.wait(start_delay)  # po starcie mostu: najpierw UI, potem siec
             try:  # bez LightWatch (import sie nie udal) - dawna petla co _ASSET_SYNC_INTERVAL_S
                 import asset_sync_runner as _asr
                 import pg_db as _pg
@@ -8546,6 +8688,9 @@ def _resolve_missing_media_path(raw: str) -> str | None:
 
 
 _VIZ_IMAGE_EXT = re.compile(r"\.(jpe?g|png|webp|gif|tif{1,2})$", re.I)
+# Koncowka pliku (.png, .ai, .pdf, .indd): litera + 1-4 znaki. Foldery rewizji koncza sie
+# na ".00", ".00 - F", "- 6300759" albo "BEZ INDEKSU", wiec tu nie wpadaja.
+_FILE_EXT_TAIL_RE = re.compile(r"\.[A-Za-z][A-Za-z0-9]{1,4}$")
 _LOGO_SLOT_RE = re.compile(r"(?i)/(01\s*-\s*logo)/")
 _LOGO_TECH_FOLDER_RE = re.compile(r"(?i)/(png|svg|jpe?g|11x|ai|pdf|eps)(/|$)")
 _VIZ_LOOKUP_MIN_SCORE = 60
@@ -8752,6 +8897,13 @@ def _resolve_viz_image_for_thumb(path: str) -> str:
     if logo_hit:
         return logo_hit
     from_index = _lookup_viz_path_from_index(raw)
+    # 07.10.2026: raw wskazujacy KONKRETNY plik, ktorego nie ma, nie moze dostac innego
+    # pliku tej rewizji - dopasowanie po samym numerze indeksu dawalo miniature (i /media)
+    # cudzego pliku. Folder rewizji / sam indeks -> wizka jak dotad. Ten sam plik w
+    # przemianowanym folderze: ta sama nazwa tutaj albo _resolve_missing_media_path nizej.
+    if from_index and _FILE_EXT_TAIL_RE.search(raw) and (
+            os.path.basename(from_index).lower() != os.path.basename(target).lower()):
+        from_index = ""
     if from_index:
         return from_index
     try:
@@ -9462,7 +9614,12 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 import index_snapshots
 
-                self._json(200, index_snapshots.status())
+                snap = index_snapshots.status()
+                # 07.10.2026: migawki branding-index nie ma juz w bazie (tryb rows, zostaly 4
+                # rodzaje) - lokalny stan trzymal stara etykiete "z bazy, KINGAUR 24.09".
+                if isinstance(snap.get("keys"), dict):
+                    snap["keys"].pop("branding-index", None)
+                self._json(200, snap)
             except Exception as exc:  # noqa: BLE001
                 self._json(200, {"ok": False, "error": str(exc)[:200]})
             return
@@ -10808,12 +10965,19 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(400, {"ok": False, "error": "base_path_required"})
                 return
             previous = str(read_machine_config().get("base_path") or "").strip()
+            # 07.10.2026: folder, ktorego NA PEWNO nie ma (dysk odpowiada, folderu brak), nie
+            # wchodzi do machine-config. Dysk, ktory nie odpowiada albo ktorego nie widac =
+            # "nie wiem" -> zapis jak dotad (patrz _root_definitely_missing).
+            probe_state = _root_state(_normalize_base_path(path))
+            if _root_definitely_missing(probe_state["root"], probe_state):
+                self._json(200, _root_missing_reply(probe_state["root"]))
+                return
             result = write_machine_config(path, expected_generation=_root_generation_baseline())
             if not result.get("ok"):
                 self._json(200, result)
                 return
             stored = str(result.get("base_path") or "")
-            root_state = _root_state(stored)["state"]
+            root_state = probe_state["state"]
             effects = _apply_root_switch_effects(previous, stored, root_state=root_state)
             result.update(
                 previous=previous,
@@ -10861,6 +11025,13 @@ class Handler(BaseHTTPRequestHandler):
                     hostname = str(ident.get("hostname") or "").strip()
             label = data.get("label") if "label" in data else None
             path = (data.get("base_path") or data.get("path") or "").strip()
+            # 07.10.2026: zapis dla BIEZACEGO urzadzenia przepisuje nizej takze machine-config -
+            # ta sama bramka co w /machine-config, zanim cokolwiek trafi do bazy.
+            if path and did and did == str(_udp_current_identity().get("device_id") or "").strip():
+                probe_state = _root_state(_normalize_base_path(path))
+                if _root_definitely_missing(probe_state["root"], probe_state):
+                    self._json(400, _root_missing_reply(probe_state["root"]))
+                    return
             res = upsert_user_device_path(
                 email,
                 did,

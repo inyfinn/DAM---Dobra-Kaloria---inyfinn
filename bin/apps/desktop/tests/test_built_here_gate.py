@@ -26,6 +26,9 @@ import index_snapshots as ix  # noqa: E402
 
 
 class FakeDb:
+    def connect(self):  # pg_db.connect istnieje w produkcji; may_publish w tych testach jest podmienione
+        raise OSError("atrapa: brak sieci")
+
     def __init__(self):
         self.rows: dict[str, dict] = {}
 
@@ -74,6 +77,11 @@ class BuiltHereGateTests(unittest.TestCase):
         p2 = mock.patch.dict(sys.modules, {"pg_db": self.db})
         p2.start()
         self.addCleanup(p2.stop)
+        # 07.10.2026: lista publikujacych nieznana (None) = "nie wolno"; te testy opisuja komputer ZNANEGO
+        # wlasciciela katalogu (jak przed zmiana, gdy brak listy znaczyl "wolno").
+        p_auth = mock.patch("index_authority.may_publish", return_value=True)
+        p_auth.start()
+        self.addCleanup(p_auth.stop)
 
     def _as(self, who: str) -> None:
         """Kazda symulowana maszyna ma WLASNY katalog stanu (index-snapshots.json) -

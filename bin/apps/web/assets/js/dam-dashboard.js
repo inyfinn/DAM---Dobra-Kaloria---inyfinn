@@ -253,6 +253,176 @@
     }
   }
 
+  /* Z kiedy i skad jest spis (jak Eksplorator / Projekty): "Spis z 07.10 09:08 · indeks ...". */
+  function paintIndexMeta(fileIndex) {
+    var el = document.getElementById("damDashIndexMeta");
+    if (!el) return;
+    var m = String((fileIndex && fileIndex.generated_at) || "").match(
+      /^\d{4}-(\d{2})-(\d{2})T(\d{2}:\d{2})/
+    );
+    el.textContent = m ? "Spis z " + m[2] + "." + m[1] + " " + m[3] : "";
+    if (m && window.DamIndexSource) window.DamIndexSource.decorate(el, "file-index");
+  }
+
+  /* Swiezy komputer: instalator nie niesie spisu, katalog idzie z bazy. dam-file-index.js
+     oglasza to zdarzeniem "dam:file-index-state" i oddaje w DamFileIndex.state():
+     { state: "waiting" | "failed" | "ready" | "idle", message: tekst PL przy "failed" }. */
+  var CATALOG_WAIT_TEXT = "Pobieram katalog z bazy...";
+  var CATALOG_FAIL_TEXT = "Nie udało się pobrać katalogu z bazy - sprawdź połączenie";
+  var CATALOG_FAIL_NOTE = "Katalog nie został jeszcze pobrany z bazy.";
+
+  function catalogState() {
+    var FI = window.DamFileIndex;
+    try {
+      return (FI && typeof FI.state === "function" && FI.state()) || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function catalogMissing(st) {
+    return !!st && (st.state === "waiting" || st.state === "failed");
+  }
+
+  /* Tekst dla widzetow zaleznych od katalogu (zamiast "Brak ..." i zer) albo "". */
+  function catalogNote(st) {
+    if (!catalogMissing(st)) return "";
+    return st.state === "waiting" ? CATALOG_WAIT_TEXT : CATALOG_FAIL_NOTE;
+  }
+
+  /* Wiersz statusu spisu: czekanie albo porazka. Gdy spis jest, wiersz maluje paintIndexMeta. */
+  function paintCatalogState(st) {
+    var el = document.getElementById("damDashIndexMeta");
+    if (!el || !catalogMissing(st)) return;
+    el.textContent =
+      st.state === "waiting" ? CATALOG_WAIT_TEXT : String(st.message || CATALOG_FAIL_TEXT);
+  }
+
+  /* Zmiana stanu pierwszego pobrania: wiersz statusu + spokojne widzety; "ready" = wypelnij. */
+  function onCatalogState(ctxRef, st) {
+    st = st || {};
+    if (!ctxRef.parts || !ctxRef.current) return;
+    if (!catalogMissing(st)) {
+      if (st.state === "ready") refreshFromIndex(ctxRef, 0, true);
+      return;
+    }
+    paintCatalogState(st);
+    var note = catalogNote(st);
+    if (ctxRef.current.catalogNote === note) return;
+    ctxRef.current.catalogNote = note;
+    var W = window.DamDashWidgets;
+    if (!(W && typeof W.isCustomizeOpen === "function" && W.isCustomizeOpen())) {
+      render(ctxRef.current);
+    }
+  }
+
+  /* Brak pliku spisu = DamFileIndex.get() czeka na pierwsze pobranie (nawet 3 minuty).
+     Pulpit nie stoi wtedy na szkielecie: bramka puszcza pierwszy obraz z pustym katalogiem
+     (zadania, koszty i reszta sa od razu), a spis doplywa sam po zdarzeniu "ready". */
+  function catalogGate() {
+    return new Promise(function (resolve) {
+      function check(st) {
+        if (!catalogMissing(st)) return;
+        paintCatalogState(st);
+        resolve(st);
+      }
+      window.addEventListener("dam:file-index-state", function (ev) {
+        check(ev && ev.detail);
+      });
+      check(catalogState());
+    });
+  }
+
+  function orEmptyCatalog(promise, gate, empty) {
+    return Promise.race([
+      promise,
+      gate.then(function () {
+        return empty;
+      })
+    ]);
+  }
+
+  /* Katalog kosztow FMCG idzie z mostu (/finance/fmcg-catalog) i zasila tylko koszt
+     miesiaca. Gdy most jest zajety (pierwsza synchronizacja na swiezym komputerze),
+     odpowiada po kilkunastu sekundach - a Pulpit stal wtedy na szkielecie z zerami, choc
+     spis mial juz w pamieci (odbior C-2.5.9-110850). Pierwszy obraz czeka na katalog
+     najwyzej FMCG_CATALOG_WAIT_MS; spozniony katalog dochodzi sam i przerysowuje siatke raz. */
+  var FMCG_CATALOG_WAIT_MS = 1500;
+  var FMCG_CATALOG_LATE = {};
+
+  function firstPaintCatalog(pCatalog) {
+    return Promise.race([
+      pCatalog,
+      new Promise(function (resolve) {
+        setTimeout(function () {
+          resolve(FMCG_CATALOG_LATE);
+        }, FMCG_CATALOG_WAIT_MS);
+      })
+    ]);
+  }
+
+  function applyLateCatalog(ctxRef, catalog) {
+    if (!catalog || !ctxRef.parts || !ctxRef.current) return false;
+    ctxRef.parts.catalog = catalog;
+    var note = ctxRef.current.catalogNote;
+    ctxRef.current = buildCtx(ctxRef.parts);
+    ctxRef.current.dashLoading = false;
+    ctxRef.current.catalogNote = note;
+    var W = window.DamDashWidgets;
+    if (!(W && typeof W.isCustomizeOpen === "function" && W.isCustomizeOpen())) {
+      render(ctxRef.current);
+    }
+    return true;
+  }
+
+  /* Nowy spis (skan na tym komputerze albo pobranie z bazy) -> Pulpit sam, bez F5.
+     keep = wez to, co loader juz ma albo wlasnie pobiera (get), bez wymuszania nowego
+     pobrania: tak wypelnia sie Pulpit po pierwszym pobraniu katalogu. */
+  function refreshFromIndex(ctxRef, attempt, keep) {
+    if (!ctxRef.parts || !window.DamFileIndex || typeof window.DamFileIndex.refresh !== "function") {
+      return Promise.resolve(false);
+    }
+    /* Dwie zmiany spisu pod rzad: liczy sie tylko ostatnie pobranie. */
+    var seq = (ctxRef.refreshSeq = (ctxRef.refreshSeq || 0) + 1);
+    return (keep ? window.DamFileIndex.get() : window.DamFileIndex.refresh())
+      .then(function (data) {
+        /* DamApi przelicza projekty, gdy DamFileIndex odda nowy obiekt spisu. */
+        var pProjects = window.DamApi
+          ? DamApi.projects().then(function (res) {
+              return (res && res.data) || [];
+            })
+          : Promise.resolve(ctxRef.parts.projects);
+        return pProjects.then(function (projects) {
+          if (seq !== ctxRef.refreshSeq) return false;
+          ctxRef.parts.fileIndex = data || {};
+          ctxRef.parts.projects = projects;
+          ctxRef.current = buildCtx(ctxRef.parts);
+          ctxRef.current.dashLoading = false;
+          if (window.DamIndexSource) window.DamIndexSource.reload();
+          paintIndexMeta(ctxRef.current.fileIndex);
+          /* ponytail: w trakcie "Dostosuj pulpit" nie przerysowujemy siatki pod reka;
+             nowe dane wejda przy Zatwierdz albo przy kolejnej zmianie spisu. */
+          var W = window.DamDashWidgets;
+          if (!(W && typeof W.isCustomizeOpen === "function" && W.isCustomizeOpen())) {
+            render(ctxRef.current);
+          }
+          return true;
+        });
+      })
+      .catch(function () {
+        /* Pobranie nie wyszlo: zostaje poprzedni spis i jego data na ekranie. Poller
+           uznal juz te zmiane za widziana, wiec ponawiamy sami: 2 razy co 15 s
+           (spis bywa wlasnie zapisywany albo serwer plikow zajety). Przy keep nie
+           ponawiamy: na brak katalogu czeka sam loader i oglasza wynik zdarzeniem. */
+        if (!keep && seq === ctxRef.refreshSeq && (attempt || 0) < 2) {
+          setTimeout(function () {
+            if (seq === ctxRef.refreshSeq) refreshFromIndex(ctxRef, (attempt || 0) + 1);
+          }, 15000);
+        }
+        return false;
+      });
+  }
+
   function wireCustomize(ctxRef) {
     var btn = document.getElementById("damDashCustomizeBtn");
     if (!btn || !window.DamDashWidgets) return;
@@ -314,20 +484,26 @@
         return { tasks: [], open: 0 };
       });
 
+    var gate = catalogGate();
+
     /* Wspolne Promise strony (dam-file-index.js) zamiast wlasnego fetch 9 MB. */
-    var pIndex = (window.DamFileIndex && typeof window.DamFileIndex.get === "function"
-      ? window.DamFileIndex.get()
-      : fetch("data/file-index.json?v=" + Date.now()).then(function (r) {
-          return r.ok ? r.json() : {};
+    var pIndex = orEmptyCatalog(
+      (window.DamFileIndex && typeof window.DamFileIndex.get === "function"
+        ? window.DamFileIndex.get()
+        : fetch("data/file-index.json?v=" + Date.now()).then(function (r) {
+            return r.ok ? r.json() : {};
+          })
+      )
+        .then(function (data) {
+          /* Nie zapisuj calego indeksu w window._DAM_FILE_INDEX (RAM + explorer freeze). */
+          return data || {};
         })
-    )
-      .then(function (data) {
-        /* Nie zapisuj calego indeksu w window._DAM_FILE_INDEX (RAM + explorer freeze). */
-        return data || {};
-      })
-      .catch(function () {
-        return {};
-      });
+        .catch(function () {
+          return {};
+        }),
+      gate,
+      {}
+    );
 
     var pCosts = fetch("data/project-costs.json?v=" + Date.now())
       .then(function (r) {
@@ -349,20 +525,29 @@
       ? DamFmcg.loadAverages()
       : Promise.resolve(null);
 
-    var pCatalog = window.DamFmcg && typeof DamFmcg.loadCatalog === "function"
+    var pCatalogReal = (window.DamFmcg && typeof DamFmcg.loadCatalog === "function"
       ? DamFmcg.loadCatalog()
-      : Promise.resolve(null);
+      : Promise.resolve(null)
+    ).catch(function () {
+      return null;
+    });
+    var pCatalog = firstPaintCatalog(pCatalogReal);
 
     var pFlags = loadVizFlags();
 
+    /* DamApi.projects() tez czeka na spis - ta sama bramka. */
     var pProjects = window.DamApi
-      ? DamApi.projects()
-          .then(function (res) {
-            return (res && res.data) || [];
-          })
-          .catch(function () {
-            return [];
-          })
+      ? orEmptyCatalog(
+          DamApi.projects()
+            .then(function (res) {
+              return (res && res.data) || [];
+            })
+            .catch(function () {
+              return [];
+            }),
+          gate,
+          []
+        )
       : Promise.resolve([]);
 
     Promise.all([pAsana, pIndex, pCosts, pRates, pFmcg, pFlags, pProjects, pCatalog]).then(
@@ -376,7 +561,7 @@
         });
         window._DAM_PROJECT_COSTS = all[2];
 
-        ctxRef.current = buildCtx({
+        ctxRef.parts = {
           asana: asana,
           fileIndex: all[1],
           projectCosts: all[2],
@@ -384,12 +569,50 @@
           fmcg: all[4],
           vizFlags: all[5],
           projects: all[6],
-          catalog: all[7]
-        });
+          catalog: all[7] === FMCG_CATALOG_LATE ? null : all[7]
+        };
+        ctxRef.current = buildCtx(ctxRef.parts);
         ctxRef.current.dashLoading = false;
+        var st0 = catalogState();
+        ctxRef.current.catalogNote = catalogNote(st0);
 
         render(ctxRef.current);
+        paintIndexMeta(ctxRef.current.fileIndex);
+        paintCatalogState(st0);
         fillSidePanel(asana);
+
+        if (all[7] === FMCG_CATALOG_LATE) {
+          pCatalogReal.then(function (catalog) {
+            applyLateCatalog(ctxRef, catalog);
+          });
+        }
+
+        window.addEventListener("dam:file-index-state", function (ev) {
+          onCatalogState(ctxRef, (ev && ev.detail) || catalogState());
+        });
+        /* Katalog doszedl miedzy bramka a pierwszym obrazem: ekran ma pusty spis, wypelnij. */
+        if (!catalogMissing(st0) && !ctxRef.parts.fileIndex.generated_at) {
+          gate.then(function () {
+            refreshFromIndex(ctxRef, 0, true);
+          });
+        }
+
+        /* Ten sam rytm co Eksplorator / Wizualizacje: wspolny poller GET /index/status. */
+        if (window.DamIndexPoller && typeof window.DamIndexPoller.create === "function") {
+          window.DamIndexPoller.create({
+            name: "dashboard",
+            statusPath: "/index/status",
+            /* Pojawienie sie spisu, ktorego nie bylo (po nieudanym pierwszym pobraniu),
+               poller sam zglasza jako zmiane (dam-index-poller.js, sawEmpty). */
+            onChange: function () {
+              var s = catalogState().state;
+              /* Na pierwsze pobranie czeka loader i sam oglosi "ready". Po porazce
+                 zmiana znacznika spisu = sprobuj od nowa (get, bez wymuszania). */
+              if (s === "waiting") return;
+              refreshFromIndex(ctxRef, 0, s === "failed");
+            }
+          });
+        }
 
         if (window.DamShell && typeof DamShell.loadAsanaTasks === "function") {
           DamShell.loadAsanaTasks(function () {});
@@ -405,5 +628,9 @@
   }
 
   // expose helpers used by legacy markup if any
-  window._DAM_DASH = { formatDate: formatDate, sectionBadge: sectionBadge };
+  window._DAM_DASH = {
+    formatDate: formatDate,
+    sectionBadge: sectionBadge,
+    paintIndexMeta: paintIndexMeta
+  };
 })();

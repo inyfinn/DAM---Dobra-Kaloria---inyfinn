@@ -3724,6 +3724,17 @@ body.geex-dashboard .dam-widget__viz-badges .dam-viz-badge {
   text-overflow: ellipsis !important;
 }
 
+/* Linia produktu (nawias z nazwy folderu, do 40 znakow) bywa dluzsza niz karta. Regula
+   wyzej juz ja zweza i ucina, ale znacznik to inline-flex (dam-primitives.css), a na nim
+   przegladarka nie rysuje wielokropka - stad inline-block tylko dla znacznika linii.
+   line-height 18px = min-height 24px minus 2 x padding-block 3px (regula media-latest),
+   zeby tekst zostal w osi znacznika. Pelna nazwa jest w dymku znacznika. */
+body.geex-dashboard .dam-widget--media-latest .dam-widget__viz-badges .dam-viz-badge--subcat {
+  display: inline-block;
+  line-height: 18px;
+  text-align: center;
+}
+
 body.geex-dashboard .dam-widget[data-widget-id="branding_latest"] .dam-widget__list--grid-2x2 {
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   gap: 10px 12px !important;

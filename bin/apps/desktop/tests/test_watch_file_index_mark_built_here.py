@@ -10,6 +10,7 @@ pomocnicze w izolacji (bez prawdziwego subprocess/build).
 from __future__ import annotations
 
 import importlib.util
+import os
 import sys
 import unittest
 from pathlib import Path
@@ -19,7 +20,10 @@ DESKTOP = Path(__file__).resolve().parents[1]
 if str(DESKTOP) not in sys.path:
     sys.path.insert(0, str(DESKTOP))
 
-WATCHER_PATH = DESKTOP.parent / "web" / "scripts" / "watch-file-index.py"
+# DAM_WATCHER_UNDER_TEST: kopia skryptu do testow mutacyjnych (prawdziwy plik zostaje nietkniety)
+WATCHER_PATH = Path(
+    os.environ.get("DAM_WATCHER_UNDER_TEST") or (DESKTOP.parent / "web" / "scripts" / "watch-file-index.py")
+)
 
 
 def _load_watcher_module():
@@ -71,7 +75,7 @@ class RcZeroGateTests(unittest.TestCase):
         import inspect
 
         src = inspect.getsource(self.watcher.rebuild_with_lock)
-        self.assertIn("if rc == 0 and out_dir is None:", src)
+        self.assertIn("if rc == 0 and out_dir is None and not unchanged:", src)  # + przyrost bez zmian nie oznacza
         self.assertIn('_mark_built_here_safe("file-index"', src)
         self.assertIn('_mark_built_here_safe("search-index"', src)
 

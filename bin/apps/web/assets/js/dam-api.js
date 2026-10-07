@@ -1326,35 +1326,14 @@
         return { status: st.status, missing_roles: st.missing_roles, mode: "offline" };
       }
     },
-    async ingestPointers(index) {
-      try {
-        return await parse(await apiFetch(API + "/ingest/pointers", {
-          method: "POST",
-          headers: authHeaders(),
-          body: JSON.stringify({ index: index || null }),
-        }));
-      } catch (e) {
-        if (!isNetworkError(e)) throw e;
-        this.offline = true;
-        _indexPromise = null;
-        _projectsCache = null;
-        if (window.DamFileIndex && typeof window.DamFileIndex.invalidate === "function") {
-          window.DamFileIndex.invalidate();
-        }
-        var pack = await loadFileIndex();
-        offlineQueuePush({ action: "ingest_pointers" });
-        return {
-          data: {
-            projects: pack.projects.length,
-            assets: pack.projects.reduce(function (n, p) {
-              return n + ((p.variants && p.variants[0] && p.variants[0].assets) || []).length;
-            }, 0),
-            viz: (pack.index && pack.index.viz_count) || 0,
-          },
-          mode: "offline",
-          source: "file-index",
-        };
+    /* Swiezy spis z serwera: pomija pamiec strony (takze pobieranie w toku) i cache
+       przegladarki. Zastapil ingestPointers (POST /ingest/pointers - trasy nie ma, 404). */
+    reloadLocalIndex: function () {
+      _indexPromise = null;
+      if (window.DamFileIndex && typeof window.DamFileIndex.invalidate === "function") {
+        window.DamFileIndex.invalidate();
       }
+      return loadFileIndex();
     },
     async notifyIntegrations(variantId) {
       try {

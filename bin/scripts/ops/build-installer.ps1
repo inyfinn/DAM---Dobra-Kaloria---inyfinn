@@ -225,8 +225,14 @@ $xfCommon = @(
 )
 
 Write-Host "Staging bin (runtime + THEME + apps + scripts + docs + agents)..."
-$xdRuntime = @($xdCommon | Where-Object { $_ -ne "data" })
+# python.old-*: kopie poprzednich runtime zostawiane przez vendor-runtime-win.ps1 (07.10.2026: 12 katalogow
+# po ok. 63 MB wjechalo do instalatora 2.5.9 - 552 MB zamiast ok. 495). Nie sa czescia programu.
+$xdRuntime = @($xdCommon | Where-Object { $_ -ne "data" }) + @("python.old-*")
 Invoke-Robo (Join-Path $BinRoot "runtime") (Join-Path $binDst "runtime") $xdRuntime $xfCommon
+$oldRuntimes = @(Get-ChildItem -LiteralPath (Join-Path $binDst "runtime") -Recurse -Directory -Filter "python.old-*" -ErrorAction SilentlyContinue)
+if ($oldRuntimes.Count -gt 0) {
+  throw ("Stare kopie runtime w staging (" + (($oldRuntimes | ForEach-Object { $_.Name }) -join ", ") + ") - Setup NIE moze wyjechac z python.old-*.")
+}
 Invoke-Robo (Join-Path $BinRoot "THEME") (Join-Path $binDst "THEME") @("__pycache__", "documentation", "*_Conflict*", "*conflict_current*") @("*.zip", "*.map", "*_Conflict*", "*conflict_current*")
 Invoke-Robo (Join-Path $BinRoot "apps\desktop") (Join-Path $binDst "apps\desktop") $xdCommon $xfCommon
 # Lustro repo w paczce: skrypty ops/qa (README do nich odsyla), dokumentacja, wykladnia agentow.
@@ -302,7 +308,16 @@ New-Item -ItemType Directory -Force -Path $webDataDst | Out-Null
 # wiec wyklucza tez sam file-index.json - przez to kazda instalacja miala
 # "Brak file-index.json (404)", pusty Eksplorer/Projekty i bridge_viz_index_404.
 # Kopie zapasowe indeksow usuwamy po kopiowaniu, dokladnym regexem.
-$xfData = $xfCommon + @(
+# 2.6.0 (decyzja wlasciciela 07.10.2026): spis katalogu NIE jedzie w instalatorze - swieza instalacja
+# pobiera go z bazy. Nazwy dokladne (bez "nazwa.*" - patrz uwaga wyzej o dopasowaniu robocopy).
+$catalogIndexFiles = @(
+  "file-index.json", "search-index.json", "campaigns.json",
+  "branding-grid-index.json", "branding-grid-head.json", "branding-search-index.json", "branding-index.json"
+)
+# Dane wewnetrzne, ktore nie sa potrzebne do startu programu i nie moga jechac w paczce (decyzja kierownika 07.10.2026):
+# branding-background-scan.json = 2 652 wpisy ze sciezkami wewnetrznych plikow.
+$internalDataFiles = @("branding-background-scan.json")
+$xfData = $xfCommon + $catalogIndexFiles + $internalDataFiles + @(
   "*.tmp", "*.log", "*.jsonl", "*.lock.json", "dam-runtime.json", "dam-identity.json",
   "_refilter-*.json", "_ocr_batch_ids.json", "warm-*.json"
 )
@@ -310,29 +325,12 @@ Invoke-Robo $webDataSrc $webDataDst @("thumbs", "_invoice_mail_stage", "__pycach
 Get-ChildItem -LiteralPath $webDataDst -File |
   Where-Object { $_.Name -match '^(branding|file|search)-index\.json\..+' } |
   Remove-Item -Force
-foreach ($req in @("file-index.json", "search-index.json")) {
-  $reqPath = Join-Path $webDataDst $req
-  if (-not (Test-Path -LiteralPath $reqPath) -or ((Get-Item -LiteralPath $reqPath).Length -lt 1000)) {
-    throw "Brak $req w staging - Setup NIE moze wyjechac (Eksplorer, Projekty i Wizualizacje beda puste)."
-  }
+# Bramka odwrotna do dawnej ("Brak file-index.json w staging"): spis w staging = blad builda.
+$catalogInStage = @($catalogIndexFiles | Where-Object { Test-Path -LiteralPath (Join-Path $webDataDst $_) })
+if ($catalogInStage.Count -gt 0) {
+  throw ("Spis katalogu w staging (" + ($catalogInStage -join ", ") + ") - Setup NIE moze wyjechac ze spisem z dnia builda; swieza instalacja pobiera go z bazy.")
 }
-Write-Host "Indeksy OK: file-index.json $((Get-Item (Join-Path $webDataDst 'file-index.json')).Length) B"
-$headSrc = Join-Path $webDataSrc "branding-grid-head.json"
-$indexDst = Join-Path $webDataDst "branding-grid-index.json"
-if ((-not (Test-Path -LiteralPath $indexDst) -or ((Get-Item -LiteralPath $indexDst).Length -lt 1000)) -and (Test-Path -LiteralPath $headSrc)) {
-  Copy-Item -LiteralPath $headSrc -Destination $indexDst -Force
-  Write-Host "Staged branding-grid-index.json from head (slim)."
-}
-$headDst = Join-Path $webDataDst "branding-grid-head.json"
-if (-not (Test-Path -LiteralPath $headDst)) {
-  throw "Brak branding-grid-head.json — Setup NIE moze wyjechac z pustym Brandingiem."
-}
-if ((Get-Item -LiteralPath $headDst).Length -lt 1000) {
-  throw "branding-grid-head.json jest stubem (<1 KB) — Setup NIE moze wyjechac."
-}
-if (-not (Test-Path -LiteralPath $indexDst) -or ((Get-Item -LiteralPath $indexDst).Length -lt 1000)) {
-  throw "branding-grid-index.json pusty/brak — Setup NIE moze wyjechac."
-}
+Write-Host "Spis katalogu: nie pakowany (lista produktow, wyszukiwarki, kampanie i siatka materialow przyjda z bazy przy pierwszym uruchomieniu)."
 New-Item -ItemType Directory -Force -Path (Join-Path $webDataDst "thumbs") | Out-Null
 $deskDataDst = Join-Path $binDst "apps\desktop\data"
 New-Item -ItemType Directory -Force -Path $deskDataDst | Out-Null
@@ -389,16 +387,6 @@ if (Test-Path -LiteralPath $usersSeedSrc) {
 $readmeDb = Join-Path $BinRoot "DATABASE\README.md"
 if (Test-Path -LiteralPath $readmeDb) {
   Copy-Item -LiteralPath $readmeDb -Destination (Join-Path $binDst "DATABASE\README.md") -Force
-}
-if (-not (Test-Path -LiteralPath (Join-Path $webDataDst "branding-index.json"))) {
-  # -Encoding UTF8 w Windows PowerShell 5.1 dopisuje BOM: ijson (build-branding-grid-index.py)
-  # padal na tym IncompleteJSONError zamiast zwrocic pusta liste - most nigdy nie odzyskiwal
-  # lokalnych skojarzen po instalacji, bo auto-naprawa siatki przy starcie zawsze konczyla sie rc=1.
-  [IO.File]::WriteAllText(
-    (Join-Path $webDataDst "branding-index.json"),
-    '{"version":1,"assets":[],"note":"slim-only-installer-use-branding-grid-head"}',
-    (New-Object Text.UTF8Encoding $false)
-  )
 }
 
 # Obrazy logowania + ikony — bez tego WebView pokazuje broken image.

@@ -37,8 +37,39 @@
   var BRANDING_SORT_DEFAULT = "newest";
 
   /** PI branding.grid_excludes_product_visualizations + viz.assoc_no_visualization_loop defense-in-depth. */
+  /* Lustro reguly z web/scripts/branding_scope.py (ta sama tabela przypadkow: scripts/tests/branding_scope_cases.json).
+     Katalogi techniczne (kopie wersji programu "Stworz prezentacje", _robocze) nie sa materialami marki; wiersze zostaja
+     w bazie, tu tylko ich nie pokazujemy (takze ze starej siatki sprzed przebudowy). Folder "SZABLON AI - skrypt"
+     (program) wypada w CALOSCI, nie tylko WORK (07.10.2026). */
+  function brandingScopeSeg(s) {
+    return String(s).normalize("NFC").replace(/[\u2010-\u2015\u2212]/g, "-").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+
+  function isBrandingScopeExcluded(path) {
+    if (!path) return false;
+    var low = String(path).toLowerCase();
+    /* Tania bramka (rozbijanie i normalizacja segmentow kosztowaly ok. 350 ms na przebieg po 70 tys. wierszy):
+       regula dotyczy tylko segmentow "_robocze" i drzewa "prezentacje", a dla pozostalych sciezek wynik to zawsze false. */
+    if (low.indexOf("_robocze") === -1 && low.indexOf("prezentacje") === -1) return false;
+    var parts = String(path).split(/[\\/]+/).filter(Boolean).map(brandingScopeSeg);
+    if (parts.indexOf("_robocze") !== -1) return true;
+    var lastSeg = parts[parts.length - 1] || "";
+    if ((lastSeg.indexOf("~$") === 0 || lastSeg.indexOf("._") === 0 || /^(thumbs\.db|\.ds_store|desktop\.ini)$/.test(lastSeg)) && presentationTail(path)) {
+      return true; /* smieci (~$ = blokada otwartej prezentacji) tylko w firmowym drzewie PREZENTACJE */
+    }
+    var start = parts.indexOf("prezentacje");
+    if (start === -1) return false;
+    var tail = parts.slice(start + 1);
+    for (var i = 0; i < tail.length; i++) {
+      if (tail[i] === "pliki programu" || tail[i] === "skill-prezentacje") return true;
+      if (/^[-\s]*szablon ai[\s-]*skrypt$/.test(tail[i])) return true;
+    }
+    return false;
+  }
+
   function isBrandingGridEligible(a) {
     if (!a) return false;
+    if (isBrandingScopeExcluded(a.path)) return false;
     var role = String(a.asset_role || "").toLowerCase();
     if (role === "packshot") return false;
     var src = String(a.source || "").toLowerCase();
@@ -55,6 +86,111 @@
 
   function filterEligibleGridAssets(list) {
     return (list || []).filter(isBrandingGridEligible);
+  }
+
+  /* Karty prezentacji (07.10.2026). W firmowym drzewie "02 - FIRMOWE MATERIALY\PREZENTACJE" jeden FOLDER prezentacji =
+     jedna karta: tytul = nazwa folderu, plik glowny = prezentacja (najnowsza), reszta folderu (badania, copy,
+     statystyki, grafiki, inne wersje prezentacji) = warianty ("+N", lista "Pokaz warianty"). _robocze i folder
+     programu wypadaja wczesniej (isBrandingScopeExcluded). Folder prezentacji = folder tuz pod PREZENTACJE; gdy sam
+     nie ma prezentacji, a maja je podfoldery, to najplytszy podfolder z prezentacja. Luzny plik w PREZENTACJE =
+     osobna karta. Kotwica to PARA segmentow (firmowe materialy + prezentacje): archiwum "...\Prezentacje" bez zmian.
+     Lustro branding_scope.presentation_tail; tabela scripts/tests/presentation_tree_cases.json. */
+  var PRESENTATION_FILE_RE = /\.(pptx|ppt|key|odp)$/i;
+  var presentationDirsCache = { arr: null, len: -1, dirs: null };
+
+  function presentationTail(path) {
+    var s = String(path || "");
+    if (s.toLowerCase().indexOf("prezentacje") === -1) return null;
+    var parts = s.split(/[\\/]+/).filter(Boolean);
+    for (var i = 0; i < parts.length - 1; i++) {
+      if (
+        brandingScopeSeg(parts[i]) === "02 - firmowe materia\u0142y" &&
+        brandingScopeSeg(parts[i + 1]) === "prezentacje"
+      ) {
+        return parts.slice(i + 2);
+      }
+    }
+    return null;
+  }
+
+  function isPresentationTreePath(path) {
+    var tail = presentationTail(path);
+    return !!(tail && tail.length) && !isBrandingScopeExcluded(path);
+  }
+
+  function isPresentationFileName(name) {
+    return PRESENTATION_FILE_RE.test(String(name || ""));
+  }
+
+  /** Foldery (znormalizowane, wzgledem PREZENTACJE), ktore BEZPOSREDNIO zawieraja plik prezentacji; z calego indeksu,
+      zeby karta nie zmieniala sie od filtrow. */
+  function presentationDirs() {
+    var arr = (index && index.assets) || null;
+    if (!arr) return Object.create(null);
+    if (presentationDirsCache.arr === arr && presentationDirsCache.len === arr.length) return presentationDirsCache.dirs;
+    var dirs = Object.create(null);
+    for (var i = 0; i < arr.length; i++) {
+      var a = arr[i];
+      if (!a || !isPresentationFileName(a.name || a.path)) continue;
+      var tail = presentationTail(a.path);
+      if (!tail || tail.length < 2 || isBrandingScopeExcluded(a.path)) continue;
+      dirs[tail.slice(0, -1).map(brandingScopeSeg).join("/")] = 1;
+    }
+    presentationDirsCache = { arr: arr, len: arr.length, dirs: dirs };
+    return dirs;
+  }
+
+  /** { key, title } karty prezentacji, do ktorej nalezy plik; null poza drzewem PREZENTACJE (zachowanie bez zmian). */
+  function presentationCard(a) {
+    var path = a && a.path;
+    var tail = presentationTail(path);
+    if (!tail || !tail.length || isBrandingScopeExcluded(path)) return null;
+    if (tail.length === 1) {
+      return { key: "pres-file:" + String(path).replace(/\\/g, "/").toLowerCase(), title: String(tail[0]).replace(/\.[a-z0-9]+$/i, "") };
+    }
+    var dirs = presentationDirs();
+    var norm = tail.slice(0, -1).map(brandingScopeSeg);
+    var depth = 1;
+    for (var k = 1; k <= norm.length; k++) {
+      if (dirs[norm.slice(0, k).join("/")]) {
+        depth = k;
+        break;
+      }
+    }
+    return { key: "pres:" + norm.slice(0, depth).join("/"), title: tail[depth - 1] };
+  }
+
+  function presentationGroupLabel(assets) {
+    var first = presentationCard(assets && assets[0]);
+    if (!first) return "";
+    for (var i = 1; i < assets.length; i++) {
+      var c = presentationCard(assets[i]);
+      if (!c || c.key !== first.key) return "";
+    }
+    return first.title;
+  }
+
+  /** Plik glowny karty prezentacji: najnowsza prezentacja (.pptx .ppt .key .odp); gdy brak - najnowszy .pdf; gdy brak -
+      najnowsza grafika (image/vector; dokument w "Tylko grafiki" nie moze zostac twarza karty); inaczej null (zwykla
+      regula). Dziala tylko, gdy WSZYSTKIE pliki sa z drzewa PREZENTACJE. */
+  function pickPrimaryPresentation(assets) {
+    var pres = [];
+    var pdfs = [];
+    var gfx = [];
+    for (var i = 0; i < assets.length; i++) {
+      var a = assets[i];
+      if (!a) continue;
+      if (!isPresentationTreePath(a.path)) return null;
+      if (isPresentationFileName(a.name || a.path)) pres.push(a);
+      else if (/\.pdf$/i.test(a.name || a.path || "")) pdfs.push(a);
+      else if (isGraphicMedia(a) && !isSourceEditableAsset(a)) gfx.push(a);
+    }
+    var pool = pres.length ? pres : pdfs.length ? pdfs : gfx;
+    if (!pool.length) return null;
+    return pool.slice().sort(function (x, y) {
+      var d = brandingAssetMtimeMs(y) - brandingAssetMtimeMs(x);
+      return d || String(x.name || "").localeCompare(String(y.name || ""), "pl");
+    })[0];
   }
 
   function hidePackshotsTab() {
@@ -309,14 +445,20 @@
     return 0;
   }
 
+  /** true, gdy data materialu faktycznie sie zmienila (po tym warto przerysowac, wczesniej nie). */
   function mergeBrandingMtime(target, fat) {
-    if (!target || !fat) return;
+    if (!target || !fat) return false;
+    var changed = false;
     var ms = Number(fat.mtime_ms);
-    if (ms && isFinite(ms)) target.mtime_ms = ms;
+    if (ms && isFinite(ms)) {
+      if (Number(target.mtime_ms) !== ms) changed = true;
+      target.mtime_ms = ms;
+    }
     if (fat.mtime) target.mtime = fat.mtime;
     if (!target.path && fat.path) target.path = fat.path;
     if (!target.name && fat.name) target.name = fat.name;
     target.__damMtimeDiskFresh = true;
+    return changed;
   }
 
   function brandingAssetLooksLikeTuba(a) {
@@ -331,6 +473,14 @@
     var assets = (data && data.assets) || [];
     var byId = Object.create(null);
     var tubaIds = [];
+    var prioIds = [];
+    var priority = null;
+    if (opts.priorityIds && opts.priorityIds.length) {
+      priority = Object.create(null);
+      opts.priorityIds.forEach(function (pid) {
+        priority[String(pid)] = 1;
+      });
+    }
     var need = [];
     var i;
     var a;
@@ -338,12 +488,16 @@
       a = assets[i];
       if (!a || !a.id) continue;
       byId[String(a.id)] = a;
-      if (!opts.forceDisk && !opts.force && brandingAssetMtimeMs(a) && a.__damMtimeDiskFresh) continue;
-      if (!opts.forceDisk && !opts.force && brandingAssetMtimeMs(a)) continue;
-      if (brandingAssetLooksLikeTuba(a)) tubaIds.push(String(a.id));
-      else need.push(String(a.id));
+      /* Data jest w indeksie (wiersze katalogu): mostu o nia nie pytamy. 07.10.2026: "forceDisk" pytal o KAZDY
+         material (676 zapytan po 120 = 81 tys. id, a siatka ma daty od razu) i zacinal start; zapytanie ma sens
+         tylko dla materialow BEZ daty - wtedy jedynym zrodlem jest dysk. */
+      if (brandingAssetMtimeMs(a) > 0) continue;
+      var sid = String(a.id);
+      if (priority && priority[sid]) prioIds.push(sid);
+      else if (brandingAssetLooksLikeTuba(a)) tubaIds.push(sid);
+      else need.push(sid);
     }
-    var ordered = tubaIds.concat(need);
+    var ordered = prioIds.concat(tubaIds, need);
     if (maxIds && ordered.length > maxIds) ordered = ordered.slice(0, maxIds);
     return { ids: ordered, byId: byId };
   }
@@ -414,13 +568,10 @@
         rows.forEach(function (list) {
           (list || []).forEach(function (fat) {
             if (!fat || !fat.id) return;
-            mergeBrandingMtime(pack.byId[String(fat.id)], fat);
+            if (mergeBrandingMtime(pack.byId[String(fat.id)], fat) && opts.stats) opts.stats.changed++;
           });
         });
         done += slice.length;
-        if (opts.onProgress && chunks.length > 1) {
-          opts.onProgress(Math.min(done, chunks.length), chunks.length);
-        }
         return runAt(offset + PARALLEL);
       });
     }
@@ -432,22 +583,17 @@
     if (!index || !index.assets) return Promise.resolve();
     if (index.__damMtimesEnriched && !opts.force) return Promise.resolve();
     if (brandingMtimeHydratePromise && !opts.force) return brandingMtimeHydratePromise;
-    var statusEl = document.getElementById("damBrandingStatus");
-    var prevStatus = statusEl ? statusEl.textContent : "";
+    /* Bez wiersza statusu ("Daty plikow: x/y"): dociaganie dat idzie w tle i nie zaslania wlasciwego statusu. */
+    var stats = { changed: 0 };
     brandingMtimeHydratePromise = enrichBrandingMtimes(index, {
       maxIds: opts.maxIds || 0,
       force: !!opts.force,
-      forceDisk: !!opts.forceDisk,
-      onProgress: function (done, total) {
-        if (!statusEl || total < 2) return;
-        statusEl.textContent = "Daty plików: " + done + "/" + total + "…";
-      },
+      priorityIds: opts.priorityIds,
+      stats: stats,
     })
       .then(function () {
-        clearBrandingComputeCache();
-        if (statusEl && prevStatus && !prevStatus.match(/Daty plików/)) {
-          statusEl.textContent = prevStatus;
-        }
+        if (index) index.__damMtimeChanged = (index.__damMtimeChanged || 0) + stats.changed;
+        if (stats.changed) clearBrandingComputeCache();
         return index;
       })
       .finally(function () {
@@ -456,9 +602,21 @@
     return brandingMtimeHydratePromise;
   }
 
+  function visibleBrandingIds() {
+    return (currentGridAssets || []).slice(0, 200).map(function (a) {
+      return a && a.id;
+    });
+  }
+
+  /** Daty brakujace w indeksie dociagamy w tle (najpierw te z widocznej strony); przerysowanie RAZ i tylko, gdy
+   *  jakas data sie zmienila - karty nie skacza przy kazdej paczce. */
   function scheduleBrandingMtimeHydrate(opts) {
     opts = opts || {};
-    ensureBrandingMtimesReady(Object.assign({ forceDisk: true }, opts)).then(function () {
+    ensureBrandingMtimesReady(
+      Object.assign({ maxIds: 800, priorityIds: visibleBrandingIds() }, opts)
+    ).then(function () {
+      if (!index || !index.__damMtimeChanged) return;
+      index.__damMtimeChanged = 0;
       clearBrandingComputeCache();
       scheduleBrandingRender({ tags: true, section: true });
     });
@@ -640,6 +798,8 @@
     opts = opts || {};
     var q = opts.searchQuery != null ? opts.searchQuery : elVal("damBrandingSearch").toLowerCase();
     if (!graphicsOnlyActive()) return true;
+    /* Drzewo PREZENTACJE: karta = folder prezentacji, a badania/copy/dokumenty sa jej wariantami - "Tylko grafiki" ich nie odcina. */
+    if (isPresentationTreePath(a.path)) return true;
     /* Aktywne wyszukiwanie: archiwum / źródła (.ai) pasujące do zapytania (np. gazetka). */
     if (!opts.ignoreSearchBypass && q && assetMatchesSearchQuery(a, q)) {
       if (
@@ -1210,6 +1370,111 @@
     /* Indeks wolny: utrzymuj skeleton w siatce (nie zostawiaj pustego paska statusu). */
     if (!index && msg) showInitialBootSkeletons();
   }
+
+  /* GRID_WAIT_BEGIN
+     Swieza instalacja nie wozi siatki (branding-grid-*): powstaje z wierszy bazy po pierwszym pobraniu katalogu.
+     Dopoki jej nie ma: "Pobieram materialy marki z bazy..." i ponowienie samo - po zdarzeniu pollera
+     /branding/status albo co 5 s do 10 min; potem komunikat z ponowieniem na klik. */
+  var GRID_WAIT_MAX_MS = 10 * 60 * 1000;
+  var GRID_WAIT_STEP_MS = 5000;
+
+  function brandingText(key, fallback) {
+    if (window.DamI18n && typeof window.DamI18n.t === "function") {
+      var v = window.DamI18n.t(key);
+      if (v && v !== key) return v;
+    }
+    return fallback;
+  }
+
+  function gridPendingText() {
+    return brandingText("branding.grid_pending", "Pobieram materiały marki z bazy…");
+  }
+
+  function brandingStatusGeneration(st) {
+    if (st && st.generation_id) return String(st.generation_id);
+    if (st && st.grid && st.grid.generation_id) return String(st.grid.generation_id);
+    return window.DamIndexPoller.pickGeneration(st);
+  }
+
+  function startGridWaitPoller(onChange) {
+    try {
+      if (window.DamIndexPoller && typeof window.DamIndexPoller.create === "function") {
+        return window.DamIndexPoller.create({
+          name: "branding-wait",
+          statusPath: "/branding/status",
+          intervalMs: GRID_WAIT_STEP_MS,
+          initialDelayMs: 500,
+          getGeneration: brandingStatusGeneration,
+          onChange: onChange,
+        });
+      }
+    } catch (ePoll) {
+      /* sam licznik 5 s wystarczy */
+    }
+    return null;
+  }
+
+  async function loadIndexPatient() {
+    var deadline = Date.now() + GRID_WAIT_MAX_MS;
+    var wake = null;
+    var poller = null;
+    var attempt = 0;
+    try {
+      for (;;) {
+        try {
+          return await loadIndex({ quiet: attempt > 0 });
+        } catch (eGrid) {
+          if (Date.now() >= deadline) {
+            eGrid.damGridWait = true;
+            throw eGrid;
+          }
+          attempt++;
+          setBootStatus(gridPendingText());
+          if (!poller) {
+            poller = startGridWaitPoller(function () {
+              if (wake) wake();
+            });
+          }
+          await new Promise(function (resolve) {
+            var timer = setTimeout(resolve, GRID_WAIT_STEP_MS);
+            wake = function () {
+              clearTimeout(timer);
+              resolve();
+            };
+          });
+          wake = null;
+        }
+      }
+    } finally {
+      if (poller && typeof poller.stop === "function") poller.stop();
+    }
+  }
+
+  function showGridFailure() {
+    var msg = brandingText(
+      "branding.grid_failed",
+      "Nie udało się przygotować materiałów marki - sprawdź połączenie."
+    );
+    var retry = brandingText("branding.grid_retry", "Spróbuj ponownie");
+    setBootStatus("");
+    ["damBrandingGrid", "damBrandingSectionGrid"].forEach(function (id) {
+      var host = document.getElementById(id);
+      if (!host) return;
+      host.innerHTML =
+        '<p class="dam-branding-muted">' +
+        esc(msg) +
+        '</p><button type="button" class="dam-branding-clear-btn" data-dam-grid-retry="1">' +
+        esc(retry) +
+        "</button>";
+      var btn = host.querySelector("[data-dam-grid-retry]");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          location.reload();
+        });
+      }
+    });
+  }
+  /* GRID_WAIT_END */
 
   function responseJsonOffMain(r, label) {
     return r.text().then(function (text) {
@@ -1890,6 +2155,8 @@
   }
 
   function marketingGroupKey(a) {
+    var presCard = presentationCard(a);
+    if (presCard) return presCard.key;
     var dir = pathDirname(a.path);
     var folderName = pathBasename(dir);
     if (/^gotowe$/i.test(folderName)) {
@@ -1962,6 +2229,8 @@
   }
 
   function marketingGroupLabel(assets) {
+    var presLabel = presentationGroupLabel(assets);
+    if (presLabel) return presLabel;
     var primary = pickPrimaryMarketing(assets) || assets[0];
     if (!primary) return "Materiał";
     if ((assets || []).length > 1 && (assets || []).every(isLogoFolderAsset)) {
@@ -2077,6 +2346,8 @@
   function pickPrimaryMarketing(assets) {
     assets = (assets || []).filter(Boolean);
     if (!assets.length) return null;
+    var presPrimary = pickPrimaryPresentation(assets);
+    if (presPrimary) return presPrimary;
     var clean = assets.filter(function (a) {
       return !isProductVizLike(a);
     });
@@ -2139,6 +2410,19 @@
     });
     return order.map(function (key) {
       var bucket = byKey[key] || [];
+      if (/^pres(?:-file)?:/.test(key)) {
+        /* karta prezentacji: zawsze grupa (takze 1 plik), plik glowny = prezentacja */
+        var presSorted = bucket.slice().sort(function (a, b) {
+          return String(a.name || "").localeCompare(String(b.name || ""), "pl");
+        });
+        return {
+          type: "group",
+          presentation: true,
+          assets: presSorted,
+          primary: pickPrimaryMarketing(presSorted),
+          label: marketingGroupLabel(presSorted),
+        };
+      }
       if (bucket.some(isLogoFolderAsset)) {
         var logosOnly = bucket.filter(function (a) {
           return !isProductVizLike(a);
@@ -3779,7 +4063,7 @@
       clearBrandingComputeCache();
       return index;
     }
-    setBootStatus("Ładowanie siatki…");
+    if (!opts.quiet) setBootStatus("Ładowanie siatki…");
     var headUrls = [
       "data/branding-grid-head.json?v=" + CB,
       bridgeUrl() + "/branding-grid-head?v=" + CB,
@@ -3873,7 +4157,7 @@
         lastErr = eLoad;
       }
     }
-    setBootStatus("Brak branding-grid-index. Uruchom build-branding-grid-index.");
+    setBootStatus(gridPendingText());
     throw lastErr || new Error("branding-grid-index");
   }
 
@@ -4083,6 +4367,7 @@
   }
 
   function groupEntrySortMs(entry) {
+    if (entry && entry.presentation && entry.primary) return assetDateMsForFilter(entry.primary);
     var assets = (entry && entry.assets) || [];
     var best = 0;
     var i;
@@ -4279,7 +4564,8 @@
             facet[key] += 1;
             /* Elementy = odrebne grupy folderowe (karty) - liczone raz na asset */
             if (!groupKey) {
-              groupKey = a.folder_group_id || marketingGroupKey(a);
+              var presFacet = presentationCard(a);
+              groupKey = presFacet ? presFacet.key : a.folder_group_id || marketingGroupKey(a);
             }
             var set = facetElSets[key] || (facetElSets[key] = {});
             if (!set[groupKey]) {
@@ -4418,6 +4704,7 @@
 
   function brandingCardTypeMeta(a) {
     if (!a) return "";
+    if (isPresentationFileName(a.name || a.path)) return "Prezentacja";
     if (a.media_type === "video") return "Wideo";
     if (/slider/i.test(a.asset_role || "") || /slider/i.test(a.name || "")) return "Slider";
     if (a.asset_role === "banner") return "Baner";
@@ -4482,25 +4769,20 @@
   function thumbStackHtml(assets, primary) {
     var p = primary || pickPrimaryMarketing(assets) || assets[0];
     /* front = ten sam plik co tytul karty (jak w cardHtml) */
-    var thumbPrimary =
-      p && /\.(png|jpe?g|webp|gif|tiff?|psd|psb|bmp)$/i.test(p.path || p.name || "") && !isLogoFolderAsset(p)
+    var presFront = !!p && isPresentationTreePath(p.path);
+    var thumbPrimary = presFront
+      ? p
+      : p && /\.(png|jpe?g|webp|gif|tiff?|psd|psb|bmp)$/i.test(p.path || p.name || "") && !isLogoFolderAsset(p)
         ? p
         : pickThumbAsset(assets) || p;
-    var second = assets.find(function (a) {
-      return a && p && a.id !== p.id && /\.(png|jpe?g|webp)$/i.test(a.name || "") && !isProductVizLike(a);
-    });
-    var html = '<div class="dam-branding-thumb-stack">';
-    if (second) {
-      html +=
-        '<div class="dam-branding-thumb-stack__layer dam-branding-thumb-stack__layer--back">' +
-        thumbHtml(second, assets) +
-        "</div>";
-    }
-    html +=
+    /* Jedna miniatura = glowny plik grupy (ten sam co tytul karty). Dawna warstwa tylna (drugi plik grupy pod
+       przodem, przesuniety o 5 px) przeswitywala przez przezroczyste PNG - wlasciciel 07.10.2026. Licznik "+N" zostaje. */
+    return (
+      '<div class="dam-branding-thumb-stack">' +
       '<div class="dam-branding-thumb-stack__layer dam-branding-thumb-stack__layer--front">' +
-      thumbHtml(thumbPrimary, assets) +
-      "</div></div>";
-    return html;
+      thumbHtml(thumbPrimary, presFront ? [thumbPrimary] : assets) +
+      "</div></div>"
+    );
   }
 
   /* 2026-09-22: karty GRUP (+28, +4...) byly puste bez folderu Marketing. pickThumbAsset
@@ -4595,6 +4877,14 @@
         "</span></div>"
       );
     }
+    if (isPresentationFileName(a.name || a.path)) {
+      return (
+        '<div class="dam-viz-thumb__noviz dam-branding-thumb__icon">' +
+        '<i class="uil uil-presentation-play" aria-hidden="true"></i><span>' +
+        esc(String(a.name || a.path).split(".").pop().toUpperCase()) +
+        "</span></div>"
+      );
+    }
     return (
       '<div class="dam-viz-thumb__noviz dam-branding-thumb__icon">' +
       '<i class="uil uil-file" aria-hidden="true"></i><span>' +
@@ -4665,10 +4955,50 @@
     );
   }
 
+  /* Karta prezentacji: rozwijana lista pozostalych plikow folderu z typem pliku. Ten sam szkielet co "Pokaz indeksy"
+     (kotwica, przycisk, wrap), wiec rozwijanie i ignorowanie klikow w karcie dzialaja bez zmian. */
+  function presentationVariantsBlockHtml(primary, assets) {
+    var rest = (assets || []).filter(function (x) {
+      return x && x !== primary && (!primary || x.id !== primary.id);
+    });
+    if (!rest.length) return "";
+    var rank = function (x) {
+      var n = String(x.name || "");
+      return isPresentationFileName(n) ? 0 : /\.(docx?|xlsx?|pdf|txt|md|csv)$/i.test(n) ? 1 : 2;
+    };
+    rest.sort(function (a, b) {
+      return rank(a) - rank(b) || String(a.name || "").localeCompare(String(b.name || ""), "pl");
+    });
+    var rows = rest
+      .map(function (x) {
+        var m = String(x.name || "").match(/\.([a-z0-9]+)$/i);
+        var ext = m ? m[1].toUpperCase() : "PLIK";
+        return (
+          '<span class="dam-viz-badge dam-viz-badge--meta dam-viz-card__variant-item" role="listitem" title="' +
+          esc(x.name) +
+          '"><b class="dam-viz-card__variant-type">' +
+          esc(ext) +
+          '</b><span class="dam-viz-card__variant-name">' +
+          esc(x.name) +
+          "</span></span>"
+        );
+      })
+      .join("");
+    return (
+      '<div class="dam-viz-card__indexes-anchor">' +
+      '<button type="button" class="geex-btn geex-btn--sm dam-btn-icon dam-viz-card__show-indexes" data-dam-tip="Pokaż pozostałe pliki folderu prezentacji: badania, copy, statystyki, grafiki" aria-expanded="false">' +
+      '<i class="uil uil-layer-group" aria-hidden="true"></i><span>Pokaż warianty</span></button>' +
+      '<div class="dam-viz-card__indexes-wrap" role="list" hidden>' +
+      rows +
+      "</div></div>"
+    );
+  }
+
   function groupCardHtml(entry, gridOpts) {
     gridOpts = gridOpts || {};
     var isKv = gridOpts.groupMode === "keyvisuale";
     var isProject = gridOpts.groupMode === "project";
+    var isPres = !!entry.presentation;
     var assets = entry.assets || [];
     var primary = pickPrimaryMarketing(assets) || entry.primary || assets[0];
     if (!primary) return "";
@@ -4683,16 +5013,20 @@
       })
       .join(",");
     var displayAssets = brandingCardDisplayAssets(assets);
-    var displayCount = displayAssets.length || assets.length;
+    /* Karta prezentacji: "+N" = WSZYSTKIE pozostale pliki folderu (takze badania, copy, dokumenty), nie tylko grafiki. */
+    var displayCount = isPres ? assets.length : displayAssets.length || assets.length;
     var groupTitle = resolveAssetDisplayTitle(primary, entry.label || primary.name);
     var groupMeta = brandingCardTypeMeta(primary);
-    var cardTitle = isProject
+    var cardTitle = isPres
+      ? "Kliknij, aby otworzyć prezentację"
+      : isProject
       ? "Kliknij, aby przejrzeć pliki projektu"
       : isKv
         ? "Kliknij, aby przejrzeć wizualizacje produktu"
         : "Kliknij, aby przejrzeć warianty materiału";
     return (
       '<article class="dam-viz-card dam-branding-card dam-branding-card--group dam-viz-card--clickable' +
+      (isPres ? " dam-branding-card--presentation" : "") +
       (tileCls ? " " + tileCls : "") +
       '" data-id="' +
       esc(primary.id) +
@@ -4712,7 +5046,7 @@
       brandingCardTitleHtml(groupTitle, brandingCardSubtitle(primary, groupTitle), "", primary) +
       brandingCardMetaHtml(groupMeta || hint || "Materiał", metaAssetIdsForCard(primary, assets)) +
       '<div class="dam-viz-card__footer">' +
-      brandingCardIndexBlockHtml(assets) +
+      (isPres ? presentationVariantsBlockHtml(primary, assets) : brandingCardIndexBlockHtml(assets)) +
       brandingCardActionsHtml(primary) +
       "</div>" +
       "</div></article>"
@@ -6739,13 +7073,13 @@
       // Instant: first card z slim; search-index (~41MB) lazy po siatce / on-demand.
       var searchPromise = null;
       performance.mark("dam-branding-boot-start");
-      await Promise.all([loadIndex(), loadAssociations(), loadTokens()]);
-      setBootStatus("Skan strony WWW…");
-      await mergeLiveWwwScanAssets();
-      if (needsMtimeHydration()) {
-        setBootStatus("Daty plików…");
-        await ensureBrandingMtimesReady({ force: true, forceDisk: true, maxIds: 800 });
-      }
+      await Promise.all([loadIndexPatient(), loadAssociations(), loadTokens()]);
+      /* Siatka od razu, z datami z indeksu. Skan WWW (kilka sekund na dysku sieciowym) i brakujace daty ida W TLE;
+         przerysowanie tylko, gdy cos sie zmienilo. */
+      mergeLiveWwwScanAssets().then(function (added) {
+        if (added) scheduleBrandingRender({ tags: true, section: true });
+      });
+      if (needsMtimeHydration()) scheduleBrandingMtimeHydrate();
       clearBootSkeletonBusy();
       performance.mark("dam-branding-index-ready");
       var rebuild = document.getElementById("damBrandingRebuild");
@@ -6895,6 +7229,10 @@
       bindBrandingIndexPoller();
       scheduleMetaFiltersReveal();
     } catch (e) {
+      if (e && e.damGridWait) {
+        showGridFailure();
+        return;
+      }
       var grid = document.getElementById("damBrandingGrid");
       if (grid) grid.innerHTML = '<p class="dam-branding-muted">Błąd: ' + esc(e.message) + "</p>";
       var sectionGrid = document.getElementById("damBrandingSectionGrid");

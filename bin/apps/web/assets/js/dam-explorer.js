@@ -1812,7 +1812,9 @@
     });
   }
 
-  function showExplorerIndexError(detail) {
+  /* plain = sam komunikat i przycisk, bez dopisku o lokalnej usludze (usluga dziala,
+     to katalog nie przyszedl z bazy). */
+  function showExplorerIndexError(detail, plain) {
     var msg = detail || "Nie załadowano indeksu.";
     if (typeof console !== "undefined" && console.warn) {
       console.warn("[DamExplorer] index load failed:", msg);
@@ -1820,7 +1822,10 @@
     var html =
       '<div class="dam-explorer-empty"><p style="color:var(--dam-danger, #FF5653)">' +
       esc(msg) +
-      "</p><p>Lokalna usługa DAM nie odpowiada. Upewnij się, że aplikacja działa (skrót na pulpicie), potem spróbuj ponownie.</p>" +
+      "</p>" +
+      (plain
+        ? ""
+        : "<p>Lokalna usługa DAM nie odpowiada. Upewnij się, że aplikacja działa (skrót na pulpicie), potem spróbuj ponownie.</p>") +
       '<p><button type="button" class="geex-btn geex-btn--primary" data-dam-explorer-retry="1">Spróbuj ponownie</button></p></div>';
     var folder = document.getElementById("damFolderList");
     if (folder && explorerFolderEmpty()) folder.innerHTML = html;
@@ -1853,6 +1858,7 @@
         if (isAbortLike(err) && document.visibilityState !== "hidden") {
           return startExplorerIndexBind("retry-abort");
         }
+        if (handleCatalogMissing(err, "retry")) return;
         setStatus("Błąd indeksu: " + (err && err.message ? err.message : err));
         showExplorerIndexError(err && err.message ? err.message : "timeout");
       })
@@ -1861,6 +1867,117 @@
         unlockExplorerBoot();
       });
   }
+
+  /* ---- Swiezy komputer: katalog dopiero idzie z bazy ----------------------------------
+     Most odpowiada wtedy 404 na /file-index (pliku spisu jeszcze nie ma). To nie awaria:
+     spokojny tekst i ciche ponawianie co 3 s, najwyzej 3 minuty. Bez pobierania przez loader
+     (pelny spis to 9 MB); stan loadera tylko czytamy, gdy inny skrypt strony juz czeka. */
+  var CATALOG_WAIT_TEXT = "Pobieram katalog z bazy...";
+  var CATALOG_FAIL_TEXT = "Nie udało się pobrać katalogu z bazy - sprawdź połączenie";
+  var CATALOG_RETRY_MS = 3000;
+  var CATALOG_WAIT_MAX_MS = 180000;
+  var catalogWait = { since: 0, timer: null, reason: "", failSeen: -1 };
+
+  function catalogLoaderState() {
+    try {
+      var FI = window.DamFileIndex;
+      return (FI && typeof FI.state === "function" && FI.state()) || {};
+    } catch (eSt) {
+      return {};
+    }
+  }
+
+  function isCatalogMissingError(err) {
+    return /_404$/.test(String((err && err.message) || err || ""));
+  }
+
+  function stopCatalogWait() {
+    clearTimeout(catalogWait.timer);
+    catalogWait.timer = null;
+    catalogWait.since = 0;
+  }
+
+  function showCatalogWait() {
+    setStatus(CATALOG_WAIT_TEXT);
+    var main = document.getElementById("damExplorerMain");
+    if (main && !main.querySelector(".dam-prod-row, .dam-carrier-card, .dam-folder-item")) {
+      main.innerHTML =
+        '<div class="dam-explorer-empty" role="status"><p>' + esc(CATALOG_WAIT_TEXT) + "</p></div>";
+    }
+  }
+
+  function failCatalogWait(msg) {
+    stopCatalogWait();
+    setStatus(msg);
+    showExplorerIndexError(msg, true);
+  }
+
+  /* true = blad obsluzony jako "trwa pierwsze pobranie katalogu" (albo jego porazka). */
+  function handleCatalogMissing(err, reason) {
+    if (!isCatalogMissingError(err)) {
+      stopCatalogWait();
+      return false;
+    }
+    clearExplorerIndexWatchdogs();
+    var now = Date.now();
+    if (!catalogWait.since) {
+      catalogWait.since = now;
+      catalogWait.reason = reason || "retry";
+    }
+    var st = catalogLoaderState();
+    /* Porazka ogloszona przez loader konczy czekanie raz; po "Sprobuj ponownie" ten sam,
+       stary stan nie przerywa juz nowej proby. */
+    if (st.state === "failed" && st.since !== catalogWait.failSeen) {
+      catalogWait.failSeen = st.since;
+      failCatalogWait(st.message || CATALOG_FAIL_TEXT);
+      return true;
+    }
+    if (now - catalogWait.since >= CATALOG_WAIT_MAX_MS) {
+      failCatalogWait(CATALOG_FAIL_TEXT);
+      return true;
+    }
+    showCatalogWait();
+    clearTimeout(catalogWait.timer);
+    catalogWait.timer = setTimeout(retryCatalogLoad, CATALOG_RETRY_MS);
+    return true;
+  }
+
+  function retryCatalogLoad() {
+    catalogWait.timer = null;
+    if (!catalogWait.since) return;
+    if (explorerIndexBound && !explorerNeedsBind()) {
+      stopCatalogWait();
+      return;
+    }
+    explorerIndexBound = false;
+    loadExplorerPrimaryIndex({ force: true })
+      .then(function (bundle) {
+        var reason = catalogWait.reason;
+        stopCatalogWait();
+        applyExplorerIndexBundle(bundle, reason);
+      })
+      .catch(function (err) {
+        if (isAbortLike(err)) {
+          catalogWait.timer = setTimeout(retryCatalogLoad, CATALOG_RETRY_MS);
+          return;
+        }
+        if (handleCatalogMissing(err)) return;
+        setStatus("Błąd indeksu: " + (err && err.message ? err.message : err));
+        showExplorerIndexError(err && err.message ? String(err.message) : "file-index");
+      });
+  }
+
+  window.addEventListener("dam:file-index-state", function (ev) {
+    if (!catalogWait.since) return;
+    var st = (ev && ev.detail) || {};
+    if (st.state === "ready") {
+      clearTimeout(catalogWait.timer);
+      retryCatalogLoad();
+    } else if (st.state === "failed") {
+      catalogWait.failSeen = st.since;
+      failCatalogWait(st.message || CATALOG_FAIL_TEXT);
+    }
+  });
 
   /* ------------------------------------------------------------------ */
   /* Category helpers                                                     */
@@ -9310,6 +9427,7 @@
             }, 80);
           });
         }
+        if (handleCatalogMissing(err, reason)) return;
         setStatus("Błąd indeksu: " + (err && err.message ? err.message : err));
         showExplorerIndexError(err && err.message ? String(err.message) : "file-index");
       })

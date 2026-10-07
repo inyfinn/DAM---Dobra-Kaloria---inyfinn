@@ -3944,10 +3944,12 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
   z-index: 51;
   box-shadow: 0 4px 16px rgb(23 22 30 / 0.04);
 }
+/* Dlugi status ("Nie udalo sie pobrac katalogu z bazy - ...") lamie sie we wlasnej
+   kolumnie; "Sortuj" stoi w pierwszym wierszu (baseline), nie spada pod status. */
 .dam-projects-grid-toolbar__status-row {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-wrap: nowrap;
+  align-items: baseline;
   gap: 10px 14px;
   min-width: 0;
 }
@@ -3955,6 +3957,7 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 .dam-projects-grid-toolbar .dam-page-status {
   margin: 0;
   min-width: 0;
+  flex: 1 1 0;
 }
 .dam-projects-sort {
   display: inline-flex;
@@ -4000,6 +4003,14 @@ body.dam-sidebar-collapsed .dam-sidebar-collapse-btn i {
 @media (max-width: 700px) {
   .dam-projects-grid-toolbar {
     grid-template-columns: 1fr;
+  }
+  /* Telefon: jak dotad - "Sortuj" spada pod status dopiero, gdy sie nie miesci. */
+  .dam-projects-grid-toolbar__status-row {
+    flex-wrap: wrap;
+  }
+  .dam-projects-grid-toolbar .dam-projects-status-line,
+  .dam-projects-grid-toolbar .dam-page-status {
+    flex: 0 1 auto;
   }
   .dam-projects-grid-toolbar__actions {
     width: 100%;

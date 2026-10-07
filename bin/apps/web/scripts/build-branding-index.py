@@ -16,6 +16,7 @@ SCRIPTS = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPTS))
 
 from asset_ids import asset_key, stable_asset_id  # noqa: E402
+from branding_scope import is_excluded_dir, is_excluded_path, is_presentation_tree_path  # noqa: E402
 from scan_walker import walk_files  # noqa: E402
 
 WEB = Path(__file__).resolve().parents[1]
@@ -35,14 +36,19 @@ SCAN_COPY_OUT = WEB / "data" / "branding-index.scan.json"
 # odroznic "plik usuniety" od "folder nieprzeczytany".
 _SCANNED_DIRS: set[str] = set()
 _FAILED_DIRS: set[str] = set()
+# Podzbior _FAILED_DIRS: katalogi techniczne celowo poza Brandingiem (branding_scope.py). Trafiaja do failed_dirs,
+# zeby istniejace wiersze pod nimi NIE dostaly znacznika usuniecia ("nie wiemy, co tam jest"), ale nie
+# oznaczaja niepelnego skanu ("complete").
+_EXCLUDED_DIRS: set[str] = set()
 
 
 def _walk(root: Path) -> list[Path]:
     """rglob("*") + fp.is_file() zastapione walk_files: dodatkowo zbiera
     scanned/failed dirs do modulowych zbiorow (patrz SCAN_DIRS_OUT)."""
-    files, scanned, failed = walk_files(root)
+    files, scanned, failed = walk_files(root, exclude_dir=is_excluded_dir)
     _SCANNED_DIRS.update(scanned)
     _FAILED_DIRS.update(failed)
+    _EXCLUDED_DIRS.update(k for k in failed if is_excluded_path(k))
     return files
 
 ARCHIVE_MARKERS = ("-- ARCHIWUM --", "00 - ARCHIWUM", "/ARCHIWUM/", "\\ARCHIWUM\\")
@@ -87,16 +93,49 @@ def is_wizki_path(path: str) -> bool:
 
 
 from asset_role_utils import (  # noqa: E402
+    PRESENTATION_EXT,
     apply_background_scan_cache,
-    detect_raster_background,
     enrich_branding_taxonomy,
     load_background_scan_cache,
     media_type_for,
+    probe_background_cached,
+    save_background_scan_cache,
+    tiff_layers_cached,
 )
 
-# Trwaly cache pixel-scanu (patch-branding-backgrounds.py): path -> transparent|white|none.
-# Rebuild nie gubi wynikow skanu i nie powtarza wolnego IO na NFS X:.
+# Trwaly cache pixel-scanu (asset_role_utils): asset_key -> transparent|white|none[@stempel].
+# Rebuild nie gubi wynikow skanu i nie powtarza wolnego IO na NFS X:. Wynik kazdej
+# wykonanej sondy trafia tu i jest utrwalany co _BG_FLUSH_EVERY nowych wynikow oraz
+# na koncu biegu (persist_background_cache).
 _BG_SCAN_CACHE = load_background_scan_cache()
+_BG_UNSAVED = 0
+_BG_FLUSH_EVERY = 500
+
+
+def persist_background_cache() -> None:
+    """Zapisz cache sondy, gdy sa niezapisane wyniki. Blad zapisu nie przerywa skanu."""
+    global _BG_UNSAVED
+    if not _BG_UNSAVED:
+        return
+    try:
+        save_background_scan_cache(_BG_SCAN_CACHE)
+        _BG_UNSAVED = 0
+    except OSError as exc:
+        print(f"warn: cache sondy tla nie zapisany: {exc}", flush=True)
+
+
+def _bg_result_added() -> None:
+    global _BG_UNSAVED
+    _BG_UNSAVED += 1
+    if _BG_UNSAVED >= _BG_FLUSH_EVERY:
+        persist_background_cache()
+
+
+def _tiff_layers_cached(path: str, stamp: str) -> bool:
+    has, added = tiff_layers_cached(_BG_SCAN_CACHE, path, stamp)
+    if added:
+        _bg_result_added()
+    return has
 
 # Stabilne id (asset_ids.stable_asset_id): id -> klucz sciezki, jeden slownik
 # na caly przebieg builda - rozwiazuje rzadkie kolizje hashu w obrebie indeksu.
@@ -277,11 +316,15 @@ def make_asset(
     include_archive: bool = False,
 ) -> dict | None:
     path = str(fp).replace("\\", "/")
+    if is_excluded_path(path):
+        return None
     archived = is_archive_path(path)
     if archived and not include_archive and not is_legacy_root_archive(path):
         return None
     ext = fp.suffix.lower()
     allowed = WIZKI_EXT if source == "wizki" else SCAN_EXT
+    if ext in PRESENTATION_EXT and source != "wizki" and is_presentation_tree_path(path):
+        allowed = allowed | PRESENTATION_EXT  # karty prezentacji: tylko 02 - FIRMOWE MATERIAŁY\PREZENTACJE
     if ext not in allowed:
         return None
     name = fp.name
@@ -292,32 +335,34 @@ def make_asset(
     tags = build_tags(archived, wiz, channels, source, path=path)
     camp = parse_campaign(fp, marketing) if source == "marketing" else None
     mt = media_type_for(ext)
+    mtime_iso = None
+    mtime_ms = None
+    stamp = ""  # mtime|rozmiar: wynik sondy w cache wazny tylko dla tego samego pliku
+    try:
+        st = fp.stat()
+        mtime_ms = int(st.st_mtime * 1000)
+        mtime_iso = datetime.fromtimestamp(st.st_mtime, tz=timezone.utc).isoformat()
+        stamp = f"{mtime_ms}|{st.st_size}"
+    except OSError:
+        pass
     bg = wiz.get("background")
     if not bg and mt == "image":
-        cached = _BG_SCAN_CACHE.get(path.lower())
-        if cached in ("transparent", "white"):
-            bg = cached
-        elif cached == "none":
-            bg = None  # skan juz byl: brak przezroczystosci, nie powtarzaj IO
-        elif is_legacy_root_archive(path) or source == "product_element":
-            # Legacy ARCHIWUM + product Links/ELEMENTY: pomin pixel-scan tła
-            # (PIL na X: NFS wisi na TIFF 50–120 MB). Tło: patch-backgrounds.
-            bg = None
-        else:
-            bg = detect_raster_background(str(fp), name)
+        # Pamiec sondy, potem sonda. Legacy ARCHIWUM + product Links/ELEMENTY: bez sondy
+        # (PIL na X: NFS wisi na TIFF 50-120 MB), tylko wpis z pamieci. Tlo: patch-backgrounds.
+        bg, added = probe_background_cached(
+            _BG_SCAN_CACHE,
+            str(fp),
+            name,
+            stamp,
+            probe=not (is_legacy_root_archive(path) or source == "product_element"),
+        )
+        if added:
+            _bg_result_added()
     blob_parts = [name, path, brand, mt, source] + tags
     if wiz.get("perspective"):
         blob_parts.append(wiz["perspective"])
     if wiz.get("size"):
         blob_parts.append(wiz["size"])
-    mtime_iso = None
-    mtime_ms = None
-    try:
-        st = fp.stat()
-        mtime_ms = int(st.st_mtime * 1000)
-        mtime_iso = datetime.fromtimestamp(st.st_mtime, tz=timezone.utc).isoformat()
-    except OSError:
-        pass
     asset = {
         "id": asset_id_for(path),
         "path": path,
@@ -343,7 +388,7 @@ def make_asset(
         "ocr_text": "",
         "search_blob": norm(" ".join(blob_parts)),
     }
-    enrich_branding_taxonomy(asset)
+    enrich_branding_taxonomy(asset, tiff_layers=lambda p: _tiff_layers_cached(p, stamp))
     return asset
 
 
@@ -574,6 +619,7 @@ def attach_product_links(
 
 
 def build_search_index(assets: list[dict]) -> dict:
+    assets = [a for a in assets if not is_excluded_path(a.get("path"))]
     by_tag: dict[str, list[str]] = {}
     by_appearance: dict[str, list[str]] = {}
     campaigns: dict[str, list[str]] = {}
@@ -648,6 +694,7 @@ def main() -> int:
     t0_ms = int(t0 * 1000)
     _SCANNED_DIRS.clear()
     _FAILED_DIRS.clear()
+    _EXCLUDED_DIRS.clear()
     print(f"id z bazy (asset_rows): {seed_id_taken_from_rows()}", flush=True)
     marketing = resolve_marketing_base()
     marketing_assets, scan_stats = scan_marketing_roots(marketing, include_archive=args.include_archive)
@@ -663,6 +710,7 @@ def main() -> int:
     element_assets = scan_product_element_assets(marketing, include_archive=args.include_archive)
     print(f"product element scan (Links/ELEMENTY): {len(element_assets)}", flush=True)
     assets = dedupe_by_path(marketing_assets, wizki_assets, element_assets)
+    persist_background_cache()
 
     file_index = json.loads(FILE_INDEX_PATH.read_text(encoding="utf-8")) if FILE_INDEX_PATH.is_file() else {}
     catalog = json.loads(CATALOG_PATH.read_text(encoding="utf-8")) if CATALOG_PATH.is_file() else {}
@@ -794,7 +842,7 @@ def main() -> int:
         "root": str(marketing).replace("\\", "/"),
         "scanned_dirs": sorted(_SCANNED_DIRS),
         "failed_dirs": sorted(_FAILED_DIRS),
-        "complete": not _FAILED_DIRS,
+        "complete": not (_FAILED_DIRS - _EXCLUDED_DIRS),
         # Odcisk pliku skanu: w trybie "rows" most nadpisuje branding-index.json wynikiem
         # scalania - runner uzywa pliku jako skanu tylko, gdy rozmiar i czas zapisu
         # zgadzaja sie z tym odciskiem (asset_sync_runner._read_scan).
@@ -811,8 +859,10 @@ def main() -> int:
         encoding="utf-8",
     )
     os.replace(scan_dirs_tmp, SCAN_DIRS_OUT)
-    if _FAILED_DIRS:
-        print(f"warn: {len(_FAILED_DIRS)} folder(y) nieprzeczytane (patrz {SCAN_DIRS_OUT})")
+    if _FAILED_DIRS - _EXCLUDED_DIRS:
+        print(f"warn: {len(_FAILED_DIRS - _EXCLUDED_DIRS)} folder(y) nieprzeczytane (patrz {SCAN_DIRS_OUT})")
+    if _EXCLUDED_DIRS:
+        print(f"katalogi techniczne poza Brandingiem (branding_scope): {len(_EXCLUDED_DIRS)}", flush=True)
 
     print(
         f"Wrote {OUT} assets={len(assets)} wizki={len(wizki_assets)} "

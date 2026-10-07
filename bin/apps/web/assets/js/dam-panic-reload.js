@@ -104,6 +104,68 @@
     }
   }
 
+  /* 07.10.2026 (test odbioru, okno programu): ekran "Nie udalo sie uruchomic aplikacji" pojawil sie przy
+     2 z 6 startow i nie zszedl sam przez 3 minuty, choc most i serwer UI dzialaly - wystarczylo przeladowac
+     strone. Straznik po 4,5 s tylko pokazywal ekran i nic wiecej nie robil. Teraz po pokazaniu ekranu co 3 s
+     sprawdza, czy serwer UI i most odpowiadaja; gdy tak, a program nadal nie wystartowal, sam przeladowuje
+     strone. Najwyzej RECOVERY_MAX razy na karte (licznik w sessionStorage, zerowany po udanym starcie),
+     potem zostaje przycisk "Sprobuj ponownie". Gdy start uda sie w miedzyczasie - ekran schodzi jak dotad. */
+  var RECOVERY_KEY = "dam_boot_autoreload";
+  var RECOVERY_MAX = 2;
+  var RECOVERY_EVERY_MS = 3000;
+  var RECOVERY_TICKS = 20;
+  var _recoveryStarted = false;
+
+  function recoveryCount() {
+    try {
+      return parseInt(sessionStorage.getItem(RECOVERY_KEY) || "0", 10) || 0;
+    } catch (eRc) {
+      return RECOVERY_MAX;
+    }
+  }
+
+  function servicesUp() {
+    if (typeof fetch !== "function") return Promise.resolve(false);
+    return fetch("/dam-runtime.json", { cache: "no-store" })
+      .then(function (r) {
+        return r.ok ? r.json() : null;
+      })
+      .then(function (cfg) {
+        if (!cfg || !cfg.bridge) return false;
+        return fetch(String(cfg.bridge).replace(/\/+$/, "") + "/health", { cache: "no-store" }).then(function (h) {
+          return !!h.ok;
+        });
+      })
+      .catch(function () {
+        return false;
+      });
+  }
+
+  function startBootRecovery(reason) {
+    if (_recoveryStarted || reason === "forced" || window.__damForceBootFail) return;
+    if (recoveryCount() >= RECOVERY_MAX) return;
+    _recoveryStarted = true;
+    var ticks = 0;
+    function tick() {
+      if (window.__damBootSucceeded) return;
+      ticks++;
+      servicesUp().then(function (up) {
+        if (window.__damBootSucceeded) return;
+        if (up) {
+          try {
+            sessionStorage.setItem(RECOVERY_KEY, String(recoveryCount() + 1));
+          } catch (eRs) {
+            return;
+          }
+          hardReload();
+          return;
+        }
+        if (ticks < RECOVERY_TICKS) setTimeout(tick, RECOVERY_EVERY_MS);
+      });
+    }
+    setTimeout(tick, RECOVERY_EVERY_MS);
+  }
+
   function showBootFail(reason) {
     if (window.__damBootSucceeded) return;
     if (isSigninPage()) {
@@ -139,6 +201,7 @@
         '<button type="button" class="dam-boot-fail__btn" id="damBootFailRetry">Spróbuj ponownie</button>' +
         "</div>";
       body.appendChild(wrap);
+      startBootRecovery(reason);
       var btn = document.getElementById("damBootFailRetry");
       if (btn) {
         btn.addEventListener("click", function () {
@@ -156,6 +219,11 @@
       return;
     }
     window.__damBootSucceeded = true;
+    try {
+      sessionStorage.removeItem(RECOVERY_KEY);
+    } catch (eRk) {
+      /* ignore */
+    }
     unlockBootSuccess();
   };
 

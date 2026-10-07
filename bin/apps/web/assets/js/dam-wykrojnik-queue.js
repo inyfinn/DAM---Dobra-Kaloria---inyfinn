@@ -127,8 +127,9 @@
     try {
       var idx;
       if (window.DamFileIndex && typeof window.DamFileIndex.get === "function") {
-        /* Wspolne Promise strony (dam-file-index.js). */
-        idx = await window.DamFileIndex.get();
+        /* Wspolne Promise strony (dam-file-index.js). Etykiety produktow sa opcjonalne:
+           wait:false, zeby kolejka (dane z mostu) nie czekala na pierwsze pobranie katalogu. */
+        idx = await window.DamFileIndex.get({ wait: false });
       } else {
         var r = await fetch("data/file-index.json?v=" + Date.now(), { cache: "force-cache" });
         if (!r.ok) return;

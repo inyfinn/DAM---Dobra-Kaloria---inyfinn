@@ -8,10 +8,25 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import re
+import time
 import unicodedata
 from collections import Counter, defaultdict
 from pathlib import Path
+
+
+def _write_atomic(path: Path, text: str) -> None:
+    """Tmp + os.replace: czytelnik (UI, most) nigdy nie widzi urwanego JSON w trakcie zapisu."""
+    tmp = path.with_suffix(path.suffix + f".{os.getpid()}.tmp")
+    tmp.write_text(text, encoding="utf-8")
+    for _ in range(20):
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError:  # Windows: plik chwilowo otwarty przez czytelnika
+            time.sleep(0.05)
+    os.replace(tmp, path)
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
@@ -357,8 +372,8 @@ def main() -> int:
     fi["tag_groups"] = tag_groups
     si["by_tag"] = {k: sorted(set(v)) for k, v in sorted(by_tag.items()) if v}
 
-    FILE_INDEX.write_text(json.dumps(fi, ensure_ascii=False, indent=2), encoding="utf-8")
-    SEARCH_INDEX.write_text(json.dumps(si, ensure_ascii=False, indent=2), encoding="utf-8")
+    _write_atomic(FILE_INDEX, json.dumps(fi, ensure_ascii=False, indent=2))
+    _write_atomic(SEARCH_INDEX, json.dumps(si, ensure_ascii=False, indent=2))
     print(
         "OK tag_groups:",
         {k: len(v) for k, v in tag_groups.items() if k != "inne"},

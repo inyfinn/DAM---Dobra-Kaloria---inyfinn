@@ -6,6 +6,14 @@
 (function () {
   "use strict";
 
+  /* ?v= zasobow programu doladowywanych w locie = wersja programu. dam-version.js stoi na
+     kazdej stronie przed dam-shell.js, wiec nie ma tu literalu do pamietania przy kazdym
+     podbiciu wersji (stare "?v=2.5.3" zostawialy w pamieci okna stary plik po aktualizacji).
+     Bez wersji (nie powinno sie zdarzyc) - znacznik czasu, zeby nigdy nie podac starego pliku. */
+  function assetV() {
+    return "?v=" + encodeURIComponent(String(window.DAM_APP_VERSION || Date.now()));
+  }
+
   /* Soft-boot akcentu gdy dam-accent.js nie jest na stronie (chrome tylko, nie tagi). */
   (function softAccentBoot() {
     if (window.DamAccent) return;
@@ -154,7 +162,7 @@
     if (!head || head.querySelector('link[data-dam-accent-css]')) return;
     var link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "./assets/css/dam-accent.css?v=2.5.3";
+    link.href = "./assets/css/dam-accent.css" + assetV();
     link.setAttribute("data-dam-accent-css", "1");
     head.appendChild(link);
   }
@@ -3260,20 +3268,20 @@
     // Status ROOT plików (czerwona kropka gdy offline)
     if (!window.DamRootStatus) {
       var rs = document.createElement("script");
-      rs.src = "assets/js/dam-root-status.js?v=2.5.3";
+      rs.src = "assets/js/dam-root-status.js" + assetV();
       document.head.appendChild(rs);
     } else if (typeof window.DamRootStatus.start === "function") {
       window.DamRootStatus.start();
     }
     if (!window.DamCacheSync && !document.querySelector("script[data-dam-cache-sync]")) {
       var cs = document.createElement("script");
-      cs.src = "assets/js/dam-cache-sync.js?v=2.5.3";
+      cs.src = "assets/js/dam-cache-sync.js" + assetV();
       cs.setAttribute("data-dam-cache-sync", "1");
       document.head.appendChild(cs);
     }
     if (!window.DamIndexPoller && !document.querySelector("script[src*='dam-index-poller']")) {
       var ip = document.createElement("script");
-      ip.src = "assets/js/dam-index-poller.js?v=6.0.9";
+      ip.src = "assets/js/dam-index-poller.js" + assetV();
       ip.setAttribute("data-dam-index-poller", "1");
       document.head.appendChild(ip);
     }
@@ -3281,7 +3289,7 @@
     // Status bazy danych (obok Pliki online)
     if (!window.DamDbStatus) {
       var dbs = document.createElement("script");
-      dbs.src = "assets/js/dam-db-status.js?v=6.0.4";
+      dbs.src = "assets/js/dam-db-status.js" + assetV();
       document.head.appendChild(dbs);
     } else if (typeof window.DamDbStatus.start === "function") {
       window.DamDbStatus.start();
@@ -3290,7 +3298,7 @@
     // Telemetria UI (kliknięcia, błędy, wolne fetch) -> desktop/logs/telemetry-*.jsonl
     if (!window.DamTelemetry) {
       var tel = document.createElement("script");
-      tel.src = "assets/js/dam-telemetry.js?v=5.0.196";
+      tel.src = "assets/js/dam-telemetry.js" + assetV();
       document.head.appendChild(tel);
     } else if (typeof window.DamTelemetry.start === "function") {
       window.DamTelemetry.start();
@@ -3299,14 +3307,14 @@
     // Wersja + aktualizacje (takze przed logowaniem na signin)
     if (!window.DamAppUpdate) {
       var upd = document.createElement("script");
-      upd.src = "assets/js/dam-app-update.js?v=2.5.5";
+      upd.src = "assets/js/dam-app-update.js" + assetV();
       document.head.appendChild(upd);
     }
 
     // F1 pomoc / F5 odśwież
     if (!window.DamShortcuts) {
       var sc = document.createElement("script");
-      sc.src = "assets/js/dam-shortcuts.js?v=2.1.0";
+      sc.src = "assets/js/dam-shortcuts.js" + assetV();
       document.head.appendChild(sc);
     }
 
@@ -3377,7 +3385,7 @@
     if (!document.querySelector(".dam-explorer-toolbar")) return;
     if (document.querySelector('script[data-dam-sticky-chrome]')) return;
     var s = document.createElement("script");
-    s.src = "./assets/js/dam-sticky-chrome.js?v=5.0.196";
+    s.src = "./assets/js/dam-sticky-chrome.js" + assetV();
     s.setAttribute("data-dam-sticky-chrome", "1");
     s.defer = true;
     document.body.appendChild(s);
@@ -3386,7 +3394,7 @@
   function ensureCacheBadgeScript() {
     if (document.querySelector('script[data-dam-cache-badge]')) return;
     var s = document.createElement("script");
-    s.src = "./assets/js/dam-cache-badge.js?v=2.0.0";
+    s.src = "./assets/js/dam-cache-badge.js" + assetV();
     s.setAttribute("data-dam-cache-badge", "1");
     s.defer = true;
     (document.body || document.documentElement).appendChild(s);

@@ -22,6 +22,7 @@ except ImportError:
     raise SystemExit(2)
 
 from branding_grid_eligibility import is_branding_grid_eligible
+from branding_scope import is_excluded_path
 
 SLIM_KEYS = (
     "id",
@@ -279,6 +280,8 @@ def main() -> int:
                 continue
             if not is_branding_grid_eligible(a):
                 continue
+            if is_excluded_path(a.get("path")):
+                continue  # katalogi techniczne (branding_scope.py): wiersze zostaja w bazie, siatka ich nie pokazuje
             assets.append(slim_asset(a))
 
     links_from_sqlite = False

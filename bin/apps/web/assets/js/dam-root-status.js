@@ -195,7 +195,9 @@
     s.id = "damRootPartialCss";
     s.textContent =
       ".dam-root-status.is-partial .dam-root-status__dot{background:var(--dam-warn);" +
-      "box-shadow:0 0 0 3px color-mix(in srgb,var(--dam-warn) 25%,transparent);}";
+      "box-shadow:0 0 0 3px color-mix(in srgb,var(--dam-warn) 25%,transparent);}" +
+      /* Tryb bez dysku: kropka spokojna (kolor tekstu pomocniczego), bez pulsowania. */
+      ".dam-root-status.is-nodisk .dam-root-status__dot{background:var(--dam-text-muted);}";
     document.head.appendChild(s);
   }
 
@@ -203,8 +205,12 @@
     var el = ensureUi();
     if (!el) return;
     var partial = !!online && reason === "partial";
+    /* Sciezka nigdy nie ustawiona = komputer bez folderu Marketing: katalog z bazy dziala,
+       wiec bez czerwonej kropki i bez czerwonego paska u gory okna. */
+    var nodisk = !online && reason === "no_root";
     ensurePartialCss();
-    el.classList.toggle("is-offline", !online);
+    el.classList.toggle("is-offline", !online && !nodisk);
+    el.classList.toggle("is-nodisk", nodisk);
     el.classList.toggle("is-online", !!online && !partial);
     el.classList.toggle("is-partial", partial);
     el.title = detail || (online ? "ROOT plików online" : "ROOT plików offline");
@@ -219,9 +225,9 @@
       } else if (!online && reason === "bridge") {
         line1 = "Most";
         line2 = "offline";
-      } else if (!online && reason === "no_root") {
-        line1 = "Brak";
-        line2 = "ścieżki";
+      } else if (nodisk) {
+        line1 = tr("root.status.nodisk_1", "Bez");
+        line2 = tr("root.status.nodisk_2", "dysku");
       }
       label.innerHTML =
         '<span class="dam-status-line">' +
@@ -241,7 +247,7 @@
         btn.innerHTML = '<i class="uil uil-folder-open" aria-hidden="true"></i><span>Wskaż folder</span>';
       }
     }
-    setBodyOffline(!online);
+    setBodyOffline(!online && !nodisk);
     if (_lastOnline !== online) {
       _lastOnline = online;
       schedulePoll(online);
@@ -278,7 +284,14 @@
               return waitForIndexRebuild(120000);
             });
         })
-        .then(function () {
+        .then(function (st) {
+          /* Limit czekania minal, a skan trwa: spis sie nie zmienil. Bez pobierania 9 MB
+             i bez "odswiezono" - ekrany dostaja tylko wiadomosc, ze skan trwa
+             (detail.scanRunning); jego koniec zglosi im DamIndexPoller. */
+          if (st && st.rebuild && st.rebuild.running) {
+            window.dispatchEvent(new CustomEvent("dam:index-refreshed", { detail: { scanRunning: true } }));
+            return { ok: true, scanRunning: true };
+          }
           return reloadIndexesGlobally();
         });
     }
@@ -304,7 +317,14 @@
     var root = rootPath();
     if (!root) {
       _checkSeq++;
-      setState(false, "Brak ROOT - ustaw ścieżkę Marketing", "no_root");
+      setState(
+        false,
+        tr(
+          "root.status.nodisk",
+          "Tryb bez dysku - widzisz katalog z bazy. Otwieranie oryginałów i skan dysku wymagają folderu Marketing - kliknij Wskaż folder."
+        ),
+        "no_root"
+      );
       return Promise.resolve({ online: false, reason: "no_root" });
     }
     var url = bridgeBase() + "/files/status?root=" + encodeURIComponent(root);
@@ -373,7 +393,7 @@
     }
     if (document.querySelector("script[data-dam-cache-sync]")) return;
     var s = document.createElement("script");
-    s.src = "assets/js/dam-cache-sync.js?v=2.5.3";
+    s.src = "assets/js/dam-cache-sync.js?v=" + encodeURIComponent(String(window.DAM_APP_VERSION || Date.now()));
     s.setAttribute("data-dam-cache-sync", "1");
     document.head.appendChild(s);
   }
@@ -381,7 +401,7 @@
   function loadDataMode() {
     if (window.DamDataMode || document.querySelector("script[data-dam-data-mode]")) return;
     var s = document.createElement("script");
-    s.src = "assets/js/dam-data-mode.js?v=2.5.3";
+    s.src = "assets/js/dam-data-mode.js?v=" + encodeURIComponent(String(window.DAM_APP_VERSION || Date.now()));
     s.setAttribute("data-dam-data-mode", "1");
     document.head.appendChild(s);
   }

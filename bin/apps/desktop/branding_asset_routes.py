@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import sqlite3
+import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -48,6 +49,21 @@ def _root_prefixes() -> list[str]:
         except Exception:  # noqa: BLE001
             pass
     return list(_DEFAULT_ROOT_PREFIXES)
+
+
+def _scope_excluded(path: str) -> bool:
+    """Wspolna regula wykluczen katalogow technicznych (web/scripts/branding_scope.py). Brak modulu = nic nie wycina."""
+    try:
+        from branding_scope import is_excluded_path
+    except ImportError:
+        scripts = Path(__file__).resolve().parent.parent / "web" / "scripts"
+        if str(scripts) not in sys.path:
+            sys.path.insert(0, str(scripts))
+        try:
+            from branding_scope import is_excluded_path
+        except ImportError:
+            return False
+    return is_excluded_path(path)
 
 
 def _www_scan_roots() -> list[Path]:
@@ -132,14 +148,18 @@ def _live_www_scan(days: int) -> list[dict[str, Any]]:
             continue
         try:
             for dirpath, dirnames, filenames in os.walk(root):
-                dirnames[:] = [d for d in dirnames if d.lower() not in _WWW_SCAN_SKIP_DIRS]
+                dirnames[:] = [
+                    d
+                    for d in dirnames
+                    if d.lower() not in _WWW_SCAN_SKIP_DIRS and not _scope_excluded(os.path.join(dirpath, d))
+                ]
                 for fname in filenames:
                     ext = Path(fname).suffix.lower()
                     if ext not in _WWW_SCAN_EXTS:
                         continue
                     fp = Path(dirpath) / fname
                     key = str(fp).replace("\\", "/").lower()
-                    if key in seen:
+                    if key in seen or _scope_excluded(str(fp)):
                         continue
                     try:
                         st = fp.stat()

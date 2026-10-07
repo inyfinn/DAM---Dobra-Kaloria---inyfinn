@@ -321,6 +321,49 @@
     return s.replace(/\s+/g, " ").trim() || name;
   }
 
+  /* Slug linii liczony tak samo jak w indekserze (build-file-index.py norm): male litery,
+     bez ogonkow, wszystko poza a-z 0-9 . zamienione na spacje, pojedyncze spacje.
+     "ł" nie ma rozkladu NFKD, wiec - jak w indekserze - staje sie spacja. */
+  function lineSlug(s) {
+    return String(s || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9.]+/g, " ")
+      .trim();
+  }
+
+  /**
+   * Linia produktu = nawias w nazwie folderu ("ARBUZ - [ z kreatyną ]").
+   * Nowy spis niesie ja w subcategory_slug / subcategory_label. Stary ma te pola
+   * puste dla nawiasow spoza slownika - wtedy bierzemy tekst nawiasu z p.name tak,
+   * jak robi to indekser: jak nazwal go grafik, pierwsza litera wielka.
+   * Slug zawsze przez lineSlug, zeby klik w znacznik dawal ten sam filtr na starym
+   * i nowym spisie. Zwraca { slug, label } albo null, gdy produkt nie ma linii.
+   */
+  function productLine(p) {
+    if (!p) return null;
+    var label = String(p.subcategory_label || "").trim();
+    var slug = lineSlug(p.subcategory_slug);
+    if (!label) {
+      /* Jak indekser: pierwszy nawias, ktory nie jest smieciem - uszkodzony bajt (U+FFFD),
+         sam numer albo tekst dluzszy niz 40 znakow nie staje sie linia. */
+      var re = /\[\s*([^\]]+?)\s*\]/g;
+      var m;
+      while ((m = re.exec(String(p.name || "")))) {
+        var text = m[1].replace(/_/g, " ").replace(/\s+/g, " ").trim();
+        var s = lineSlug(text);
+        if (!s || text.length > 40 || text.indexOf("\ufffd") !== -1 || /^[\d ]+$/.test(s)) continue;
+        label = text.charAt(0).toLocaleUpperCase("pl") + text.slice(1);
+        slug = s;
+        break;
+      }
+    }
+    if (!label) return null;
+    return { slug: slug || lineSlug(label), label: label };
+  }
+
   function isMixProduct(name, tags) {
     var n = String(name || "");
     if (/\bMIX\b/i.test(n) || /^\s*-\s*MIX/i.test(n)) return true;
@@ -1101,6 +1144,8 @@
     toTitleCasePl: toTitleCasePl,
     mapPackagingTagToCarrierLabel: mapPackagingTagToCarrierLabel,
     cleanProductDisplayName: cleanProductDisplayName,
+    productLine: productLine,
+    lineSlug: lineSlug,
     PRODUCT_NAME_PL: PRODUCT_NAME_PL,
     applyProductNamePl: applyProductNamePl,
     lookupProductNamePl: lookupProductNamePl,

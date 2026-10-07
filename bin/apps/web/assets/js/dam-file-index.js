@@ -16,6 +16,23 @@
  * sesji strony (czas ladowania zaokraglony do 10 min), przegladarka moze uzyc cache.
  * Po invalidate() adres dostaje unikalny znacznik i cache: "no-store".
  * Odrzucone Promise nie zostaje w pamieci: nastepne get() probuje ponownie.
+ *
+ * Pierwsze pobranie katalogu z bazy (07.10.2026): instalator nie pakuje spisu, wiec na
+ * swiezym komputerze pliku przez pierwsze sekundy NIE MA (404). To nie blad koncowy:
+ * get() wisi, co WAIT_POLL_MS pyta most (GET /index/snapshots) i ponawia odczyt pliku.
+ * Konczy sie spisem, gdy plik przyjdzie, albo bledem, gdy most mowi, ze pobranie sie
+ * nie powiodlo. Gdy plik jest od razu - nic z tego sie nie dzieje.
+ *
+ *   DamFileIndex.state() -> { state: "idle" | "waiting" | "ready" | "failed",
+ *                            since: ms epoki (start czekania), reason, message }
+ *   zdarzenie window "dam:file-index-state" (detail = state()) tylko przy zmianie:
+ *   raz "waiting", potem raz "ready" albo "failed". Zwykle wczytanie nie oglasza nic.
+ *   reason: "db" (brak polaczenia z baza), "empty_db" (w bazie nie ma katalogu),
+ *   "local_mode", "bridge" (most milczy / nie podaje stanu), "timeout".
+ *   Blad z get(): Error { code: "index_first_sync_failed", reason, message po polsku }.
+ *   DamFileIndex.get({ wait: false }) -> dla wolajacych, ktorym spis jest opcjonalny
+ *   (np. wykrycie ROOT w dam-paths.js): nie wisi na pierwszym pobraniu, przy braku
+ *   pliku odrzuca od razu jak dawniej. Petla czekania i zdarzenia dzialaja tak samo.
  */
 (function (w) {
   "use strict";
@@ -26,6 +43,19 @@
   var WORKER_PARSE_MIN = 1200000;
   var WORKER_TIMEOUT_MS = 25000;
   var SESSION_TOKEN = "s" + Math.floor(Date.now() / 600000);
+  /* Zmierzone 07.10.2026: pierwsze pobranie ok. 19 s od startu mostu. Nieudane polaczenie
+     z baza: czekamy, dopoki most ponawia (last.at sie zmienia), najwyzej DB_GIVE_UP_MS;
+     gdy przez DB_RETRY_GRACE_MS nie bylo nowej proby - most nie ponawia, konczymy. */
+  var WAIT_POLL_MS = 3000;
+  var DB_RETRY_GRACE_MS = 15000;
+  var DB_GIVE_UP_MS = 60000;
+  var BRIDGE_SILENT_MAX_MS = 60000;
+  var WAIT_MAX_MS = 180000;
+  var FAIL_DEFAULT = "Nie udało się pobrać katalogu z bazy - sprawdź połączenie";
+  var FAIL_TEXT = {
+    empty_db: "W bazie nie ma jeszcze katalogu produktów - administrator musi uruchomić skan dysku",
+    local_mode: "Ten komputer pracuje w trybie lokalnym i nie ma jeszcze spisu - uruchom skan dysku",
+  };
 
   var _promise = null;
   var _data = null;
@@ -33,6 +63,38 @@
   var _token = "";
   var _tokenIsReal = false;
   var _forced = "";
+  var _state = { state: "idle", since: 0, reason: "", message: "" };
+  var _wait = null;
+  var _onWait = [];
+
+  function state() {
+    return { state: _state.state, since: _state.since, reason: _state.reason, message: _state.message };
+  }
+
+  /* Zdarzenie tylko przy zmianie stanu; "ready" bez wczesniejszego czekania to zwykle
+     wczytanie i ekrany nie musza o nim wiedziec. */
+  function setState(name, since, reason) {
+    var prev = _state.state;
+    _state = {
+      state: name,
+      since: since || 0,
+      reason: reason || "",
+      message: name === "failed" ? FAIL_TEXT[reason] || FAIL_DEFAULT : "",
+    };
+    var waiters = _onWait;
+    _onWait = [];
+    if (name === "waiting") {
+      waiters.forEach(function (fn) {
+        fn();
+      });
+    }
+    if (prev === name || (name === "ready" && prev !== "waiting" && prev !== "failed")) return;
+    try {
+      w.dispatchEvent(new CustomEvent("dam:file-index-state", { detail: state() }));
+    } catch (eEv) {
+      /* ignore */
+    }
+  }
 
   function bridgeBase() {
     try {
@@ -60,7 +122,8 @@
     return String(raw.last_finished || wt.last_finished || "").trim();
   }
 
-  function fetchHealthToken() {
+  /* GET <most><path> -> JSON albo null (most milczy HEALTH_TIMEOUT_MS / blad / nie 200). */
+  function bridgeJson(path) {
     return new Promise(function (resolve) {
       var done = false;
       var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
@@ -72,13 +135,13 @@
         } catch (eAb) {
           /* ignore */
         }
-        resolve("");
+        resolve(null);
       }, HEALTH_TIMEOUT_MS);
       var opts = { cache: "no-store" };
       if (ctrl) opts.signal = ctrl.signal;
       var p;
       try {
-        p = fetch(bridgeBase() + "/health", opts);
+        p = fetch(bridgeBase() + path, opts);
       } catch (eF) {
         p = Promise.reject(eF);
       }
@@ -89,15 +152,96 @@
           if (done) return;
           done = true;
           clearTimeout(timer);
-          resolve(pickToken(h));
+          resolve(h && typeof h === "object" ? h : null);
         })
         .catch(function () {
           if (done) return;
           done = true;
           clearTimeout(timer);
-          resolve("");
+          resolve(null);
         });
     });
+  }
+
+  function fetchHealthToken() {
+    return bridgeJson("/health").then(pickToken);
+  }
+
+  /* Odpowiedz GET /index/snapshots -> null (most milczy) | { done, reason, at }.
+     Jedno zrodlo prawdy: index_snapshots.status(). first_sync.done = pierwszy cykl sie
+     skonczyl (first_sync.ok jest ustawiane raz, wiec powod bierzemy z last.pull,
+     a last.at mowi, kiedy most probowal ostatnio). */
+  function firstSyncInfo(j) {
+    if (!j) return null;
+    var fs = j.first_sync;
+    if (!fs || typeof fs !== "object") return { done: true, reason: "bridge", at: "" };
+    if (!fs.done) return { done: false, reason: "", at: "" };
+    var last = j.last || {};
+    var pull = last.pull || {};
+    var missing = pull.missing_in_db || [];
+    var reason = "db";
+    if (pull.skipped_local_mode) reason = "local_mode";
+    else if (pull.ok !== false && missing.indexOf("file-index") !== -1) reason = "empty_db";
+    return { done: true, reason: reason, at: String(last.at || "") };
+  }
+
+  /* Jedna petla czekania na strone (wspolna dla wszystkich get(), takze po invalidate()).
+     Kolejnosc w kroku: NAJPIERW most, POTEM plik - gdy most mowi "skonczone", plik
+     zapisany tuz przed odpowiedzia jest juz widoczny. Wynik: tekst spisu. */
+  function waitForFirstSync() {
+    if (_wait) return _wait;
+    var since = Date.now();
+    var heard = since;
+    var tryAt = null;
+    var tryseen = 0;
+    setState("waiting", since);
+    var p = new Promise(function (resolve, reject) {
+      function fail(reason) {
+        setState("failed", since, reason);
+        var e = new Error(_state.message);
+        e.code = "index_first_sync_failed";
+        e.reason = reason;
+        reject(e);
+      }
+      function step() {
+        bridgeJson("/index/snapshots")
+          .then(function (j) {
+            var info = firstSyncInfo(j);
+            var now = Date.now();
+            if (info) heard = now;
+            return fetch(INDEX_URL + "?v=w" + now, { cache: "no-store" }).then(function (r) {
+              if (r.ok) {
+                return r.text().then(function (text) {
+                  setState("ready");
+                  resolve(text);
+                });
+              }
+              if (r.status !== 404) return fail("bridge");
+              if (info && info.done) {
+                if (info.reason !== "db") return fail(info.reason);
+                if (info.at !== tryAt) {
+                  tryAt = info.at;
+                  tryseen = now;
+                }
+                if (now - tryseen >= DB_RETRY_GRACE_MS || now - since >= DB_GIVE_UP_MS) return fail("db");
+              }
+              if (now - heard >= BRIDGE_SILENT_MAX_MS) return fail("bridge");
+              if (now - since >= WAIT_MAX_MS) return fail("timeout");
+              setTimeout(step, WAIT_POLL_MS);
+            });
+          })
+          .catch(function () {
+            fail("bridge");
+          });
+      }
+      step();
+    });
+    function clear() {
+      if (_wait === p) _wait = null;
+    }
+    p.then(clear, clear);
+    _wait = p;
+    return p;
   }
 
   function currentToken() {
@@ -165,7 +309,20 @@
     });
   }
 
-  function get() {
+  function getNoWait() {
+    var p = get();
+    return new Promise(function (resolve, reject) {
+      function missing() {
+        reject(new Error("Brak file-index.json (404)"));
+      }
+      if (_state.state === "waiting") return missing();
+      _onWait.push(missing);
+      p.then(resolve, reject);
+    });
+  }
+
+  function get(opts) {
+    if (opts && opts.wait === false) return getNoWait();
     if (_promise) return _promise;
     var p = currentToken()
       .then(function (tok) {
@@ -173,6 +330,7 @@
         return fetch(INDEX_URL + "?v=" + encodeURIComponent(tok), opts);
       })
       .then(function (r) {
+        if (r.status === 404) return waitForFirstSync();
         if (!r.ok) throw new Error("Brak file-index.json (" + r.status + ")");
         return r.text();
       })
@@ -180,6 +338,7 @@
       .then(function (data) {
         data = data || {};
         if (_promise === p) _data = data;
+        setState("ready");
         return data;
       });
     p.catch(function () {
@@ -230,6 +389,7 @@
     invalidate: invalidate,
     refresh: refresh,
     revalidate: revalidate,
+    state: state,
     parseText: parseText,
   };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -1155,9 +1155,10 @@
   }
 
   function loadProductLookup() {
-    /* Wspolne Promise strony (dam-file-index.js). */
+    /* Wspolne Promise strony (dam-file-index.js). Spis tylko dopisuje nazwy produktow:
+       wait:false, zeby skrzynka (dane z mostu) nie czekala na pierwsze pobranie katalogu. */
     var p = window.DamFileIndex && typeof window.DamFileIndex.get === "function"
-      ? window.DamFileIndex.get()
+      ? window.DamFileIndex.get({ wait: false })
       : fetch("data/file-index.json?v=" + Date.now()).then(function (r) {
           return r.ok ? r.json() : {};
         });

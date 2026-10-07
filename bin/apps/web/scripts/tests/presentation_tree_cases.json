@@ -1,0 +1,80 @@
+{
+ "_opis": "Wspolna tabela: czy plik lezy w firmowym drzewie prezentacji 02 - FIRMOWE MATERIALY\\PREZENTACJE (karty prezentacji w Brandingu, skan prezentacji). Czytana przez test_branding_scope.py (branding_scope.is_presentation_tree_path) i test_branding_presentations.js (isPresentationTreePath w dam-branding.js).",
+ "cases": [
+  {
+   "path": "M:/- POLSKA/02 - FIRMOWE MATERIAŁY/PREZENTACJE/06.10.2026 - strategia/DK_co_dalej_update.pptx",
+   "in_tree": true,
+   "note": "M:"
+  },
+  {
+   "path": "X:/Marketing/- POLSKA/02 - FIRMOWE MATERIAŁY/PREZENTACJE/DATESY/DOBRA KALORIA - DATESY.pptx",
+   "in_tree": true,
+   "note": "X:/Marketing"
+  },
+  {
+   "path": "D:\\Marketing\\- POLSKA\\02 - FIRMOWE MATERIAŁY\\PREZENTACJE\\24.09.2026 - KULKI z kreatyną\\Elementy\\arbuz.png",
+   "in_tree": true,
+   "note": "D:\\Marketing, ukosniki odwrotne"
+  },
+  {
+   "path": "m:/- polska/02 - firmowe materiały/prezentacje/onlien.pptx",
+   "in_tree": true,
+   "note": "male litery, luzny plik"
+  },
+  {
+   "path": "M:/- POLSKA/02 – FIRMOWE MATERIAŁY/Prezentacje/DATESY/a.pptx",
+   "in_tree": true,
+   "note": "polpauza i mieszana wielkosc liter"
+  },
+  {
+   "path": "02 - FIRMOWE MATERIAŁY/PREZENTACJE/DATESY/a.pptx",
+   "in_tree": true,
+   "note": "sciezka wzgledna bez dysku"
+  },
+  {
+   "path": "//nas/share/Marketing/- POLSKA/02 - FIRMOWE MATERIAŁY/PREZENTACJE/DATESY/a.pptx",
+   "in_tree": true,
+   "note": "UNC"
+  },
+  {
+   "path": "M:/- POLSKA/02 - FIRMOWE MATERIAŁY/PREZENTACJE/06.10.2026 - strategia/_robocze/qa/s1.pptx",
+   "in_tree": false,
+   "note": "_robocze wypada z Brandingu"
+  },
+  {
+   "path": "M:/- POLSKA/02 - FIRMOWE MATERIAŁY/PREZENTACJE/— SZABLON AI - skrypt/DK - szablon prezentacji.pptx",
+   "in_tree": false,
+   "note": "folder programu wypada z Brandingu"
+  },
+  {
+   "path": "M:/- POLSKA/02 - FIRMOWE MATERIAŁY/PREZENTACJE",
+   "in_tree": false,
+   "note": "sam korzen PREZENTACJE (bez pliku)"
+  },
+  {
+   "path": "M:/-- ARCHIWUM --/99_Inne/SOLAR/Prezentacje/Prezentacje/prezentacja piatek niemso/a.pptx",
+   "in_tree": false,
+   "note": "archiwum SOLAR\\Prezentacje to inne drzewo"
+  },
+  {
+   "path": "M:/- POLSKA/02 - FIRMOWE MATERIAŁY/INNE/a.pptx",
+   "in_tree": false,
+   "note": "inny folder firmowych materialow"
+  },
+  {
+   "path": "M:/- POLSKA/04 - PROCESY/PREZENTACJE/a.pptx",
+   "in_tree": false,
+   "note": "PREZENTACJE poza 02 - FIRMOWE MATERIAŁY"
+  },
+  {
+   "path": "M:/- POLSKA/02 - FIRMOWE MATERIAŁY/PREZENTACJE2/a.pptx",
+   "in_tree": false,
+   "note": "tylko dokladny segment PREZENTACJE"
+  },
+  {
+   "path": "",
+   "in_tree": false,
+   "note": "pusta sciezka"
+  }
+ ]
+}

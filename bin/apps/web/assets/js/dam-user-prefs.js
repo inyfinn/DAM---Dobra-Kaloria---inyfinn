@@ -291,11 +291,14 @@
               Object.keys(merged.assoc_split || {}).length) {
             needPush = true;
           }
-        } else if (legacy || local) {
-          needPush = true;
         }
 
         writeCache(merged);
+        /* 07.10.2026: nieudany odczyt (401, 5xx, ok:false) to NIE "serwer nie ma ustawien" -
+           most przy udanym odczycie zawsze oddaje prefs (chocby domyslne). Dawniej szedl wtedy
+           POST z lokalnego cache, a klucz dam_user_prefs nie jest per konto. Bez zapisu i bez
+           znacznika migracji: stare klucze przeniosa sie po pierwszym udanym odczycie. */
+        if (!server) return merged;
         if (needPush) {
           return postPrefs(merged).then(function (p) {
             try { localStorage.setItem(MIGRATE_FLAG, "1"); } catch (e) { /* ignore */ }

@@ -534,8 +534,12 @@ def _primary_host(cfg: dict[str, Any]) -> str:
     return str(cfg.get("host") or "").strip()
 
 
-def connect(_retried: bool = False):
+def connect(_retried: bool = False, *, timeout: float | None = None):
     """Polaczenie psycopg2 do JEDNEGO hosta, krotki timeout, TLS (sslmode).
+
+    timeout (sekundy, opcjonalny): limit POLACZENIA zamiast domyslnych 5 s (pierwsze udane
+    polaczenie procesu) / 1 s (kolejne). Dla prob pierwszego pobrania katalogu na wolnym laczu
+    (index_snapshots.FIRST_SYNC_CONNECT_TIMEOUT_S); UI i logowanie zostaja przy domyslnych.
 
     Odrzucone haslo: jeden raz odswiez konfiguracje z sealed.json (zapamietany kod)
     i sprobuj ponownie. Dalej zle -> _AUTH_FAILED, UI prosi o kod aktywacyjny."""
@@ -552,7 +556,7 @@ def connect(_retried: bool = False):
         "dbname": cfg["dbname"],
         "user": cfg["user"],
         "password": cfg["password"],
-        "connect_timeout": _CONNECT_TIMEOUT_S if _LAST_HOST else _FIRST_CONNECT_TIMEOUT_S,
+        "connect_timeout": int(timeout + 0.999) if timeout else (_CONNECT_TIMEOUT_S if _LAST_HOST else _FIRST_CONNECT_TIMEOUT_S),
         "cursor_factory": psycopg2.extras.RealDictCursor,
         "sslmode": cfg.get("sslmode") or "require",
     }
@@ -571,7 +575,7 @@ def connect(_retried: bool = False):
                     refreshed = False
                 if refreshed:
                     reset_config_cache()
-                    return connect(_retried=True)
+                    return connect(_retried=True, timeout=timeout)
         msg = (
             f"Postgres niedostepny {host}:{cfg['port']} "
             f"sslmode={kwargs.get('sslmode')} -> {exc}"
@@ -1339,9 +1343,9 @@ def publish_index_snapshot(
         conn.close()
 
 
-def index_snapshot_meta() -> dict[str, dict[str, Any]]:
-    """Tanie metadane bez kolumny payload_gz (TOAST nie jest czytany)."""
-    conn = connect()
+def index_snapshot_meta(*, timeout: float | None = None) -> dict[str, dict[str, Any]]:
+    """Tanie metadane bez kolumny payload_gz (TOAST nie jest czytany). timeout: limit polaczenia (patrz connect)."""
+    conn = connect(timeout=timeout) if timeout else connect()
     try:
         cur = conn.cursor()
         cur.execute("SELECT to_regclass('dam_index_snapshots') AS t")
@@ -1357,10 +1361,10 @@ def index_snapshot_meta() -> dict[str, dict[str, Any]]:
         conn.close()
 
 
-def fetch_index_snapshot(store_key: str) -> tuple[dict[str, Any], bytes] | None:
+def fetch_index_snapshot(store_key: str, *, timeout: float | None = None) -> tuple[dict[str, Any], bytes] | None:
     import gzip
 
-    conn = connect()
+    conn = connect(timeout=timeout) if timeout else connect()
     try:
         cur = conn.cursor()
         cur.execute(

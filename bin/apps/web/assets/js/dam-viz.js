@@ -3553,12 +3553,12 @@
       var vizCss = document.createElement("link");
       vizCss.id = "dam-viz-modal-css";
       vizCss.rel = "stylesheet";
-      vizCss.href = "assets/css/dam-viz-modal.css?v=2.5.3";
+      vizCss.href = "assets/css/dam-viz-modal.css?v=" + encodeURIComponent(String(window.DAM_APP_VERSION || Date.now()));
       document.head.appendChild(vizCss);
     } else {
       var existingVizCss = document.getElementById("dam-viz-modal-css");
       if (existingVizCss && existingVizCss.tagName === "LINK") {
-        existingVizCss.href = "assets/css/dam-viz-modal.css?v=2.5.3";
+        existingVizCss.href = "assets/css/dam-viz-modal.css?v=" + encodeURIComponent(String(window.DAM_APP_VERSION || Date.now()));
       }
     }
     document.body.insertAdjacentHTML("beforeend", html);
@@ -6399,12 +6399,113 @@
       return fetchVizIndexFromBridge();
     }
 
-    loadIndex().then(boot).catch(function (err) {
-      if (err && (err.name === "AbortError" || /abort/i.test(String(err && err.message ? err.message : err)))) {
+    /* ---- Swiezy komputer: katalog dopiero idzie z bazy --------------------------------
+       Most odpowiada wtedy 404 na /file-index (pliku spisu jeszcze nie ma). To nie awaria:
+       spokojny tekst i ponawianie co 3 s, najwyzej 3 minuty, potem komunikat z przyciskiem.
+       Stan loadera (DamFileIndex.state) tylko czytamy, gdy inny skrypt strony juz czeka. */
+    var VIZ_CATALOG_WAIT_TEXT = "Pobieram katalog z bazy...";
+    var VIZ_CATALOG_FAIL_TEXT = "Nie udało się pobrać katalogu z bazy - sprawdź połączenie";
+    var VIZ_CATALOG_RETRY_MS = 3000;
+    var VIZ_CATALOG_WAIT_MAX_MS = 180000;
+    var vizCatalogWait = { since: 0, timer: null, failSeen: -1, pollerSaw: false, skipPollerUntil: 0 };
+
+    function vizCatalogLoaderState() {
+      try {
+        var FI = window.DamFileIndex;
+        return (FI && typeof FI.state === "function" && FI.state()) || {};
+      } catch (eSt) {
+        return {};
+      }
+    }
+
+    function vizCatalogStop() {
+      clearTimeout(vizCatalogWait.timer);
+      vizCatalogWait.timer = null;
+      vizCatalogWait.since = 0;
+    }
+
+    function vizCatalogFail(msg) {
+      vizCatalogStop();
+      grid.innerHTML =
+        '<div role="alert"><p style="color:var(--dam-danger)">' +
+        esc(msg) +
+        '</p><p><button type="button" class="geex-btn geex-btn--primary" id="vizCatalogRetry">Spróbuj ponownie</button></p></div>';
+      var btn = document.getElementById("vizCatalogRetry");
+      if (btn) {
+        btn.addEventListener("click", function () {
+          loadIndex().then(boot).catch(onVizIndexError);
+        });
+      }
+    }
+
+    function onVizIndexError(err) {
+      var msg = String((err && err.message) || err || "");
+      if ((err && err.name === "AbortError") || /abort/i.test(msg)) {
+        /* Przerwane pobranie w trakcie czekania na katalog: probuj dalej, nie milknij. */
+        if (vizCatalogWait.since) {
+          clearTimeout(vizCatalogWait.timer);
+          vizCatalogWait.timer = setTimeout(vizCatalogRetry, VIZ_CATALOG_RETRY_MS);
+        }
         return;
       }
-      grid.innerHTML = '<p style="color:var(--dam-ink-danger, #FF5653)">Blad indeksu: ' + esc(err.message) + "</p>";
+      if (!/_404$/.test(msg)) {
+        vizCatalogStop();
+        grid.innerHTML = '<p style="color:var(--dam-ink-danger, #FF5653)">Błąd indeksu: ' + esc(msg) + "</p>";
+        return;
+      }
+      var now = Date.now();
+      if (!vizCatalogWait.since) vizCatalogWait.since = now;
+      var st = vizCatalogLoaderState();
+      /* Porazka ogloszona przez loader konczy czekanie raz; po "Sprobuj ponownie" ten sam,
+         stary stan nie przerywa juz nowej proby. */
+      if (st.state === "failed" && st.since !== vizCatalogWait.failSeen) {
+        vizCatalogWait.failSeen = st.since;
+        vizCatalogFail(st.message || VIZ_CATALOG_FAIL_TEXT);
+        return;
+      }
+      if (now - vizCatalogWait.since >= VIZ_CATALOG_WAIT_MAX_MS) {
+        vizCatalogFail(VIZ_CATALOG_FAIL_TEXT);
+        return;
+      }
+      if (!grid.querySelector("[data-viz-catalog-wait]")) {
+        grid.innerHTML =
+          '<p data-viz-catalog-wait="1" role="status" style="color:var(--dam-text-muted)">' +
+          esc(VIZ_CATALOG_WAIT_TEXT) +
+          "</p>";
+      }
+      clearTimeout(vizCatalogWait.timer);
+      vizCatalogWait.timer = setTimeout(vizCatalogRetry, VIZ_CATALOG_RETRY_MS);
+    }
+
+    function vizCatalogRetry() {
+      vizCatalogWait.timer = null;
+      if (!vizCatalogWait.since) return;
+      loadIndex()
+        .then(function (data) {
+          /* ponytail: poller zglosi pojawienie sie spisu przy swoim odczycie (do 10 s) -
+             to ten sam spis, wiec jedno jego zdarzenie w ciagu 30 s pomijamy. Sufit: zmiana
+             spisu w tych 30 s wejdzie dopiero z nastepna; lepiej byloby porownac mtime. */
+          vizCatalogWait.skipPollerUntil = vizCatalogWait.pollerSaw ? 0 : Date.now() + 30000;
+          vizCatalogWait.pollerSaw = false;
+          vizCatalogStop();
+          boot(data);
+        })
+        .catch(onVizIndexError);
+    }
+
+    window.addEventListener("dam:file-index-state", function (ev) {
+      if (!vizCatalogWait.since) return;
+      var st = (ev && ev.detail) || {};
+      if (st.state === "ready") {
+        clearTimeout(vizCatalogWait.timer);
+        vizCatalogRetry();
+      } else if (st.state === "failed") {
+        vizCatalogWait.failSeen = st.since;
+        vizCatalogFail(st.message || VIZ_CATALOG_FAIL_TEXT);
+      }
     });
+
+    loadIndex().then(boot).catch(onVizIndexError);
 
     /* Live refresh via shared poller (visible/focus + 10s, backoff while rebuild). */
     if (window.DamIndexPoller && typeof window.DamIndexPoller.create === "function") {
@@ -6412,6 +6513,15 @@
         name: "viz",
         statusPath: "/index/status",
         onChange: function () {
+          /* W trakcie czekania na katalog laduje petla wyzej - bez drugiego pobrania. */
+          if (vizCatalogWait.since) {
+            vizCatalogWait.pollerSaw = true;
+            return;
+          }
+          if (Date.now() < vizCatalogWait.skipPollerUntil) {
+            vizCatalogWait.skipPollerUntil = 0;
+            return;
+          }
           loadIndex().then(boot).catch(function () {});
         },
       });

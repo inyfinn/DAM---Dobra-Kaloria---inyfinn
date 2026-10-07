@@ -1,6 +1,6 @@
 ﻿; DAM Windows installer - pelny kreator (licencja, sciezka, aktualizacja)
 #ifndef MyAppVersion
-  #define MyAppVersion "2.5.9"
+  #define MyAppVersion "2.6.0"
 #endif
 #ifndef StageDir
   #define StageDir "..\..\work\dist\staging\DAM-install"
@@ -142,14 +142,15 @@ Source: "{#StageDir}\README.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#StageDir}\bin\*"; DestDir: "{app}\bin"; Excludes: "apps\web\data\market-index.json,\apps\web\data\branding-index.json,\apps\web\data\branding-index.scan.json,\apps\web\data\branding-scan-dirs.json,\apps\web\data\file-index.json,\apps\web\data\search-index.json,\apps\web\data\app-settings.json,\apps\web\data\campaigns.json,\apps\web\data\branding-grid-index.json,\apps\web\data\branding-grid-head.json,\apps\web\data\branding-search-index.json,\apps\web\data\lifecycle-status.json,\apps\web\data\product-people.json,\DATABASE\users-seed.sqlite,\PAMIEC-PODRECZNA\thumbs\*"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Miniatury maja nazwy = skrot tresci, wiec istniejacego pliku nie trzeba nadpisywac (szybsza aktualizacja).
 Source: "{#StageDir}\bin\PAMIEC-PODRECZNA\thumbs\*"; DestDir: "{app}\bin\PAMIEC-PODRECZNA\thumbs"; Flags: onlyifdoesntexist
-Source: "{#StageDir}\bin\apps\web\data\branding-index.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
-Source: "{#StageDir}\bin\apps\web\data\file-index.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
-Source: "{#StageDir}\bin\apps\web\data\search-index.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
+; 2.6.0 (decyzja wlasciciela 07.10.2026): instalator NIE wozi spisu katalogu - listy produktow
+; (file-index.json), wyszukiwarek (search-index.json, branding-search-index.json), kampanii
+; (campaigns.json) ani siatki materialow (branding-grid-index.json, branding-grid-head.json,
+; zaslepka branding-index.json). Swieza instalacja pobiera je z bazy przy pierwszym uruchomieniu
+; (index_snapshots.py, asset_sync_runner.py); do tego czasu ekrany pokazuja "Pobieram katalog z bazy".
+; Paczka wozila spis z dnia builda (2.5.8: lista z 20.09, bez 8 produktow, z 11 nieistniejacymi).
+; Te nazwy ZOSTAJA w Excludes linii bin\* wyzej: aktualizacja nie rusza plikow, ktore uzytkownik
+; juz ma (nic ich nie nadpisuje ani nie kasuje), a przypadkowy plik w staging nie trafi do paczki.
 Source: "{#StageDir}\bin\apps\web\data\app-settings.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
-Source: "{#StageDir}\bin\apps\web\data\campaigns.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
-Source: "{#StageDir}\bin\apps\web\data\branding-grid-index.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
-Source: "{#StageDir}\bin\apps\web\data\branding-grid-head.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
-Source: "{#StageDir}\bin\apps\web\data\branding-search-index.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
 Source: "{#StageDir}\bin\apps\web\data\lifecycle-status.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
 Source: "{#StageDir}\bin\apps\web\data\product-people.json"; DestDir: "{app}\bin\apps\web\data"; Flags: onlyifdoesntexist
 Source: "{#StageDir}\bin\DATABASE\users-seed.sqlite"; DestDir: "{app}\bin\DATABASE"; Flags: onlyifdoesntexist

@@ -75,6 +75,31 @@ SHRINK_GUARD = 0.8
 # sprawdzamy tanio, czy plik "wyglada" na kompletny JSON (patrz
 # _looks_complete_json nizej).
 FULL_PARSE_MAX_BYTES = 50 * 1024 * 1024
+# 07.10.2026 (audyt publikacji, Z1): wlasciciel nie cofa pobraniem z bazy pliku, ktory
+# zmienil sie lokalnie i czeka na znacznik mark_built_here (dopisuje go INNY proces,
+# sekundy do minut po zapisie pliku). Dluzej niz tyle nie czekamy - wraca wersja z bazy.
+PENDING_BUILD_HOLD_S = 1800.0
+# Log cykli (most pod pythonw gubi stdout): jeden plik + jedna kopia .1.
+LOG_MAX_BYTES = 1_000_000
+# 07.10.2026 (instalator nie pakuje spisu - katalog zawsze z bazy): do PIERWSZEGO udanego pobrania
+# ponawiamy co FIRST_SYNC_RETRY_S przez FIRST_SYNC_FAST_FOR_S, potem odstep rosnie (0,5 s na sekunde)
+# do FIRST_SYNC_RETRY_MAX_S; po pierwszym sukcesie obowiazuje zwykly rytm (LIGHT_CHECK_S / REFRESH_S).
+# Ponowienie to samo pobranie (pull_newer), bez publikacji i bez nakladania sie na trwajacy cykl.
+FIRST_SYNC_RETRY_S = 5.0
+FIRST_SYNC_FAST_FOR_S = 60.0
+FIRST_SYNC_RETRY_MAX_S = 30.0
+FIRST_SYNC_TICK_S = 1.0
+# Limit POLACZENIA w probach pierwszego pobrania (pg_db: 5 s do pierwszego sukcesu, potem 1 s - po
+# sukcesie meta kazde kolejne polaczenie w tym samym cyklu, w tym pobranie 5,6 MB, ma 1 s, a libpq
+# i tak podnosi wartosci < 2 s do 2 s). Pomiar 07.10 z tego komputera (siec firmowa): polaczenie
+# 75-163 ms, DNS 1 ms z cache, zimny start Windows i lacze domowe do zmierzenia osobno. 15 s =
+# ponad 90x mediany: wolne lacze nie moze dawac porazki, a koszt to tylko dluzsze trwanie JEDNEJ
+# nieudanej proby w watku migawek (UI i logowanie zostaja przy 5 s).
+FIRST_SYNC_CONNECT_TIMEOUT_S = 15.0
+# Opoznienie pierwszego cyklu po starcie mostu ("najpierw UI, potem siec"). Swiezy komputer bez plikow
+# spisu nie ma co pokazywac, wiec pierwsze pobranie rusza szybko; gdy pliki sa, bez zmian.
+START_DELAY_S = 8.0
+START_DELAY_FRESH_S = 2.0
 
 # Faza 2 (bin/docs/PLAN-jedno-zrodlo-prawdy.md): gdy asset_sync_runner.py ma
 # wlaczony tryb "rows" (dam_meta.asset_index_mode = "rows"), branding-index.json
@@ -90,12 +115,31 @@ _THREAD: threading.Thread | None = None
 _LAST: dict[str, Any] = {}
 # Faza 3 (PLAN-jedno-zrodlo-prawdy.md, zadanie 3.4): stan pierwszej synchronizacji
 # po starcie procesu, do wystawienia w /health / banerze UI "pobieram dane".
-_FIRST_SYNC: dict[str, Any] = {"done": False, "ok": None, "started_at": "", "finished_at": ""}
+_FIRST_SYNC: dict[str, Any] = {"done": False, "ok": None, "started_at": "", "finished_at": "",
+                               "attempts": 0, "last_error": "", "next_retry_at": ""}
 
 
 def is_not_authority_error(err: Any) -> bool:
     """Odmowa bramki ADR-012 (wyzwalacz w bazie), nie blad sieci/bazy."""
     return NOT_AUTHORITY_MARK in str(err or "")
+
+
+def _pg_timeout_kwargs(fn: Callable[..., Any], timeout: float | None) -> dict[str, float]:
+    """{"timeout": N}, gdy funkcja pg_db ma jawny parametr `timeout` (limit polaczenia), inaczej {}.
+    Pierwsze pobranie dostaje dluzszy limit, a pg_db sprzed tej zmiany dziala jak dotad."""
+    if not timeout:
+        return {}
+    try:
+        import inspect
+
+        return {"timeout": float(timeout)} if "timeout" in inspect.signature(fn).parameters else {}
+    except (TypeError, ValueError):
+        return {}
+
+
+def _connector(pg_db: Any, timeout: float | None) -> Callable[[], Any]:
+    kw = _pg_timeout_kwargs(pg_db.connect, timeout)
+    return (lambda: pg_db.connect(**kw)) if kw else pg_db.connect
 
 
 def generations_signature() -> tuple | None:
@@ -111,7 +155,7 @@ def generations_signature() -> tuple | None:
                         for k, m in (metas or {}).items()))
 
 
-def _asset_index_mode_is_rows(*, force: bool = False) -> bool:
+def _asset_index_mode_is_rows(*, force: bool = False, connect_timeout: float | None = None) -> bool:
     """dam_meta.asset_index_mode == "rows"? Cache 10 min - nie pytamy bazy na kazdy plik.
 
     Blad polaczenia / brak tabeli = False (bezpieczny domyslny: snapshoty dzialaja
@@ -123,7 +167,7 @@ def _asset_index_mode_is_rows(*, force: bool = False) -> bool:
     try:
         import pg_db
 
-        pg = pg_db.connect()
+        pg = _connector(pg_db, connect_timeout)()
         try:
             cur = pg.cursor()
             cur.execute("SELECT value FROM dam_meta WHERE key = %s", ("asset_index_mode",))
@@ -149,6 +193,49 @@ def _state_lock_path() -> Path:
 
 
 _STATE_LOCK_TIMEOUT_S = 5.0
+# Blokada starsza niz tyle (albo z martwym pid) jest przejmowana. 06.10.2026 pusty plik
+# blokady po padnietym procesie wisial dobe i kazdy zapis stanu kosztowal 5 s czekania.
+_STATE_LOCK_STALE_S = 60.0
+
+
+def _pid_alive(pid: int) -> bool:
+    try:
+        import rebuild_lock
+
+        return rebuild_lock._pid_alive(pid)
+    except Exception:  # noqa: BLE001 - nie wiemy = traktuj jak zywy (wiek i tak go zwolni)
+        return True
+
+
+def _lock_is_stale(lock_path: Path) -> bool:
+    """Przeterminowana (mtime) albo po martwym procesie. Pusty plik (stary format albo
+    wlasnie tworzony przez inny proces) oceniamy tylko po wieku."""
+    try:
+        if abs(time.time() - lock_path.stat().st_mtime) > _STATE_LOCK_STALE_S:
+            return True
+        pid = int(lock_path.read_text(encoding="utf-8").split(":")[0] or 0)
+    except (OSError, ValueError):
+        return False
+    return bool(pid) and pid != os.getpid() and not _pid_alive(pid)
+
+
+def _take_over_lock(lock_path: Path, token: str) -> bool:
+    """Nadpisz przeterminowana blokade wlasna (tmp + replace). Niczego nie kasuje."""
+    tmp = lock_path.with_name(lock_path.name + f".{os.getpid()}.{threading.get_ident()}.tmp")
+    try:
+        tmp.write_text(token, encoding="utf-8")
+        os.replace(tmp, lock_path)
+        # ponytail: dwoch przejmujacych naraz rozstrzyga "czyj zapis zostal po 50 ms";
+        # okno istnieje tylko przy przeterminowanej blokadzie. Gdyby kolizje sie
+        # zdarzaly: blokada systemowa (msvcrt.locking / fcntl) na otwartym pliku.
+        time.sleep(0.05)
+        return lock_path.read_text(encoding="utf-8") == token
+    except OSError:
+        try:
+            tmp.unlink()  # wlasny plik tymczasowy, gdy replace sie nie udal
+        except OSError:
+            pass
+        return False
 
 
 @contextlib.contextmanager
@@ -163,38 +250,74 @@ def _state_lock():
     watcher wlasnie dopisal, i odwrotnie).
 
     Prosty plik-znacznik (O_CREAT|O_EXCL) - dziala identycznie na Windows/Linux,
-    bez dodatkowej zaleznosci. Timeout: nie blokuj watku HTTP w nieskonczonosc -
-    po uplywie czasu piszemy i tak (rzadka kolizja jest tansza niz zawieszony most;
-    martwy plik blokady po padniete procesie tez nie ma prawa wisiec na zawsze)."""
+    bez dodatkowej zaleznosci. W pliku "pid:watek:czas" - po tym poznajemy wlasna
+    blokade przy zwalnianiu i martwego wlasciciela przy czekaniu (_lock_is_stale).
+    Timeout: nie blokuj watku HTTP w nieskonczonosc - po uplywie czasu piszemy i tak
+    (rzadka kolizja jest tansza niz zawieszony most). Oddaje True, gdy blokada jest nasza."""
     lock_path = _state_lock_path()
     try:
         lock_path.parent.mkdir(parents=True, exist_ok=True)
     except OSError:
         pass
+    token = f"{os.getpid()}:{threading.get_ident()}:{time.time():.6f}"
     deadline = time.monotonic() + _STATE_LOCK_TIMEOUT_S
-    fd = None
+    held = False
     while True:
         try:
             fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            try:
+                os.write(fd, token.encode("utf-8"))
+            finally:
+                os.close(fd)  # zamkniety uchwyt: przeterminowana blokade da sie przejac
+            held = True
             break
         except FileExistsError:
+            if _lock_is_stale(lock_path) and _take_over_lock(lock_path, token):
+                held = True
+                break
             if time.monotonic() >= deadline:
                 break  # zrezygnuj z blokady po timeout - zapisz i tak
             time.sleep(0.05)
         except OSError:
             break  # np. brak dostepu do katalogu - zapisz bez blokady
     try:
-        yield
+        yield held
     finally:
-        if fd is not None:
+        # Windows: unlink pada (PermissionError), gdy czekajacy proces akurat czyta ten
+        # plik w _lock_is_stale. Bez ponowienia blokada zostawala na 60 s (pomiar 07.10).
+        for _ in range(40 if held else 0):
             try:
-                os.close(fd)
+                # tylko wlasna: ktos mogl ja przejac, gdy trzymalismy ponad 60 s
+                if lock_path.read_text(encoding="utf-8") == token:
+                    lock_path.unlink()
+                break
+            except FileNotFoundError:
+                break
             except OSError:
-                pass
-            try:
-                lock_path.unlink()
-            except OSError:
-                pass
+                time.sleep(0.01)
+
+
+def _log_path() -> Path:
+    return platform_compat.user_state_dir() / "logs" / "index-snapshots.log"
+
+
+def _log(text: str, data: Any = None) -> None:
+    """Dziennik cykli w katalogu stanu (wzor: dam_file_availability._mark). Nigdy nie rzuca."""
+    try:
+        if data is not None:
+            text = f"{text} {json.dumps(data, ensure_ascii=False, default=str)}"
+        target = _log_path()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            if target.stat().st_size > LOG_MAX_BYTES:
+                os.replace(target, target.with_name(target.name + ".1"))
+        except OSError:
+            pass
+        ts = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        with open(target, "a", encoding="utf-8") as fh:
+            fh.write(f"{ts} {text}\n")
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def _load_state() -> dict[str, Any]:
@@ -211,9 +334,32 @@ def _save_state(state: dict[str, Any]) -> None:
         p.parent.mkdir(parents=True, exist_ok=True)
         tmp = p.with_name(p.name + f".{os.getpid()}.tmp")
         tmp.write_text(json.dumps(state, ensure_ascii=False, indent=1), encoding="utf-8")
-        os.replace(tmp, p)
+        for attempt in range(20):
+            try:
+                os.replace(tmp, p)
+                break
+            except PermissionError:
+                # Windows: ktos wlasnie czyta stan (status(), local_signature() czytaja
+                # bez blokady co 2 s) - bez ponowienia zapis ginal po cichu.
+                if attempt == 19:
+                    raise
+                time.sleep(0.01)
     except OSError:
         pass
+
+
+def _save_cycle_state(state: dict[str, Any]) -> None:
+    """Zapis stanu na koncu pull_newer / publish_changed. Oba trzymaja blokade przez
+    cala siec (pobranie / wysylka), a czekajacy mark_built_here po 5 s pisze bez
+    blokady. built_here_sha ustawia TYLKO mark_built_here, wiec wartosc z dysku jest
+    nie starsza niz nasza kopia sprzed cyklu - bierzemy ja, zamiast kasowac swiezy
+    znacznik (bez niego plik czeka PENDING_BUILD_HOLD_S i wraca do wersji z bazy)."""
+    for key, on_disk in _load_state().items():
+        mark = on_disk.get("built_here_sha") if isinstance(on_disk, dict) else None
+        entry = state.setdefault(key, {})
+        if mark and isinstance(entry, dict):
+            entry["built_here_sha"] = mark
+    _save_state(state)
 
 
 def _file_sig(path: Path) -> tuple[int, int] | None:
@@ -257,6 +403,22 @@ def _is_built_here(entry: dict[str, Any], sha: str) -> bool:
     if built_here:
         return sha == built_here
     return bool(sha) and sha == entry.get("published_sha") and entry.get("source") == "local"
+
+
+def _pending_local_build(entry: dict[str, Any], sha: str, path: Path) -> bool:
+    """Plik zmienil sie lokalnie od ostatniego znanego stanu (pobranie / publikacja /
+    znacznik / zgodnosc z baza = synced_sha) i jest swiezy (mtime w oknie
+    PENDING_BUILD_HOLD_S) = lokalny build, ktory czeka na mark_built_here. Pusty stan
+    (pierwsza synchronizacja, plik z paczki instalatora) to NIE jest oczekujacy build -
+    wtedy wygrywa baza."""
+    known = {entry.get(k) for k in ("pulled_sha", "published_sha", "built_here_sha", "synced_sha")}
+    known -= {None, ""}
+    if not sha or not known or sha in known:
+        return False
+    try:
+        return abs(time.time() - path.stat().st_mtime) <= PENDING_BUILD_HOLD_S
+    except OSError:
+        return False
 
 
 def mark_built_here(key: str, path: Path | str) -> dict[str, Any]:
@@ -362,8 +524,9 @@ def publish_changed(data_dir: Path, *, root_alive: bool, force: bool = False) ->
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "error": f"pg_db: {exc}"}
     # Faza 3 (decyzja kierownika 27.09.2026): ROOT lokalny nie daje prawa do
-    # zmiany wspolnego katalogu w bazie - patrz index_authority.py. None (brak
-    # klucza / blad odczytu) = zachowanie jak przed tym modulem (dozwolone).
+    # zmiany wspolnego katalogu w bazie - patrz index_authority.py. 07.10.2026 (zasada wlasciciela:
+    # ekran pokazuje stan bazy): None (brak klucza / blad odczytu bez zapamietanej wartosci) =
+    # "nie wiem" = "nie wolno". Wyjatek: force (reczne "Wyslij indeks do bazy" przez admina).
     try:
         import index_authority
 
@@ -372,6 +535,8 @@ def publish_changed(data_dir: Path, *, root_alive: bool, force: bool = False) ->
         allowed = None
     if allowed is False:
         return {"ok": True, "skipped": "not_authority"}
+    if allowed is None and not force:
+        return {"ok": True, "skipped": "authority_unknown"}
     out: dict[str, Any] = {"ok": True, "published": [], "unchanged": []}
     try:
         db_metas = pg_db.index_snapshot_meta()
@@ -432,6 +597,7 @@ def publish_changed(data_dir: Path, *, root_alive: bool, force: bool = False) ->
                     except Exception:  # noqa: BLE001
                         pass
                     print(f"index_snapshots: {key} odrzucony przez baze (not_authority)", flush=True)
+                    _log(f"{key} odrzucony przez baze (not_authority)")
                     break
                 out["ok"] = False
                 out.setdefault("errors", {})[key] = str(exc)[:300]
@@ -439,7 +605,7 @@ def publish_changed(data_dir: Path, *, root_alive: bool, force: bool = False) ->
             entry["published_sha"] = sha
             entry["generation"] = res.get("generation")
             (out["published"] if res.get("changed") else out["unchanged"]).append(key)
-        _save_state(state)
+        _save_cycle_state(state)
     return out
 
 
@@ -448,9 +614,13 @@ def pull_newer(
     *,
     root_alive: bool,
     on_updated: Callable[[str, Path], None] | None = None,
+    connect_timeout: float | None = None,
 ) -> dict[str, Any]:
     """Sciagnij z bazy nowsza generacje skanu. Komputer z folderem jest zrodlem - nie
-    nadpisujemy mu swiezszego lokalnego skanu starszym z bazy."""
+    nadpisujemy mu swiezszego lokalnego skanu starszym z bazy.
+
+    connect_timeout (proby pierwszego pobrania): limit KAZDEGO polaczenia w tym pobraniu
+    (meta, lista wlascicieli, tresc migawek), gdy pg_db przyjmuje parametr `timeout`."""
     try:
         import data_mode
 
@@ -461,28 +631,31 @@ def pull_newer(
     try:
         import pg_db
 
-        metas = pg_db.index_snapshot_meta()
+        metas = pg_db.index_snapshot_meta(**_pg_timeout_kwargs(pg_db.index_snapshot_meta, connect_timeout))
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "error": str(exc)[:300]}
     out: dict[str, Any] = {"ok": True, "pulled": [], "current": [], "missing_in_db": []}
     # ADR-012 pkt 3: "lokalny nowszy plik wygrywa" tylko dla wlasciciela katalogu
-    # (may_publish True) albo gdy listy nie ma (None = jak dotad). Komputer spoza
-    # listy zawsze bierze wersje z bazy - jego ROOT bywa opozniona kopia Drive.
+    # (may_publish True). Komputer spoza listy zawsze bierze wersje z bazy - jego ROOT bywa
+    # opozniona kopia Drive. 07.10.2026: lista nieznana (None) tez = wersja z bazy ("nie wiem" =
+    # "nie wolno": ekran pokazuje stan bazy, nie to, co ma ten komputer); zapamietana wartosc listy
+    # (index_authority: plik stanu) obowiazuje jak dotad, wiec wlasciciel przy chwilowo
+    # niedostepnej bazie dalej wygrywa lokalnym buildem.
     try:
         import index_authority
 
-        authority = index_authority.may_publish(pg_db.connect)
+        authority = index_authority.may_publish(_connector(pg_db, connect_timeout))
     except Exception:  # noqa: BLE001
         authority = None
-    local_may_win = authority is not False
+    local_may_win = authority is True
     if not local_may_win:
-        out["authority"] = False
+        out["authority"] = False if authority is False else "unknown"
     # Blokada miedzyprocesowa: most i watch-file-index.py (mark_built_here) pisza
     # do tego samego pliku stanu - patrz _state_lock().
     with _state_lock():
         state = _load_state()
         for key, fname in SNAPSHOT_FILES.items():
-            if key == ROWS_MODE_SKIP_KEY and _asset_index_mode_is_rows():
+            if key == ROWS_MODE_SKIP_KEY and _asset_index_mode_is_rows(connect_timeout=connect_timeout):
                 out.setdefault("skipped_rows_mode", []).append(key)
                 continue
             meta = metas.get(key)
@@ -495,6 +668,7 @@ def pull_newer(
             entry["db"] = {k: meta.get(k) for k in ("generation", "built_at", "built_by", "published_at", "sha256")}
             if local_sha and local_sha == meta.get("sha256"):
                 entry["source"] = "db" if entry.get("pulled_sha") == local_sha else entry.get("source") or "local"
+                entry["synced_sha"] = local_sha  # znany stan dla _pending_local_build
                 out["current"].append(key)
                 continue
             if (
@@ -508,9 +682,12 @@ def pull_newer(
                 out["current"].append(key)
                 entry["source"] = "local"
                 continue
+            if local_may_win and root_alive and _pending_local_build(entry, local_sha, path):
+                out.setdefault("pending_local_build", []).append(key)
+                continue
             t0 = time.monotonic()
             try:
-                got = pg_db.fetch_index_snapshot(key)
+                got = pg_db.fetch_index_snapshot(key, **_pg_timeout_kwargs(pg_db.fetch_index_snapshot, connect_timeout))
                 if not got:
                     continue
                 m2, raw = got
@@ -535,7 +712,7 @@ def pull_newer(
                     on_updated(key, path)
                 except Exception:  # noqa: BLE001
                     pass
-        _save_state(state)
+        _save_cycle_state(state)
     return out
 
 
@@ -564,8 +741,22 @@ def first_sync_state() -> dict[str, Any]:
     return dict(_FIRST_SYNC)
 
 
+def _note_first_sync(pull: dict[str, Any]) -> None:
+    """Zapis wyniku proby pobrania w stanie pierwszej synchronizacji (wolac pod _LOCK).
+    `done` = pierwsza proba sie zakonczyla (udana lub nie), `ok` = wynik OSTATNIEJ proby do
+    pierwszego sukcesu; po sukcesie stan sie nie zmienia (pozniejsze porazki to zwykly rytm)."""
+    _FIRST_SYNC["attempts"] = int(_FIRST_SYNC.get("attempts") or 0) + 1
+    if _FIRST_SYNC.get("ok") is True:
+        return
+    ok = bool(pull.get("ok"))
+    err = "" if ok else str(pull.get("error") or pull.get("errors") or "nieznany blad")[:300]
+    _FIRST_SYNC.update(done=True, ok=ok, last_error=err, finished_at=datetime.now(timezone.utc).isoformat())
+    if ok:
+        _FIRST_SYNC["next_retry_at"] = ""
+
+
 def run_once(data_dir: Path, root_alive_fn: Callable[[], bool],
-             on_updated: Callable[[str, Path], None] | None = None) -> dict[str, Any]:
+             on_updated: Callable[[str, Path], None] | None = None, *, why: str = "") -> dict[str, Any]:
     with _LOCK:
         is_first = not _FIRST_SYNC["done"]
         if is_first and not _FIRST_SYNC["started_at"]:
@@ -576,16 +767,112 @@ def run_once(data_dir: Path, root_alive_fn: Callable[[], bool],
             alive = False
         # PLAN Faza 3, zadanie 3.4: najpierw pobierz (zeby lokalny plik z instalatora
         # zdazyl sie zastapic wersja z bazy PRZED ewentualna publikacja), potem publikuj.
-        pull = pull_newer(data_dir, root_alive=alive, on_updated=on_updated)
-        pub = publish_changed(data_dir, root_alive=alive)
-        _LAST.update(at=datetime.now(timezone.utc).isoformat(), root_alive=alive, publish=pub, pull=pull)
-        if is_first:
-            _FIRST_SYNC.update(
-                done=True,
-                ok=bool(pull.get("ok")),
-                finished_at=datetime.now(timezone.utc).isoformat(),
-            )
+        first_try = _FIRST_SYNC.get("ok") is not True  # do pierwszego sukcesu dluzszy limit polaczenia
+        pull = pull_newer(data_dir, root_alive=alive, on_updated=on_updated,
+                          connect_timeout=FIRST_SYNC_CONNECT_TIMEOUT_S if first_try else None)
+        if not pull.get("ok") and pull.get("error") and not pull.get("errors"):
+            # Baza nieosiagalna (meta nie odczytane): publikacja polaczylaby sie jeszcze dwa razy
+            # (meta + lista wlascicieli, kazde z limitem polaczenia) i tak bez skutku.
+            pub = {"ok": True, "skipped": "db_unreachable"}
+        else:
+            pub = publish_changed(data_dir, root_alive=alive)
+        _LAST.update(at=datetime.now(timezone.utc).isoformat(), why=why, root_alive=alive, publish=pub, pull=pull)
+        _log("cykl", {"why": why, "root": alive, "pull": pull, "publish": pub})
+        _note_first_sync(pull)
         return dict(_LAST)
+
+
+def retry_first_pull(data_dir: Path, root_alive_fn: Callable[[], bool],
+                     on_updated: Callable[[str, Path], None] | None = None) -> bool | None:
+    """Ponowienie PIERWSZEGO pobrania z bazy: samo pull_newer, bez publikacji. None = trwa inny
+    cykl (run_once / ponowienie z innego watku) - nic nie robimy i nie liczymy proby; True = pobranie
+    sie udalo (takze pusta baza: baza odpowiedziala); False = porazka. Po kazdej probie zmienia sie
+    `last.at` w /index/snapshots (UI po tym widzi, ze most zyje i probuje)."""
+    if not _LOCK.acquire(blocking=False):
+        return None
+    try:
+        if _FIRST_SYNC.get("ok") is True:
+            return True
+        try:
+            alive = bool(root_alive_fn())
+        except Exception:  # noqa: BLE001
+            alive = False
+        pull = pull_newer(data_dir, root_alive=alive, on_updated=on_updated,
+                          connect_timeout=FIRST_SYNC_CONNECT_TIMEOUT_S)
+        _LAST.update(at=datetime.now(timezone.utc).isoformat(), why="first_sync_retry", root_alive=alive,
+                     publish={"ok": True, "skipped": "first_sync_retry"}, pull=pull)
+        _log("ponowienie pierwszego pobrania", {"root": alive, "pull": pull})
+        _note_first_sync(pull)
+        return bool(pull.get("ok"))
+    finally:
+        _LOCK.release()
+
+
+def first_sync_delay(elapsed_s: float) -> float:
+    """Odstep miedzy probami pierwszego pobrania: FIRST_SYNC_RETRY_S przez pierwsza minute od
+    porazki, potem rosnie 0,5 s na sekunde do FIRST_SYNC_RETRY_MAX_S."""
+    if elapsed_s < FIRST_SYNC_FAST_FOR_S:
+        return FIRST_SYNC_RETRY_S
+    return min(FIRST_SYNC_RETRY_MAX_S, FIRST_SYNC_RETRY_S + (elapsed_s - FIRST_SYNC_FAST_FOR_S) * 0.5)
+
+
+class FirstSyncRetry:
+    """Harmonogram ponowien pierwszego pobrania (testowalny bez watku). Aktywny od porazki pierwszego
+    cyklu (`_FIRST_SYNC.done` i `ok is False`) do pierwszego sukcesu; `attempt` zwraca True/False/None
+    (patrz retry_first_pull)."""
+
+    def __init__(self, attempt: Callable[[], bool | None], *, clock: Callable[[], float] = time.monotonic):
+        self.attempt = attempt
+        self.clock = clock
+        self._since: float | None = None
+        self._next_at = 0.0
+        self.tries = 0
+
+    @staticmethod
+    def pending() -> bool:
+        return bool(_FIRST_SYNC.get("done")) and _FIRST_SYNC.get("ok") is False
+
+    def _arm(self, now: float) -> None:
+        self._since = now
+        self._set_next(now + first_sync_delay(0.0))
+
+    def _set_next(self, at: float) -> None:
+        self._next_at = at
+        eta = datetime.now(timezone.utc).timestamp() + max(0.0, at - self.clock())
+        _FIRST_SYNC["next_retry_at"] = datetime.fromtimestamp(eta, tz=timezone.utc).isoformat()
+
+    def cycle_finished(self) -> None:
+        """Wolane po kazdym pelnym cyklu: porazka pierwszego pobrania uzbraja odliczanie od teraz."""
+        if self.pending():
+            self._arm(self.clock())
+        else:
+            self._since = None
+
+    def due(self) -> bool:
+        if not self.pending():
+            self._since = None
+            return False
+        now = self.clock()
+        if self._since is None:
+            self._arm(now)
+        return now >= self._next_at
+
+    def run(self) -> bool | None:
+        try:
+            res = self.attempt()
+        except Exception as exc:  # noqa: BLE001 - blad proby to porazka, nie petla co sekunde
+            _log(f"ponowienie pierwszego pobrania: wyjatek {str(exc)[:300]}")
+            res = False
+        now = self.clock()
+        if res is None:  # trwa inny cykl: sprawdzimy za chwile, proby nie liczymy
+            self._set_next(now + FIRST_SYNC_TICK_S)
+            return None
+        self.tries += 1
+        if res:
+            self._since = None
+            return True
+        self._set_next(now + first_sync_delay(now - (self._since if self._since is not None else now)))
+        return False
 
 
 def local_signature(data_dir: Path) -> tuple:
@@ -660,10 +947,11 @@ class SnapshotLoop:
     wlasciciel (True) publikuje, klient (False) wraca do wersji z bazy. None = jak dotad."""
 
     def __init__(self, data_dir: Path, *, run_cycle: Callable[[str], Any], remote_watch: Any,
-                 clock: Callable[[], float] = time.monotonic):
+                 clock: Callable[[], float] = time.monotonic, first_retry: FirstSyncRetry | None = None):
         self.run_cycle = run_cycle
         self.remote_watch = remote_watch
         self.clock = clock
+        self.first_retry = first_retry  # ponawianie pierwszego pobrania (None = jak dotad)
         self.local = LocalBuildWatch(lambda: local_signature(data_dir), clock=clock)
         self._next_remote = 0.0
         self._last_full: float | None = None
@@ -671,11 +959,14 @@ class SnapshotLoop:
     def tick(self) -> str:
         why = ""
         now = self.clock()
+        if self.first_retry is not None and self.first_retry.due():
+            self.first_retry.run()  # samo pobranie, bez publikacji; nie nachodzi na trwajacy cykl (_LOCK)
         if self.local.due():
             if _authority_decision() is not None:
                 why = "local_build"
-            else:
-                self.local.done()
+            # None = lista publikujacych nieznana: zmiana lokalna ZOSTAJE oczekujaca (due() dalej prawdziwe)
+            # do chwili, gdy lista bedzie znana (cache listy 60 s ogranicza pytania do bazy); pelny cykl
+            # w miedzyczasie i tak ja zamyka (finally nizej) pobraniem wersji z bazy.
         if not why and now >= self._next_remote:
             self._next_remote = now + LIGHT_CHECK_S
             if self.remote_watch is not None:
@@ -693,7 +984,40 @@ class SnapshotLoop:
                 if self.remote_watch is not None:
                     self.remote_watch.done()
                 self.local.done()
+                if self.first_retry is not None:
+                    self.first_retry.cycle_finished()
         return why
+
+
+def _catalog_files_present(data_dir: Path) -> bool:
+    """Czy sa lokalne pliki spisu (lista i wyszukiwarka produktow, niepuste)."""
+    for key in ("file-index", "search-index"):
+        sig = _file_sig(Path(data_dir) / SNAPSHOT_FILES[key])
+        if sig is None or sig[0] < MIN_BYTES:
+            return False
+    return True
+
+
+def _startup_delay_s(data_dir: Path) -> float:
+    return START_DELAY_S if _catalog_files_present(data_dir) else START_DELAY_FRESH_S
+
+
+def _initial_wait(data_dir: Path) -> None:
+    time.sleep(_startup_delay_s(data_dir))
+
+
+def _cycle_safe(data_dir: Path, root_alive_fn: Callable[[], bool],
+                on_updated: Callable[[str, Path], None] | None, why: str) -> dict[str, Any]:
+    """run_once bez wyjatku na zewnatrz. Wyjatek tez zmienia `last.at` (UI widzi, ze most zyje i probuje)."""
+    try:
+        return run_once(data_dir, root_alive_fn, on_updated, why=why)
+    except Exception as exc:  # noqa: BLE001 - watek nie moze umrzec
+        err = str(exc)[:300]
+        _LAST.update(at=datetime.now(timezone.utc).isoformat(), why=why, error=err)
+        _log(f"cykl blad why={why}: {err}")
+        with _LOCK:  # wyjatek pierwszego cyklu = porazka pierwszego pobrania: wlacza ponawianie
+            _note_first_sync({"ok": False, "error": err})
+        return {"error": err}
 
 
 def start_watch(data_dir: Path, root_alive_fn: Callable[[], bool],
@@ -703,16 +1027,13 @@ def start_watch(data_dir: Path, root_alive_fn: Callable[[], bool],
         return {"ok": True, "started": False}
 
     def cycle(why: str) -> None:
-        try:
-            res = run_once(data_dir, root_alive_fn, on_updated)
-        except Exception as exc:  # noqa: BLE001 - watek nie moze umrzec
-            res = {"error": str(exc)[:300]}
+        res = _cycle_safe(data_dir, root_alive_fn, on_updated, why)
         print("index_snapshots:", {"why": why, "root": res.get("root_alive"),
                                    "publish": res.get("publish"), "pull": res.get("pull")},
               flush=True)
 
     def loop() -> None:
-        time.sleep(8.0)  # po starcie mostu: najpierw UI, potem siec
+        _initial_wait(data_dir)  # po starcie mostu: najpierw UI, potem siec (swiezy komputer: szybciej)
         # ADR-012 pkt 4: co LIGHT_CHECK_S tylko generacje (bez payload); pelny cykl
         # przy zmianie w bazie albo co REFRESH_S jak dotad. Bez LightWatch (import
         # sie nie udal) - dawna petla co REFRESH_S. W8: plus lokalny build (SnapshotLoop).
@@ -722,13 +1043,16 @@ def start_watch(data_dir: Path, root_alive_fn: Callable[[], bool],
             watch = LightWatch(REFRESH_S, generations_signature)
         except Exception:  # noqa: BLE001
             watch = None
-        stepper = SnapshotLoop(data_dir, run_cycle=cycle, remote_watch=watch)
+        retry = FirstSyncRetry(lambda: retry_first_pull(data_dir, root_alive_fn, on_updated))
+        stepper = SnapshotLoop(data_dir, run_cycle=cycle, remote_watch=watch, first_retry=retry)
         while True:
             try:
                 stepper.tick()
             except Exception as exc:  # noqa: BLE001 - watek nie moze umrzec
                 print("index_snapshots: tick error", str(exc)[:300], flush=True)
-            time.sleep(LOCAL_CHECK_S)
+                _log(f"tick error {str(exc)[:300]}")
+            # do pierwszego udanego pobrania sprawdzamy co sekunde (ponowienia co 5 s), potem jak dotad
+            time.sleep(FIRST_SYNC_TICK_S if retry.pending() else LOCAL_CHECK_S)
 
     _THREAD = threading.Thread(target=loop, daemon=True, name="dam-index-snapshots")
     _THREAD.start()

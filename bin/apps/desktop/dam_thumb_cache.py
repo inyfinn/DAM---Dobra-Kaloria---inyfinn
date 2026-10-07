@@ -3304,7 +3304,19 @@ def publish_new_thumbs(*, publisher: str = "") -> dict:
         return _publish_new_thumbs_locked(publisher=publisher or _publisher_name())
 
 
+def _real_publish_blocked_in_tests() -> bool:
+    """Pod unittest prawdziwej publikacji nie robimy, chyba ze test jawnie pozwala
+    (DAM_ALLOW_REAL_SPAWN_IN_TESTS=1 - ten sam wylacznik co index_supervisor i watch-file-index.py).
+    07.10.2026: test petli obserwatora doszedl tu bez atrapy - watek zalozyl
+    <repo>/bin/PAMIEC-PODRECZNA/thumbs i zaczal odpytywac magazyn na NAS."""
+    return _network_blocked_in_tests() and os.environ.get("DAM_ALLOW_REAL_SPAWN_IN_TESTS", "").strip() != "1"
+
+
 def _publish_new_thumbs_locked(*, publisher: str) -> dict:
+    # Tylko PRAWDZIWY magazyn (domyslna sciezka W:, a przy jej braku SSH + Postgres): test, ktory
+    # podstawil wlasny katalog magazynu (DAM_NAS_CACHE_PATH / atrapa nas_cache_path), dziala jak dotad.
+    if _real_publish_blocked_in_tests() and nas_cache_path() == NAS_CACHE_PATH_DEFAULT:
+        return {"ok": True, "skipped": "unittest"}
     local_thumbs = cache_root() / "thumbs"
     nas_root = nas_cache_path()
     queued_only = False
@@ -3440,6 +3452,9 @@ def _publish_new_thumbs_locked(*, publisher: str) -> dict:
 
 
 def start_publish_after_index() -> dict:
+    if _real_publish_blocked_in_tests():
+        return {"ok": True, "skipped": "unittest"}
+
     def _worker() -> None:
         try:
             publish_new_thumbs()

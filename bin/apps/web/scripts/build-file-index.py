@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import stat
 import re
 import shutil
 import sys
@@ -369,7 +370,7 @@ PRODUCT_HINTS = [
     "nuggets", "kiełbas", "parow", "krem", "napoj", "sypkie",
     "roslinne", "roślinne", "burger", "gyros", "kotlet", "pasztet",
     "owies", "jaglanka", "boost", "dates", "mix", "mixy",
-    "niemiesne", "funkcjonalny", "sniadaniowe",
+    "niemiesne", "funkcjonalny", "sniadaniowe", "kreatyna",
 ]
 # Nosniki = Opakowanie (pelna lista z docs/NAMING.md / naming-dictionary)
 PACKAGING_HINTS = [
@@ -477,12 +478,14 @@ SUBCATEGORY_PL = {
     "bars protein": "Batony Proteinowe",
     "boosty": "Boosty",
     "cashews": "Nerkowce",
+    "daktyle": "Daktyle",
     "daktylowy": "Daktylowy",
     "date": "Daktylowe",
     "deserowe": "Deserowe",
     "funkcjonalne": "Funkcjonalne",
     "funkcjonalny": "Funkcjonalny",
     "ig": "Niski IG",
+    "kreatyna": "Kreatyna",
     "krem orzechowy": "Krem Orzechowy",
     "mixy": "Mixy",
     "nerkowcowy": "Nerkowcowy",
@@ -496,12 +499,20 @@ SUBCATEGORY_PL = {
     "raw": "Raw",
     "sniadanie": "Śniadanie",
     "sniadaniowe": "Śniadaniowe",
+    "z kreatyna": "Z kreatyną",
     "ziomki": "Ziomki",
 }
 
 
 def subcategory_label_pl(bracket_tags: list[str]) -> tuple[str, str]:
-    """Pierwszy nawias z nazwy produktu -> (slug, etykieta PL). "" gdy brak / nieznany."""
+    """Pierwszy nawias z nazwy produktu -> (slug, etykieta PL). "" tylko gdy nawiasu brak.
+
+    07.10.2026: nieznany nawias NIE jest juz gubiony. Slownik byl biala lista i nowa linia
+    ("[ z kreatyna ]", "[ daktyle ]") dawala pusta podkategorie, wiec produkt byl w DAM
+    nierozpoznawalny. Teraz slownik daje ladna etykiete, a gdy wpisu brak - pokazujemy tekst
+    nawiasu tak, jak nazwal go grafik (surowy, z polskimi znakami).
+    """
+    fallback: tuple[str, str] = ("", "")
     for raw in bracket_tags or []:
         slug = norm(raw)
         if not slug:
@@ -509,7 +520,11 @@ def subcategory_label_pl(bracket_tags: list[str]) -> tuple[str, str]:
         label = SUBCATEGORY_PL.get(slug)
         if label:
             return slug, label
-    return "", ""
+        text = re.sub(r"\s+", " ", str(raw)).strip()
+        # Uszkodzony bajt w nazwie folderu (U+FFFD) albo sam numer: nie pokazuj smieci.
+        if not fallback[0] and text and "\ufffd" not in text and not slug.replace(" ", "").isdigit() and len(text) <= 40:
+            fallback = (slug, text[:1].upper() + text[1:])
+    return fallback
 
 MARKETING_LINKS = [
     {
@@ -895,6 +910,17 @@ def safe_thumb_stem(product_id: str, index_base: str, lang: str) -> str:
     return f"{pid}__{base}_{lg}.jpg"
 
 
+DATE_ISO_RE = re.compile(r"(?<!\d)(20\d{2})[-_.](\d{1,2})[-_.](\d{1,2})(?!\d)")
+DATE_LOOSE_RE = re.compile(r"(?<!\d)(\d{1,2})[-_.](\d{1,2})[-_.](20\d{2})(?!\d)")
+
+
+def _valid_ymd(y: str, mo: str, d: str) -> str | None:
+    try:
+        return datetime(int(y), int(mo), int(d)).strftime("%Y-%m-%d")
+    except ValueError:
+        return None
+
+
 def parse_date(name: str) -> str | None:
     m = DATE_DOT_RE.search(name)
     if m:
@@ -904,6 +930,18 @@ def parse_date(name: str) -> str | None:
     if m:
         d, mo, y = m.groups()
         return f"{y}-{mo}-{d}"
+    # 07.10.2026: "2026_08_31", "2026-07-15", "2026.08.19", "17_09_2026", "3.07.2026".
+    m = DATE_ISO_RE.search(name)
+    if m:
+        got = _valid_ymd(*m.groups())
+        if got:
+            return got
+    m = DATE_LOOSE_RE.search(name)
+    if m:
+        d, mo, y = m.groups()
+        got = _valid_ymd(y, mo, d)
+        if got:
+            return got
     return None
 
 
@@ -1665,8 +1703,13 @@ def scan_revision_children(product_dir: Path, root: Path, brand: str, cat_name: 
         lang_pool = [f for f in pool if is_lang_evidence_file(f)]
         raw_langs = infer_langs_from_files(child.name, lang_pool)
         file_langs, langs_source = apply_brand_lang_baseline(brand, raw_langs)
+        rev_mtime = max(
+            (str(f.get("mtime") or "") for fs in files_by_role.values() for f in (fs or [])),
+            default="",
+        )
         revisions.append(
             {
+                "mtime": rev_mtime,
                 "folder": child.name,
                 "path": str(child).replace("\\", "/"),
                 "rel": str(child.relative_to(root)).replace("\\", "/"),
@@ -1804,7 +1847,7 @@ def scan_product(cat_name: str, product_dir: Path, root: Path, brand: str) -> di
     # Podkategoria: WSZYSTKIE nawiasy z nazwy (nie tylko te co przeszly filtr
     # is_noise_tag dla Smak/Typ - "balls_crispy"/"plant based" sa wielowyrazowe
     # i sa tam odrzucane, ale jako Podkategoria maja byc widoczne, patrz P4).
-    raw_brackets = [norm(m.group(1)) for m in BRACKET_HINT_RE.finditer(product_name)]
+    raw_brackets = [m.group(1) for m in BRACKET_HINT_RE.finditer(product_name)]
     subcat_slug, subcat_label = subcategory_label_pl(raw_brackets)
     touch_index_live(
         kind="product",
@@ -2500,6 +2543,31 @@ MARKETING_CACHE_NAME = "index-marketing-folders.json"
 MARKETING_CACHE_TTL_SEC = float(os.environ.get("DAM_MARKETING_CACHE_TTL_SEC", "21600") or "21600")
 
 
+class MergeUnreachable(Exception):
+    """Folder chwilowo nieosiagalny (blad sieci/SMB): nie wolno uznac go za usuniety."""
+
+
+UNREACHABLE_RC = 6
+
+
+def _dir_state(path: Path) -> str:
+    """'dir' | 'absent' | 'unreachable'. Path.is_dir() zwraca False takze przy bledzie sieci."""
+    try:
+        st = os.stat(path)
+    except (FileNotFoundError, NotADirectoryError):
+        return "absent"
+    except OSError:
+        return "unreachable"
+    return "dir" if stat.S_ISDIR(st.st_mode) else "absent"
+
+
+def _dir_exists_or_raise(path: Path) -> bool:
+    state = _dir_state(path)
+    if state == "unreachable":
+        raise MergeUnreachable(str(path))
+    return state == "dir"
+
+
 class MergeNeedsFull(Exception):
     """Przyrost niemozliwy albo niebezpieczny - wolajacy ma zrobic pelny skan (kod wyjscia 5)."""
 
@@ -2641,7 +2709,7 @@ def incremental_scan(base: dict, roots: list[tuple[str, Path]], only_paths: list
     have = {(e.get("brand"), _cf(e.get("rel"))) for e in base_products}
     for (ri, cat, prod) in list(prod_units.values()):
         brand, root = roots[ri]
-        exists = (root / cat / prod).is_dir()
+        exists = _dir_exists_or_raise(root / cat / prod)
         present = (brand, _cf(f"{cat}/{prod}")) in have
         if exists != present and _archive_wrapper_matches(root / cat, prod):
             cat_units[(ri, cat.casefold())] = (ri, cat)
@@ -2665,13 +2733,13 @@ def incremental_scan(base: dict, roots: list[tuple[str, Path]], only_paths: list
         brand, root = roots[ri]
         drop_cats.add((brand, cat.casefold()))
         cat_dir = root / cat
-        if cat_dir.is_dir():
+        if _dir_exists_or_raise(cat_dir):
             scan_category(cat_dir, root, brand, new_items, 0, 0)
     for (ri, cat, prod) in prod_units.values():
         brand, root = roots[ri]
         drop_rels.add((brand, _cf(f"{cat}/{prod}")))
         prod_dir = root / cat / prod
-        if not prod_dir.is_dir():
+        if not _dir_exists_or_raise(prod_dir):
             continue
         item = scan_product(cat, prod_dir, root, brand)
         if item:
@@ -2749,6 +2817,48 @@ def _run_enrichers(redirect: bool) -> None:
         print(f"enrich-product-associations: exit={code2}")
     except Exception as exc:  # noqa: BLE001
         print(f"WARN: enrich-product-associations failed: {exc}")
+
+
+# --- przyrost: brak zmian = brak zapisu -----------------------------------------------------------------
+# 07.10.2026: kazdy przyrost zapisywal file-index.json i search-index.json z nowym "generated_at", takze gdy
+# w produktach nic sie nie zmienilo. Publikacja migawek porownuje sha256 CALEGO pliku
+# (index_snapshots.publish_changed), wiec przeglad godzinny (5 paczek) i kazdy falszywy alarm obserwatora
+# rozsylaly caly spis do wszystkich komputerow. Teraz przyrost pisze do plikow roboczych (takze wzbogacanie:
+# enrich-*), na koncu porownuje CALY wynik ze spisem z pominieciem pol czasu i dopiero przy roznicy podmienia.
+_MERGE_VOLATILE_KEYS = ("generated_at", "elapsed_sec")  # rozne przy kazdym biegu; nie sa trescia spisu
+
+
+def _merge_stage_path(live: Path) -> Path:
+    return live.with_name(f"{live.name}.merge-{os.getpid()}.tmp")
+
+
+def _same_ignoring_time(a: Path, b: Path) -> bool:
+    try:
+        da = json.loads(a.read_text(encoding="utf-8"))
+        db = json.loads(b.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    if not isinstance(da, dict) or not isinstance(db, dict):
+        return False
+    return {k: v for k, v in da.items() if k not in _MERGE_VOLATILE_KEYS} == {
+        k: v for k, v in db.items() if k not in _MERGE_VOLATILE_KEYS
+    }
+
+
+def _commit_merge(staged: list[tuple[Path, Path]]) -> bool:
+    """Pliki robocze przyrostu -> pliki spisu. False = wynik identyczny ze spisem (bez pol czasu):
+    pliki spisu NIE sa dotykane (ten sam skrot, ta sama data), robocze znikaja."""
+    if all(_same_ignoring_time(stage, live) for stage, live in staged):
+        for stage, _live in staged:
+            try:
+                stage.unlink()
+            except OSError:
+                pass
+        return False
+    for stage, live in staged:
+        if not _replace_with_retry(stage, live, attempts=20, delay=0.05):
+            raise OSError(f"nie udalo sie podmienic {live} (plik zajety)")
+    return True
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -2830,6 +2940,12 @@ def main(argv: list[str] | None = None) -> None:
             _LIVE["running"] = False
             _write_index_live(force=True)
             raise SystemExit(NEEDS_FULL_RC)
+        except MergeUnreachable as exc:
+            # Nic nie zapisujemy: stary spis zostaje, obserwator ponowi paczke.
+            print(f"MERGE_UNREACHABLE: {exc}", flush=True)
+            _LIVE["running"] = False
+            _write_index_live(force=True)
+            raise SystemExit(UNREACHABLE_RC)
         products = inc["products"]
         categories = inc["categories"]
         new_items = inc["new_items"]
@@ -2883,6 +2999,9 @@ def main(argv: list[str] | None = None) -> None:
         apply_lang_overrides(products)
         merge_product_catalog_packaging(products)
 
+    for prod in products:
+        prod["mtime"] = max((str(r.get("mtime") or "") for r in prod.get("revisions") or []), default="")
+
     search = build_search(products)
     viz = collect_viz_latest(products, THUMBS_DIR)
 
@@ -2926,6 +3045,10 @@ def main(argv: list[str] | None = None) -> None:
         _LIVE["running"] = False
         _write_index_live(force=True)
         raise SystemExit(3)
+    live_out, live_search = OUT, SEARCH_OUT
+    if merge_mode:
+        # przyrost pisze do plikow roboczych; spis podmieniamy na koncu, tylko gdy cos sie zmienilo
+        OUT, SEARCH_OUT = _merge_stage_path(live_out), _merge_stage_path(live_search)
     _atomic_write_json(OUT, payload)
     _atomic_write_json(
         SEARCH_OUT,
@@ -2941,8 +3064,9 @@ def main(argv: list[str] | None = None) -> None:
     orange = [v for v in viz if v.get("index_base") == "6300624" or "orange" in norm(v.get("product_name", ""))]
     _LIVE["running"] = False
     _write_index_live(force=True)
-    print(f"Wrote {OUT} ({OUT.stat().st_size // 1024} KB)")
-    print(f"Wrote {SEARCH_OUT} ({SEARCH_OUT.stat().st_size // 1024} KB)")
+    if not merge_mode:
+        print(f"Wrote {OUT} ({OUT.stat().st_size // 1024} KB)")
+        print(f"Wrote {SEARCH_OUT} ({SEARCH_OUT.stat().st_size // 1024} KB)")
     print(f"Thumbs dir: {THUMBS_DIR} ({len(list(THUMBS_DIR.glob('*.jpg')))} files)")
     print(f"products={len(products)} viz={len(viz)} elapsed={payload['elapsed_sec']}s")
     if merge_mode:
@@ -2963,7 +3087,20 @@ def main(argv: list[str] | None = None) -> None:
         p = sample[0]
         print("TARTA display_name:", p.get("display_name"), "related:", len(p.get("related_materials") or []))
 
-    _run_enrichers(redirect=bool(args.out_dir))
+    if not merge_mode:
+        _run_enrichers(redirect=bool(args.out_dir))
+        return
+    try:
+        _run_enrichers(redirect=True)  # na plikach roboczych: OUT / SEARCH_OUT
+        wrote = _commit_merge([(OUT, live_out), (SEARCH_OUT, live_search)])
+    finally:
+        OUT, SEARCH_OUT = live_out, live_search
+    if wrote:
+        print(f"Wrote {OUT} ({OUT.stat().st_size // 1024} KB)")
+        print(f"Wrote {SEARCH_OUT} ({SEARCH_OUT.stat().st_size // 1024} KB)")
+    else:
+        # Kod 0: obserwator po tej linii nie oznacza 'zbudowane tutaj', nie budzi brandingu i nie publikuje.
+        print("MERGE_UNCHANGED: wynik przyrostu identyczny ze spisem (bez pol czasu) - plikow nie zapisano", flush=True)
 
 
 if __name__ == "__main__":

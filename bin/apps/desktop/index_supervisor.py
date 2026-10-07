@@ -959,7 +959,8 @@ def begin_run_snapshot() -> dict[str, Any]:
     return snap
 
 
-def complete_run_report(*, ok: bool = True, cancelled: bool = False, rc: int | None = None) -> dict[str, Any]:
+def complete_run_report(*, ok: bool = True, cancelled: bool = False, rc: int | None = None,
+                        mode: str = "full") -> dict[str, Any]:
     """Write index-last-report.json.
 
     Contract (additive; keep legacy flat keys the current UI already reads):
@@ -1050,7 +1051,7 @@ def complete_run_report(*, ok: bool = True, cancelled: bool = False, rc: int | N
     finished_at = _utc()
     started_at = str(prev_body.get("started_at") or "")
     duration_ms = _duration_ms(started_at, prev_body.get("started_mono"), finished_at)
-    mode = "full"
+    mode = mode if mode in ("full", "incremental", "review") else "full"
 
     counts = {
         "new": int(file_diff["new"]),
