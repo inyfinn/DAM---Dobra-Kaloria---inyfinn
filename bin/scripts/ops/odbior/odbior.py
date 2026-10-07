@@ -121,15 +121,19 @@ def port_free(port: int) -> bool:
 
 
 def robocopy(src: Path, dst: Path, xd: tuple[str, ...] = ("__pycache__",), xf: tuple[str, ...] = ()) -> None:
-    dst.mkdir(parents=True, exist_ok=True)
-    cmd = ["robocopy", str(src), str(dst), "/E", "/R:1", "/W:1", "/MT:16", "/NFL", "/NDL", "/NJH", "/NJS", "/NP",
-           "/XD", *xd]
-    if xf:
-        cmd += ["/XF", *xf]
-    assert "/MIR" not in cmd and "/PURGE" not in cmd
-    r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
-    if r.returncode >= 8:
-        raise RuntimeError(f"robocopy rc={r.returncode}: {r.stdout[-600:]}")
+    """Kopia drzewa w Pythonie (nazwa historyczna). 07.10.2026: robocopy.exe bywal na tym komputerze
+    zamykany z zewnatrz w polowie kopiowania z kodem 0 - kopia wychodzila niepelna bez bledu."""
+    import fnmatch
+    import shutil
+
+    xd_low = {x.lower() for x in xd}
+
+    def ignore(_dir, names):
+        out = [n for n in names if n.lower() in xd_low]
+        out += [n for n in names if any(fnmatch.fnmatch(n.lower(), pat.lower()) for pat in xf)]
+        return out
+
+    shutil.copytree(src, dst, ignore=ignore, dirs_exist_ok=True)
 
 
 def find_package(version: str | None, explicit: str | None) -> Path:

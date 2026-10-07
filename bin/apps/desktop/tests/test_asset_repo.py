@@ -271,5 +271,30 @@ class ImportAndLiveIndexTests(unittest.TestCase):
         self.assertEqual([e["path"] for e in live_x], sorted(e["path"] for e in live_x))
 
 
+class ScanFromIndexCollisionTests(unittest.TestCase):
+    """Etap 1a (spec 4.4, 6): dwa pliki o tym samym kluczu (wielkosc liter, NFC / NFD) -> jeden wpis,
+    zwyciezca niezalezny od kolejnosci skanu (najmniejsza sciezka alfabetycznie); pary trafiaja do `dupes`."""
+
+    def _assets(self, paths):
+        return [{"path": p, "mtime_ms": 1000 + i, "size_bytes": 5 + i} for i, p in enumerate(paths)]
+
+    def test_zwyciezca_nie_zalezy_od_kolejnosci(self):
+        paths = ["M:/- POLSKA/A/Plik.png", "M:/- POLSKA/A/plik.png", "M:/- POLSKA/A/PLIK.png"]
+        results = []
+        for order in (paths, paths[::-1], [paths[1], paths[2], paths[0]]):
+            dupes: list = []
+            scan = asset_repo.scan_from_index(self._assets(order), "M:", dupes=dupes)
+            self.assertEqual(len(scan), 1)
+            (entry,) = scan.values()
+            results.append((entry["path_rel"], entry["name"], len(dupes)))
+        self.assertEqual(len(set(results)), 1, results)
+        self.assertEqual(results[0][0], "- POLSKA/A/PLIK.png", "najmniejsza alfabetycznie")
+        self.assertEqual(results[0][2], 2)
+
+    def test_bez_listy_dupes_dziala_jak_dotad(self):
+        scan = asset_repo.scan_from_index(self._assets(["M:/- POLSKA/A/x.png", "M:/- POLSKA/A/X.png"]), "M:")
+        self.assertEqual(len(scan), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

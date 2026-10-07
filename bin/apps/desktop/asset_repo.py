@@ -250,7 +250,8 @@ def taken_from_rows(rows: dict[str, dict]) -> dict[str, str]:
 
 
 def scan_from_index(index_assets: list[dict], root: str, *,
-                    taken: dict[str, str] | None = None) -> dict[str, dict]:
+                    taken: dict[str, str] | None = None,
+                    dupes: list[tuple[str, str]] | None = None) -> dict[str, dict]:
     """Zloty indeks (branding-index.json) -> asset_id -> wpis skanu dla asset_sync.
 
     Id: stabilne id z indeksu (build-branding-index rozwiazal juz kolizje
@@ -260,13 +261,19 @@ def scan_from_index(index_assets: list[dict], root: str, *,
     sklejalo dwa pliki w jeden wiersz - 8 plikow znikalo, 8 id wskazywalo inny plik
     niz skojarzenia w bazie.
 
-    Pomija pola liczone z bazy skojarzen - patrz _SCAN_META_EXCLUDE."""
+    Pomija pola liczone z bazy skojarzen - patrz _SCAN_META_EXCLUDE.
+
+    Etap 1a (spec 4.4, 6): dwa pliki o tym samym kluczu (tylko wielkosc liter albo NFC / NFD) daja jeden
+    wpis i ZAWSZE wygrywa ta sama sciezka - najmniejsza alfabetycznie, niezaleznie od kolejnosci skanu
+    (dawniej wygrywal ostatni, wiec wiersz moglby zmieniac sie co cykl). Pary (zwyciezca, przegrany)
+    trafiaja do `dupes`, jesli podano liste."""
     ids = asset_sync._asset_ids()  # noqa: SLF001 - ten sam modul co build-branding-index
     owner: dict[str, str] = dict(taken or {})
     # Plik znany w bazie zawsze zachowuje swoje id (23.09: build z inna kolejnoscia
     # skanu dal plikowi nowe id -> drugi wiersz z tym samym asset_key, PUSH odrzucony).
     id_by_key: dict[str, str] = {k: aid for aid, k in owner.items()}
     out: dict[str, dict] = {}
+    winner: dict[str, str] = {}
     for asset in index_assets or ():
         if not isinstance(asset, dict):
             continue
@@ -288,7 +295,16 @@ def scan_from_index(index_assets: list[dict], root: str, *,
             str(path), size=_size_bytes(asset), mtime_ms=asset.get("mtime_ms") or 0,
             root=root, meta=meta, asset_id=aid,
         )
+        if aid in out:
+            if str(path) < winner[aid]:
+                out[aid], loser, winner[aid] = entry, winner[aid], str(path)
+            else:
+                loser = str(path)
+            if dupes is not None:
+                dupes.append((winner[aid], loser))
+            continue
         out[aid] = entry
+        winner[aid] = str(path)
     return out
 
 
@@ -341,6 +357,8 @@ def import_index_to_pg(pg, index_assets: list[dict], root: str, machine: str, *,
         now_ms = asset_sync._now_ms()  # noqa: SLF001 - ten sam moment dla calego importu
         updated_by = f"{machine}:import"
         cur = pg.cursor()
+        # etap 1a: ta sama blokada doradcza co push_ops - numery zmian rosna w kolejnosci zatwierdzen
+        cur.execute(asset_sync._SQL_LOCK, (asset_sync.ADVISORY_LOCK_KEY,))  # noqa: SLF001
         items = list(scan.items())
         for i in range(0, total, max(1, int(batch))):
             chunk = items[i:i + max(1, int(batch))]

@@ -76,6 +76,13 @@ OP_RESTORE = "restore"
 ROW_FIELDS = ("asset_id", "asset_key", "path_rel", "name", "size", "mtime_ms",
               "content_hash", "meta", "deleted_at", "updated_at", "updated_by",
               "seen_by_machine", "rev")
+# Etap 1a (m_columns.sql): pola dodatkowe wiersza. Lustro w SQLite to JSON, wiec nic nie
+# kosztuja; normalize_row zachowuje je tylko, gdy sa w wierszu (tryb "off" ich nie pobiera).
+ROW_FIELDS_M = ("origin", "master_mtime", "master_size", "author_mtime", "author_size",
+                "author_by", "delete_batch")
+FUTURE_MS = 300000            # data pliku nowsza od poczatku skanu o > 5 minut = "z przyszlosci"
+ROLE_COPY = "copy"
+ROLE_M = "m"
 
 # --------------------------------------------------------------------------
 # Klucze sciezek (zrodlo prawdy: bin/apps/web/scripts/asset_ids.py)
@@ -245,7 +252,10 @@ def _op(kind: str, aid: str, entry: dict, prev: dict | None, machine: str,
 
 
 def _content_differs(entry: dict, prev: dict) -> bool:
-    if _opt_int(entry.get("size")) != _opt_int(prev.get("size")):
+    # Etap 1a: pusty rozmiar po ktorejkolwiek stronie nie jest roznica (kolumna size jest dzis
+    # pusta w calym katalogu; gdy skaner zacznie ja podawac, nie moze to dac 73 tys. zmian).
+    s_new, s_old = _opt_int(entry.get("size")), _opt_int(prev.get("size"))
+    if s_new is not None and s_old is not None and s_new != s_old:
         return True
     h_new, h_old = entry.get("content_hash"), prev.get("content_hash")
     return bool(h_new and h_old and h_new != h_old)
@@ -393,8 +403,16 @@ def diff_scan_report(prev_rows: dict, scan: dict, scanned_dirs: Iterable[str],
                      last_seen: Any = None,
                      failed_dirs: Iterable[str] = (),
                      confirmed_dirs: Iterable[str] = (),
-                     root_gen: Any = None) -> dict:
+                     root_gen: Any = None,
+                     role: str = ROLE_COPY,
+                     scan_db_ms: int | None = None,
+                     skip_future: bool = False) -> dict:
     """Pelny raport scalania.
+
+    Etap 1a: `role` = "copy" (domyslnie: reguly bez zmian, takze dla trybow off i shadow)
+    albo "m" (komputer z M:, tryb on: dane z M: sa wzorcem - patrz _diff_scan_report_m).
+    `scan_db_ms` = poczatek skanu na zegarze BAZY (tylko rola m). `skip_future` = pomin wpisy
+    z data > 5 min w przod (rola copy w trybie on: baza i tak by je odrzucila).
 
     prev_rows    asset_id -> wiersz z bazy (lokalne lustro po ostatnim pull; tombstony tez)
     scan         asset_id -> wpis skanu (asset_key, path_rel, name, size, mtime_ms, meta)
@@ -415,6 +433,10 @@ def diff_scan_report(prev_rows: dict, scan: dict, scanned_dirs: Iterable[str],
             "meta_held", "conflicts", "conflict_sample", "tombstone_version_mismatch",
             "unobserved_missing", "next_last_seen" (slownik obserwacji)}.
     """
+    if role == ROLE_M:
+        return _diff_scan_report_m(prev_rows, scan, scanned_dirs, scan_time_ms, machine,
+                                   last_seen=last_seen, failed_dirs=failed_dirs,
+                                   root_gen=root_gen, scan_db_ms=scan_db_ms)
     listed = {str(d) for d in scanned_dirs}
     failed = {str(d) for d in failed_dirs}
     confirmed = {str(d) for d in confirmed_dirs}
@@ -422,6 +444,7 @@ def diff_scan_report(prev_rows: dict, scan: dict, scanned_dirs: Iterable[str],
     seen_before = None if obs_before is None else set(obs_before)
     ops: list[dict] = []
     stale_ignored = 0
+    future_skipped = 0
     meta_held = 0
     conflict_sample: list[dict] = []
     next_seen: dict[str, dict] = {}
@@ -434,6 +457,9 @@ def diff_scan_report(prev_rows: dict, scan: dict, scanned_dirs: Iterable[str],
         entry = scan[aid] or {}
         prev = prev_rows.get(aid)
         mt = _int(entry.get("mtime_ms"))
+        if skip_future and mt > int(scan_time_ms) + FUTURE_MS:
+            future_skipped += 1   # etap 1a: baza (tryb on) odrzuca date z przyszlosci od kopii
+            continue
         next_seen[aid] = observe(entry, root_gen)
         if prev is None:
             ops.append(_op(OP_UPSERT, aid, entry, None, machine, scan_time_ms, "add"))
@@ -565,6 +591,123 @@ def diff_scan_report(prev_rows: dict, scan: dict, scanned_dirs: Iterable[str],
             "conflicts": meta_held, "conflict_sample": conflict_sample,
             "tombstone_version_mismatch": version_mismatch,
             "unobserved_missing": unobserved_missing,
+            "future_skipped": future_skipped,
+            "next_last_seen": next_seen}
+
+
+def _row_version(prev: dict) -> int:
+    """Wersja pliku na M: zapamietana w wierszu: master_mtime (surowa data z dysku), a dla wiersza
+    sprzed etapu 1a, ktorego nikt jeszcze nie potwierdzil na M:, mtime_ms."""
+    mm = prev.get("master_mtime")
+    return _int(mm) if mm is not None else _int(prev.get("mtime_ms"))
+
+
+def _op_m(aid: str, entry: dict, prev: dict | None, machine: str, scan_time_ms: int,
+          scan_db_ms: int, reason: str, *, base_rev: int | None = None) -> dict:
+    """Operacja komputera z M: (instrukcja M1). Data z przyszlosci (> 5 min po poczatku skanu):
+    w mtime_ms czas poczatku skanu, w master_mtime surowa data z dysku (spec 3.4)."""
+    raw = _int(entry.get("mtime_ms"))
+    op = _op(OP_UPSERT, aid, entry, prev, machine, scan_time_ms, reason, base_rev=base_rev)
+    op["role"] = ROLE_M
+    op["master_mtime"] = raw
+    op["scan_db_ms"] = int(scan_db_ms)
+    if raw > int(scan_time_ms) + FUTURE_MS:
+        op["mtime_ms"] = int(scan_time_ms)
+        op["future_clipped"] = True
+    return op
+
+
+def _diff_scan_report_m(prev_rows: dict, scan: dict, scanned_dirs: Iterable[str],
+                        scan_time_ms: int, machine: str, *, last_seen: Any = None,
+                        failed_dirs: Iterable[str] = (), root_gen: Any = None,
+                        scan_db_ms: int | None = None) -> dict:
+    """Raport scalania dla komputera z M: w trybie `on` (etap 1a, spec 3.2-3.5).
+
+    To, co jest na M:, jest wzorcem: starsza data tez jest zmiana, plik ze znacznikiem usuniecia
+    wraca zawsze, a pamiec "co widzialem" jest w bazie (kolumna origin), nie w obserwacjach tego
+    komputera. Nie ma bezpiecznika poddrzew (zastepuja go wstrzymanie, kanarki, swiadek i hamulec
+    partii w asset_sync_m). Zwraca te same klucze co wersja dla kopii oraz:
+      stamp    [(asset_id, mtime_ms wiersza, rozmiar)] pliki w skanie w tej samej wersji, ktorych
+               wiersz nie ma jeszcze origin = 'm' (instrukcja M2)
+      missing  [asset_id] zywe wiersze origin = 'm' nieobecne w skanie, z wylistowanym przodkiem
+               (instrukcja M3, pierwsze sprawdzenie)
+    Wiersze sprzed 1a (origin puste), ktorych nie ma w skanie, NIE trafiaja do `missing`:
+    rozstrzyga je tylko narzedzie uzgodnienia (decyzja P1)."""
+    listed = {str(d) for d in scanned_dirs}
+    failed = {str(d) for d in failed_dirs}
+    obs_before = observations(last_seen)
+    scan_db = int(scan_time_ms if scan_db_ms is None else scan_db_ms)
+    ops: list[dict] = []
+    stamp: list[tuple] = []
+    missing: list[str] = []
+    meta_held = 0
+    future_clipped = 0
+    conflict_sample: list[dict] = []
+    next_seen: dict[str, dict] = {}
+
+    def obs_ok(obs: dict | None) -> bool:
+        return _has_version(obs) and obs.get("root_gen") == root_gen
+
+    for aid in sorted(scan):
+        entry = scan[aid] or {}
+        prev = prev_rows.get(aid)
+        raw = _int(entry.get("mtime_ms"))
+        next_seen[aid] = observe(entry, root_gen)
+        if raw > int(scan_time_ms) + FUTURE_MS:
+            future_clipped += 1
+        if prev is None:
+            ops.append(_op_m(aid, entry, None, machine, scan_time_ms, scan_db, "add"))
+            continue
+        if prev.get("deleted_at") is not None:
+            ops.append(_op_m(aid, entry, prev, machine, scan_time_ms, scan_db, "returned"))
+            continue
+        if raw != _row_version(prev) or _content_differs(entry, prev):
+            ops.append(_op_m(aid, entry, prev, machine, scan_time_ms, scan_db, "change"))
+            continue
+        if _descriptor_differs(entry, prev):
+            obs = (obs_before or {}).get(aid)
+            own_changed = (obs_ok(obs) and obs.get("desc")
+                           and _same_version(obs, next_seen[aid])
+                           and obs["desc"] != next_seen[aid]["desc"])
+            if own_changed:
+                base = obs.get("rev")
+                ops.append(_op_m(aid, entry, prev, machine, scan_time_ms, scan_db, "meta",
+                                 base_rev=_int(prev.get("rev")) if base is None else _int(base)))
+                continue
+            meta_held += 1
+            if len(conflict_sample) < CONFLICT_SAMPLE:
+                conflict_sample.append({
+                    "asset_id": aid, "path_rel": str(prev.get("path_rel") or ""),
+                    "db_updated_by": str(prev.get("updated_by") or ""),
+                    "db_rev": _int(prev.get("rev")),
+                    "why": "unchanged_observation" if obs_ok(obs) and obs.get("desc")
+                    and _same_version(obs, next_seen[aid]) else "first_observation",
+                })
+        if prev.get("origin") != "m":
+            stamp.append((aid, _int(prev.get("mtime_ms")), _opt_int(entry.get("size"))))
+
+    skipped_unlisted = 0
+    for aid, prev in prev_rows.items():
+        if aid in scan or prev.get("deleted_at") is not None or prev.get("origin") != "m":
+            continue
+        ok = False
+        for anc in _ancestors(str(prev.get("asset_key") or "")):
+            if anc in failed:
+                break
+            if anc in listed:
+                ok = True
+                break
+        if ok:
+            missing.append(aid)
+        else:
+            skipped_unlisted += 1
+    missing.sort()
+    return {"ops": ops, "blocked": {}, "skipped_unlisted": skipped_unlisted,
+            "stale_ignored": 0, "meta_held": meta_held,
+            "conflicts": meta_held, "conflict_sample": conflict_sample,
+            "tombstone_version_mismatch": 0, "unobserved_missing": 0,
+            "future_clipped": future_clipped, "future_skipped": 0,
+            "stamp": stamp, "missing": missing,
             "next_last_seen": next_seen}
 
 
@@ -595,6 +738,10 @@ def normalize_row(row: Any) -> dict:
     d["mtime_ms"] = _int(d.get("mtime_ms"))
     d["size"] = _opt_int(d.get("size"))
     d["deleted_at"] = _opt_int(d.get("deleted_at"))
+    for k in ROW_FIELDS_M:
+        if hasattr(row, "keys") and k in row.keys():
+            v = row.get(k)
+            d[k] = _opt_int(v) if k in ("master_mtime", "master_size", "author_mtime", "author_size") else v
     return d
 
 
@@ -734,6 +881,15 @@ SELECT asset_id, asset_key, path_rel, name, size, mtime_ms, content_hash, meta,
 FROM dam_assets WHERE rev > %s ORDER BY rev LIMIT %s
 """
 
+# Etap 1a (M11): to samo + pola z m_columns.sql. Uzywane tylko gdy m_rules.mode <> 'off' i kolumny
+# istnieja - nowy klient wobec starej bazy nie pyta o nieistniejace kolumny.
+_SQL_PULL_M = """
+SELECT asset_id, asset_key, path_rel, name, size, mtime_ms, content_hash, meta,
+       deleted_at, updated_at, updated_by, seen_by_machine, rev,
+       origin, master_mtime, master_size, author_mtime, author_size, author_by, delete_batch
+FROM dam_assets WHERE rev > %s ORDER BY rev LIMIT %s
+"""
+
 
 def ensure_schema(pg) -> dict:
     try:
@@ -764,6 +920,10 @@ def _exec_op(cur, op: dict, now_ms: int) -> int | None:
     kind = op.get("op")
     machine = str(op.get("machine") or "")
     meta = json.dumps(op.get("meta") or {}, ensure_ascii=False, sort_keys=True)
+    if kind == OP_UPSERT and op.get("role") == ROLE_M:
+        import asset_sync_m  # noqa: PLC0415 - leniwie: asset_sync_m importuje ten modul
+
+        return asset_sync_m.exec_m1(cur, op)
     if kind == OP_UPSERT:
         cur.execute(_SQL_UPSERT, (
             op["asset_id"], op["asset_key"], op.get("path_rel") or "", op.get("name") or "",
@@ -790,18 +950,55 @@ def _exec_op(cur, op: dict, now_ms: int) -> int | None:
     raise ValueError(f"nieznana operacja: {kind!r}")  # blad programisty
 
 
-def push_ops(pg, ops: list[dict], *, now_ms: int | None = None) -> dict:
+try:  # bez psycopg2 (testy z atrapa SQLite) bledy "danych" to tylko ValueError / UnicodeError
+    import psycopg2 as _psycopg2
+
+    _DATA_ERRORS: tuple = (_psycopg2.DataError, _psycopg2.IntegrityError, ValueError, UnicodeError)
+    _INTEGRITY_ERRORS: tuple = (_psycopg2.IntegrityError,)
+except ImportError:  # pragma: no cover
+    _DATA_ERRORS = (ValueError, UnicodeError)
+    _INTEGRITY_ERRORS = ()
+
+LOCK_TIMEOUT = "30s"
+
+
+def _classify(exc: BaseException) -> str:
+    """Krotki powod odrzucenia jednej operacji (do raportu cyklu)."""
+    if _INTEGRITY_ERRORS and isinstance(exc, _INTEGRITY_ERRORS):
+        return "key_collision" if "dam_assets_key_idx" in str(exc) else "integrity"
+    if isinstance(exc, UnicodeError) or isinstance(exc, ValueError):
+        return "bad_value"
+    return "data_error"
+
+
+def begin_write(cur, writer: str | None = None, *, lock: bool = True) -> None:
+    """Poczatek transakcji zapisu do dam_assets. Z `writer` (nowy klient, tryb <> off): limit
+    czekania na blokade i znacznik roli dla wyzwalacza (TRZECI ARGUMENT true = zmienna lokalna
+    dla transakcji; z false rola zostalaby do konca polaczenia). Bez `writer` jak w 2.6.0."""
+    if writer:
+        cur.execute("SET LOCAL lock_timeout = '" + LOCK_TIMEOUT + "'")
+        cur.execute("SELECT set_config('dam.writer', %s, true)", (writer,))
+    if lock:
+        cur.execute(_SQL_LOCK, (ADVISORY_LOCK_KEY,))
+
+
+def push_ops(pg, ops: list[dict], *, now_ms: int | None = None, writer: str | None = None) -> dict:
     """Wyslij operacje. Zapisy serializowane blokada doradcza, zeby rev rosly w
     kolejnosci commitow (pull_since 'rev > ostatni' niczego nie gubi).
 
-    Zwraca {"ok", "applied", "refused", "results": [{asset_id, op, applied, rev}]}.
-    Odrzucone = baza ma nowsza wersje; nastepny pull_since ja przyniesie."""
+    Etap 1a (spec 6): kazda operacja w osobnym SAVEPOINT. Zla (blad danych: znak zerowy w nazwie,
+    kolizja klucza) trafia do raportu i NIE wycofuje paczki. Blad polaczenia przerywa paczke jak dotad.
+    `writer` ('HOST:m1' / 'HOST:c1') ustawia role zapisu dla wyzwalacza bazy.
+
+    Zwraca {"ok", "applied", "refused", "failed", "errors", "results": [{asset_id, op, applied,
+    rev, error?}]}. Odrzucone = baza ma nowsza wersje; nastepny pull_since ja przyniesie."""
     for op in ops:  # bledy programisty zglaszamy przed dotknieciem bazy
         if op.get("op") not in (OP_UPSERT, OP_TOMBSTONE, OP_RESTORE) or not op.get("asset_id"):
             raise ValueError(f"zla operacja: {op!r}")
     stamp = _now_ms() if now_ms is None else int(now_ms)
     results: list[dict] = []
-    applied = refused = committed = 0
+    errors: list[dict] = []
+    applied = refused = failed = committed = 0
     try:
         cur = pg.cursor()
         for i, op in enumerate(ops):
@@ -809,8 +1006,19 @@ def push_ops(pg, ops: list[dict], *, now_ms: int | None = None) -> dict:
                 if i:
                     pg.commit()
                     committed = len(results)
-                cur.execute(_SQL_LOCK, (ADVISORY_LOCK_KEY,))
-            rev = _exec_op(cur, op, stamp)
+                begin_write(cur, writer)
+            cur.execute("SAVEPOINT dam_op")
+            try:
+                rev = _exec_op(cur, op, stamp)
+                cur.execute("RELEASE SAVEPOINT dam_op")
+            except _DATA_ERRORS as exc:  # dane, nie polaczenie
+                cur.execute("ROLLBACK TO SAVEPOINT dam_op")
+                err = {"asset_id": op["asset_id"], "op": op["op"], "applied": False, "rev": None,
+                       "error": _classify(exc), "detail": str(exc).splitlines()[0][:200] if str(exc) else ""}
+                results.append(err)
+                errors.append(err)
+                failed += 1
+                continue
             ok = rev is not None
             applied += int(ok)
             refused += int(not ok)
@@ -821,18 +1029,23 @@ def push_ops(pg, ops: list[dict], *, now_ms: int | None = None) -> dict:
         kept = results[:committed]  # tylko to, co naprawde zatwierdzono
         return {"ok": False, "error": str(exc)[:300],
                 "applied": sum(1 for r in kept if r["applied"]),
-                "refused": sum(1 for r in kept if not r["applied"]), "results": kept}
-    return {"ok": True, "applied": applied, "refused": refused, "results": results}
+                "refused": sum(1 for r in kept if not r["applied"] and not r.get("error")),
+                "failed": sum(1 for r in kept if r.get("error")),
+                "errors": [r for r in kept if r.get("error")][:20], "results": kept}
+    return {"ok": True, "applied": applied, "refused": refused, "failed": failed,
+            "errors": errors[:20], "results": results}
 
 
-def pull_since(pg, rev: int, *, limit: int = PULL_BATCH) -> dict:
-    """Wiersze z rev > `rev` (paczkami). Zwraca {"ok", "rows", "max_rev", "more"}."""
+def pull_since(pg, rev: int, *, limit: int = PULL_BATCH, sql: str | None = None) -> dict:
+    """Wiersze z rev > `rev` (paczkami). Zwraca {"ok", "rows", "max_rev", "more"}.
+    `sql` = _SQL_PULL_M, gdy etap 1a jest wlaczony (tryb <> off); domyslnie _SQL_PULL."""
     last = _int(rev)
+    query = sql or _SQL_PULL
     rows: list[dict] = []
     try:
         cur = pg.cursor()
         while True:
-            cur.execute(_SQL_PULL, (last, int(limit)))
+            cur.execute(query, (last, int(limit)))
             batch = cur.fetchall()
             for r in batch:
                 row = normalize_row(r)
@@ -861,15 +1074,23 @@ def sync_cycle(pg, local_rows: dict, *, scan: dict | None = None,
                confirmed_dirs: Iterable[str] = (),
                last_seen: Any = None, scan_time_ms: int = 0,
                machine: str = "", now_ms: int | None = None,
-               root_gen: Any = None) -> dict:
+               root_gen: Any = None,
+               role: str = ROLE_COPY, m_mode: str = "off", writer: str | None = None,
+               scan_db_ms: int | None = None, pull_sql: str | None = None) -> dict:
     """Jeden cykl jak klient Synology: pull -> (diff -> push -> pull).
 
     scan=None -> komputer bez ROOT: tylko pobiera. Zwraca {"ok", "rows",
     "report", "push", "next_last_seen"}; przy bledzie sieci rows = stan po tym,
     co zdazylo przyjsc, a last_seen sie nie zmienia. next_last_seen po udanym
-    cyklu ze skanem = slownik obserwacji (kontrakt O) z rev z chwili obserwacji."""
+    cyklu ze skanem = slownik obserwacji (kontrakt O) z rev z chwili obserwacji.
+
+    Etap 1a: `role` "m" + `m_mode` "on" = reguly komputera z M: (M1 + stempel M2 + "brakuje od" M3);
+    "m" + "shadow" = stare reguly usuwania i stare instrukcje, ale ze zmienna roli, oraz stempel i
+    "brakuje od" do nowych kolumn (usuniec wg nowych regul nie wykonuje); "copy" + "on" odrzuca
+    daty z przyszlosci po stronie klienta. `writer` = 'HOST:m1' / 'HOST:c1'. Domyslnie (m_mode
+    "off") cykl jest dokladnie tym z 2.6.0, poza izolacja operacji w push_ops."""
     rows = dict(local_rows)
-    first = pull_since(pg, max_rev(rows))
+    first = pull_since(pg, max_rev(rows), sql=pull_sql)
     rows = apply_remote(rows, first["rows"])
     out: dict[str, Any] = {"ok": first["ok"], "rows": rows, "report": None, "push": None,
                            "next_last_seen": _copy_seen(last_seen)}
@@ -878,14 +1099,35 @@ def sync_cycle(pg, local_rows: dict, *, scan: dict | None = None,
         return out
     if scan is None:
         return out
+    m_diff = role == ROLE_M and m_mode == "on"
     report = diff_scan_report(rows, scan, scanned_dirs, scan_time_ms, machine,
                               last_seen=last_seen, failed_dirs=failed_dirs,
-                              confirmed_dirs=confirmed_dirs, root_gen=root_gen)
-    out["report"] = {k: v for k, v in report.items() if k != "next_last_seen"}
-    pushed = push_ops(pg, report["ops"], now_ms=now_ms)
+                              confirmed_dirs=confirmed_dirs, root_gen=root_gen,
+                              role=ROLE_M if m_diff else ROLE_COPY, scan_db_ms=scan_db_ms,
+                              skip_future=(role == ROLE_COPY and m_mode == "on"))
+    lists = report
+    if role == ROLE_M and not m_diff and m_mode != "off":   # shadow: listy z reguly komputera z M:
+        lists = _diff_scan_report_m(rows, scan, scanned_dirs, scan_time_ms, machine,
+                                    last_seen=last_seen, failed_dirs=failed_dirs,
+                                    root_gen=root_gen, scan_db_ms=scan_db_ms)
+    out["report"] = {k: v for k, v in report.items() if k not in ("next_last_seen", "stamp", "missing")}
+    pushed = push_ops(pg, report["ops"], now_ms=now_ms, writer=writer)
     out["push"] = pushed
-    second = pull_since(pg, max_rev(rows))
+    stamped_ids: list[str] = []
+    if role == ROLE_M and m_mode != "off" and pushed["ok"]:
+        import asset_sync_m  # noqa: PLC0415
+
+        st = asset_sync_m.stamp_and_mark(
+            pg, writer, lists.get("stamp") or [], lists.get("missing") or [],
+            int(scan_time_ms if scan_db_ms is None else scan_db_ms))
+        out["m"] = st
+        stamped_ids = st.get("stamped_ok_ids") or []
+    second = pull_since(pg, max_rev(rows), sql=pull_sql)
     out["rows"] = apply_remote(rows, second["rows"])
+    for aid in stamped_ids:   # wiersz sprzed 1a -> 'm' bez nowego rev: lustro dopisuje to samo, co baza
+        r = out["rows"].get(aid)
+        if r is not None and r.get("origin") != "m" and _int(r.get("rev")) == _int(rows.get(aid, {}).get("rev")):
+            out["rows"][aid] = {**r, "origin": "m", "master_mtime": r.get("mtime_ms")}
     out["ok"] = bool(pushed["ok"] and second["ok"])
     if out["ok"]:
         out["next_last_seen"] = stamp_observed_rev(report["next_last_seen"], out["rows"], scan)

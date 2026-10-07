@@ -61,6 +61,14 @@ class FakeCursor:
             self.db.locks += 1
             self._rows = []
             return
+        if sql.startswith("SET LOCAL") or "set_config(" in sql:   # etap 1a: rola zapisu, lock_timeout
+            self.db.session_vars.append(tuple(params))
+            self._rows = []
+            return
+        if sql.startswith("SAVEPOINT") and not self.db.conn.in_transaction:
+            # PostgreSQL trzyma SAVEPOINT w transakcji klienta; SQLite zalozylby wlasna i RELEASE
+            # zatwierdzilby ja po kazdej operacji - tu jawny BEGIN, zeby punkt zatwierdzenia byl ten sam.
+            self.db.conn.execute("BEGIN")
         q = (sql.replace("%s::jsonb", "?").replace("%s", "?")
              .replace("nextval('dam_assets_rev_seq')",
                       "(SELECT COALESCE(MAX(rev), 0) + 1 FROM dam_assets)")
@@ -82,6 +90,7 @@ class FakePG:
         self.conn = sqlite3.connect(":memory:", isolation_level="DEFERRED")
         self.statements = 0
         self.locks = 0
+        self.session_vars: list[tuple] = []
         self.fail_on: int | None = None
         assert asset_sync.ensure_schema(self)["ok"]
 

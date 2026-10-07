@@ -1114,6 +1114,15 @@ def _apply_root_switch_effects(previous: str, stored: str, *, root_state: str = 
     changed = _normalize_base_path(previous).lower() != stored.lower() if previous else True
     watcher = _restart_index_watcher_for_root(scan_allowed=root_state == "full") if changed else "unchanged"
     scan_memory = _reset_scan_memory("root_switch") if changed else None
+    if changed:
+        # ETAP 0: nowa para (komputer, dysk) - tetno od razu (rola m|copy zalezy od ROOT). Asynchroniczne: tylko
+        # zdarzenie, nie czeka na baze; wolane po UDANYM zapisie ROOT (wszystkie trzy drogi zapisu przechodza tu).
+        try:
+            import fleet_heartbeat
+
+            fleet_heartbeat.kick()
+        except Exception:  # noqa: BLE001
+            pass
     return {"changed": changed, "watcher": watcher, "scan_memory": scan_memory}
 
 
@@ -2217,6 +2226,7 @@ def index_status() -> dict:
         "current_label": progress.get("current_label") or watcher.get("current_label") or "",
         "new_items": watcher.get("new_items") or [],
         "last_report": watcher.get("last_report") or {},
+        "catalog": _catalog_payload(),
     }
 
 
@@ -2751,6 +2761,44 @@ def _snapshot_root_alive() -> bool:
     return _root_state(base)["state"] == "full"
 
 
+def _fleet_info() -> dict:
+    """ETAP 0, dla fleet_heartbeat: co most wie o tym komputerze (bez sieci). Wolane z watku tetna
+    co ~5 min, NIE czesciej: _root_state sonduje dysk do ROOT_SWITCH_PROBE_TIMEOUT_S."""
+    base = str(read_machine_config().get("base_path") or "").strip()
+    try:
+        state = _root_state(base)["state"] if base else "none"
+    except Exception:  # noqa: BLE001
+        state = "none"
+    try:
+        import data_mode
+
+        mode = data_mode.get_mode()
+    except Exception:  # noqa: BLE001
+        mode = ""
+    return {"windows_user": _windows_username(), "base_path": base, "root_state": state,
+            "data_mode": mode, "asset_status": asset_sync_status()}
+
+
+def _catalog_payload() -> dict:
+    """ETAP 0: znacznik katalogu do /index/status. Wyjatek = pusty slownik, nigdy nie zrywa odpowiedzi."""
+    try:
+        import index_snapshots
+
+        return index_snapshots.catalog_info(WEB_ROOT / "data")
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+def _catalog_health() -> dict:
+    """ETAP 0: znacznik katalogu do /health - TYLKO pamiec (zasada W11: zero IO w /health)."""
+    try:
+        import index_snapshots
+
+        return index_snapshots.cached_catalog_id()
+    except Exception:  # noqa: BLE001
+        return {}
+
+
 _data_mode_switch: dict[str, Any] = {"running": False, "mode": "", "stage": "", "error": "",
                                      "started_at": "", "finished_at": ""}
 
@@ -2859,13 +2907,23 @@ _ASSET_SYNC_INTERVAL_S = 600.0
 # ADR-012 pkt 4: co tyle sekund tani odczyt max(rev) z dam_assets; pelny cykl
 # (run_asset_sync_once) od razu przy zmianie w bazie, inaczej co _ASSET_SYNC_INTERVAL_S.
 _ASSET_SYNC_LIGHT_CHECK_S = 30.0
-_asset_sync_lock = threading.Lock()
+_asset_sync_lock = threading.Lock()                # chroni tylko slownik stanu
+_asset_sync_run_lock = threading.Lock()            # etap 1a: jeden cykl naraz (run_asset_sync_once i run_asset_confirm_tick)
 _asset_sync_thread: threading.Thread | None = None
 _asset_sync_wake = threading.Event()
 _asset_sync_state: dict[str, Any] = {
     "ok": None, "mode": "", "last_run": "", "error": "",
     "pulled": None, "push": None, "blocked_count": 0, "blocked": {},
+    # etap 1a (spec/etap-1/dla-most-api.md, 3.1). Pola dla tetna floty (assets_max_rev, missing_marked, holds,
+    # witness_tripped) NIE maja wartosci poczatkowych: pojawiaja sie w statusie dopiero, gdy raport je ma (kontrakt etapu 0).
+    "role": "", "m_mode": "", "stamped": 0, "holds_list": [], "witness": None,
+    "last_batch": "", "last_confirm": "",
+    "failed_ops": 0, "key_collisions": 0, "clock_skew_ms": None,
 }
+# Klucze raportu cyklu / drugiego sprawdzenia przepisywane do stanu, gdy sa w raporcie (raport bez klucza nie zeruje stanu).
+_ASSET_SYNC_M_KEYS = ("role", "m_mode", "stamped", "missing_marked_new", "witness",
+                      "last_batch", "failed_ops", "key_collisions", "clock_skew_ms")
+_ASSET_BATCH_RE = re.compile(r"^[crw]-[A-Za-z0-9_.-]{1,80}$")
 
 
 def _asset_sync_machine() -> str:
@@ -2877,8 +2935,14 @@ def _asset_sync_root_path() -> str:
 
 
 def run_asset_sync_once() -> dict[str, Any]:
-    """Jeden cykl scalania (Faza 2). Bezpieczny gdy tryb 'off' albo asset_repo.py
-    jeszcze nie jest gotowy - patrz asset_sync_runner.run_once."""
+    """Jeden cykl scalania (Faza 2). Etap 1a: pod _asset_sync_run_lock - pelny cykl z petli i cykl po
+    przebudowie Brandingu (_kick_asset_sync_after_branding_rebuild) nie nakladaja sie."""
+    with _asset_sync_run_lock:
+        return _run_asset_sync_once_locked()
+
+
+def _run_asset_sync_once_locked() -> dict[str, Any]:
+    """Bezpieczny gdy tryb 'off' albo asset_repo.py jeszcze nie jest gotowy - patrz asset_sync_runner.run_once."""
     try:
         import asset_sync_runner
         import pg_db
@@ -2908,18 +2972,66 @@ def run_asset_sync_once() -> dict[str, Any]:
             pulled=report.get("pulled"),
             push=report.get("push"),
         )
+        # ETAP 0: pola raportu cyklu, ktore tetno floty zapisuje w bazie (fleet_heartbeat, kolumny nullable;
+        # nazwy ustala etap 1a). Kopiujemy tylko te, ktore raport faktycznie ma - przed etapem 1a nie ma zadnej.
+        _asset_sync_state.update({k: report[k] for k in ("assets_max_rev", "missing_marked", "holds", "witness_tripped")
+                                  if k in report})
         if "blocked" in report:
             blocked = report.get("blocked") or {}
             _asset_sync_state["blocked"] = blocked
             _asset_sync_state["blocked_count"] = len(blocked)
+        for key in _ASSET_SYNC_M_KEYS:
+            if key in report:
+                _asset_sync_state[key] = report[key]
     return report
+
+
+def run_asset_confirm_tick() -> dict[str, Any]:
+    """Etap 1a: drugie sprawdzenie "brakuje od" (asset_sync_runner.confirm_tick), wolane z petli co 30 s, gdy nie idzie
+    pelny cykl. Oznaczenie nie zmienia numeru zmiany w bazie, wiec LightWatch go nie widzi - bez tego wywolania
+    usuniecie czekaloby do 10 minut zamiast okolo 90 s. W trybie off, na kopii i bez ROOT: jeden tani odczyt."""
+    if not _asset_sync_run_lock.acquire(blocking=False):
+        return {"ok": True, "skipped": "busy"}
+    try:
+        try:
+            import asset_sync_runner
+            import pg_db
+        except Exception as exc:  # noqa: BLE001
+            return {"ok": False, "error": f"import: {exc}"[:300]}
+        db_path = getattr(dam_db, "DB_CANONICAL", None) if dam_db is not None else None
+        if not db_path:
+            return {"ok": False, "error": "db_canonical_missing"}
+        rep = asset_sync_runner.confirm_tick(
+            db_path, WEB_ROOT / "data",
+            root_alive=_snapshot_root_alive(), root_path=_asset_sync_root_path(),
+            machine=_asset_sync_machine(), pg_connect=pg_db.connect)
+        with _asset_sync_lock:
+            touched = False
+            for key in ("missing_marked", "holds", "holds_list", "witness", "witness_tripped", "last_batch",
+                        "would_delete", "role", "m_mode"):
+                if key in rep:
+                    _asset_sync_state[key] = rep[key]
+                    touched = True
+            if touched:
+                _asset_sync_state["last_confirm"] = utc_now()
+            if rep.get("ok") is False and rep.get("error"):
+                _asset_sync_state["error"] = str(rep["error"])[:300]
+        return rep
+    finally:
+        _asset_sync_run_lock.release()
 
 
 def asset_sync_status() -> dict[str, Any]:
     with _asset_sync_lock:
         state = dict(_asset_sync_state)
     state.pop("blocked", None)  # lista osobno przez /asset-sync/blocked
-    return state
+    state.pop("holds_list", None)   # etap 1a: lista wstrzymanych folderow idzie osobno ("holds" w /asset-sync/blocked);
+    return state                    # "holds" w statusie = LICZBA (tetno floty, etap 0)
+
+
+def asset_sync_holds() -> list[dict[str, Any]]:
+    with _asset_sync_lock:
+        return [dict(h) for h in (_asset_sync_state.get("holds_list") or []) if isinstance(h, dict)]
 
 
 def asset_sync_blocked() -> list[dict[str, Any]]:
@@ -3019,13 +3131,17 @@ def start_asset_sync_watch() -> dict[str, Any]:
                 watch = None
             while True:
                 try:
+                    ran_full = False
                     if watch is None or watch.due():
                         report = None
                         try:
                             report = run_asset_sync_once()
+                            ran_full = True
                         finally:
                             if watch is not None:
                                 watch.done((report or {}).get("max_rev"))
+                    if not ran_full:
+                        run_asset_confirm_tick()   # etap 1a: drugie sprawdzenie "brakuje od" (tani odczyt, gdy nic do roboty)
                 except Exception as exc:  # noqa: BLE001
                     print("asset_sync_runner:", exc)
                 _asset_sync_wake.wait(_ASSET_SYNC_LIGHT_CHECK_S if watch is not None
@@ -9566,6 +9682,7 @@ class Handler(BaseHTTPRequestHandler):
                     # 29.09.2026: tozsamosc - nowa aplikacja nie uzywa mostu innej
                     # wersji / instalacji (Mac 2.4.7 -> 2.4.9 logowal do starej bazy).
                     **_bridge_identity(),
+                    **_catalog_health(),
                     "control": True,
                     "assoc": assoc,
                     "assoc_schema_error": assoc.get("schema_error") or "",
@@ -9641,7 +9758,19 @@ class Handler(BaseHTTPRequestHandler):
             # Foldery zablokowane bezpiecznikiem poddrzewa (>20% znikajacych plikow) -
             # panel admina "potwierdz usuniecia" (krok 6 planu).
             try:
-                self._json(200, {"ok": True, "items": asset_sync_blocked()})
+                self._json(200, {"ok": True, "items": asset_sync_blocked(), "holds": asset_sync_holds()})
+            except Exception as exc:  # noqa: BLE001
+                self._json(200, {"ok": False, "error": str(exc)[:200]})
+            return
+        if parsed.path == "/asset-sync/batches":
+            # Etap 1a: lista partii usuniec (panel w Ustawieniach, przycisk "Cofnij partie"). Tylko admin.
+            if self._require_admin() is None:
+                return
+            try:
+                import asset_sync_runner
+                import pg_db
+
+                self._json(200, asset_sync_runner.list_batches(pg_db.connect))
             except Exception as exc:  # noqa: BLE001
                 self._json(200, {"ok": False, "error": str(exc)[:200]})
             return
@@ -9746,6 +9875,18 @@ class Handler(BaseHTTPRequestHandler):
             base = str(read_machine_config().get("base_path") or "").strip()
             try:
                 self._json(200, index_authority.status(root_path=base))
+            except Exception as exc:  # noqa: BLE001
+                self._json(200, {"ok": False, "error": str(exc)[:200]})
+            return
+        if parsed.path == "/fleet/status":
+            # ETAP 0: lista komputerow (tetno, wersja, katalog, rola M:). Tylko admin; NIE w PUBLIC_ANON_PATHS.
+            if self._require_admin() is None:
+                return
+            try:
+                import fleet_heartbeat  # noqa: PLC0415
+                import pg_db  # noqa: PLC0415
+
+                self._json(200, {"ok": True, **fleet_heartbeat.admin_status(pg_db.connect)})
             except Exception as exc:  # noqa: BLE001
                 self._json(200, {"ok": False, "error": str(exc)[:200]})
             return
@@ -11304,13 +11445,77 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._json(200, index_snapshots.publish_changed(WEB_ROOT / "data", root_alive=True, force=True))
             return
+        if parsed.path in ("/fleet/m-decision", "/fleet/m-share", "/fleet/m-register"):
+            # ETAP 0: rejestr komputerow z M:. Zatwierdza admin (decyzja czlowieka, nie uprawnienie techniczne);
+            # kazda zmiana trafia tez do audit_log (action = fleet.m_decision / fleet.m_share / fleet.m_register).
+            admin = self._require_admin()
+            if admin is None:
+                return
+            payload = data if isinstance(data, dict) else {}
+            by = str(admin.get("email") or "").strip()
+            try:
+                import fleet_heartbeat  # noqa: PLC0415
+                import pg_db  # noqa: PLC0415
+
+                if parsed.path == "/fleet/m-decision":
+                    res = fleet_heartbeat.m_decision(
+                        pg_db.connect, machine=str(payload.get("machine") or ""), drive=str(payload.get("drive") or ""),
+                        state=str(payload.get("state") or ""),
+                        note=(str(payload["note"]) if payload.get("note") is not None else None), by=by)
+                    audit_detail = f"{payload.get('machine')} {payload.get('drive')} -> {payload.get('state')}"
+                elif parsed.path == "/fleet/m-share":
+                    res = fleet_heartbeat.m_share(pg_db.connect, action=str(payload.get("action") or ""),
+                                                  share=str(payload.get("share") or ""), by=by)
+                    audit_detail = f"{payload.get('action')} {payload.get('share')}"
+                else:
+                    res = fleet_heartbeat.m_register(pg_db.connect, machine=str(payload.get("machine") or ""),
+                                                     drive=str(payload.get("drive") or ""), by=by)
+                    audit_detail = f"{payload.get('machine')} {payload.get('drive')}"
+            except Exception as exc:  # noqa: BLE001
+                self._json(200, {"ok": False, "error": str(exc)[:200]})
+                return
+            if res.get("ok"):
+                try:
+                    append_audit({"action": "fleet." + parsed.path.rsplit("/", 1)[1].replace("-", "_"), "user": by,
+                                  "detail": audit_detail[:300], "meta": {k: res.get(k) for k in ("row", "shares")}})
+                except Exception:  # noqa: BLE001 - audyt jest dodatkiem, decyzja juz zapisana w bazie
+                    pass
+            self._json(200, res)
+            return
         if parsed.path == "/asset-sync/confirm":
             # Admin potwierdza, ze usuniecia z zablokowanego poddrzewa sa prawdziwe
             # (krok 6 planu) - dopisuje folder do confirmed_dirs na nastepny cykl.
             if self._require_admin() is None:
                 return
+            with _asset_sync_lock:   # etap 1a: w trybie on wstrzymanie folderow zastapilo reczne potwierdzanie
+                replaced = (_asset_sync_state.get("role") == "m" and _asset_sync_state.get("m_mode") == "on")
+            if replaced:
+                self._json(200, {"ok": False, "error": "replaced_by_m_rules"})
+                return
             folder = str((data.get("folder") if isinstance(data, dict) else None) or "")
             self._json(200, asset_sync_confirm_folder(folder))
+            return
+        if parsed.path == "/asset-sync/undo-batch":
+            # Etap 1a: cofniecie partii usuniec jedna instrukcja (M8). Tylko admin; z komputera z M: z listy
+            # index_authority i w trybie on - inaczej asset_sync_runner.undo_batch zwraca czytelny blad (kod 200).
+            if self._require_admin() is None:
+                return
+            batch = str((data.get("batch") if isinstance(data, dict) else None) or "")
+            if not _ASSET_BATCH_RE.match(batch):
+                self._json(200, {"ok": False, "error": "bad_batch"})
+                return
+            try:
+                import asset_sync_runner
+                import pg_db
+
+                res = asset_sync_runner.undo_batch(
+                    pg_db.connect, machine=_asset_sync_machine(),
+                    root_path=_asset_sync_root_path(), batch=batch)
+            except Exception as exc:  # noqa: BLE001
+                res = {"ok": False, "error": str(exc)[:200]}
+            if res.get("ok"):
+                _asset_sync_wake.set()   # lustro pobierze przywrocone wiersze od razu
+            self._json(200, res)
             return
         if parsed.path == "/index/cancel":
             self._json(200, index_cancel())
@@ -12874,6 +13079,14 @@ def main() -> None:
         index_snapshots.start_watch(WEB_ROOT / "data", _snapshot_root_alive, _on_snapshot_updated)
     except Exception as exc:  # noqa: BLE001
         print("index_snapshots:", exc)
+    try:
+        # ETAP 0: tetno komputera (wersja, katalog, rola M:). Watek daemon, pierwsze tetno po ~20 s; bez tabel
+        # fleet.sql w bazie po cichu pomija zapis. Wylacznik: dam_meta fleet_heartbeat=off albo DAM_HEARTBEAT_S=0.
+        import fleet_heartbeat
+
+        fleet_heartbeat.start(_fleet_info)
+    except Exception as exc:  # noqa: BLE001
+        print("fleet_heartbeat:", exc)
     try:
         # Faza 2 "jedno zrodlo prawdy": scalanie indeksu materialow (dam_assets).
         # No-op dopoki dam_meta.asset_index_mode != "rows" - patrz asset_sync_runner.py.

@@ -36,6 +36,11 @@ from typing import Any, Callable
 STATE_KEY_LAST_SCAN_TIME = "asset_sync_last_scan_time_ms"
 STATE_KEY_CONFIRMED_DIRS = "asset_sync_confirmed_dirs"
 STATE_KEY_BLOCKED = "asset_sync_blocked"
+STATE_KEY_HOLDS = "asset_sync_holds"                 # etap 1a: wstrzymane foldery (panel w Ustawieniach)
+STATE_KEY_FAILED_OPS = "asset_sync_failed_ops"       # etap 1a: operacje odrzucone jako zle dane + licznik
+STATE_KEY_CATALOG_COUNT_AT = "asset_sync_catalog_count_at"
+FAILED_OPS_KEEP = 200
+CLOCK_SKEW_WARN_MS = 300000
 MODE_KEY = "asset_index_mode"
 MODE_ON = "rows"
 
@@ -317,7 +322,10 @@ def _sync_cycle_restricted_ops(pg, local_rows: dict, *, scan: dict | None = None
                                 scanned_dirs=(), failed_dirs=(), confirmed_dirs=(),
                                 last_seen=None, scan_time_ms: int = 0,
                                 machine: str = "", now_ms: int | None = None,
-                                root_gen: Any = None) -> dict[str, Any]:
+                                root_gen: Any = None,
+                                role: str = "copy", m_mode: str = "off", writer: str | None = None,
+                                scan_db_ms: int | None = None,
+                                pull_sql: str | None = None) -> dict[str, Any]:
     """Ta sama orkiestracja co asset_sync.sync_cycle (pull -> diff -> push -> pull),
     ZLOZONA tu z publicznych funkcji asset_sync.py bez zmiany tego pliku (zakaz
     kierownika) - jedyna roznica: operacje spoza _is_allowed_without_authority sa
@@ -336,7 +344,8 @@ def _sync_cycle_restricted_ops(pg, local_rows: dict, *, scan: dict | None = None
     import asset_sync  # noqa: PLC0415 - ten sam lazy import co run_once
 
     rows = dict(local_rows)
-    first = asset_sync.pull_since(pg, asset_sync.max_rev(rows))
+    pull_kw = {"sql": pull_sql} if pull_sql else {}
+    first = asset_sync.pull_since(pg, asset_sync.max_rev(rows), **pull_kw)
     rows = asset_sync.apply_remote(rows, first["rows"])
     out: dict[str, Any] = {"ok": first["ok"], "rows": rows, "report": None, "push": None,
                            "next_last_seen": asset_sync._copy_seen(last_seen)}  # noqa: SLF001
@@ -345,10 +354,11 @@ def _sync_cycle_restricted_ops(pg, local_rows: dict, *, scan: dict | None = None
         return out
     if scan is None:
         return out
+    diff_kw = {"skip_future": True} if m_mode == "on" else {}   # etap 1a: baza (on) odrzuca daty z przyszlosci
     report = asset_sync.diff_scan_report(
         rows, scan, scanned_dirs, scan_time_ms, machine,
         last_seen=last_seen, failed_dirs=failed_dirs, confirmed_dirs=confirmed_dirs,
-        root_gen=root_gen,
+        root_gen=root_gen, **diff_kw,
     )
     ops = report["ops"]
     kept_ops = [op for op in ops if _is_allowed_without_authority(op)]
@@ -362,9 +372,10 @@ def _sync_cycle_restricted_ops(pg, local_rows: dict, *, scan: dict | None = None
     out["report"]["blocked"] = blocked
     out["report"]["not_authority_held"] = len(held_back)
 
-    pushed = asset_sync.push_ops(pg, kept_ops, now_ms=now_ms)
+    push_kw = {"writer": writer} if writer else {}
+    pushed = asset_sync.push_ops(pg, kept_ops, now_ms=now_ms, **push_kw)
     out["push"] = pushed
-    second = asset_sync.pull_since(pg, asset_sync.max_rev(rows))
+    second = asset_sync.pull_since(pg, asset_sync.max_rev(rows), **pull_kw)
     out["rows"] = asset_sync.apply_remote(rows, second["rows"])
     out["ok"] = bool(pushed["ok"] and second["ok"])
     if out["ok"]:
@@ -449,6 +460,24 @@ def run_once(
 
         import asset_repo  # noqa: PLC0415 - lazy: modul dostarcza inny worker (W2)
         import asset_sync  # noqa: PLC0415
+        import asset_sync_m  # noqa: PLC0415
+
+        # Etap 1a: przelacznik dam_meta['m_rules'] (off | shadow | on). Brak wiersza / zly JSON = off.
+        # Blad ODCZYTU to blad cyklu, nie "off". Bez kolumn etapu 1a w bazie klient dziala jak 2.6.0.
+        try:
+            rules = asset_sync_m.read_rules(pg)
+        except asset_sync_m.RulesLookupFailed as exc:
+            return {"ok": False, "error": f"m_rules: {exc}"[:300], "mode": "rows"}
+        m_mode = rules["mode"]
+        m_columns_missing = False
+        if m_mode != "off" and not asset_sync_m.columns_ready(pg):
+            m_mode, m_columns_missing = "off", True
+        role = asset_sync.ROLE_COPY
+        writer = None
+        if m_mode != "off":
+            if root_alive and root_path:
+                role = asset_sync_m.resolve_role(pg_connect, root_path, machine)
+            writer = asset_sync_m.writer_of(machine, role)
 
         try:
             conn = sqlite3.connect(str(db_path))
@@ -480,6 +509,7 @@ def run_once(
                 confirmed_dirs = []
 
         scan_kwargs: dict[str, Any] = {"machine": machine}
+        dupes: list[tuple[str, str]] = []
         did_scan = False
         manifest = None
         manifest_root_mismatch = False
@@ -499,7 +529,7 @@ def run_once(
                 index_assets = _load_scan_assets(data_dir, manifest)
                 if index_assets is not None:
                     scan = asset_repo.scan_from_index(
-                        index_assets, root_path, taken=asset_repo.taken_from_rows(rows))
+                        index_assets, root_path, taken=asset_repo.taken_from_rows(rows), dupes=dupes)
                     scan_kwargs.update(
                         scan=scan,
                         scanned_dirs=manifest.get("scanned_dirs") or (),
@@ -517,6 +547,20 @@ def run_once(
         if did_scan and _accepts_confirmed_dirs(asset_sync.sync_cycle):
             scan_kwargs["confirmed_dirs"] = confirmed_dirs
 
+        # Etap 1a: pola dodatkowe tylko, gdy tryb <> off (w "off" wywolania sa identyczne jak w 2.6.0).
+        clock_skew_ms = None
+        if m_mode != "off":
+            scan_kwargs["pull_sql"] = asset_sync._SQL_PULL_M  # noqa: SLF001
+            if did_scan:
+                scan_db_ms = scan_kwargs["scan_time_ms"]
+                if role == asset_sync.ROLE_M:
+                    try:
+                        clock_skew_ms, _rtt = asset_sync_m.db_clock_offset(pg)
+                    except Exception as exc:  # noqa: BLE001
+                        return {"ok": False, "error": f"clock: {exc}"[:300], "mode": "rows"}
+                    scan_db_ms = int(scan_db_ms) + int(clock_skew_ms)
+                scan_kwargs.update(role=role, m_mode=m_mode, writer=writer, scan_db_ms=scan_db_ms)
+
         # Faza 3 (decyzja kierownika 27.09.2026): ROOT lokalny nie daje prawa do
         # kasowania we wspolnej bazie - patrz index_authority.py. None (brak
         # klucza / blad odczytu) = jak dzis (dozwolone, bez zmiany zachowania).
@@ -527,8 +571,11 @@ def run_once(
         except Exception:  # noqa: BLE001
             authority = None
 
+        m_on_m = role == asset_sync.ROLE_M and m_mode == "on"
         try:
-            if did_scan and authority is False:
+            # Etap 1a: kopia w trybie "on" ZAWSZE idzie sciezka ograniczona, takze gdy komputer jest na liscie
+            # index_authority (np. wlasciciel przelaczyl ROOT na D:) - baza odrzucilaby jego usuniecia.
+            if did_scan and not m_on_m and (authority is False or (role == asset_sync.ROLE_COPY and m_mode == "on")):
                 result = _sync_cycle_restricted_ops(pg, rows, **scan_kwargs)
             else:
                 result = asset_sync.sync_cycle(pg, rows, **scan_kwargs)
@@ -543,7 +590,8 @@ def run_once(
         # restore/meta: nowa obserwacja). Odswiez decyzje i - jesli False - przywroc
         # poprzednie obserwacje tych plikow, jak robi _sync_cycle_restricted_ops.
         # Nastepny cykl idzie juz sciezka z filtrem (nic nie wysyla, bez petli).
-        refused_held = _refused_held_ids(result) if did_scan and authority is not False else []
+        refused_held = (_refused_held_ids(result)
+                        if did_scan and authority is not False and not m_on_m else [])
         if refused_held and result.get("ok"):
             try:
                 import index_authority
@@ -573,6 +621,28 @@ def run_once(
         if refused_held and authority is False:
             report["not_authority_refused"] = len(refused_held)
         diff_report = result.get("report") or {}
+        # Etap 1a: pola raportu cyklu (spec 4.3)
+        push_res = result.get("push") or {}
+        m_res = result.get("m") or {}
+        report.update({
+            "role": role, "m_mode": m_mode, "m_columns_missing": m_columns_missing,
+            "stamped": int(m_res.get("stamped") or 0),
+            "missing_marked_new": int(m_res.get("marked") or 0),   # oznaczone w TYM cyklu; lacznie: confirm_tick
+            "failed_ops": int(push_res.get("failed") or 0),
+            "key_collisions": len(dupes), "clock_skew_ms": clock_skew_ms,
+            "future_skipped": int(diff_report.get("future_skipped") or 0),
+            "future_clipped": int(diff_report.get("future_clipped") or 0),
+        })
+        if push_res.get("errors"):
+            report["failed_samples"] = [{k: e.get(k) for k in ("asset_id", "error", "detail")}
+                                        for e in push_res["errors"][:5]]
+        if m_res.get("errors"):
+            report.setdefault("warnings", []).extend(
+                f"{e.get('step')}: {e.get('error')}"[:200] for e in m_res["errors"][:5])
+        if clock_skew_ms is not None and abs(clock_skew_ms) > CLOCK_SKEW_WARN_MS:
+            report.setdefault("warnings", []).append(f"clock_skew_ms: {clock_skew_ms}")
+        if dupes:
+            report["key_collision_sample"] = [list(d) for d in dupes[:5]]
         if "conflicts" in diff_report:
             report["conflicts"] = diff_report.get("conflicts")
             report["conflict_sample"] = diff_report.get("conflict_sample") or []
@@ -582,6 +652,7 @@ def run_once(
         changed_ids = [aid for aid, row in new_rows.items() if rows.get(aid) != row]
         changed = bool(changed_ids)
         report["max_rev"] = asset_sync.max_rev(new_rows)  # dla LightWatch.done()
+        report["assets_max_rev"] = report["max_rev"]       # tetno floty (etap 0): kolumna assets_rev
 
         if result.get("ok"):
             if did_scan and result.get("next_last_seen") is not None:
@@ -599,6 +670,8 @@ def run_once(
                     asset_repo.set_state(conn, STATE_KEY_BLOCKED,
                                           json.dumps(blocked, ensure_ascii=False))
                     report["blocked"] = blocked
+                    if m_on_m:   # wstrzymanie folderow zastepuje bezpiecznik 20 %: bez zgody admina
+                        asset_repo.set_state(conn, STATE_KEY_CONFIRMED_DIRS, json.dumps([]))
                 except Exception as exc:  # noqa: BLE001
                     report.setdefault("warnings", []).append(f"state_save: {exc}"[:300])
         else:
@@ -612,6 +685,11 @@ def run_once(
                 pg_rev_setter(conn, asset_sync.max_rev(new_rows))
         except Exception as exc:  # noqa: BLE001
             report.setdefault("warnings", []).append(f"save_rows: {exc}"[:300])
+
+        if m_mode != "off":
+            _record_failed_ops(asset_repo, conn, push_res, report)
+            if role == asset_sync.ROLE_M and result.get("ok"):
+                _maybe_refresh_catalog_count(asset_repo, asset_sync_m, conn, pg, machine, writer)
 
         index_path = data_dir / INDEX_NAME
         # 27.09.2026, incydent: karta produktu pokazywala 0 materialow. Miedzy
@@ -681,3 +759,188 @@ def _int_state(asset_repo, conn, key: str, default: int) -> int:
         return default
     except Exception:  # noqa: BLE001
         return default
+
+
+# --------------------------------------------------------------------------
+# Etap 1a: stan pomocniczy, drugie sprawdzenie, partie
+# --------------------------------------------------------------------------
+
+def _record_failed_ops(asset_repo, conn, push_res: dict, report: dict) -> None:
+    """Operacja odrzucona jako zle dane (znak zerowy, kolizja klucza) jest ponawiana w kolejnych cyklach, ale
+    zostawia slad: asset_id -> {count, error, last_ms}. Zdrowe id znikaja ze stanu."""
+    try:
+        raw = asset_repo.get_state(conn, STATE_KEY_FAILED_OPS)
+        prev = json.loads(raw) if raw else {}
+        prev = prev if isinstance(prev, dict) else {}
+        now = _now_ms()
+        cur: dict[str, Any] = {}
+        for e in (push_res.get("errors") or []):
+            aid = str(e.get("asset_id") or "")
+            if not aid:
+                continue
+            n = int((prev.get(aid) or {}).get("count") or 0) + 1
+            cur[aid] = {"count": n, "error": e.get("error"), "last_ms": now}
+        if cur or prev:
+            asset_repo.set_state(conn, STATE_KEY_FAILED_OPS,
+                                  json.dumps(dict(list(cur.items())[:FAILED_OPS_KEEP]), ensure_ascii=False))
+        if cur:
+            report["failed_ops_repeating"] = sum(1 for v in cur.values() if v["count"] > 1)
+    except Exception as exc:  # noqa: BLE001 - stan pomocniczy nie psuje cyklu
+        report.setdefault("warnings", []).append(f"failed_ops_state: {exc}"[:200])
+
+
+def _maybe_refresh_catalog_count(asset_repo, asset_sync_m, conn, pg, machine: str, writer: str | None) -> None:
+    """M17 raz na dobe (zegar lokalny tylko do odstepu miedzy wywolaniami; wiek wpisu sprawdza baza)."""
+    try:
+        last = int(asset_repo.get_state(conn, STATE_KEY_CATALOG_COUNT_AT) or 0)
+        if _now_ms() - last < 86400000:
+            return
+        asset_sync_m.refresh_catalog_count(pg, machine, writer)
+        asset_repo.set_state(conn, STATE_KEY_CATALOG_COUNT_AT, str(_now_ms()))
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def confirm_tick(db_path: str | Path, data_dir: str | Path, *, root_alive: bool, root_path: str, machine: str,
+                 pg_connect: Callable[[], Any], probe: Callable[..., dict] | None = None) -> dict[str, Any]:
+    """Drugie sprawdzenie "brakuje od" (wolane przez most przy kazdym przebudzeniu petli, co 30 s, gdy nie idzie
+    pelny cykl). W trybie off, na kopii i bez ROOT konczy sie jednym tanim odczytem i zwraca {"ok": True,
+    "skipped": "<powod>"}. Nie rzuca wyjatkow: blad bazy / dysku to {"ok": False, "error": ...}.
+    Wynik bez "skipped": raport confirm_pass (pola: missing_marked, holds, witness, witness_tripped,
+    last_batch, deleted, would_delete, errors ...)."""
+    if not root_alive or not root_path:
+        return {"ok": True, "skipped": "no_root"}
+    try:
+        import data_mode  # noqa: PLC0415
+
+        if data_mode.is_local():
+            return {"ok": True, "skipped": "local_mode"}
+    except ImportError:
+        pass
+    try:
+        pg = pg_connect()
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)[:300]}
+    conn: sqlite3.Connection | None = None
+    try:
+        import asset_repo  # noqa: PLC0415
+        import asset_sync_m  # noqa: PLC0415
+
+        try:
+            if _get_mode(pg) != MODE_ON:
+                return {"ok": True, "skipped": "index_mode_off"}
+            rules = asset_sync_m.read_rules(pg)
+        except (_ModeLookupFailed, asset_sync_m.RulesLookupFailed) as exc:
+            return {"ok": False, "error": str(exc)[:300]}
+        if rules["mode"] == "off":
+            return {"ok": True, "skipped": "mode_off"}
+        if not asset_sync_m.columns_ready(pg):
+            return {"ok": True, "skipped": "columns_missing"}
+        if asset_sync_m.resolve_role(pg_connect, root_path, machine) != "m":
+            return {"ok": True, "skipped": "copy"}
+        cur = pg.cursor()
+        cur.execute(asset_sync_m.M["M10"])
+        row = cur.fetchone()
+        marked = int(row["marked"] if hasattr(row, "keys") else row[0])
+        if marked == 0:
+            cur.execute(asset_sync_m.M["M13"])
+            has_witness = cur.fetchone() is not None
+            pg.rollback()
+            if not has_witness:
+                return {"ok": True, "skipped": "nothing_marked", "missing_marked": 0, "holds": 0,
+                        "holds_list": [], "witness": None, "witness_tripped": False,
+                        "would_delete": 0}
+        else:
+            pg.rollback()
+        conn = sqlite3.connect(str(db_path))
+        asset_repo.ensure_local(conn)
+        rows = asset_repo.load_rows(conn)
+        apply = rules["mode"] == "on"
+        if apply:   # do etapu 4 usuwa tylko komputer z listy index_authority; reszta tylko raportuje
+            try:
+                import index_authority  # noqa: PLC0415
+
+                apply = index_authority.may_publish(pg_connect) is not False
+            except Exception:  # noqa: BLE001
+                pass
+        rep = asset_sync_m.confirm_pass(pg, rows, root=root_path, machine=machine, cfg=rules, apply=apply,
+                                        probe=probe)
+        rep["role"], rep["m_mode"] = "m", rules["mode"]
+        # kontrakt ze stanem mostu / tetnem (etap 0): "holds" = LICZBA wstrzymanych folderow, lista w "holds_list"
+        rep["holds_list"] = rep.get("holds") or []
+        rep["holds"] = len(rep["holds_list"])
+        try:
+            asset_repo.set_state(conn, STATE_KEY_HOLDS, json.dumps(rep["holds_list"], ensure_ascii=False))
+        except Exception:  # noqa: BLE001
+            pass
+        return rep
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": f"confirm_tick: {exc}"[:300]}
+    finally:
+        if conn is not None:
+            try:
+                conn.close()
+            except Exception:  # noqa: BLE001
+                pass
+        try:
+            pg.close()
+        except Exception:  # noqa: BLE001
+            pass
+
+
+def list_batches(pg_connect: Callable[[], Any]) -> dict[str, Any]:
+    """Lista partii usuniec (panel w Ustawieniach, trasa GET /asset-sync/batches). W trybie off: pusta."""
+    try:
+        pg = pg_connect()
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)[:300]}
+    try:
+        import asset_sync_m  # noqa: PLC0415
+
+        if asset_sync_m.read_rules(pg)["mode"] == "off" or not asset_sync_m.columns_ready(pg):
+            return {"ok": True, "items": []}
+        return {"ok": True, "items": asset_sync_m.list_batches(pg)}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)[:300]}
+    finally:
+        try:
+            pg.close()
+        except Exception:  # noqa: BLE001
+            pass
+
+
+def undo_batch(pg_connect: Callable[[], Any], *, machine: str, root_path: str, batch: str) -> dict[str, Any]:
+    """Cofniecie partii usuniec (M8). Tylko z komputera z M:, ktory jest na liscie index_authority, i tylko
+    w trybie on. Bledy: bad_batch, rules_off, not_m_computer, not_authority, unknown_batch, albo tekst bledu bazy."""
+    import asset_sync_m  # noqa: PLC0415
+
+    if not asset_sync_m.BATCH_RE.match(str(batch or "")):
+        return {"ok": False, "error": "bad_batch"}
+    try:
+        pg = pg_connect()
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)[:300]}
+    try:
+        rules = asset_sync_m.read_rules(pg)
+        if rules["mode"] != "on" or not asset_sync_m.columns_ready(pg):
+            return {"ok": False, "error": "rules_off"}
+        if asset_sync_m.resolve_role(pg_connect, root_path, machine) != "m":
+            return {"ok": False, "error": "not_m_computer"}
+        try:
+            import index_authority  # noqa: PLC0415
+
+            if index_authority.may_publish(pg_connect, force=True) is False:
+                return {"ok": False, "error": "not_authority"}
+        except Exception:  # noqa: BLE001
+            pass
+        ids = asset_sync_m.undo_batch(pg, asset_sync_m.writer_of(machine, "m"), batch)
+        if not ids:
+            return {"ok": False, "error": "unknown_batch", "batch": batch, "restored": 0}
+        return {"ok": True, "batch": batch, "restored": len(ids)}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)[:300]}
+    finally:
+        try:
+            pg.close()
+        except Exception:  # noqa: BLE001
+            pass

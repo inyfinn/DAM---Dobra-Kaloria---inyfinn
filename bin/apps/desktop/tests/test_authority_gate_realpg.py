@@ -298,7 +298,9 @@ class GateSnapshots(_RealPG):
             index_snapshots.mark_built_here("campaigns", data / "campaigns.json")
             res = index_snapshots.publish_changed(data, root_alive=True)
         self.assertTrue(res["ok"], res)
-        self.assertEqual(res.get("skipped"), "not_authority")
+        # 2.6.0: nieznana lista publikujacych = klient nie publikuje i nie pyta bazy (authority_unknown);
+        # wczesniej odmowa przychodzila z bramki w bazie (not_authority). Oba oznaczaja: bez petli bledow.
+        self.assertIn(res.get("skipped"), ("not_authority", "authority_unknown"))
         self.assertNotIn("errors", res)
         self.assertEqual(len(res["refused_not_authority"]), 1)
         self.assertIsNone(self.snapshot_row("file-index"))

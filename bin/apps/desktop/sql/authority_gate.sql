@@ -170,7 +170,16 @@ CREATE TRIGGER dam_authority_gate_snapshots
   BEFORE INSERT OR UPDATE ON dam_index_snapshots
   FOR EACH ROW EXECUTE FUNCTION dam_authority_gate_snapshots();
 
-DROP TRIGGER IF EXISTS dam_authority_gate_assets ON dam_assets;
-CREATE TRIGGER dam_authority_gate_assets
-  BEFORE UPDATE ON dam_assets
-  FOR EACH ROW EXECUTE FUNCTION dam_authority_gate_assets();
+-- Etap 1a (spec 4.6): stary wyzwalacz powstaje tylko, gdy na tabeli nie ma juz dam_assets_rules
+-- (bez tego ponowne wlaczenie bramki zalozyloby drugi wyzwalacz obok nowego).
+DO $guard$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger
+                  WHERE tgname = 'dam_assets_rules' AND tgrelid = to_regclass('dam_assets')) THEN
+    DROP TRIGGER IF EXISTS dam_authority_gate_assets ON dam_assets;
+    CREATE TRIGGER dam_authority_gate_assets
+      BEFORE UPDATE ON dam_assets
+      FOR EACH ROW EXECUTE FUNCTION dam_authority_gate_assets();
+  END IF;
+END
+$guard$;

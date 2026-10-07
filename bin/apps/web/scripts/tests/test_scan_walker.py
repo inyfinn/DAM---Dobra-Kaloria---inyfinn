@@ -4,6 +4,7 @@ scanned_dirs (wylistowane bez bledu) vs failed_dirs (blad IO / wykluczone)."""
 from __future__ import annotations
 
 import importlib.util
+import os
 import sys
 import tempfile
 import unittest
@@ -15,7 +16,7 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 from asset_ids import asset_key  # noqa: E402
-from scan_walker import walk_files  # noqa: E402
+from scan_walker import PROBE_ABSENT, PROBE_PRESENT, PROBE_UNREACHABLE, probe_file, walk_files  # noqa: E402
 
 
 def _load_build_branding_index():
@@ -191,6 +192,99 @@ class BuildBrandingIndexManifestTest(unittest.TestCase):
             names = {a["name"] for a in assets}
             self.assertIn("logo.ai", names)
             self.assertIn("paleta.pdf", names)
+
+
+class ProbeFileTests(unittest.TestCase):
+    """Etap 1a (spec 3.1): sonda pojedynczego pliku rozroznia "nie ma" od "nieosiagalny"."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.root = Path(self._tmp.name) / "Marketing"
+        for top in ("- POLSKA", "-- ARCHIWUM --", "- EKSPORT"):
+            (self.root / top).mkdir(parents=True)
+        (self.root / "- POLSKA" / "A").mkdir()
+        (self.root / "- POLSKA" / "A" / "b.png").write_bytes(b"x")
+
+    def probe(self, rel, cache=None):
+        return probe_file(self.root, rel, cache)
+
+    def test_jest(self):
+        self.assertEqual(self.probe("- POLSKA/A/b.png")["state"], PROBE_PRESENT)
+
+    def test_nie_ma_w_istniejacym_folderze(self):
+        r = self.probe("- POLSKA/A/c.png")
+        self.assertEqual((r["state"], r["gone"], r["empty_parent"]), (PROBE_ABSENT, "", False))
+
+    def test_zniknal_folder_nadrzedny_i_dwa_poziomy(self):
+        r = self.probe("- POLSKA/X/c.png")
+        self.assertEqual((r["state"], r["gone"]), (PROBE_ABSENT, "- POLSKA/X"))
+        r = self.probe("- POLSKA/X/Y/c.png")
+        self.assertEqual((r["state"], r["gone"]), (PROBE_ABSENT, "- POLSKA/X"), "najwyzszy zniknity folder")
+
+    def test_pusty_folder_nadrzedny_jest_zgloszony(self):
+        (self.root / "- POLSKA" / "Pusty").mkdir()
+        r = self.probe("- POLSKA/Pusty/c.png")
+        self.assertEqual((r["state"], r["empty_parent"]), (PROBE_ABSENT, True))
+
+    def test_nazwa_nfd_na_dysku_nfc_w_bazie_i_inna_wielkosc_liter_to_jest(self):
+        import unicodedata  # noqa: PLC0415
+
+        nfd = unicodedata.normalize("NFD", "Zażółć.png")
+        (self.root / "- POLSKA" / "A" / nfd).write_bytes(b"x")
+        self.assertEqual(self.probe("- POLSKA/A/" + unicodedata.normalize("NFC", "Zażółć.png"))["state"], PROBE_PRESENT)
+        self.assertEqual(self.probe("- polska/a/B.PNG")["state"], PROBE_PRESENT)
+
+    def test_blad_listowania_to_nieosiagalny(self):
+        real = os.scandir
+
+        def boom(path):
+            if str(path).endswith("A"):
+                raise PermissionError("brak dostepu")
+            return real(path)
+
+        with mock.patch("scan_walker.os.scandir", side_effect=boom):
+            r = self.probe("- POLSKA/A/b.png")
+        self.assertEqual(r["state"], PROBE_UNREACHABLE)
+        self.assertEqual(r["reason"], "listing_error")
+
+    def test_listowanie_mowi_nie_ma_a_stat_inny_blad_to_nieosiagalny(self):
+        with mock.patch("scan_walker.os.stat", side_effect=OSError(5, "blad sieci")):
+            r = self.probe("- POLSKA/A/c.png")
+        self.assertEqual((r["state"], r["reason"]), (PROBE_UNREACHABLE, "stat_error"))
+
+    def test_listowanie_mowi_nie_ma_a_stat_mowi_jest_to_nieosiagalny(self):
+        with mock.patch("scan_walker.os.stat", return_value=os.stat(self.root)):
+            r = self.probe("- POLSKA/A/c.png")
+        self.assertEqual(r["state"], PROBE_UNREACHABLE)
+
+    def test_korzen_pusty_albo_bez_trzech_folderow_glownych_to_nieosiagalny(self):
+        empty = Path(self._tmp.name) / "Pusty"
+        empty.mkdir()
+        self.assertEqual(probe_file(empty, "- POLSKA/A/b.png")["state"], PROBE_UNREACHABLE)
+        os.rename(self.root / "- EKSPORT", self.root / "- EKSPORT-x")
+        r = self.probe("- POLSKA/A/b.png")
+        self.assertEqual((r["state"], r["reason"]), (PROBE_UNREACHABLE, "missing_top:- EKSPORT"))
+        self.assertEqual(probe_file(Path(self._tmp.name) / "NieMaTakiego", "- POLSKA/A/b.png")["state"],
+                         PROBE_UNREACHABLE)
+
+    def test_cache_listuje_kazdy_folder_raz_w_przebiegu(self):
+        cache: dict = {}
+        real = os.scandir
+        calls = []
+
+        def counting(path):
+            calls.append(str(path))
+            return real(path)
+
+        with mock.patch("scan_walker.os.scandir", side_effect=counting):
+            for n in ("b.png", "c.png", "d.png"):
+                self.probe(f"- POLSKA/A/{n}", cache)
+        self.assertEqual(len(calls), len(set(calls)), "ten sam folder nie jest listowany drugi raz")
+        calls.clear()
+        with mock.patch("scan_walker.os.scandir", side_effect=counting):
+            self.probe("- POLSKA/A/b.png")           # nowy przebieg (nowy cache): swiezy odczyt
+        self.assertGreater(len(calls), 0)
 
 
 if __name__ == "__main__":

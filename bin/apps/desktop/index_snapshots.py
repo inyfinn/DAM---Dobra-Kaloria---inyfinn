@@ -111,12 +111,19 @@ _ROWS_MODE_CACHE_TTL_S = 600.0  # tania funkcja: co najwyzej raz na 10 min pyta 
 _ROWS_MODE_CACHE: dict[str, Any] = {"value": False, "at": 0.0}
 
 _LOCK = threading.Lock()
+_LOCK_CATALOG = threading.Lock()
 _THREAD: threading.Thread | None = None
 _LAST: dict[str, Any] = {}
 # Faza 3 (PLAN-jedno-zrodlo-prawdy.md, zadanie 3.4): stan pierwszej synchronizacji
 # po starcie procesu, do wystawienia w /health / banerze UI "pobieram dane".
 _FIRST_SYNC: dict[str, Any] = {"done": False, "ok": None, "started_at": "", "finished_at": "",
                                "attempts": 0, "last_error": "", "next_retry_at": ""}
+# ETAP 0 (07.10.2026): znacznik katalogu = to, co ekran pokazuje jako "wersja katalogu". Cztery pliki, ktore
+# razem sa spisem: lista produktow, jej wyszukiwarka, wyszukiwarka materialow, kampanie. Kolejnosc stala.
+# branding-index (surowe wiersze, setki MB) NIE wchodzi: jego stan ma w etapie 3 wlasny numer.
+CATALOG_KEYS = ("file-index", "search-index", "branding-search-index", "campaigns")
+_DATA_DIR: Path | None = None  # katalog plikow migawek zapamietany przy starcie (catalog_info() bez argumentu)
+_CATALOG_CACHE: dict[str, str] = {"catalog_id": "", "catalog_source": ""}  # dla /health: zero IO w zapytaniu
 
 
 def is_not_authority_error(err: Any) -> bool:
@@ -731,7 +738,11 @@ def status() -> dict[str, Any]:
             "db_built_by": db.get("built_by") or "",
             "pulled_at": e.get("pulled_at") or "",
         }
-    return {"ok": True, "keys": keys, "last": dict(_LAST), "first_sync": dict(_FIRST_SYNC)}
+    try:
+        catalog = catalog_info()
+    except Exception:  # noqa: BLE001 - znacznik jest dodatkiem, nie moze zepsuc statusu
+        catalog = {}
+    return {"ok": True, "keys": keys, "last": dict(_LAST), "first_sync": dict(_FIRST_SYNC), "catalog": catalog}
 
 
 def first_sync_state() -> dict[str, Any]:
@@ -739,6 +750,103 @@ def first_sync_state() -> dict[str, Any]:
     juz sie skonczyl, i czy sie udal. Zanim sie skonczy: done=False - UI ma wtedy
     pokazac stan ladowania zamiast danych z instalatora/pustych list (PLAN Faza 3)."""
     return dict(_FIRST_SYNC)
+
+
+def catalog_id_from_shas(shas: dict[str, str]) -> str:
+    """Znacznik katalogu: 7 znakow skrotu czterech sum plikow (CATALOG_KEYS, stala kolejnosc).
+    Dwa komputery z tym samym znacznikiem maja te same cztery pliki co do bajta. Brak ktorejkolwiek
+    sumy = '' (katalog niekompletny: swieza instalacja bez spisu, albo suma jeszcze nieliczona)."""
+    if not all(str(shas.get(k) or "") for k in CATALOG_KEYS):
+        return ""
+    raw = "\n".join(f"{k}={shas[k]}" for k in CATALOG_KEYS)
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:7]
+
+
+def catalog_info(data_dir: Path | str | None = None) -> dict[str, Any]:
+    """Znacznik katalogu TEGO komputera do ekranow, /index/status, /index/snapshots i tetna.
+
+    Sumy bierze ze stanu migawek (local_sha), gdy local_sig zgadza sie ze stat() pliku; plik zmieniony od
+    ostatniego liczenia sumy = `pending` (sume policzy najblizszy cykl migawek, tu nie hashujemy 45 MB).
+    id/db_id puste = katalog niekompletny. source: db = wszystkie cztery pliki rowne wersji w bazie,
+    local = zadna, mixed = czesc; '' gdy nie ma zadnego pliku z suma. Tylko pamiec i 4x stat() - tanie.
+    Etap 3 podmienia TYLKO to wyliczenie (kind=generation, id=numer kompletu); pola zostaja."""
+    root = Path(data_dir) if data_dir else _DATA_DIR
+    state = _load_state()
+    parts: dict[str, Any] = {}
+    shas: dict[str, str] = {}
+    db_shas: dict[str, str] = {}
+    pending = False
+    for key in CATALOG_KEYS:
+        entry = state.get(key) or {}
+        db = entry.get("db") or {}
+        path = root / SNAPSHOT_FILES[key] if root else None
+        sig = _file_sig(path) if path else None
+        sha = ""
+        if sig is not None:
+            if entry.get("local_sig") == list(sig) and entry.get("local_sha"):
+                sha = str(entry["local_sha"])
+            else:
+                pending = True
+        db_sha = str(db.get("sha256") or "")
+        shas[key], db_shas[key] = sha, db_sha
+        same = bool(sha) and sha == db_sha
+        if same:
+            built_at, built_by = str(db.get("built_at") or ""), str(db.get("built_by") or "")
+        else:
+            built_at = _iso_mtime(path) if sig is not None and path else ""
+            built_by = _machine() if sha and _is_built_here(entry, sha) else ""
+        parts[key] = {"sha": sha[:7], "built_at": built_at, "built_by": built_by, "pending": sha == "" and sig is not None,
+                      "source": "" if not sha else ("db" if same else "local"), "pulled_at": str(entry.get("pulled_at") or "")}
+    have = [k for k in CATALOG_KEYS if shas[k]]
+    if not have:
+        source = ""
+    elif all(shas[k] == db_shas[k] for k in CATALOG_KEYS):
+        source = "db"
+    elif not any(shas[k] == db_shas[k] for k in have):
+        source = "local"
+    else:
+        source = "mixed"
+    head = parts["file-index"]
+    return {
+        "kind": "snapshot", "id": catalog_id_from_shas(shas), "gen": None,
+        "built_at": head["built_at"], "built_by": head["built_by"], "source": source,
+        "complete": len(have) == len(CATALOG_KEYS), "pending": pending,
+        "db_id": catalog_id_from_shas(db_shas),
+        "pulled_at": max((p["pulled_at"] for p in parts.values()), default=""),
+        "parts": parts,
+    }
+
+
+def refresh_catalog_cache() -> bool:
+    """Odswiez pamiec podreczna znacznika dla /health (zero IO w zapytaniu: W11). True = id sie zmienil."""
+    try:
+        info = catalog_info()
+        new = {"catalog_id": str(info.get("id") or ""), "catalog_source": str(info.get("source") or "")}
+    except Exception:  # noqa: BLE001
+        return False
+    with _LOCK_CATALOG:
+        changed = new["catalog_id"] != _CATALOG_CACHE["catalog_id"]
+        _CATALOG_CACHE.update(new)
+    return changed
+
+
+def cached_catalog_id() -> dict[str, str]:
+    with _LOCK_CATALOG:
+        return dict(_CATALOG_CACHE)
+
+
+def _after_cycle(data_dir: Path) -> None:
+    """Koniec cyklu migawek: zapamietaj katalog plikow, odswiez znacznik; zmiana = tetno floty od reki
+    (admin widzi nowy katalog tego komputera bez czekania pelnego rytmu). Nigdy nie rzuca."""
+    global _DATA_DIR
+    _DATA_DIR = Path(data_dir)
+    if refresh_catalog_cache():
+        try:
+            import fleet_heartbeat  # noqa: PLC0415
+
+            fleet_heartbeat.kick()
+        except Exception:  # noqa: BLE001
+            pass
 
 
 def _note_first_sync(pull: dict[str, Any]) -> None:
@@ -779,6 +887,7 @@ def run_once(data_dir: Path, root_alive_fn: Callable[[], bool],
         _LAST.update(at=datetime.now(timezone.utc).isoformat(), why=why, root_alive=alive, publish=pub, pull=pull)
         _log("cykl", {"why": why, "root": alive, "pull": pull, "publish": pub})
         _note_first_sync(pull)
+        _after_cycle(data_dir)
         return dict(_LAST)
 
 
@@ -803,6 +912,7 @@ def retry_first_pull(data_dir: Path, root_alive_fn: Callable[[], bool],
                      publish={"ok": True, "skipped": "first_sync_retry"}, pull=pull)
         _log("ponowienie pierwszego pobrania", {"root": alive, "pull": pull})
         _note_first_sync(pull)
+        _after_cycle(data_dir)
         return bool(pull.get("ok"))
     finally:
         _LOCK.release()
@@ -1033,6 +1143,7 @@ def start_watch(data_dir: Path, root_alive_fn: Callable[[], bool],
               flush=True)
 
     def loop() -> None:
+        _after_cycle(data_dir)  # znacznik katalogu od startu (z plikow i stanu; bez sieci), przed pierwszym cyklem
         _initial_wait(data_dir)  # po starcie mostu: najpierw UI, potem siec (swiezy komputer: szybciej)
         # ADR-012 pkt 4: co LIGHT_CHECK_S tylko generacje (bez payload); pelny cykl
         # przy zmianie w bazie albo co REFRESH_S jak dotad. Bez LightWatch (import
