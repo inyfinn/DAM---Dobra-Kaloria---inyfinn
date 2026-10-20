@@ -303,4 +303,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         # Obraz i podpis jednym wywolaniem: wydanie nie ma zostawac z .dmg bez .sig.
-        run: gh release upload "${{ github.event.release.tag_name }}" "dist/DAM-${{ matrix.arch }}.dmg" "dist/DAM-${{ matrix.arch }}.dmg.sig" --clobber
+        run: gh release upload "${{ github.event.release.tag_name }}" "dist/DAM-${{ matrix.arch }}.dmg" "dist/DAM-${{ matrix.arch }}.dmg.sig" --clobber --repo "${{ github.repository }}"
