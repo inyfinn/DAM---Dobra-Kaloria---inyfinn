@@ -1,7 +1,7 @@
 name: macOS diagnoza (opublikowany DMG)
 
 # 27.10.2026: odtworzenie "nieprawidlowy email lub haslo" na Macu bez Maca. Pobiera DMG z wydania, uruchamia most
-# z pakietu (DAM --run local_bridge) i pyta go o stan i logowanie kontem, ktore nie istnieje. Nic nie wysyla, nie aktywuje.
+# z pakietu (DAM --run bridge) i pyta go o stan i logowanie kontem, ktore nie istnieje. Nic nie wysyla, nie aktywuje.
 on:
   workflow_dispatch:
     inputs:
@@ -49,7 +49,7 @@ jobs:
         run: |
           set +e
           export DAM_STATE_DIR="$RUNNER_TEMP/state"
-          "$APP/Contents/MacOS/DAM" --run local_bridge > "$RUNNER_TEMP/bridge.log" 2>&1 &
+          "$APP/Contents/MacOS/DAM" --run bridge > "$RUNNER_TEMP/bridge.log" 2>&1 &
           for i in $(seq 1 90); do curl -fsS http://127.0.0.1:8766/health > "$RUNNER_TEMP/health.json" 2>/dev/null && break; sleep 2; done
           echo "--- /health ---"; head -c 2500 "$RUNNER_TEMP/health.json"; echo
           echo "--- /auth/status ---"; curl -sS http://127.0.0.1:8766/auth/status | head -c 1500; echo
