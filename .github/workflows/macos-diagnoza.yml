@@ -1,0 +1,61 @@
+name: macOS diagnoza (opublikowany DMG)
+
+# 27.10.2026: odtworzenie "nieprawidlowy email lub haslo" na Macu bez Maca. Pobiera DMG z wydania, uruchamia most
+# z pakietu (DAM --run local_bridge) i pyta go o stan i logowanie kontem, ktore nie istnieje. Nic nie wysyla, nie aktywuje.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag wydania (np. v2.8.7)'
+        required: true
+        type: string
+
+jobs:
+  diag:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15-intel
+            arch: Intel
+          - runner: macos-latest
+            arch: AppleSilicon
+    runs-on: ${{ matrix.runner }}
+    name: ${{ matrix.arch }}
+    timeout-minutes: 20
+    steps:
+      - name: Pobierz i zamontuj DMG
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh release download "${{ inputs.tag }}" --repo "${{ github.repository }}" -p "DAM-${{ matrix.arch }}.dmg" -D "$RUNNER_TEMP"
+          MP="$RUNNER_TEMP/mnt"; mkdir -p "$MP"
+          hdiutil attach "$RUNNER_TEMP/DAM-${{ matrix.arch }}.dmg" -nobrowse -readonly -mountpoint "$MP"
+          ditto "$MP/DAM.app" "$RUNNER_TEMP/DAM.app"
+          APP="$RUNNER_TEMP/DAM.app"
+          echo "APP=$APP" >> "$GITHUB_ENV"
+          echo "--- wersja w pakiecie ---"
+          find "$APP" -name version.json -path '*apps/web/*' -exec grep -m1 '"version"' {} \;
+          find "$APP" -name runtime_config.py -exec grep -m1 'APP_VERSION' {} \;
+          find "$APP" -name dam-version.js -exec grep -m1 'DAM_APP_VERSION =' {} \;
+          echo "--- konfiguracja bazy w pakiecie ---"
+          find "$APP" -name 'pg-config*' -print
+          echo "--- .git w pakiecie (tryb deweloperski) ---"
+          find "$APP" -maxdepth 6 -name '.git' -print || true
+          lipo -archs "$APP/Contents/MacOS/DAM" || true
+
+      - name: Most z pakietu i logowanie testowe
+        run: |
+          set +e
+          export DAM_STATE_DIR="$RUNNER_TEMP/state"
+          "$APP/Contents/MacOS/DAM" --run local_bridge > "$RUNNER_TEMP/bridge.log" 2>&1 &
+          for i in $(seq 1 90); do curl -fsS http://127.0.0.1:8766/health > "$RUNNER_TEMP/health.json" 2>/dev/null && break; sleep 2; done
+          echo "--- /health ---"; head -c 2500 "$RUNNER_TEMP/health.json"; echo
+          echo "--- /auth/status ---"; curl -sS http://127.0.0.1:8766/auth/status | head -c 1500; echo
+          echo "--- /db/status ---"; curl -sS http://127.0.0.1:8766/db/status | head -c 1500; echo
+          echo "--- /auth/login (konto, ktorego nie ma) ---"
+          curl -sS -X POST http://127.0.0.1:8766/auth/login -H 'Content-Type: application/json' \
+            -d '{"email":"diagnoza-ci@example.invalid","password":"Zle-haslo-123","device_id":"dam-dev-ci","machine_id":"dam-mid-ci"}' | head -c 1500; echo
+          echo "--- log mostu (koniec) ---"; tail -80 "$RUNNER_TEMP/bridge.log"
+          exit 0
