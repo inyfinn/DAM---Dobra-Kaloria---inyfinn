@@ -228,6 +228,33 @@ jobs:
           dist/DAM.app/Contents/MacOS/DAM --selftest 2>&1 | tee /tmp/selftest.log
           grep -q "selftest: PASS" /tmp/selftest.log
 
+      # 27.10.2026: Mac mowil "nieprawidlowy email lub haslo" i wlasciciel bral to za stara wersje. Bramka: most z pakietu
+      # wstaje, podaje wersje rowna tagowi, a logowanie na nieaktywowanym Macu konczy sie not_activated (okno kodu).
+      - name: Most z pakietu (wersja i logowanie bez aktywacji)
+        env:
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          set -euo pipefail
+          export DAM_STATE_DIR="$RUNNER_TEMP/state-bramka"
+          dist/DAM.app/Contents/MacOS/DAM --run bridge > /tmp/bridge-bramka.log 2>&1 &
+          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8766/health > /tmp/health.json 2>/dev/null && break; sleep 2; done
+          python3 - "$TAG" <<'PY'
+          import json, sys, urllib.request
+          want = sys.argv[1].lstrip("v")
+          h = json.load(open("/tmp/health.json"))
+          assert h.get("app_version") == want, f"most z pakietu ma wersje {h.get('app_version')!r}, tag {want!r}"
+          req = urllib.request.Request("http://127.0.0.1:8766/auth/login", method="POST", headers={"Content-Type": "application/json"},
+              data=json.dumps({"email": "bramka-ci@example.invalid", "password": "Zle-haslo-123", "device_id": "dam-dev-ci", "machine_id": "dam-mid-ci"}).encode())
+          try:
+              body = urllib.request.urlopen(req, timeout=20).read()
+          except urllib.error.HTTPError as e:
+              body = e.read()
+          r = json.loads(body)
+          assert r.get("error") == "not_activated", f"logowanie bez aktywacji: {r}"
+          print("bramka OK: most", want, "| logowanie bez aktywacji -> not_activated")
+          PY
+          pkill -f "DAM.app/Contents/MacOS/DAM" || true
+
       - name: Rozmiar pakietu
         run: du -sh dist/DAM.app && find dist/DAM.app -name '*.py' | wc -l
 
