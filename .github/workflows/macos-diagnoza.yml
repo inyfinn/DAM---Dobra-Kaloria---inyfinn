@@ -58,4 +58,24 @@ jobs:
           curl -sS -X POST http://127.0.0.1:8766/auth/login -H 'Content-Type: application/json' \
             -d '{"email":"diagnoza-ci@example.invalid","password":"Zle-haslo-123","device_id":"dam-dev-ci","machine_id":"dam-mid-ci"}' | head -c 1500; echo
           echo "--- log mostu (koniec) ---"; tail -80 "$RUNNER_TEMP/bridge.log"
+          pkill -f "/DAM[^/]*.app/Contents/MacOS/DAM" || true
           exit 0
+
+      - name: Test instaluj-mac.sh (jak u uzytkownika, ze stara kopia i dzialajacym starym mostem)
+        run: |
+          set -euo pipefail
+          # stara kopia + "DAM 2.app" + dzialajacy most starej kopii: skrypt ma je usunac do Kosza i zamknac proces
+          ditto "$APP" /Applications/DAM.app
+          ditto "$APP" "/Applications/DAM 2.app"
+          "/Applications/DAM 2.app/Contents/MacOS/DAM" --run bridge > /dev/null 2>&1 &
+          sleep 15
+          pgrep -fl "/DAM[^/]*.app/Contents/MacOS/DAM" || true
+          curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/wydania/instaluj-mac.sh" | bash
+          sleep 5
+          echo "--- po instalacji ---"
+          ls -d /Applications/DAM*.app
+          ls ~/.Trash | grep DAM-stara || true
+          grep -m1 '"version"' /Applications/DAM.app/Contents/Resources/damroot/bin/apps/web/version.json
+          echo "kwarantanna: $(xattr -p com.apple.quarantine /Applications/DAM.app 2>/dev/null || echo brak)"
+          test ! -d "/Applications/DAM 2.app"
+          pkill -f "/DAM[^/]*.app/Contents/MacOS/DAM" || true
