@@ -235,8 +235,13 @@ jobs:
           TAG: ${{ github.event.release.tag_name || inputs.tag }}
         run: |
           set -euo pipefail
+          # 28.10.2026 (2.9.2 wyszlo zepsute): most uruchomiony Z dist/DAM.app przenosil katalogi danych i zapiekal w pakiecie
+          # dowiazania do ~ runnera. Bramka dziala TYLKO na kopii, z obcym HOME i wylaczonym przenoszeniem; dist/ zostaje nietkniety.
+          GATE="$RUNNER_TEMP/gate-$$"; mkdir -p "$GATE/home"
+          ditto dist/DAM.app "$GATE/DAM.app"
+          export HOME="$GATE/home" DAM_SKIP_RELOCATE=1
           export DAM_STATE_DIR="$RUNNER_TEMP/state-bramka"
-          dist/DAM.app/Contents/MacOS/DAM --run bridge > /tmp/bridge-bramka.log 2>&1 &
+          "$GATE/DAM.app/Contents/MacOS/DAM" --run bridge > /tmp/bridge-bramka.log 2>&1 &
           for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8766/health > /tmp/health.json 2>/dev/null && break; sleep 2; done
           python3 - "$TAG" <<'PY'
           import json, sys, urllib.request
@@ -254,6 +259,15 @@ jobs:
           print("bramka OK: most", want, "| logowanie bez aktywacji -> not_activated")
           PY
           pkill -f "DAM.app/Contents/MacOS/DAM" || true
+
+      # Bramka blokujaca: w pakiecie nie moze byc zadnych dowiazan do katalogow danych (damroot) - 2.9.2 miala 4 wskazujace na /Users/runner.
+      - name: Brak dowiazan w DAM.app
+        run: |
+          set -euo pipefail
+          LINKS=$(find dist/DAM.app -type l -path '*damroot*' -print)
+          if [ -n "$LINKS" ]; then echo "::error::Dowiazania w pakiecie:"; echo "$LINKS"; exit 1; fi
+          if find dist/DAM.app -type l -lname '/Users/*' -print | grep -q .; then echo "::error::Dowiazanie do /Users w pakiecie"; exit 1; fi
+          echo "OK: brak dowiazan do danych w DAM.app"
 
       - name: Rozmiar pakietu
         run: du -sh dist/DAM.app && find dist/DAM.app -name '*.py' | wc -l
@@ -289,6 +303,9 @@ jobs:
           hdiutil attach "$DMG" -nobrowse -readonly -mountpoint "$MP"
           ls -la "$MP"
           test -d "$MP/DAM.app" || { echo "BLAD: w obrazie nie ma DAM.app"; exit 1; }
+          # kontrola KONCOWEGO obrazu (to jedzie do uzytkownikow): zadnych dowiazan do danych ani do /Users
+          if find "$MP/DAM.app" -type l \( -path '*damroot*' -o -lname '/Users/*' \) -print | grep -q .; then echo "BLAD: dowiazania w obrazie .dmg"; find "$MP/DAM.app" -type l \( -path '*damroot*' -o -lname '/Users/*' \) -print; exit 1; fi
+          echo "OK: obraz bez dowiazan do danych"
           hdiutil detach "$MP"
 
       # 15.10.2026 (2.7.2): aktualizator Maca uznaje wydanie tylko z para <obraz>.dmg + <obraz>.dmg.sig (jak .exe + .exe.sig).
