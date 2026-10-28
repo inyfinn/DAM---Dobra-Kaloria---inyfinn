@@ -260,11 +260,11 @@ jobs:
           PY
           pkill -f "DAM.app/Contents/MacOS/DAM" || true
 
-      # Bramka blokujaca: w pakiecie nie moze byc zadnych dowiazan do katalogow danych (damroot) - 2.9.2 miala 4 wskazujace na /Users/runner.
+      # Bramka blokujaca: w pakiecie nie moze byc dowiazan WEWNATRZ damroot (katalogi danych); Frameworks/damroot -> Resources/damroot to dowiazanie PyInstallera, dozwolone - 2.9.2 miala 4 wskazujace na /Users/runner.
       - name: Brak dowiazan w DAM.app
         run: |
           set -euo pipefail
-          LINKS=$(find dist/DAM.app -type l -path '*damroot*' -print)
+          LINKS=$(find dist/DAM.app -type l -path '*/damroot/*' -print)
           if [ -n "$LINKS" ]; then echo "::error::Dowiazania w pakiecie:"; echo "$LINKS"; exit 1; fi
           if find dist/DAM.app -type l -lname '/Users/*' -print | grep -q .; then echo "::error::Dowiazanie do /Users w pakiecie"; exit 1; fi
           echo "OK: brak dowiazan do danych w DAM.app"
@@ -304,7 +304,7 @@ jobs:
           ls -la "$MP"
           test -d "$MP/DAM.app" || { echo "BLAD: w obrazie nie ma DAM.app"; exit 1; }
           # kontrola KONCOWEGO obrazu (to jedzie do uzytkownikow): zadnych dowiazan do danych ani do /Users
-          if find "$MP/DAM.app" -type l \( -path '*damroot*' -o -lname '/Users/*' \) -print | grep -q .; then echo "BLAD: dowiazania w obrazie .dmg"; find "$MP/DAM.app" -type l \( -path '*damroot*' -o -lname '/Users/*' \) -print; exit 1; fi
+          if find "$MP/DAM.app" -type l \( -path '*/damroot/*' -o -lname '/Users/*' \) -print | grep -q .; then echo "BLAD: dowiazania w obrazie .dmg"; find "$MP/DAM.app" -type l \( -path '*/damroot/*' -o -lname '/Users/*' \) -print; exit 1; fi
           echo "OK: obraz bez dowiazan do danych"
           hdiutil detach "$MP"
 
