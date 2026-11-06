@@ -12,9 +12,16 @@ Galeria packshotów z domyślnym widokiem tylko najnowszych wersji, więc nic st
 ![Wizualizacje](docs/img/01-wizualizacje.png)
 
 ### Eksplorer
-Pełna struktura produktów z kategoriami po lewej: wiersze produktów, rewizje, nośniki opakowań (baton, kartonik, doypack, kulki, tuba i inne), statusy F / X / D (aktualny, nieaktualny, demo) oraz zmiana wersji jednym przyciskiem z listą. Szukasz po indeksie, nazwie albo skojarzeniu.
+Pełna struktura produktów z kategoriami po lewej: produkty, warianty i ich pliki jako kafelki. Każdy wariant ma przełącznik Aktualny / Nieaktualny i listę kompletności (plik źródłowy, podgląd PDF, pliki do druku, wizualizacje). Kliknięcie pozycji listy otwiera menu działań: przy brakującym pliku „Zgłoś zapotrzebowanie” albo „Otwórz folder wariantu”, przy obecnym „Otwórz”, „Pokaż w folderze”, „Kopiuj ścieżkę”. Szukasz po indeksie, nazwie albo skojarzeniu, a „Odśwież miniatury” buduje podglądy od nowa z plików na dysku.
 
 ![Eksplorer](docs/img/02-eksplorer.png)
+
+### Zadania i Asana w obie strony
+Każdy łączy swoje konto Asany raz (Integracje → Asana, osobisty token) i od tej chwili widzi w DAM tylko swoje zadania, na każdym komputerze. Ptaszek w DAM zamyka zadanie w Asanie, a zmiany z Asany pojawiają się w DAM po kilkunastu sekundach. W Wiadomościach rozwinięte zadanie pokazuje, kto je ma, na kiedy, w jakim projekcie i do czego należy, a „Otwórz w Asanie” otwiera aplikację Asana. Zgłoszenie zapotrzebowania może od razu utworzyć zadanie w Asanie.
+
+![Zadania](docs/img/05-zadania.png)
+
+![Wiadomości](docs/img/06-wiadomosci.png)
 
 ### Materiały graficzne
 Reklamy, filmy, banery, loga i grafiki marki w jednym katalogu, z podziałem na kampanie, social i wideo, strony WWW oraz brandbook. Wyszukiwarka rozumie zwykłe zapytania ("slider niemięsa", "film lato 2026"), a tagi pozwalają zawęzić wynik kliknięciem. Pliki w kilku formatach (PNG, SVG) są jednym elementem, a SVG otwiera się w oknie podglądu.
@@ -27,16 +34,17 @@ Znak zapytania (lub klawisz F1) otwiera panel "Pomóż mi tutaj": krótkie wskaz
 ![Pomoc](docs/img/04-pomoc.png)
 
 ### Pozostałe moduły
-- **Dashboard** - liczniki produktów i projektów, najnowsze wizualizacje i produkty oraz powiadomienia z Asany i Teams, układane po swojemu.
-- **Projekty, Zadania, Wiadomości** - projekty opakowań z etapami, zadania i skrzynka zgłoszeń (zapotrzebowanie na wizualizacje, uwagi).
+- **Dashboard** - liczniki produktów i projektów, najnowsze wizualizacje i produkty oraz Twoje zadania z Asany, układane po swojemu.
+- **Projekty** - projekty opakowań z etapami.
 - **Faktury, Integracja i produkcja** - faktury i koszty, integracje (Asana, Teams) oraz dane produkcyjne produktów.
-- **Użytkownicy** (tylko administrator) - lista kont z wyszukiwaniem i filtrami, akceptacja nowych osób, kody aktywacyjne, klucze licencji, edycja i wyłączanie kont.
+- **Użytkownicy** (tylko administrator) - lista kont z wyszukiwaniem i filtrami, akceptacja nowych osób, klucze licencji, edycja i wyłączanie kont oraz lista komputerów z dostępem do bazy z przyciskiem „Odłącz komputer”.
 - **Profil i Ustawienia** - dane konta, komputery i ścieżki do folderu Marketing (każdy komputer może mieć inną literę dysku), motyw jasny i ciemny, zestawy kolorów.
 - **LIVE i LOKALNY** - przełącznik źródła danych: wspólna baza albo tylko pliki z tego komputera.
 
 ## Jak to działa
 
 - **Jedna prawda w bazie.** Konta, statusy, tagi i skojarzenia leżą w centralnej bazie PostgreSQL, a plik z dysku Marketing pozostaje źródłem materiałów. Pamięć podręczna miniatur przyspiesza podglądy, a oryginał jest zawsze do otwarcia.
+- **Jedno konto, wszędzie.** Logujesz się swoim adresem i hasłem na każdym komputerze. Każdy komputer dostaje w tle własny, ograniczony dostęp do bazy, który administrator może w każdej chwili odłączyć.
 - **Instaluj i pracuj.** Instalator zawiera wszystko, czego program potrzebuje: nie trzeba instalować Pythona ani niczego konfigurować. Po instalacji logujesz się kontem firmowym.
 - **Aktualizacje same.** Program sprawdza to repozytorium i pobiera nowe wydanie w tle. Wydania są podpisane, więc program instaluje tylko to, co pochodzi od autora. Ręcznie: menu profilu, Sprawdź aktualizacje.
 - **Szybki start.** Okno startowe pojawia się od razu, a ponowne kliknięcie ikony w trakcie uruchamiania nie restartuje programu.
