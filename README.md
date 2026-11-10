@@ -28,17 +28,31 @@ Reklamy, filmy, banery, loga i grafiki marki w jednym katalogu, z podziałem na 
 
 ![Materiały graficzne](docs/img/03-materialy-graficzne.png)
 
+### Inne materiały i pokrycie
+Każdy plik multimedialny z dysku Marketing jest w&nbsp;programie. To, czego nie ma w&nbsp;Materiałach ani w&nbsp;Eksploratorze (wideo, zdjęcia RAW z&nbsp;aparatu, audio, projekty After Effects), trafia na stronę Inne materiały: z&nbsp;miniaturą, szukaniem po nazwie i&nbsp;ścieżce oraz przyciskiem „Pokaż w&nbsp;folderze”. Ustawienia → Pokrycie materiałów po każdym przeglądzie liczą, czy program pokazuje wszystko: „Pokrycie: 100%” albo lista braków, a&nbsp;foldery nieczytelne są osobno. Eksplorer bez wyniku podpowiada dwa kroki dalej.
+
+![Inne materiały](docs/img/07-inne-materialy.png)
+
+![Pokrycie materiałów](docs/img/08-pokrycie.png)
+
+![Eksplorer: szukaj dalej](docs/img/10-eksplorer-szukaj-dalej.png)
+
 ### Pomoc w każdym miejscu
 Znak zapytania (lub klawisz F1) otwiera panel "Pomóż mi tutaj": krótkie wskazówki dla bieżącej strony z przyciskami "Pokaż mi", które podświetlają element na ekranie, samouczek, lista skrótów klawiszowych i słowniczek. Dobrokaloriuś prowadzi przez program, a bez myszy da się przełączać strony (Alt+1...9), szukać (`/` albo Ctrl+K) i chodzić po kaflach klawiszami Tab i strzałkami.
 
 ![Pomoc](docs/img/04-pomoc.png)
+
+### Faktury i koszty
+Faktury, Koszty, Stawki i Katalog FMCG obsługujesz w&nbsp;całości w&nbsp;programie: dodajesz, edytujesz i&nbsp;usuwasz wpisy oraz importujesz pliki CSV i&nbsp;XLSX. Kwoty są liczone dokładnie (Decimal), a&nbsp;kafle podsumowań mają kolor tylko na liczbie i&nbsp;tylko wtedy, gdy coś znaczy.
+
+![Faktury](docs/img/09-faktury.png)
 
 ### Pozostałe moduły
 - **Dashboard** - liczniki produktów i projektów, najnowsze wizualizacje i produkty oraz Twoje zadania z Asany, układane po swojemu.
 - **Projekty** - projekty opakowań z etapami.
 - **Faktury, Integracja i produkcja** - faktury i koszty, integracje (Asana, Teams) oraz dane produkcyjne produktów.
 - **Użytkownicy** (tylko administrator) - lista kont z wyszukiwaniem i filtrami, akceptacja nowych osób, klucze licencji, edycja i wyłączanie kont oraz lista komputerów z dostępem do bazy z przyciskiem „Odłącz komputer”.
-- **Profil i Ustawienia** - dane konta, komputery i ścieżki do folderu Marketing (każdy komputer może mieć inną literę dysku), motyw jasny i ciemny, zestawy kolorów.
+- **Profil i Ustawienia** - dane konta, komputery i ścieżki do folderu Marketing (każdy komputer może mieć inną literę dysku), motyw jasny i ciemny, zestawy kolorów. Ciemny motyw ma jedną drabinę od #09150D i&nbsp;widoczne krawędzie kart.
 - **LIVE i LOKALNY** - przełącznik źródła danych: wspólna baza albo tylko pliki z tego komputera.
 
 ## Jak to działa
