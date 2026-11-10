@@ -7,14 +7,20 @@
 ## Co potrafi
 
 ### Wizualizacje
-Galeria packshotów z domyślnym widokiem tylko najnowszych wersji, więc nic starego nie miesza się do pracy. Produkty filtrujesz tagami (smak, typ, opakowanie, autor, opis, podkategoria), sortujesz i skalujesz kafle. Kliknięcie otwiera okno produktu z wariantami, perspektywami (przód, tył), tłem i jakością pliku oraz powiązanymi materiałami.
+Galeria packshotów z domyślnym widokiem tylko najnowszych wersji, więc nic starego nie miesza się do pracy. Produkty filtrujesz tagami (smak, typ, opakowanie, autor, opis, podkategoria), sortujesz i skalujesz kafle. Kliknięcie otwiera okno produktu z wariantami, perspektywami (przód, tył), tłem i jakością pliku oraz powiązanymi materiałami. Wizualizacje i&nbsp;Materiały mają ten sam pasek filtrów: zakładki, tagi, przełączniki, DK/GC, zakresy dat (także „Poprzedni miesiąc”) i&nbsp;jeden format licznika.
 
 ![Wizualizacje](docs/img/01-wizualizacje.png)
+
+![Wspólny pasek filtrów](docs/img/11-wizualizacje-pasek.png)
 
 ### Eksplorer
 Pełna struktura produktów z kategoriami po lewej: produkty, warianty i ich pliki jako kafelki. Każdy wariant ma przełącznik Aktualny / Nieaktualny i listę kompletności (plik źródłowy, podgląd PDF, pliki do druku, wizualizacje). Kliknięcie pozycji listy otwiera menu działań: przy brakującym pliku „Zgłoś zapotrzebowanie” albo „Otwórz folder wariantu”, przy obecnym „Otwórz”, „Pokaż w folderze”, „Kopiuj ścieżkę”. Szukasz po indeksie, nazwie albo skojarzeniu, a „Odśwież miniatury” buduje podglądy od nowa z plików na dysku.
 
+Wyniki szukania to kafle produktów z&nbsp;wariantami i&nbsp;jeden licznik. Eksplorer bez wyniku podpowiada dwa kroki dalej.
+
 ![Eksplorer](docs/img/02-eksplorer.png)
+
+![Eksplorer: wyniki jako kafle](docs/img/10-eksplorer-szukaj-dalej.png)
 
 ### Zadania i Asana w obie strony
 Każdy łączy swoje konto Asany raz (Integracje → Asana, osobisty token) i od tej chwili widzi w DAM tylko swoje zadania, na każdym komputerze. Ptaszek w DAM zamyka zadanie w Asanie, a zmiany z Asany pojawiają się w DAM po kilkunastu sekundach. W Wiadomościach rozwinięte zadanie pokazuje, kto je ma, na kiedy, w jakim projekcie i do czego należy, a „Otwórz w Asanie” otwiera aplikację Asana. Zgłoszenie zapotrzebowania może od razu utworzyć zadanie w Asanie.
@@ -28,14 +34,17 @@ Reklamy, filmy, banery, loga i grafiki marki w jednym katalogu, z podziałem na 
 
 ![Materiały graficzne](docs/img/03-materialy-graficzne.png)
 
-### Inne materiały i pokrycie
-Każdy plik multimedialny z dysku Marketing jest w&nbsp;programie. To, czego nie ma w&nbsp;Materiałach ani w&nbsp;Eksploratorze (wideo, zdjęcia RAW z&nbsp;aparatu, audio, projekty After Effects), trafia na stronę Inne materiały: z&nbsp;miniaturą, szukaniem po nazwie i&nbsp;ścieżce oraz przyciskiem „Pokaż w&nbsp;folderze”. Ustawienia → Pokrycie materiałów po każdym przeglądzie liczą, czy program pokazuje wszystko: „Pokrycie: 100%” albo lista braków, a&nbsp;foldery nieczytelne są osobno. Eksplorer bez wyniku podpowiada dwa kroki dalej.
+### Materiały graficzne: wszystko poza wizualizacjami
+Materiały pokazują wszystko, co jest na dysku Marketing poza wizualizacjami produktów, bez osobnej strony „Inne materiały”. Domyślnie widać gotowe grafiki. Przełączniki dokładają pliki źródłowe (AI, PSD, INDD, AEP), wideo i&nbsp;prezentacje, archiwum albo wszystko z&nbsp;dysku. Kopie wizek nie dublują się w&nbsp;Materiałach. Podglądy SVG, wideo i&nbsp;GIF grają po najechaniu, a&nbsp;pliki AI, INDD i&nbsp;PPTX mają miniatury. Kafle nie mają obrysów ani podkreśleń, a&nbsp;„Pokaż w&nbsp;folderze” otwiera folder od&nbsp;razu.
 
-![Inne materiały](docs/img/07-inne-materialy.png)
+![Materiały graficzne: wszystko poza wizualizacjami](docs/img/07-materialy-wszystko.png)
+
+Ustawienia → Pokrycie materiałów po każdym przeglądzie liczą, czy program pokazuje wszystko: „Pokrycie: 100%” albo lista braków, a&nbsp;foldery nieczytelne są osobno.
 
 ![Pokrycie materiałów](docs/img/08-pokrycie.png)
 
-![Eksplorer: szukaj dalej](docs/img/10-eksplorer-szukaj-dalej.png)
+### Projekty opakowań
+Produkt jest kompletny, gdy ma komplet w&nbsp;którymś wariancie. W&nbsp;projekcie każdy wariant ma kafel z&nbsp;listą „jest” / „brak” / „brak, jest w&nbsp;innym wariancie”, a&nbsp;„W toku” pokazuje zadanie z&nbsp;Asany (projekt „Zmiany bieżących opakowań”). Bez połączonej Asany Zadania pokazują przycisk „Połącz Asanę”.
 
 ### Pomoc w każdym miejscu
 Znak zapytania (lub klawisz F1) otwiera panel "Pomóż mi tutaj": krótkie wskazówki dla bieżącej strony z przyciskami "Pokaż mi", które podświetlają element na ekranie, samouczek, lista skrótów klawiszowych i słowniczek. Dobrokaloriuś prowadzi przez program, a bez myszy da się przełączać strony (Alt+1...9), szukać (`/` albo Ctrl+K) i chodzić po kaflach klawiszami Tab i strzałkami.
