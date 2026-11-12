@@ -46,6 +46,22 @@ Ustawienia → Pokrycie materiałów po każdym przeglądzie liczą, czy program
 ### Projekty opakowań
 Produkt jest kompletny, gdy ma komplet w&nbsp;którymś wariancie. W&nbsp;projekcie każdy wariant ma kafel z&nbsp;listą „jest” / „brak” / „brak, jest w&nbsp;innym wariancie”, a&nbsp;„W toku” pokazuje zadanie z&nbsp;Asany (projekt „Zmiany bieżących opakowań”). Bez połączonej Asany Zadania pokazują przycisk „Połącz Asanę”.
 
+![Projekt: warianty](docs/img/12-projekt-warianty.png)
+
+### Quizy: dane, których program sam nie zgadnie
+Strona Quizy ma trzy zakładki z&nbsp;licznikami. **Nośniki** porządkują luźne warianty: klikasz kafelek (albo klawisz), a&nbsp;DAM przenosi wariant do folderu typu (RĘKAW, DOY, KAR3X…), poprawia nazwy plików i&nbsp;dokłada brakujące puste foldery z&nbsp;szablonu (0-ARCHIWUM, 2-PROJEKT, 3-DRUK…; dla eksportu wersje angielskie). Warianty z&nbsp;POLSKA dostają polskie kafelki, z&nbsp;EKSPORT angielskie. Przy nazwie wariantu wpiszesz prawdziwy indeks zamiast 6300XXX, a&nbsp;przy dwóch datach wybierzesz właściwą. Chipy „8 wizek / 2&nbsp;PDF / 2&nbsp;AI” otwierają podgląd na cały ekran z&nbsp;przyciskiem „Otwórz w&nbsp;programie”. Każdy ruch można cofnąć.
+
+![Quiz nośników](docs/img/13-quizy-nosniki.png)
+
+**Produkty** to pliki bez żadnego produktu, od najnowszych, z&nbsp;podpowiedziami (propozycje DAM, ten sam folder, nazwa pliku). Zaznaczasz jeden albo kilka produktów i&nbsp;„Zatwierdź i&nbsp;dalej”. „To nie produkt” przenosi plik do zakładki **Materiały graficzne**, gdzie wskazujesz produkty widoczne na grafice. Quizy skojarzeń rozwiązuje każdy zalogowany.
+
+![Quiz Produkty](docs/img/14-quizy-produkty.png)
+
+### Pulpit
+Kafelki „Zacznij quiz” pojawiają się tylko wtedy, gdy jest coś do zrobienia. Obok liczniki produktów i&nbsp;projektów, „W toku” z&nbsp;Asany i&nbsp;kolumna Powiadomień, która rośnie razem z&nbsp;oknem. Okienka Wiadomości i&nbsp;Powiadomienia rozciągasz w&nbsp;dół i&nbsp;na szerokość, a&nbsp;program pamięta ich rozmiar.
+
+![Pulpit](docs/img/15-pulpit.png)
+
 ### Pomoc w każdym miejscu
 Znak zapytania (lub klawisz F1) otwiera panel "Pomóż mi tutaj": krótkie wskazówki dla bieżącej strony z przyciskami "Pokaż mi", które podświetlają element na ekranie, samouczek, lista skrótów klawiszowych i słowniczek. Dobrokaloriuś prowadzi przez program, a bez myszy da się przełączać strony (Alt+1...9), szukać (`/` albo Ctrl+K) i chodzić po kaflach klawiszami Tab i strzałkami.
 
@@ -71,6 +87,10 @@ Faktury, Koszty, Stawki i Katalog FMCG obsługujesz w&nbsp;całości w&nbsp;prog
 - **Instaluj i pracuj.** Instalator zawiera wszystko, czego program potrzebuje: nie trzeba instalować Pythona ani niczego konfigurować. Po instalacji logujesz się kontem firmowym.
 - **Aktualizacje same.** Program sprawdza to repozytorium i pobiera nowe wydanie w tle. Wydania są podpisane, więc program instaluje tylko to, co pochodzi od autora. Ręcznie: menu profilu, Sprawdź aktualizacje.
 - **Szybki start.** Okno startowe pojawia się od razu, a ponowne kliknięcie ikony w trakcie uruchamiania nie restartuje programu.
+
+## Mapa kodu (dla programistów i agentów)
+
+`bin/docs/mapa-kodu/` to katalog kodu jak w bibliotece: każdy plik z obszarem, celem, funkcjami i trasami z numerami linii oraz słownik ponad 190 pojęć, którymi mówi zespół (wizka, nośnik, łatka, kafelki, odłącz komputer…). Pytanie zadajesz po polsku: `python bin/docs/mapa-kodu/szukaj.py "gdzie snapshot indeksu"` zwraca plik i linię w ułamku sekundy, a `biblioteka.html` daje to samo w przeglądarce. Po zmianach w kodzie: `python bin/docs/mapa-kodu/odswiez.py`.
 
 ## Repozytoria
 
