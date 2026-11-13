@@ -53,9 +53,9 @@ Strona Quizy ma trzy zakładki z&nbsp;licznikami. **Nośniki** porządkują luź
 
 ![Quiz nośników](docs/img/13-quizy-nosniki.png)
 
-**Produkty** to pliki bez żadnego produktu, od najnowszych, z&nbsp;podpowiedziami (propozycje DAM, ten sam folder, nazwa pliku). Zaznaczasz jeden albo kilka produktów i&nbsp;„Zatwierdź i&nbsp;dalej”. „To nie produkt” przenosi plik do zakładki **Materiały graficzne**, gdzie wskazujesz produkty widoczne na grafice. Quizy skojarzeń rozwiązuje każdy zalogowany.
+**Materiały graficzne** to jeden quiz skojarzeń: najpierw grafiki z&nbsp;propozycjami DAM, potem pliki z&nbsp;nazwą produktu w&nbsp;nazwie lub folderze, a&nbsp;slidery i&nbsp;banery na końcu. Przy każdym produkcie widać miniaturę, ścieżkę folderu, „Podgląd” i&nbsp;„Pokaż w&nbsp;folderze”, a&nbsp;wyszukiwarka rozumie literówki i&nbsp;indeksy. Zaznaczasz jeden albo kilka produktów i&nbsp;„Zatwierdź i&nbsp;dalej”. „Nic nie pasuje” działa też dla całego folderu, każdy ruch można cofnąć. Quiz rozwiązuje każdy zalogowany.
 
-![Quiz Produkty](docs/img/14-quizy-produkty.png)
+![Quiz Materiały graficzne](docs/img/14-quizy-produkty.png)
 
 ### Pulpit
 Kafelki „Zacznij quiz” pojawiają się tylko wtedy, gdy jest coś do zrobienia. Obok liczniki produktów i&nbsp;projektów, „W toku” z&nbsp;Asany i&nbsp;kolumna Powiadomień, która rośnie razem z&nbsp;oknem. Okienka Wiadomości i&nbsp;Powiadomienia rozciągasz w&nbsp;dół i&nbsp;na szerokość, a&nbsp;program pamięta ich rozmiar.
@@ -77,7 +77,7 @@ Faktury, Koszty, Stawki i Katalog FMCG obsługujesz w&nbsp;całości w&nbsp;prog
 - **Projekty** - projekty opakowań z etapami.
 - **Faktury, Integracja i produkcja** - faktury i koszty, integracje (Asana, Teams) oraz dane produkcyjne produktów.
 - **Użytkownicy** (tylko administrator) - lista kont z wyszukiwaniem i filtrami, akceptacja nowych osób, klucze licencji, edycja i wyłączanie kont oraz lista komputerów z dostępem do bazy z przyciskiem „Odłącz komputer”.
-- **Profil i Ustawienia** - dane konta, komputery i ścieżki do folderu Marketing (każdy komputer może mieć inną literę dysku), motyw jasny i ciemny, zestawy kolorów. Ciemny motyw ma jedną drabinę od #09150D i&nbsp;widoczne krawędzie kart.
+- **Profil i Ustawienia** - dane konta, komputery i ścieżki do folderu Marketing (każdy komputer może mieć inną literę dysku), motyw jasny i ciemny, zestawy kolorów, osobno kolor główny i kolor akcentu. Ciemny motyw ma jedną drabinę od #09150D i&nbsp;widoczne krawędzie kart.
 - **LIVE i LOKALNY** - przełącznik źródła danych: wspólna baza albo tylko pliki z tego komputera.
 
 ## Jak to działa
