@@ -16,7 +16,9 @@ Galeria packshotów z domyślnym widokiem tylko najnowszych wersji, więc nic st
 ### Eksplorer
 Pełna struktura produktów z kategoriami po lewej: produkty, warianty i ich pliki jako kafelki. Każdy wariant ma przełącznik Aktualny / Nieaktualny i listę kompletności (plik źródłowy, podgląd PDF, pliki do druku, wizualizacje). Kliknięcie pozycji listy otwiera menu działań: przy brakującym pliku „Zgłoś zapotrzebowanie” albo „Otwórz folder wariantu”, przy obecnym „Otwórz”, „Pokaż w folderze”, „Kopiuj ścieżkę”. Szukasz po indeksie, nazwie albo skojarzeniu, a „Odśwież miniatury” buduje podglądy od nowa z plików na dysku.
 
-Wyniki szukania to kafle produktów z&nbsp;wariantami i&nbsp;jeden licznik. Eksplorer bez wyniku podpowiada dwa kroki dalej.
+Wyniki szukania to kafle produktów z&nbsp;wariantami i&nbsp;jeden licznik. Eksplorer bez wyniku podpowiada dwa kroki dalej, a&nbsp;po włączeniu „Pokaż wszystkie” pokazuje też stare projekty z&nbsp;archiwum Marketing.
+
+„Dodaj kategorię” i&nbsp;„Dodaj produkt” (także z&nbsp;widoku głównego) prowadzą krok po kroku: kategoria z&nbsp;miejsca, w&nbsp;którym jesteś, podkategoria z&nbsp;listy, typ opakowania, gramatura i&nbsp;nazwy folderów oraz plików według ustaleń. Nowa kategoria jest od razu widoczna, duplikaty nazw i&nbsp;numerów są odrzucane, a&nbsp;„Potwierdź” robi dokładnie to, co pokazał „Podgląd”. Dodawanie widzi każdy, a&nbsp;wykonuje administrator.
 
 ![Eksplorer](docs/img/02-eksplorer.png)
 
@@ -30,7 +32,7 @@ Każdy łączy swoje konto Asany raz (Integracje → Asana, osobisty token) i od
 ![Wiadomości](docs/img/06-wiadomosci.png)
 
 ### Materiały graficzne
-Reklamy, filmy, banery, loga i grafiki marki w jednym katalogu, z podziałem na kampanie, social i wideo, strony WWW oraz brandbook. Wyszukiwarka rozumie zwykłe zapytania ("slider niemięsa", "film lato 2026"), a tagi pozwalają zawęzić wynik kliknięciem. Pliki w kilku formatach (PNG, SVG) są jednym elementem, a SVG otwiera się w oknie podglądu.
+Reklamy, filmy, banery, loga i grafiki marki w jednym katalogu, z kategoriami jak foldery działu Marketing (Branding i&nbsp;marka, Produkty, Social media, Strony WWW, E-commerce, Kampanie…), dobieranymi po skojarzeniach, z&nbsp;licznikami. Wyszukiwarka rozumie zwykłe zapytania ("slider niemięsa", "film lato 2026"), a tagi pozwalają zawęzić wynik kliknięciem. Pliki w kilku formatach (PNG, SVG) są jednym elementem, a SVG otwiera się w oknie podglądu.
 
 ![Materiały graficzne](docs/img/03-materialy-graficzne.png)
 
@@ -49,7 +51,7 @@ Produkt jest kompletny, gdy ma komplet w&nbsp;którymś wariancie. W&nbsp;projek
 ![Projekt: warianty](docs/img/12-projekt-warianty.png)
 
 ### Quizy: dane, których program sam nie zgadnie
-Strona Quizy ma trzy zakładki z&nbsp;licznikami. **Nośniki** porządkują luźne warianty: klikasz kafelek (albo klawisz), a&nbsp;DAM przenosi wariant do folderu typu (RĘKAW, DOY, KAR3X…), poprawia nazwy plików i&nbsp;dokłada brakujące puste foldery z&nbsp;szablonu (0-ARCHIWUM, 2-PROJEKT, 3-DRUK…; dla eksportu wersje angielskie). Warianty z&nbsp;POLSKA dostają polskie kafelki, z&nbsp;EKSPORT angielskie. Przy nazwie wariantu wpiszesz prawdziwy indeks zamiast 6300XXX, a&nbsp;przy dwóch datach wybierzesz właściwą. Chipy „8 wizek / 2&nbsp;PDF / 2&nbsp;AI” otwierają podgląd na cały ekran z&nbsp;przyciskiem „Otwórz w&nbsp;programie”. Każdy ruch można cofnąć.
+Strona Quizy ma trzy zakładki z&nbsp;licznikami. **Nośniki** porządkują luźne warianty: klikasz kafelek (albo klawisz), a&nbsp;DAM przenosi wariant do folderu typu (RĘKAW, DOY, KAR3X…), poprawia nazwy plików i&nbsp;dokłada brakujące puste foldery z&nbsp;szablonu (0-ARCHIWUM, 2-PROJEKT, 3-DRUK…; dla eksportu wersje angielskie). Warianty z&nbsp;POLSKA dostają polskie kafelki, z&nbsp;EKSPORT angielskie. Przy nazwie wariantu wpiszesz prawdziwy indeks zamiast 6300XXX, a&nbsp;przy dwóch datach wybierzesz właściwą. Chipy „8 wizek / 2&nbsp;PDF / 2&nbsp;AI” otwierają podgląd na cały ekran z&nbsp;przyciskiem „Otwórz w&nbsp;programie”. Luźny wariant z&nbsp;tą samą datą i&nbsp;indeksem dołącza do istniejącego folderu wariantu zamiast tworzyć drugi, a&nbsp;nazwy plików projektu zmieniają się tylko w&nbsp;slocie 2-PROJEKT. „Do archiwum” przenosi cały wariant do archiwum linii (najpierw powstaje tam folder produktu). Program nigdy nie kopiuje ani nie kasuje plików przy przenoszeniu, a&nbsp;każdy ruch można cofnąć do identycznego drzewa folderów.
 
 ![Quiz nośników](docs/img/13-quizy-nosniki.png)
 
